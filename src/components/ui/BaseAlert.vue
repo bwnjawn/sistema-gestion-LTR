@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Info, AlertTriangle, CheckCircle2, XCircle } from 'lucide-vue-next'
+import { Info, AlertTriangle, CheckCircle2, AlertCircle } from 'lucide-vue-next'
 
 interface Props {
   variant?: 'info' | 'warning' | 'success' | 'danger'
@@ -8,57 +8,54 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  variant: 'info'
+  variant: 'info',
+  title: undefined
 })
 
-const variantStyles = computed(() => {
+// 1. Estilos por variante (corregido para usar alertClasses)
+const alertClasses = computed(() => {
   switch (props.variant) {
     case 'warning':
-      return {
-        box: 'bg-amber-50 border-amber-300 text-amber-950',
-        iconBg: 'bg-amber-400 text-amber-950',
-        icon: AlertTriangle
-      }
+      return 'bg-amber-50 border-amber-200 text-amber-900'
     case 'success':
-      return {
-        box: 'bg-emerald-50 border-emerald-300 text-emerald-950',
-        iconBg: 'bg-status-success text-white',
-        icon: CheckCircle2
-      }
+      return 'bg-emerald-50 border-emerald-200 text-emerald-900'
     case 'danger':
-      return {
-        box: 'bg-rose-50 border-rose-300 text-rose-950',
-        iconBg: 'bg-status-danger text-white',
-        icon: XCircle
-      }
+      return 'bg-rose-50 border-rose-200 text-rose-900'
     case 'info':
     default:
-      return {
-        box: 'bg-amber-50 border-amber-300 text-amber-950',
-        iconBg: 'bg-amber-400 text-amber-950',
-        icon: Info
-      }
+      return 'bg-amber-50/90 border-amber-200 text-amber-950'
+  }
+})
+
+// 2. Icono reactivo según la variante (corregido para exponer 'icon')
+const icon = computed(() => {
+  switch (props.variant) {
+    case 'warning':
+      return AlertTriangle
+    case 'success':
+      return CheckCircle2
+    case 'danger':
+      return AlertCircle
+    case 'info':
+    default:
+      return Info
   }
 })
 </script>
 
 <template>
-  <div 
-    :class="[
-      'border-2 rounded-2xl p-4 flex items-start gap-3.5 shadow-xs transition-colors',
-      variantStyles.box
-    ]"
-    role="alert"
-  >
-    <div :class="['p-2 rounded-xl shrink-0 mt-0.5', variantStyles.iconBg]">
-      <component :is="variantStyles.icon" class="w-5 h-5 stroke-[2.5]" />
-    </div>
+  <div :class="['p-3.5 rounded-2xl border-2 flex items-start gap-3', alertClasses]">
+    <!-- Icono del cuadro de alerta -->
+    <component :is="icon" class="w-5 h-5 shrink-0 mt-0.5 stroke-[2.5]" />
 
     <div class="space-y-0.5">
-      <h3 v-if="title" class="font-extrabold text-base leading-tight">
+      <!-- Título destacado en negrita -->
+      <h4 v-if="title" class="font-extrabold text-xs uppercase tracking-wider">
         {{ title }}
-      </h3>
-      <div class="text-sm font-bold leading-snug">
+      </h4>
+
+      <!-- Mensaje secundario en texto normal sin negrita -->
+      <div class="text-xs font-normal leading-relaxed opacity-90">
         <slot />
       </div>
     </div>
