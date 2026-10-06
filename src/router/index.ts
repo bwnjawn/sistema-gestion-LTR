@@ -80,7 +80,7 @@ const routes = [
     component: () => import('../views/client/restaurante/RestaurantStep4View.vue')
   },
 
-  // --- RUTAS DE ADMINISTRACIÓN ---
+  // --- RUTAS DE AUTENTICACIÓN (Sin Layout de Admin) ---
   {
     path: '/admin/login',
     name: 'admin-login',
@@ -91,11 +91,48 @@ const routes = [
     name: 'admin-register',
     component: () => import('../views/admin/RegisterView.vue')
   },
+
+  // --- RUTAS DE ADMINISTRACIÓN PROTEGIDAS (Con Layout de Admin) ---
   {
-    path: '/admin/dashboard',
-    name: 'admin-dashboard',
-    component: () => import('../views/admin/AdminDashboardView.vue'),
-    meta: { requiresAuth: true } // 🔒 Requiere inicio de sesión
+    path: '/admin',
+    component: () => import('../layouts/AdminLayout.vue'),
+    meta: { requiresAuth: true }, // 🔒 Protección para todo el módulo
+    children: [
+      {
+        path: '',
+        redirect: { name: 'admin-dashboard' }
+      },
+      {
+        path: 'dashboard',
+        name: 'admin-dashboard',
+        component: () => import('../views/admin/AdminDashboardView.vue')
+      },
+      {
+        path: 'solicitudes',
+        name: 'admin-requests',
+        component: () => import('../views/admin/AdminDashboardView.vue')
+      },
+      {
+        path: 'calendario',
+        name: 'admin-calendar',
+        component: () => import('../views/admin/AdminCalendarView.vue')
+      },
+      {
+        path: 'editar',
+        name: 'admin-edit',
+        component: () => import('../views/admin/AdminDashboardView.vue')
+      },
+      {
+        path: 'mas',
+        name: 'admin-more',
+        component: () => import('../views/admin/AdminDashboardView.vue')
+      },
+      {
+        path: 'catalogo',
+        name: 'admin-catalog',
+        component: () => import('../views/admin/AdminDashboardView.vue')
+      }
+    ]
   },
 
   // Redirección por defecto si la ruta no existe
@@ -110,18 +147,18 @@ const router = createRouter({
   routes
 })
 
-// GUARDIÁN DE NAVEGACIÓN (Protección de rutas de administración)
-router.beforeEach((to, from, next) => {
+// GUARDIÁN DE NAVEGACIÓN (Protección de rutas de administración con authStore)
+router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
 
-  // 1. Si la ruta requiere autenticación y el usuario NO ha iniciado sesión
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  // 1. Si la ruta o su ruta padre requiere autenticación y el usuario NO ha iniciado sesión
+  if (to.matched.some(record => record.meta.requiresAuth) && !authStore.isAuthenticated) {
     next({ name: 'admin-login' })
-  } 
+  }
   // 2. Si el usuario ya está autenticado e intenta entrar a Login o Registro, va directo al Dashboard
   else if ((to.name === 'admin-login' || to.name === 'admin-register') && authStore.isAuthenticated) {
     next({ name: 'admin-dashboard' })
-  } 
+  }
   // 3. Continuar normalmente
   else {
     next()

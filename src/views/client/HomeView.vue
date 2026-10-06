@@ -1,72 +1,13 @@
-<script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { Home, PhoneCall, ChevronRight, ShieldCheck } from 'lucide-vue-next'
-import { useReservationStore } from '../../stores/reservationStore'
-
-const router = useRouter()
-const store = useReservationStore()
-
-function selectService(service: 'cabana' | 'camping' | 'restaurant') {
-  store.resetStore()
-  store.setService(service)
-  
-  if (service === 'cabana') {
-    router.push({ name: 'cabana-step1' })
-  } else if (service === 'camping') {
-    router.push({ name: 'camping-step1' })
-  } else if (service === 'restaurant') {
-    router.push({ name: 'restaurant-step1' })
-  }
-}
-
-function goToContact() {
-  router.push({ name: 'contact' })
-}
-
-function goToAdmin() {
-  router.push({ name: 'admin-dashboard' })
-}
-</script>
-
 <template>
-  <div class="min-h-screen bg-[#f2f5f0] text-brand-dark flex flex-col justify-between max-w-md mx-auto relative pb-24 font-sans">
-    
-    <!-- ENCABEZADO PROTOTIPO (Logo Real + Título + Ubicación + Acceso Admin) -->
-    <header class="p-4 pt-6 bg-transparent flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-16 h-16 rounded-full bg-white border-2 border-brand-border shadow-xs flex items-center justify-center p-1 shrink-0 overflow-hidden">
-          <img 
-            src="/images/logo.png" 
-            alt="Logo Los Troncos de Repil" 
-            class="w-full h-full object-cover rounded-ful scale-150"
-            @error="(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=200&q=80' }"
-          />
-        </div>
-        
-        <div>
-          <h1 class="text-lg font-black text-brand-dark leading-tight tracking-tight">
-            Los Troncos de Repil
-          </h1>
-          <p class="text-xs font-extrabold text-gray-500">
-            Fresia, Los Lagos
-          </p>
-        </div>
-      </div>
+  <div class="min-h-screen bg-brand-light flex flex-col pb-20">
+    <!-- Encabezado Reutilizable con Botón Admin -->
+    <ClientHeader 
+      show-admin 
+      @admin-click="goToAdmin" 
+    />
 
-      <button 
-        type="button" 
-        @click="goToAdmin" 
-        class="text-[11px] font-black text-brand-dark bg-white/80 hover:bg-white border border-brand-border px-2.5 py-1 rounded-full shadow-2xs flex items-center gap-1 touch-target active:scale-95 transition-transform"
-        title="Acceso Administración"
-      >
-        <ShieldCheck class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-        <span>Admin</span>
-      </button>
-    </header>
-
-    <!-- CONTENIDO PRINCIPAL: TARJETAS DE SERVICIO SEGÚN PROTOTIPO -->
-    <main class="p-4 space-y-4 grow">
-      
+    <!-- CONTENIDO PRINCIPAL: TARJETAS DE SERVICIO -->
+    <main class="p-4 space-y-4 grow max-w-md mx-auto w-full">
       <div class="space-y-1">
         <h2 class="text-xl font-black text-brand-dark tracking-tight">
           ¿Qué quieres reservar?
@@ -74,7 +15,6 @@ function goToAdmin() {
       </div>
 
       <div class="space-y-3.5">
-        
         <!-- CARD 1: CABAÑA -->
         <div 
           @click="selectService('cabana')"
@@ -155,32 +95,36 @@ function goToAdmin() {
             </div>
           </div>
         </div>
-
       </div>
-
     </main>
 
-    <!-- BARRA INFERIOR FIJA DE NAVEGACIÓN CLIENTE -->
-    <nav class="fixed bottom-0 left-0 right-0 z-30 bg-[#e3eae1]/95 backdrop-blur-md border-t-2 border-brand-border p-2.5 shadow-2xl">
-      <div class="max-w-md mx-auto grid grid-cols-2 gap-2">
-        <button 
-          type="button" 
-          class="py-2.5 px-3 rounded-2xl bg-[#c5d7be] text-brand-dark font-black text-xs flex items-center justify-center gap-2 border border-brand-border shadow-2xs touch-target"
-        >
-          <Home class="w-4 h-4 stroke-[2.5]" />
-          <span>Inicio</span>
-        </button>
-
-        <button 
-          type="button" 
-          @click="goToContact"
-          class="py-2.5 px-3 rounded-2xl bg-white/60 hover:bg-white text-gray-600 font-extrabold text-xs flex items-center justify-center gap-2 border border-brand-border/60 touch-target active:scale-95 transition-all"
-        >
-          <PhoneCall class="w-4 h-4 stroke-[2.5]" />
-          <span>Contacto</span>
-        </button>
-      </div>
-    </nav>
-
+    <!-- Barra de Navegación Inferior Reutilizable -->
+    <ClientBottomNav />
   </div>
 </template>
+
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { ChevronRight } from 'lucide-vue-next'
+import ClientHeader from '../../components/ui/ClientHeader.vue'
+import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
+import { useReservationStore } from '../../stores/reservationStore'
+
+const router = useRouter()
+const reservationStore = useReservationStore()
+
+const selectService = (service: 'cabana' | 'camping' | 'restaurant') => {
+  reservationStore.setService(service)
+  if (service === 'cabana') {
+    router.push({ name: 'cabana-step1' })
+  } else if (service === 'camping') {
+    router.push({ name: 'camping-step1' })
+  } else if (service === 'restaurant') {
+    router.push({ name: 'restaurant-step1' })
+  }
+}
+
+const goToAdmin = () => {
+  router.push({ name: 'admin-dashboard' })
+}
+</script>

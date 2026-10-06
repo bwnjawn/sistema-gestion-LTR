@@ -1,82 +1,11 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { 
-  Home, 
-  PhoneCall, 
-  MapPin, 
-  Mail, 
-  Phone, 
-  Globe, 
-  Compass, 
-  ExternalLink,
-  MessageCircle,
-  Moon,
-  Sun
-} from 'lucide-vue-next'
-
-const router = useRouter()
-const isDarkMode = ref(false)
-
-function toggleDarkMode() {
-  isDarkMode.value = !isDarkMode.value
-  document.documentElement.classList.toggle('dark', isDarkMode.value)
-}
-
-function goToHome() {
-  router.push({ name: 'home' })
-}
-
-// Datos reales de Los Troncos de Repil
-const phones = [
-  { raw: '+56985025056', display: '+56 9 8502 5056', label: 'Contacto Principal' },
-  { raw: '+56958833853', display: '+56 9 5883 3853', label: 'Contacto Secundario' }
-]
-
-const email = 'lostroncosderepil@gmail.com'
-const websiteUrl = 'https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html'
-const websiteDisplay = 'fresianatural.cl/troncos-de-repil'
-const address = 'Sector Repil, Fresia, Región de Los Lagos, Chile'
-
-// Enlace e Iframe de Google Maps
-const mapEmbedUrl = 'https://maps.google.com/maps?q=Los+Troncos+de+Repil,+Fresia,+Los+Lagos,+Chile&t=&z=12&ie=UTF8&iwloc=&output=embed'
-const directMapsUrl = 'https://www.google.com/maps/search/?api=1&query=Los+Troncos+de+Repil+Fresia+Chile'
-</script>
-
 <template>
-  <div class="min-h-screen bg-[#f2f5f0] dark:bg-gray-900 text-brand-dark dark:text-gray-100 flex flex-col justify-between max-w-md mx-auto relative pb-28 font-sans transition-colors duration-300 overflow-x-hidden">
-    
-    <!-- ENCABEZADO CON LOGO REAL -->
-    <header class="p-4 pt-6 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-16 h-16 rounded-full bg-white dark:bg-gray-800 border-2 border-brand-border shadow-xs flex items-center justify-center p-1 shrink-0 overflow-hidden">
-          <img 
-            src="/images/logo.png" 
-            alt="Logo Los Troncos de Repil" 
-            class="w-full h-full object-cover rounded-full scale-150"
-            @error="(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=200&q=80' }"
-          />
-        </div>
-        <div>
-          <h1 class="text-lg font-black text-brand-dark dark:text-white leading-tight tracking-tight">
-            Los Troncos de Repil
-          </h1>
-          <p class="text-xs font-extrabold text-gray-500 dark:text-gray-400">
-            Fresia, Los Lagos
-          </p>
-        </div>
-      </div>
-
-      <button 
-        type="button" 
-        @click="toggleDarkMode"
-        class="flex items-center justify-center p-2.5 rounded-full bg-white dark:bg-gray-800 border-2 border-brand-border text-brand-dark dark:text-amber-300 shadow-xs active:scale-95 transition-transform touch-target shrink-0"
-        title="Cambiar tema"
-      >
-        <Moon v-if="!isDarkMode" class="w-5 h-5 stroke-[2.5]" />
-        <Sun v-else class="w-5 h-5 stroke-[2.5]" />
-      </button>
-    </header>
+  <div :class="['min-h-screen flex flex-col pb-20 transition-colors', isDarkMode ? 'dark bg-gray-900' : 'bg-brand-light']">
+    <!-- Encabezado Reutilizable con Conmutador de Modo Oscuro -->
+    <ClientHeader 
+      show-dark-mode 
+      :is-dark-mode="isDarkMode" 
+      @toggle-dark-mode="toggleDarkMode" 
+    />
 
     <!-- CONTENIDO PRINCIPAL -->
     <main class="p-4 space-y-4 grow w-full max-w-md mx-auto">
@@ -89,7 +18,7 @@ const directMapsUrl = 'https://www.google.com/maps/search/?api=1&query=Los+Tronc
         </p>
       </div>
 
-      <!-- MAPA INTERACTIVO REAL -->
+      <!-- MAPA INTERACTIVO -->
       <div class="bg-white dark:bg-gray-800 rounded-3xl border-2 border-brand-border overflow-hidden shadow-sm space-y-3 p-3">
         <div class="flex items-center justify-between px-1">
           <span class="text-xs font-black text-brand-dark dark:text-white flex items-center gap-1.5 uppercase tracking-wider">
@@ -187,7 +116,6 @@ const directMapsUrl = 'https://www.google.com/maps/search/?api=1&query=Los+Tronc
         </h3>
 
         <div class="space-y-2 text-xs font-bold">
-          <!-- CORREO -->
           <a 
             :href="`mailto:${email}`"
             class="bg-brand-light dark:bg-gray-700/60 p-3 rounded-2xl border border-brand-border flex items-center justify-between gap-2 text-brand-dark dark:text-white hover:bg-gray-100 transition-colors"
@@ -199,7 +127,6 @@ const directMapsUrl = 'https://www.google.com/maps/search/?api=1&query=Los+Tronc
             <ExternalLink class="w-3.5 h-3.5 text-gray-400 stroke-[2.5] shrink-0" />
           </a>
 
-          <!-- SITIO WEB RECURTADO Y RECORTADO SIN DESBORDAMIENTO -->
           <a 
             :href="websiteUrl"
             target="_blank"
@@ -214,30 +141,44 @@ const directMapsUrl = 'https://www.google.com/maps/search/?api=1&query=Los+Tronc
           </a>
         </div>
       </div>
-
     </main>
 
-    <!-- NAVEGACIÓN FIJA CENTRADA PERFECTAMENTE DENTRO DEL CONTENEDOR MAX-W-MD -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-[#e3eae1]/95 dark:bg-gray-900/95 backdrop-blur-md border-t-2 border-brand-border p-2.5 shadow-2xl">
-      <div class="grid grid-cols-2 gap-2">
-        <button 
-          type="button" 
-          @click="goToHome"
-          class="py-2.5 px-3 rounded-2xl bg-white/60 dark:bg-gray-800/60 hover:bg-white text-gray-600 dark:text-gray-300 font-extrabold text-xs flex items-center justify-center gap-2 border border-brand-border/60 touch-target active:scale-95 transition-all"
-        >
-          <Home class="w-4 h-4 stroke-[2.5]" />
-          <span>Inicio</span>
-        </button>
-
-        <button 
-          type="button" 
-          class="py-2.5 px-3 rounded-2xl bg-[#c5d7be] dark:bg-brand-dark text-brand-dark dark:text-white font-black text-xs flex items-center justify-center gap-2 border border-brand-border shadow-2xs touch-target"
-        >
-          <PhoneCall class="w-4 h-4 stroke-[2.5]" />
-          <span>Contacto</span>
-        </button>
-      </div>
-    </nav>
-
+    <!-- Barra de Navegación Inferior Reutilizable -->
+    <ClientBottomNav />
   </div>
-</template> 
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { 
+  MapPin, 
+  PhoneCall, 
+  Phone, 
+  MessageCircle, 
+  Mail, 
+  Globe, 
+  ExternalLink, 
+  Compass 
+} from 'lucide-vue-next'
+import ClientHeader from '../../components/ui/ClientHeader.vue'
+import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
+
+const isDarkMode = ref(false)
+
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value
+}
+
+const address = 'Sector Repil, Fresia, Región de Los Lagos, Chile'
+const directMapsUrl = 'https://maps.google.com/?q=-41.1500,-73.4167'
+const mapEmbedUrl = 'https://maps.google.com/maps?q=-41.1500,-73.4167&hl=es&z=13&output=embed'
+
+const email = 'lostroncosderepil@gmail.com'
+const websiteUrl = 'https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html'
+const websiteDisplay = 'fresianatural.cl/troncos-de-repil'
+
+const phones = [
+  { label: 'Administración 1', display: '+56 9 8502 5056', raw: '+56985025056' },
+  { label: 'Administración 2', display: '+56 9 9588 3385', raw: '+56995883385' }
+]
+</script>
