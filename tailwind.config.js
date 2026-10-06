@@ -1,3 +1,4 @@
+// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,18 +8,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        tronco: {
-          green: '#1E4620',
-          darkgreen: '#0f2a11',
-          brown: '#48250D',
-          orange: '#E65100',
-          red: '#C62828',
-          bg: '#F1F2EE',
-          card: '#FFFFFF'
+        brand: {
+          dark: '#1E4620',      // Verde Bosque
+          accent: '#25636B',    // Verde Azulado
+          light: '#F9F9F6',     // Blanco Hueso
+          text: '#1A1D20',      // Gris Oscuro
+          border: '#D1D5DB',
+        },
+        status: {
+          success: '#2E7D32',
+          danger: '#C62828',
+          warning: '#E65100',
         }
       },
       fontFamily: {
-        sans: ['"Atkinson Hyperlegible"', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'], // Tipografía moderna e intuitiva
       }
     },
   },
