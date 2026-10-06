@@ -4,14 +4,14 @@ import { useRouter } from 'vue-router'
 import { 
   ArrowRight, 
   ArrowLeft, 
+  ChevronRight, 
+  Plus, 
+  Minus, 
   Check, 
   AlertTriangle, 
+  Info, 
   Utensils, 
-  Plus, 
-  Minus,
-  Sparkles,
-  ChevronRight,
-  Info
+  Sparkles 
 } from 'lucide-vue-next'
 import { useReservationStore } from '../../../stores/reservationStore'
 import BaseButton from '../../../components/ui/BaseButton.vue'
@@ -23,16 +23,15 @@ const store = useReservationStore()
 
 const totalGuests = computed(() => store.guestsCount || 1)
 
-// Modal de confirmación para asignaciones parciales
-const showPartialModal = ref(false)
-
-// 1. ORDEN FIJO ESTRICTO: Desayuno -> Almuerzo -> Once
-const canonicalOrder = ['desayuno', 'almuerzo', 'once']
-
-const activeMealTypes = computed<string[]>(() => {
-  const selected = store.selectedMealTypes || ['almuerzo']
-  return canonicalOrder.filter(m => selected.includes(m))
+// Tipos de servicio activos según lo seleccionado en el Paso 1
+const activeMealTypes = computed(() => {
+  return store.selectedMealTypes && store.selectedMealTypes.length > 0
+    ? store.selectedMealTypes
+    : ['desayuno', 'almuerzo', 'once']
 })
+
+const activeMealIndex = ref(0)
+const currentMealType = computed(() => activeMealTypes.value[activeMealIndex.value] || 'desayuno')
 
 const mealLabels: Record<string, string> = {
   desayuno: 'Desayuno',
@@ -40,230 +39,225 @@ const mealLabels: Record<string, string> = {
   once: 'Once'
 }
 
-const activeMealIndex = ref(0)
+const currentMealLabel = computed(() => mealLabels[currentMealType.value])
 
-const currentMealId = computed(() => {
-  return activeMealTypes.value[activeMealIndex.value] || activeMealTypes.value[0] || 'almuerzo'
-})
-
-const currentMealLabel = computed(() => mealLabels[currentMealId.value] || 'Servicio')
-
-interface MenuItem {
+interface Dish {
   id: string
-  mealType: 'desayuno' | 'almuerzo' | 'once'
   name: string
-  description: string
+  mealType: 'desayuno' | 'almuerzo' | 'once'
   price: number
+  description: string
+  image: string
   availableSideDishes: string[]
 }
 
-const fullCatalog: MenuItem[] = [
-  // Desayuno
+// Catálogo de platos de r2.txt con imagen agregada
+const allDishes: Dish[] = [
+  // Desayunos
   {
     id: 'desayuno-campesino',
+    name: 'Desayuno Campestre',
     mealType: 'desayuno',
-    name: 'Desayuno Campesino',
-    description: 'Huevos de campo, queso fresco, mermelada casera, pan amasado, té/café/leche',
-    price: 8000,
+    price: 10800,
+    description: 'Frutas, yogurt, cereales, pan amasado, huevos de campo, mermelada casera, café, té o mate.',
+    image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=800&q=80',
     availableSideDishes: []
   },
   {
     id: 'desayuno-tradicional',
-    mealType: 'desayuno',
     name: 'Desayuno Tradicional',
-    description: 'Pan amasado caliente, mantequilla de campo, mermelada de la casa, té/café/leche',
+    mealType: 'desayuno',
     price: 6000,
+    description: 'Un sándwich jamón queso en pan casero, té, café o leche y un bocado dulce.',
+    image: 'https://images.unsplash.com/photo-1495214783159-3503fd1b572d?auto=format&fit=crop&w=800&q=80',
     availableSideDishes: []
   },
-  
-  // Almuerzo
+
+  // Almuerzos
   {
     id: 'almuerzo-cordero-cerdo',
+    name: 'Asado de Cordero y Cerdo al Palo',
     mealType: 'almuerzo',
-    name: 'Cordero y cerdo',
-    description: 'Asado tradicional al palo con ensaladas surtidas de la estación',
     price: 20000,
-    availableSideDishes: ['Papas al vapor', 'Puré de papas', 'Papas rústicas']
+    description: 'Asado tradicional cocinado a fuego lento con leña nativa. Incluye buffet de ensaladas, pan amasado y postre.',
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+    availableSideDishes: ['Papas al vapor', 'Puré casero', 'Papas rústicas']
   },
   {
     id: 'almuerzo-vacuno-bechamel',
+    name: 'Vacuno con Salsa Bechamel',
     mealType: 'almuerzo',
-    name: 'Vacuno con bechamel',
-    description: 'Carne jugosa al horno con salsa bechamel, ensalada y postre casero',
     price: 21000,
-    availableSideDishes: ['Papas rústicas', 'Arroz', 'Puré de papas']
+    description: 'Tierno corte de vacuno con suave salsa cremosa. Incluye buffet de ensaladas, pan amasado y postre.',
+    image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=800&q=80',
+    availableSideDishes: ['Papas rústicas', 'Puré casero', 'Arroz primavera']
   },
   {
     id: 'almuerzo-salmon-camarones',
+    name: 'Salmón con Salsa de Camarones',
     mealType: 'almuerzo',
-    name: 'Salmón con salsa de camarones',
-    description: 'Filete de salmón fresco con salsa de camarones y pan amasado',
     price: 21000,
-    availableSideDishes: ['Puré de papas', 'Papas al vapor', 'Arroz']
+    description: 'Salmón fresco bañado en salsa de camarones. Incluye buffet de ensaladas, pan amasado y postre.',
+    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80',
+    availableSideDishes: ['Puré casero', 'Papas rústicas', 'Arroz primavera']
   },
   {
     id: 'almuerzo-chuletas-cerdo',
+    name: 'Chuletas de Cerdo Criollas',
     mealType: 'almuerzo',
-    name: 'Chuletas de cerdo',
-    description: 'Chuletas doradas a la plancha con ensaladas frescas',
     price: 13000,
-    availableSideDishes: ['Puré de papas', 'Papas rústicas', 'Arroz']
+    description: 'Jugosas chuletas de cerdo doradas. Incluye buffet de ensaladas, pan amasado y postre.',
+    image: 'https://images.unsplash.com/photo-1432139555190-58524dae6a55?auto=format&fit=crop&w=800&q=80',
+    availableSideDishes: ['Puré casero', 'Papas al vapor', 'Papas rústicas']
+  },
+  {
+    id: 'almuerzo-vegetariano',
+    name: 'Almuerzo Vegetariano / Vegano',
+    mealType: 'almuerzo',
+    price: 12000,
+    description: 'Pastel, chupe o budín de verduras a acordar. Incluye buffet de ensalada, postre y té de hierba.',
+    image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80',
+    availableSideDishes: []
   },
 
-  // Once
+  // Onces
   {
     id: 'once-campesina',
-    mealType: 'once',
     name: 'Once Campesina',
-    description: 'Tostadas en estufa a leña, queso chanco, jamón artesanal, kuchen casero, té/café',
-    price: 10000,
+    mealType: 'once',
+    price: 12000,
+    description: 'Jugo natural, té, café o mate. Sopaipillas, pan casero, pastas para acompañar, queso, mermeladas y kuchen.',
+    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
     availableSideDishes: []
   },
   {
     id: 'once-tradicional',
+    name: 'Once Tradicional / Infantil',
     mealType: 'once',
-    name: 'Once Tradicional',
-    description: 'Pan amasado caliente, mantequilla, mermelada casera, kuchen, té/café',
-    price: 7000,
+    price: 7500,
+    description: 'Un hot dog o completo, un vaso de bebida y una paleta de helado.',
+    image: 'https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80',
     availableSideDishes: []
   }
 ]
 
-// Formato limpio de moneda CLP
-function formatCLP(val: number): string {
-  return '\$' + val.toLocaleString('es-CL')
+interface DishSelection {
+  count: number
+  sides: Record<string, number>
 }
 
-// Inicialización de selecciones
-const selections = ref<Record<string, { count: number; sides: Record<string, number> }>>({})
-
-fullCatalog.forEach(dish => {
-  const existing = store.selectedMenus?.[dish.id]
-  selections.value[dish.id] = {
-    count: existing?.count || 0,
-    sides: existing?.sides ? { ...existing.sides } : {}
-  }
-})
+// Carga de selecciones
+const selections = ref<Record<string, DishSelection>>(
+  store.selectedMenus && Object.keys(store.selectedMenus).length > 0
+    ? JSON.parse(JSON.stringify(store.selectedMenus))
+    : {}
+)
 
 const currentMealDishes = computed(() => {
-  return fullCatalog.filter(item => item.mealType === currentMealId.value)
-})
-
-const mealSelectedCount = computed(() => {
-  return currentMealDishes.value.reduce((acc, dish) => {
-    return acc + (selections.value[dish.id]?.count || 0)
-  }, 0)
-})
-
-const dishStatusMap = computed(() => {
-  const result: Record<string, { isComplete: boolean; assignedSides: number; requiredSides: number; missing: number }> = {}
-  
-  fullCatalog.forEach(dish => {
-    const sel = selections.value[dish.id] || { count: 0, sides: {} }
-    const required = sel.count
-    const hasSides = dish.availableSideDishes.length > 0
-    
-    if (!hasSides) {
-      result[dish.id] = {
-        isComplete: true,
-        assignedSides: 0,
-        requiredSides: 0,
-        missing: 0
-      }
-    } else {
-      const assigned = Object.values(sel.sides).reduce((sum, n) => sum + n, 0)
-      const isComplete = required === 0 || assigned === required
-      result[dish.id] = {
-        isComplete,
-        assignedSides: assigned,
-        requiredSides: required,
-        missing: Math.max(0, required - assigned)
-      }
-    }
-  })
-  
-  return result
-})
-
-function isMealValid(mealId: string): boolean {
-  const dishes = fullCatalog.filter(d => d.mealType === mealId)
-  const totalCount = dishes.reduce((sum, d) => sum + (selections.value[d.id]?.count || 0), 0)
-  
-  if (totalCount > totalGuests.value) return false
-  return dishes.every(d => dishStatusMap.value[d.id]?.isComplete)
-}
-
-function getMealSelectedCount(mealId: string): number {
-  const dishes = fullCatalog.filter(d => d.mealType === mealId)
-  return dishes.reduce((sum, d) => sum + (selections.value[d.id]?.count || 0), 0)
-}
-
-const isCurrentMealValid = computed(() => {
-  return isMealValid(currentMealId.value)
-})
-
-const areAllMealsValid = computed(() => {
-  return activeMealTypes.value.every(mealId => isMealValid(mealId))
-})
-
-// Detecta si alguna categoría tiene menos platos que el total de comensales
-const hasPartialAssignments = computed(() => {
-  return activeMealTypes.value.some(mealId => {
-    const count = getMealSelectedCount(mealId)
-    return count < totalGuests.value
-  })
-})
-
-const partialSummary = computed(() => {
-  return activeMealTypes.value
-    .filter(mealId => getMealSelectedCount(mealId) < totalGuests.value)
-    .map(mealId => `${mealLabels[mealId]} (${getMealSelectedCount(mealId)} de ${totalGuests.value})`)
-    .join(', ')
+  return allDishes.filter(d => d.mealType === currentMealType.value)
 })
 
 function updateDishCount(dishId: string, delta: number) {
-  const current = selections.value[dishId]?.count || 0
-  const newCount = Math.max(0, current + delta)
-  
-  selections.value[dishId].count = newCount
-  
-  const totalSides = Object.values(selections.value[dishId].sides).reduce((a, b) => a + b, 0)
-  if (totalSides > newCount) {
+  if (!selections.value[dishId]) {
+    selections.value[dishId] = { count: 0, sides: {} }
+  }
+  const current = selections.value[dishId].count
+  const next = Math.max(0, current + delta)
+  selections.value[dishId].count = next
+
+  if (next === 0) {
     selections.value[dishId].sides = {}
   }
 }
 
-function updateSideCount(dishId: string, sideName: string, delta: number) {
-  const dishCount = selections.value[dishId]?.count || 0
-  if (dishCount === 0) return
+function updateSideCount(dishId: string, side: string, delta: number) {
+  if (!selections.value[dishId] || selections.value[dishId].count <= 0) return
+  if (!selections.value[dishId].sides) {
+    selections.value[dishId].sides = {}
+  }
+  const current = selections.value[dishId].sides[side] || 0
+  
+  // Calcular total de acompañamientos ya asignados
+  const totalAssigned = Object.values(selections.value[dishId].sides).reduce((a, b) => a + b, 0)
+  const maxAllowed = selections.value[dishId].count
 
-  const currentSides = selections.value[dishId].sides[sideName] || 0
-  const currentTotalSides = Object.values(selections.value[dishId].sides).reduce((a, b) => a + b, 0)
+  if (delta > 0 && totalAssigned >= maxAllowed) {
+    return // No permite asignar más acompañamientos que platos
+  }
+
+  const next = Math.max(0, current + delta)
+  selections.value[dishId].sides[side] = next
   
-  if (delta > 0 && currentTotalSides >= dishCount) return
-  
-  const newSideCount = Math.max(0, currentSides + delta)
-  selections.value[dishId].sides[sideName] = newSideCount
+  if (next === 0) {
+    delete selections.value[dishId].sides[side]
+  }
 }
 
-function selectMealTab(index: number) {
-  if (index >= 0 && index < activeMealTypes.value.length) {
-    activeMealIndex.value = index
-  }
+// Mapa de validación de acompañamientos por plato (original r2.txt)
+const dishStatusMap = computed(() => {
+  const map: Record<string, { assignedSides: number; requiredSides: number; missing: number; isComplete: boolean }> = {}
+  allDishes.forEach(dish => {
+    const sel = selections.value[dish.id] || { count: 0, sides: {} }
+    const count = sel.count || 0
+    if (count === 0 || dish.availableSideDishes.length === 0) {
+      map[dish.id] = { assignedSides: 0, requiredSides: 0, missing: 0, isComplete: true }
+    } else {
+      const assigned = Object.values(sel.sides || {}).reduce((a, b) => a + b, 0)
+      const required = count
+      const missing = Math.max(0, required - assigned)
+      map[dish.id] = {
+        assignedSides: assigned,
+        requiredSides: required,
+        missing,
+        isComplete: missing === 0
+      }
+    }
+  })
+  return map
+})
+
+function getMealSelectedCount(mId: string): number {
+  return allDishes
+    .filter(d => d.mealType === mId)
+    .reduce((sum, d) => sum + (selections.value[d.id]?.count || 0), 0)
+}
+
+function isMealValid(mId: string): boolean {
+  const mealDishes = allDishes.filter(d => d.mealType === mId)
+  const count = getMealSelectedCount(mId)
+  if (count > totalGuests.value) return false
+  return mealDishes.every(d => dishStatusMap.value[d.id].isComplete)
+}
+
+const mealSelectedCount = computed(() => getMealSelectedCount(currentMealType.value))
+const isCurrentMealValid = computed(() => isMealValid(currentMealType.value))
+const areAllMealsValid = computed(() => activeMealTypes.value.every(mId => isMealValid(mId)))
+
+function selectMealTab(idx: number) {
+  activeMealIndex.value = idx
 }
 
 function handleNextMeal() {
   if (activeMealIndex.value < activeMealTypes.value.length - 1) {
     activeMealIndex.value++
-  } else {
-    handleGoToStep3()
   }
 }
 
+const showPartialModal = ref(false)
+
+const partialSummary = computed(() => {
+  return activeMealTypes.value
+    .map(mId => `${mealLabels[mId]}: ${getMealSelectedCount(mId)} de ${totalGuests.value}`)
+    .join(' · ')
+})
+
 function handleGoToStep3() {
-  if (!areAllMealsValid.value) return
-  
-  if (hasPartialAssignments.value) {
+  const hasPartial = activeMealTypes.value.some(mId => {
+    const cnt = getMealSelectedCount(mId)
+    return cnt > 0 && cnt < totalGuests.value
+  })
+
+  if (hasPartial) {
     showPartialModal.value = true
   } else {
     confirmAndProceed()
@@ -271,8 +265,7 @@ function handleGoToStep3() {
 }
 
 function confirmAndProceed() {
-  showPartialModal.value = false
-  store.selectedMenus = { ...selections.value }
+  store.selectedMenus = JSON.parse(JSON.stringify(selections.value))
   store.nextStep()
   router.push({ name: 'restaurant-step3' })
 }
@@ -285,16 +278,21 @@ function handleBack() {
     router.push({ name: 'restaurant-step1' })
   }
 }
+
+function formatCLP(val: number): string {
+  return '\$' + val.toLocaleString('es-CL')
+}
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto pb-32">
+  <div class="space-y-4 max-w-md mx-auto pb-28">
     
-    <!-- Indicador de Pasos Estándar (Único encabezado) -->
+    <!-- Indicador de Pasos Estándar -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="2" />
     </div>
 
+    <!-- Alerta de Guía r2.txt -->
     <BaseAlert variant="info" title="Selección de Menú por Servicio">
       Asigna los menús para tus {{ totalGuests }} comensales. Si deseas, puedes asignar menús solo a una parte del grupo.
     </BaseAlert>
@@ -327,29 +325,40 @@ function handleBack() {
       </button>
     </div>
 
-    <!-- Lista de Platos por Servicio -->
+    <!-- Lista de Platos por Servicio con Foto -->
     <div class="space-y-4">
       <div 
         v-for="dish in currentMealDishes" 
         :key="dish.id"
         :class="[
           'bg-white rounded-3xl border-2 p-4 transition-all shadow-sm space-y-3 relative',
-          dish.availableSideDishes.length > 0 && !dishStatusMap[dish.id].isComplete
+          dish.availableSideDishes.length > 0 && selections[dish.id]?.count > 0 && !dishStatusMap[dish.id].isComplete
             ? 'border-rose-500 bg-rose-50/20 ring-4 ring-rose-500/10'
             : selections[dish.id]?.count > 0
               ? 'border-brand-dark bg-white'
               : 'border-brand-border hover:border-gray-400'
         ]"
       >
+        <!-- Imagen del Plato -->
+        <div class="relative h-40 w-full bg-gray-100 rounded-2xl overflow-hidden mb-1">
+          <img 
+            :src="dish.image" 
+            :alt="dish.name"
+            class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            @error="(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80' }"
+          />
+          <div class="absolute top-2.5 right-2.5 bg-brand-dark/95 text-white font-black text-xs px-3 py-1 rounded-full backdrop-blur-xs border border-white/20 shadow-xs">
+            {{ formatCLP(dish.price) }}
+          </div>
+        </div>
+
         <div class="flex items-start justify-between gap-3">
           <div class="space-y-1">
             <h3 class="text-lg font-black text-brand-dark leading-tight">{{ dish.name }}</h3>
             <p class="text-xs font-bold text-gray-500 leading-relaxed">{{ dish.description }}</p>
-            <span class="inline-block text-base font-black text-brand-dark mt-1">
-              {{ formatCLP(dish.price) }}
-            </span>
           </div>
 
+          <!-- Contadores de Plato -->
           <div class="flex items-center gap-1.5 bg-brand-light p-1.5 rounded-2xl border-2 border-brand-border shrink-0">
             <button
               type="button"
@@ -371,7 +380,7 @@ function handleBack() {
           </div>
         </div>
 
-        <!-- Acompañamientos -->
+        <!-- Acompañamientos según r2.txt -->
         <div 
           v-if="selections[dish.id]?.count > 0 && dish.availableSideDishes.length > 0"
           class="pt-3 border-t-2 border-gray-100 space-y-2.5"
@@ -438,8 +447,8 @@ function handleBack() {
     </div>
 
     <!-- BARRA INFERIOR FIJA: CONTEO EN TIEMPO REAL + NAVEGACIÓN -->
-    <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="max-w-md mx-auto space-y-2.5">
+    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
+      <div class="space-y-2.5">
         
         <div class="flex items-center justify-between bg-brand-dark text-white px-3.5 py-2 rounded-xl text-xs">
           <div class="flex items-center gap-2">
@@ -516,7 +525,7 @@ function handleBack() {
     <!-- MODAL DE CONFIRMACIÓN PARA ASIGNACIÓN PARCIAL -->
     <div 
       v-if="showPartialModal" 
-      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
     >
       <div class="bg-white rounded-3xl p-6 border-2 border-brand-border shadow-2xl max-w-sm w-full space-y-4 text-center">
         <div class="w-12 h-12 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto">
