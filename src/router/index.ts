@@ -1,115 +1,130 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/client/HomeView.vue'
-import ContactView from '../views/client/ContactView.vue'
-
-// Cabañas
-import CabanaStep1View from '../views/client/cabana/CabanaStep1View.vue'
-import CabanaStep2View from '../views/client/cabana/CabanaStep2View.vue'
-import CabanaStep3View from '../views/client/cabana/CabanaStep3View.vue'
-import CabanaStep4View from '../views/client/cabana/CabanaStep4View.vue'
-
-// Restaurante
-import RestaurantStep1View from '../views/client/restaurante/RestaurantStep1View.vue'
-import RestaurantStep2View from '../views/client/restaurante/RestaurantStep2View.vue'
-import RestaurantStep3View from '../views/client/restaurante/RestaurantStep3View.vue'
-import RestaurantStep4View from '../views/client/restaurante/RestaurantStep4View.vue'
-
-// Camping
-import CampingStep1View from '../views/client/camping/CampingStep1View.vue'
-import CampingStep2View from '../views/client/camping/CampingStep2View.vue'
-import CampingStep3View from '../views/client/camping/CampingStep3View.vue'
-import CampingStep4View from '../views/client/camping/CampingStep4View.vue'
-
-// Administración
-import AdminDashboardView from '../views/admin/AdminDashboardView.vue'
+import { useAuthStore } from '../stores/authStore'
 
 const routes = [
+  // --- RUTAS PÚBLICAS (CLIENTE) ---
   {
     path: '/',
     name: 'home',
-    component: HomeView
+    component: () => import('../views/client/HomeView.vue')
   },
   {
     path: '/contacto',
     name: 'contact',
-    component: ContactView
+    component: () => import('../views/client/ContactView.vue')
   },
-  // Rutas Cabañas
+
+  // Flujo Cabañas
   {
-    path: '/cabanas/paso-1',
+    path: '/cabana/paso1',
     name: 'cabana-step1',
-    component: CabanaStep1View
+    component: () => import('../views/client/cabana/CabanaStep1View.vue')
   },
   {
-    path: '/cabanas/paso-2',
+    path: '/cabana/paso2',
     name: 'cabana-step2',
-    component: CabanaStep2View
+    component: () => import('../views/client/cabana/CabanaStep2View.vue')
   },
   {
-    path: '/cabanas/paso-3',
+    path: '/cabana/paso3',
     name: 'cabana-step3',
-    component: CabanaStep3View
+    component: () => import('../views/client/cabana/CabanaStep3View.vue')
   },
   {
-    path: '/cabanas/paso-4',
+    path: '/cabana/paso4',
     name: 'cabana-step4',
-    component: CabanaStep4View
+    component: () => import('../views/client/cabana/CabanaStep4View.vue')
   },
-  // Rutas Restaurante
+
+  // Flujo Camping
   {
-    path: '/restaurante/paso-1',
-    name: 'restaurant-step1',
-    component: RestaurantStep1View
-  },
-  {
-    path: '/restaurante/paso-2',
-    name: 'restaurant-step2',
-    component: RestaurantStep2View
-  },
-  {
-    path: '/restaurante/paso-3',
-    name: 'restaurant-step3',
-    component: RestaurantStep3View
-  },
-  {
-    path: '/restaurante/paso-4',
-    name: 'restaurant-step4',
-    component: RestaurantStep4View
-  },
-  // Rutas Camping
-  {
-    path: '/camping/paso-1',
+    path: '/camping/paso1',
     name: 'camping-step1',
-    component: CampingStep1View
+    component: () => import('../views/client/camping/CampingStep1View.vue')
   },
   {
-    path: '/camping/paso-2',
+    path: '/camping/paso2',
     name: 'camping-step2',
-    component: CampingStep2View
+    component: () => import('../views/client/camping/CampingStep2View.vue')
   },
   {
-    path: '/camping/paso-3',
+    path: '/camping/paso3',
     name: 'camping-step3',
-    component: CampingStep3View
+    component: () => import('../views/client/camping/CampingStep3View.vue')
   },
   {
-    path: '/camping/paso-4',
+    path: '/camping/paso4',
     name: 'camping-step4',
-    component: CampingStep4View
+    component: () => import('../views/client/camping/CampingStep4View.vue')
   },
-  // Panel Administrador
+
+  // Flujo Restaurante
   {
-    path: '/admin',
+    path: '/restaurante/paso1',
+    name: 'restaurant-step1',
+    component: () => import('../views/client/restaurante/RestaurantStep1View.vue')
+  },
+  {
+    path: '/restaurante/paso2',
+    name: 'restaurant-step2',
+    component: () => import('../views/client/restaurante/RestaurantStep2View.vue')
+  },
+  {
+    path: '/restaurante/paso3',
+    name: 'restaurant-step3',
+    component: () => import('../views/client/restaurante/RestaurantStep3View.vue')
+  },
+  {
+    path: '/restaurante/paso4',
+    name: 'restaurant-step4',
+    component: () => import('../views/client/restaurante/RestaurantStep4View.vue')
+  },
+
+  // --- RUTAS DE ADMINISTRACIÓN ---
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: () => import('../views/admin/LoginView.vue')
+  },
+  {
+    path: '/admin/registro',
+    name: 'admin-register',
+    component: () => import('../views/admin/RegisterView.vue')
+  },
+  {
+    path: '/admin/dashboard',
     name: 'admin-dashboard',
-    component: AdminDashboardView
+    component: () => import('../views/admin/AdminDashboardView.vue'),
+    meta: { requiresAuth: true } // 🔒 Requiere inicio de sesión
+  },
+
+  // Redirección por defecto si la ruta no existe
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: { name: 'home' }
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
-  scrollBehavior() {
-    return { top: 0 }
+  routes
+})
+
+// GUARDIÁN DE NAVEGACIÓN (Protección de rutas de administración)
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+
+  // 1. Si la ruta requiere autenticación y el usuario NO ha iniciado sesión
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next({ name: 'admin-login' })
+  } 
+  // 2. Si el usuario ya está autenticado e intenta entrar a Login o Registro, va directo al Dashboard
+  else if ((to.name === 'admin-login' || to.name === 'admin-register') && authStore.isAuthenticated) {
+    next({ name: 'admin-dashboard' })
+  } 
+  // 3. Continuar normalmente
+  else {
+    next()
   }
 })
 
