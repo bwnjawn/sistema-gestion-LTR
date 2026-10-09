@@ -2,7 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 
 const routes = [
-  // --- RUTAS PÚBLICAS (CLIENTE) ---
+  // ==========================================
+  // RUTAS PÚBLICAS (CLIENTE)
+  // ==========================================
   {
     path: '/',
     name: 'home',
@@ -13,8 +15,7 @@ const routes = [
     name: 'contact',
     component: () => import('../views/client/ContactView.vue')
   },
-
-  // Flujo Cabañas
+  // Flujo Reserva Cabaña
   {
     path: '/cabana/paso1',
     name: 'cabana-step1',
@@ -35,8 +36,7 @@ const routes = [
     name: 'cabana-step4',
     component: () => import('../views/client/cabana/CabanaStep4View.vue')
   },
-
-  // Flujo Camping
+  // Flujo Reserva Camping
   {
     path: '/camping/paso1',
     name: 'camping-step1',
@@ -57,8 +57,7 @@ const routes = [
     name: 'camping-step4',
     component: () => import('../views/client/camping/CampingStep4View.vue')
   },
-
-  // Flujo Restaurante
+  // Flujo Reserva Restaurante
   {
     path: '/restaurante/paso1',
     name: 'restaurant-step1',
@@ -79,8 +78,9 @@ const routes = [
     name: 'restaurant-step4',
     component: () => import('../views/client/restaurante/RestaurantStep4View.vue')
   },
-
-  // --- RUTAS DE AUTENTICACIÓN (Sin Layout de Admin) ---
+  // ==========================================
+  // RUTAS DE AUTENTICACIÓN (Sin Layout de Admin)
+  // ==========================================
   {
     path: '/admin/login',
     name: 'admin-login',
@@ -91,12 +91,13 @@ const routes = [
     name: 'admin-register',
     component: () => import('../views/admin/RegisterView.vue')
   },
-
-  // --- RUTAS DE ADMINISTRACIÓN PROTEGIDAS (Con Layout de Admin) ---
+  // ==========================================
+  // RUTAS DE ADMINISTRACIÓN PROTEGIDAS (AdminLayout)
+  // ==========================================
   {
     path: '/admin',
     component: () => import('../layouts/AdminLayout.vue'),
-    meta: { requiresAuth: true }, // 🔒 Protección para todo el módulo
+    meta: { requiresAuth: true }, // Protección para todo el grupo de rutas hijas
     children: [
       {
         path: '',
@@ -108,33 +109,32 @@ const routes = [
         component: () => import('../views/admin/AdminDashboardView.vue')
       },
       {
-        path: 'solicitudes',
-        name: 'admin-requests',
-        component: () => import('../views/admin/AdminDashboardView.vue')
-      },
-      {
         path: 'calendario',
         name: 'admin-calendar',
         component: () => import('../views/admin/AdminCalendarView.vue')
       },
       {
+        path: 'solicitudes',
+        name: 'admin-requests',
+        component: () => import('../views/admin/AdminDashboardView.vue')
+      },
+      {
         path: 'editar',
         name: 'admin-edit',
-        component: () => import('../views/admin/AdminDashboardView.vue')
+        component: () => import('../views/admin/AdminCatalogEditView.vue')
+      },
+      {
+        path: 'catalogo',
+        name: 'admin-catalog',
+        component: () => import('../views/admin/AdminCatalogEditView.vue')
       },
       {
         path: 'mas',
         name: 'admin-more',
         component: () => import('../views/admin/AdminDashboardView.vue')
-      },
-      {
-        path: 'catalogo',
-        name: 'admin-catalog',
-        component: () => import('../views/admin/AdminDashboardView.vue')
       }
     ]
   },
-
   // Redirección por defecto si la ruta no existe
   {
     path: '/:pathMatch(.*)*',
@@ -147,19 +147,19 @@ const router = createRouter({
   routes
 })
 
-// GUARDIÁN DE NAVEGACIÓN (Protección de rutas de administración con authStore)
+// GUARDIÁN DE NAVEGACIÓN (Protección de rutas administrativas con authStore)
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
-
-  // 1. Si la ruta o su ruta padre requiere autenticación y el usuario NO ha iniciado sesión
+  
+  // 1. Si la ruta requiere autenticación y el usuario NO está autenticado
   if (to.matched.some(record => record.meta.requiresAuth) && !authStore.isAuthenticated) {
     next({ name: 'admin-login' })
   }
-  // 2. Si el usuario ya está autenticado e intenta entrar a Login o Registro, va directo al Dashboard
+  // 2. Si el usuario ya inició sesión e intenta ir a Login/Registro, redirigir al Dashboard
   else if ((to.name === 'admin-login' || to.name === 'admin-register') && authStore.isAuthenticated) {
     next({ name: 'admin-dashboard' })
   }
-  // 3. Continuar normalmente
+  // 3. Continuar la navegación normal
   else {
     next()
   }
