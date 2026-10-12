@@ -1,119 +1,128 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight, ArrowLeft, Users, Calendar as CalendarIcon, Moon } from 'lucide-vue-next'
-import { useReservationStore } from '../../../stores/reservationStore'
-import BaseButton from '../../../components/ui/BaseButton.vue'
+import { ArrowRight, ArrowLeft, Users, Moon } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseCalendar from '../../../components/ui/BaseCalendar.vue'
+import BaseButton from '../../../components/ui/BaseButton.vue'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import { useReservationStore } from '../../../stores/reservationStore'
 
 const router = useRouter()
-const store = useReservationStore()
+const reservationStore = useReservationStore()
 
-const checkIn = ref<Date | null>(
-  store.checkInDate ? new Date(store.checkInDate + 'T00:00:00') : new Date(2026, 9, 10)
-)
-const checkOut = ref<Date | null>(
-  store.checkOutDate ? new Date(store.checkOutDate + 'T00:00:00') : new Date(2026, 9, 12)
-)
-const guests = ref<number>(store.guestsCount || 4)
+reservationStore.setService('cabana')
 
-function handleCalendarChange(payload: { start: Date | null; end: Date | null }) {
-  checkIn.value = payload.start
-  checkOut.value = payload.end
-  if (payload.start) store.checkInDate = formatDateISO(payload.start)
-  if (payload.end) store.checkOutDate = formatDateISO(payload.end)
-}
-
-function formatDateISO(d: Date) {
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function formatDateShort(d: Date | null) {
-  if (!d) return '—'
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
-}
-
-const nightsCount = computed(() => {
-  if (!checkIn.value || !checkOut.value) return 0
-  const diffTime = checkOut.value.getTime() - checkIn.value.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24))
-  return Math.max(0, diffDays)
+// Conversión de string (YYYY-MM-DD) a objeto Date para BaseCalendar (corrige TS2322)
+const calendarStartDate = computed<Date | null>(() => {
+  if (!reservationStore.checkInDate) return null
+  const [y, m, d] = reservationStore.checkInDate.split('-').map(Number)
+  return new Date(y, m - 1, d)
 })
 
-function handleGuestsInput(e: Event) {
-  const target = e.target as HTMLInputElement
-  let val = parseInt(target.value) || 1
-  if (val < 1) val = 1
-  if (val > 20) val = 20
-  guests.value = val
-  store.guestsCount = val
+const calendarEndDate = computed<Date | null>(() => {
+  if (!reservationStore.checkOutDate) return null
+  const [y, m, d] = reservationStore.checkOutDate.split('-').map(Number)
+  return new Date(y, m - 1, d)
+})
+
+// Manejo del evento @change con tipo { start: Date | null; end: Date | null } (corrige TS2322)
+function handleCalendarChange(payload: { start: Date | null; end: Date | null }) {
+  if (payload.start) {
+    const year = payload.start.getFullYear()
+    const month = String(payload.start.getMonth() + 1).padStart(2, '0')
+    const day = String(payload.start.getDate()).padStart(2, '0')
+    reservationStore.checkInDate = `${year}-${month}-${day}`
+  } else {
+    reservationStore.checkInDate = ''
+  }
+
+  if (payload.end) {
+    const year = payload.end.getFullYear()
+    const month = String(payload.end.getMonth() + 1).padStart(2, '0')
+    const day = String(payload.end.getDate()).padStart(2, '0')
+    reservationStore.checkOutDate = `${year}-${month}-${day}`
+  } else {
+    reservationStore.checkOutDate = ''
+  }
 }
 
+// Controles para cantidad de huéspedes (+, - e ingreso manual)
 function incrementGuests() {
-  if (guests.value < 20) {
-    guests.value++
-    store.guestsCount = guests.value
-  }
+  reservationStore.guestsCount++
 }
 
 function decrementGuests() {
-  if (guests.value > 1) {
-    guests.value--
-    store.guestsCount = guests.value
+  if (reservationStore.guestsCount > 1) {
+    reservationStore.guestsCount--
   }
 }
 
-const isValid = computed(() => {
-  return !!checkIn.value && !!checkOut.value && nightsCount.value >= 1
+function handleGuestsInput(event: Event) {
+  const target = event.target as HTMLInputElement
+  const val = parseInt(target.value, 10)
+  if (isNaN(val) || val < 1) {
+    reservationStore.guestsCount = 1
+  } else {
+    reservationStore.guestsCount = Math.min(20, val)
+  }
+}
+
+// Cálculo de noches
+const nightsCount = computed(() => {
+  if (!reservationStore.checkInDate || !reservationStore.checkOutDate) return 1
+  const diff = new Date(reservationStore.checkOutDate).getTime() - new Date(reservationStore.checkInDate).getTime()
+  const days = Math.ceil(diff / (1000 * 3600 * 24))
+  return days > 0 ? days : 1
 })
 
-function handleNext() {
-  if (!isValid.value || !checkIn.value || !checkOut.value) return
-  
-  store.checkInDate = formatDateISO(checkIn.value)
-  store.checkOutDate = formatDateISO(checkOut.value)
-  store.guestsCount = guests.value
-  
-  store.nextStep()
-  router.push({ name: 'cabana-step2' })
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return '-'
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  return `${d} ${months[m - 1]}`
 }
 
 function handleBack() {
   router.push('/')
 }
+
+function handleNext() {
+  if (reservationStore.checkInDate && reservationStore.checkOutDate) {
+    reservationStore.nextStep()
+    router.push('/cabana/paso2')
+  }
+}
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto pb-28">
-    
+  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+    <!-- Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="1" />
     </div>
 
+    <!-- Alerta Informativa -->
     <BaseAlert variant="info" title="Alojamiento en Cabaña">
       Selecciona las fechas de llegada y salida (mínimo 1 noche) y la cantidad de huéspedes.
     </BaseAlert>
 
+    <!-- Contenedor del Calendario y Huéspedes -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       
+      <!-- Calendario Interactivo -->
       <div class="space-y-2">
         <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider">
           Selecciona Estadía (Llegada - Salida)
         </label>
         <BaseCalendar 
-          :start-date="checkIn"
-          :end-date="checkOut"
+          :start-date="calendarStartDate"
+          :end-date="calendarEndDate"
           @change="handleCalendarChange"
         />
       </div>
 
+      <!-- Selector de Huéspedes (Botones + - e Input Manual Centrado) -->
       <div class="pt-3 border-t-2 border-gray-100 space-y-2">
         <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -132,14 +141,14 @@ function handleBack() {
           <div class="flex flex-col items-center grow">
             <input 
               type="number"
-              :value="guests"
+              :value="reservationStore.guestsCount"
               @input="handleGuestsInput"
               min="1"
               max="20"
               class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
-            <span class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mt-1 block">
-              {{ guests === 1 ? 'Persona' : 'Personas' }}
+            <span class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
+              {{ reservationStore.guestsCount === 1 ? 'Persona' : 'Personas' }}
             </span>
           </div>
 
@@ -153,10 +162,11 @@ function handleBack() {
         </div>
       </div>
 
+      <!-- Resumen de Estadía -->
       <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-xs font-bold text-gray-700">
         <div>
           <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Llegada</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(checkIn) }}</span>
+          <span class="text-brand-dark font-black">{{ formatDateShort(reservationStore.checkInDate) }}</span>
         </div>
         <div class="text-center border-x border-gray-200 px-3">
           <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Noches</span>
@@ -167,13 +177,13 @@ function handleBack() {
         </div>
         <div class="text-right">
           <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Salida</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(checkOut) }}</span>
+          <span class="text-brand-dark font-black">{{ formatDateShort(reservationStore.checkOutDate) }}</span>
         </div>
       </div>
 
     </div>
 
-    <!-- BOTONES FIJOS EN LA PARTE INFERIOR -->
+    <!-- Botones Flotantes Inferiores -->
     <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
       <div class="max-w-md mx-auto flex items-center gap-3">
         <BaseButton variant="outline" size="lg" @click="handleBack">
@@ -185,7 +195,7 @@ function handleBack() {
           variant="primary" 
           size="lg" 
           fullWidth 
-          :disabled="!isValid"
+          :disabled="!reservationStore.checkInDate || !reservationStore.checkOutDate"
           @click="handleNext"
         >
           Ver Cabañas
@@ -193,6 +203,5 @@ function handleBack() {
         </BaseButton>
       </div>
     </div>
-
   </div>
 </template>

@@ -28,7 +28,7 @@
 import { useRouter } from 'vue-router'
 import { Plus } from 'lucide-vue-next'
 import AdminHeader from '../components/ui/AdminHeader.vue'
-import AdminBottomNav from '../components/ui/AdminBottomNav.vue'
+import AdminBottomNav from '../components/admin/AdminBottomNav.vue'
 
 const router = useRouter()
 

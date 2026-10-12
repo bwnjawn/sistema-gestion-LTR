@@ -2,101 +2,108 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  Calendar, 
-  Receipt, 
-  Send, 
-  ArrowLeft, 
-  FileText, 
-  CheckCircle2, 
-  FileCheck, 
-  BedDouble, 
-  Tent, 
-  RotateCcw,
-  User,
-  Phone,
-  Utensils,
-  Clock,
-  Pencil
+  ArrowLeft, Calendar, Pencil, Clock, Receipt, User, Phone, Mail,
+  FileText, Send, CheckCircle2, FileCheck, Home, Tent, RotateCcw, Utensils 
 } from 'lucide-vue-next'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
-import BaseButton from '../../../components/ui/BaseButton.vue'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
+import BaseButton from '../../../components/ui/BaseButton.vue'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
-import { useAdminStore } from '../../../stores/adminStore'
+import { formatCLP } from '../../../lib/format'
+import { useRequestsStore } from '../../../stores/requestsStore'
 
 const router = useRouter()
 const store = useReservationStore()
-const adminStore = useAdminStore()
 
 const isSubmitted = ref(false)
 const reservationCode = ref('')
 
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return ''
-  const [, month, day] = dateStr.split('-')
-  if (!day || !month) return dateStr
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  const monthIdx = parseInt(month, 10) - 1
-  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
+const mealLabels: Record<string, string> = {
+  desayuno: 'Desayuno',
+  almuerzo: 'Almuerzo',
+  once: 'Once'
 }
 
-function navigateToStep(stepNumber: number) {
-  router.push(`/restaurante/paso${stepNumber}`)
-}
+const activeMealNames = computed(() => {
+  const order = ['desayuno', 'almuerzo', 'once']
+  return order
+    .filter(m => store.selectedMealTypes.includes(m))
+    .map(m => mealLabels[m])
+    .join(', ') || 'Restaurante'
+})
 
-const displayMeals = computed(() => {
-  if (Array.isArray(store.selectedMeals) && store.selectedMeals.length > 0) {
-    return store.selectedMeals.filter((m: any) => (m.count || m.quantity || 0) > 0)
-  }
-  
-  if (store.selectedMenus && Object.keys(store.selectedMenus).length > 0) {
-    const list: any[] = []
-    Object.entries(store.selectedMenus).forEach(([dishId, data]: [string, any]) => {
-      if (data && data.count > 0) {
-        const dish = adminStore.dishes?.find((d: any) => d.id === dishId)
-        list.push({
-          id: dishId,
-          name: dish?.name || data.name || 'Menú Seleccionado',
-          price: dish?.price || data.price || 0,
-          count: data.count,
-          sides: data.sides || {},
-          fixedSide: dish?.fixedSide
-        })
-      }
-    })
-    return list
-  }
-  
-  return []
+const selectedMealItems = computed(() => {
+  return (store.selectedMeals as any[]) || []
 })
 
 const subtotal = computed(() => {
-  return displayMeals.value.reduce((sum: number, meal: any) => {
-    const price = Number(meal.price || meal.unitPrice || 0)
-    const count = Number(meal.count || meal.quantity || 1)
-    return sum + (price * count)
-  }, 0)
+  return selectedMealItems.value.reduce((acc, item) => acc + (item.price * (item.quantity || item.count || 1)), 0)
 })
 
-const ivaAmount = computed(() => Math.round(subtotal.value * 0.19))
-const totalWithIva = computed(() => subtotal.value + ivaAmount.value)
+const ivaAmount = computed(() => {
+  return Math.round(subtotal.value * 0.19)
+})
 
-function formatCLP(amount: number): string {
-  return `$${amount.toLocaleString('es-CL')}`
+const totalWithIva = computed(() => {
+  return subtotal.value + ivaAmount.value
+})
+
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return '-'
+  const [, m, d] = dateStr.split('-').map(Number)
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  return `${d} ${months[m - 1]}`
 }
 
+const formattedScheduleDisplay = computed(() => {
+  if (!store.checkInDate) return 'Sin fecha'
+  const timeStr = store.restaurantTime ? ` (${store.restaurantTime} hrs)` : ''
+  return `${formatDateShort(store.checkInDate)}${timeStr}`
+})
+
+function formatSidesList(sidesObj: Record<string, number> | undefined): string {
+  if (!sidesObj) return ''
+  const entries = Object.entries(sidesObj).filter(([, count]) => count > 0)
+  if (entries.length === 0) return ''
+  return entries.map(([name, count]) => `${name} (${count})`).join(', ')
+}
+
+const requestsStore = useRequestsStore()
+
 function handleSendRequest() {
-  reservationCode.value = 'SOL-' + Math.floor(1000 + Math.random() * 9000)
+  // Construir etiqueta de comida/horario de forma segura con los tipos reales del store
+  const mealTypesLabel = store.selectedMealTypes && store.selectedMealTypes.length > 0
+    ? store.selectedMealTypes.join(', ')
+    : 'Mesa Restaurante'
+    
+  const scheduleLabel = store.restaurantTime ||
+    (store.selectedMealTypes && store.selectedMealTypes.length > 0
+      ? store.selectedMealTypes.map(m => store.mealTimes?.[m]).filter(Boolean).join(' / ')
+      : 'Por coordinar')
+
+  // 1. Guardar en el store de solicitudes con los campos exactos de reservationStore
+  requestsStore.addRequest({
+    requestCode: reservationCode.value,
+    clientName: store.clientName,
+    clientPhone: store.clientPhone,
+    type: 'restaurante',
+    resourceName: `Restaurante (${mealTypesLabel})`,
+    date: store.checkInDate,
+    timeOrDuration: scheduleLabel,
+    guestsCount: store.guestsCount,
+    totalAmount: totalWithIva.value,
+    depositAmount: Math.round(totalWithIva.value * 0.3),
+    details: {
+      comments: store.comments,
+      selectedMeals: store.selectedMeals || []
+    }
+  })
+
+  // 2. Mostrar pantalla de confirmación exitosa
   isSubmitted.value = true
 }
 
-function handleGoHome() {
-  store.resetStore()
-  router.push('/')
-}
-
-// HU-5.2: Redirección con preservación de estado global (Fechas, huéspedes y contacto)
 function handleGoToCabana() {
   store.prepareCrossServiceBooking('cabana')
   router.push('/cabana/paso1')
@@ -106,32 +113,38 @@ function handleGoToCamping() {
   store.prepareCrossServiceBooking('camping')
   router.push('/camping/paso1')
 }
+
+function handleGoHome() {
+  store.resetStore()
+  router.push('/')
+}
 </script>
 
 <template>
-  <div class="space-y-4 pb-24">
-    <div v-if="!isSubmitted" class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
-      <StepIndicator :current-step="4" />
-    </div>
-
+  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+    
     <!-- PANTALLA A: REVISIÓN DE LA SOLICITUD -->
     <div v-if="!isSubmitted" class="space-y-4">
-      <BaseAlert variant="info" title="Revisa tu solicitud de restaurante">
-        Verifica tu selección de menús y horarios antes de confirmar. Puedes editar cualquier sección.
+      <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
+        <StepIndicator :current-step="4" />
+      </div>
+
+      <BaseAlert variant="info" title="Revisa tu solicitud antes de enviar">
+        Verifica los parámetros y menús seleccionados antes de enviar la reserva.
       </BaseAlert>
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
         
-        <!-- 1. Fechas y Horario con Edición (Paso 1) -->
+        <!-- 1. Fechas y Atenciones con Botón Editar -->
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              Fecha y Horario de Atención
+              Fecha y Atenciones
             </h3>
             <button 
               type="button" 
-              @click="navigateToStep(1)"
+              @click="router.push('/restaurante/paso1')"
               class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
             >
               <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
@@ -141,41 +154,25 @@ function handleGoToCamping() {
 
           <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
             <div class="flex justify-between">
-              <span>Fecha:</span>
-              <span class="text-brand-dark font-black uppercase">{{ formatDateShort(store.checkInDate) }}</span>
+              <span>Servicios:</span>
+              <span class="text-brand-dark font-black uppercase">{{ activeMealNames }}</span>
             </div>
-            
-            <div v-if="store.selectedMealTypes && store.selectedMealTypes.length > 0" class="space-y-1 pt-1 border-t border-gray-200/60">
-              <div 
-                v-for="mId in store.selectedMealTypes" 
-                :key="mId" 
-                class="flex justify-between items-center"
-              >
-                <span class="capitalize text-gray-600">{{ mId }}:</span>
-                <span class="text-brand-dark font-black flex items-center gap-1">
-                  <Clock class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-                  {{ store.mealTimes?.[mId] || store.restaurantTime || 'Por definir' }} hrs
-                </span>
-              </div>
-            </div>
-
-            <div v-else class="flex justify-between">
-              <span>Hora solicitada:</span>
-              <span class="text-brand-dark font-black flex items-center gap-1">
-                <Clock class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-                {{ store.restaurantTime || 'Por coordinar' }}
+            <div class="flex justify-between items-start gap-2">
+              <span class="shrink-0">Fecha y Horario:</span>
+              <span class="text-brand-dark font-black text-right flex items-center justify-end gap-1">
+                <Clock class="w-3.5 h-3.5 text-brand-accent shrink-0 stroke-[2.5]" />
+                {{ formattedScheduleDisplay }}
               </span>
             </div>
-
-            <div class="flex justify-between pt-1 border-t border-gray-200/60">
+            <div class="flex justify-between">
               <span>Comensales:</span>
               <span class="text-brand-dark font-black">{{ store.guestsCount }} personas</span>
             </div>
           </div>
         </div>
 
-        <!-- 2. Desglose de Platos Seleccionados con Edición (Paso 2) -->
-        <div class="space-y-3">
+        <!-- 2. Detalle de Platos Seleccionados con Botón Editar -->
+        <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -183,7 +180,7 @@ function handleGoToCamping() {
             </h3>
             <button 
               type="button" 
-              @click="navigateToStep(2)"
+              @click="router.push('/restaurante/paso2')"
               class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
             >
               <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
@@ -191,39 +188,30 @@ function handleGoToCamping() {
             </button>
           </div>
 
-          <div v-if="displayMeals.length > 0" class="space-y-2">
+          <div class="space-y-2">
             <div 
-              v-for="(meal, idx) in displayMeals" 
-              :key="idx" 
-              class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-1 text-xs"
+              v-for="(item, idx) in selectedMealItems" 
+              :key="idx"
+              class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-1 text-xs font-bold text-gray-700"
             >
-              <div class="flex justify-between items-center font-black text-brand-dark text-sm">
-                <span>{{ meal.name }} (x{{ meal.count }})</span>
-                <span>{{ formatCLP((meal.price || 0) * (meal.count || 1)) }}</span>
-              </div>
-              <div class="text-gray-500 font-bold text-[11px]">
-                <span>Precio unitario: {{ formatCLP(meal.price || 0) }}</span>
-              </div>
-
-              <!-- HU-3.3: Muestra Acompañamiento Fijo o Lista Elegida -->
-              <div v-if="meal.fixedSide" class="text-[11px] text-emerald-800 font-bold pt-0.5">
-                <span>Acompañamiento fijo: <strong>{{ meal.fixedSide }}</strong></span>
-              </div>
-              <div v-else-if="meal.sides && Object.keys(meal.sides).length > 0" class="text-[11px] text-brand-accent font-semibold pt-0.5">
-                <span class="font-extrabold">Acompañamientos: </span>
-                <span>
-                  {{ 
-                    typeof meal.sides === 'object' && !Array.isArray(meal.sides)
-                      ? Object.entries(meal.sides).filter(([, c]) => Number(c) > 0).map(([s, c]) => `${c} ${s}`).join(', ')
-                      : Array.isArray(meal.sides) ? meal.sides.join(', ') : meal.sides
-                  }}
+              <div class="flex justify-between items-center">
+                <span class="text-brand-dark font-black text-sm">
+                  {{ item.quantity || item.count }}x {{ item.name }}
+                </span>
+                <span class="text-brand-dark font-black">
+                  {{ formatCLP(item.price * (item.quantity || item.count || 1)) }}
                 </span>
               </div>
-            </div>
-          </div>
 
-          <div v-else class="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-bold">
-            No se han registrado platos específicos para esta solicitud.
+              <!-- Acompañamiento fijo o elegible -->
+              <p v-if="item.fixedSide" class="text-[11px] text-gray-500 font-semibold">
+                Acompañamiento: <span class="text-gray-700 font-bold">{{ item.fixedSide }}</span>
+              </p>
+
+              <p v-else-if="formatSidesList(item.sides || item.sideSelections)" class="text-[11px] text-gray-500 font-semibold">
+                Acompañamientos: <span class="text-gray-700 font-bold">{{ formatSidesList(item.sides || item.sideSelections) }}</span>
+              </p>
+            </div>
           </div>
         </div>
 
@@ -231,7 +219,7 @@ function handleGoToCamping() {
         <div class="space-y-3">
           <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
             <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Presupuesto Total
+            Presupuesto
           </h3>
 
           <div class="space-y-2 text-sm font-bold">
@@ -252,7 +240,7 @@ function handleGoToCamping() {
           <DepositInfoCard :total-with-iva="totalWithIva" service-name="restaurante" />
         </div>
 
-        <!-- 4. Contacto del Cliente con Edición (Paso 3) -->
+        <!-- 4. Contacto del Cliente con Botón Editar -->
         <div class="space-y-3">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -261,7 +249,7 @@ function handleGoToCamping() {
             </h3>
             <button 
               type="button" 
-              @click="navigateToStep(3)"
+              @click="router.push('/restaurante/paso3')"
               class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
             >
               <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
@@ -281,10 +269,17 @@ function handleGoToCamping() {
                 {{ store.clientPhone || 'Sin registrar' }}
               </span>
             </div>
+            <div v-if="store.clientEmail" class="flex justify-between">
+              <span>Correo:</span>
+              <span class="text-brand-dark font-black flex items-center gap-1">
+                <Mail class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
+                {{ store.clientEmail }}
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- 5. Comentarios u Observaciones con Edición (Paso 3) -->
+        <!-- 5. Comentarios con Botón Editar -->
         <div v-if="store.comments" class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -293,29 +288,28 @@ function handleGoToCamping() {
             </h3>
             <button 
               type="button" 
-              @click="navigateToStep(3)"
+              @click="router.push('/restaurante/paso3')"
               class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
             >
               <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
               Editar
             </button>
           </div>
-          
           <p class="bg-brand-light p-3.5 rounded-2xl border border-brand-border text-xs font-bold text-gray-700 italic">
             "{{ store.comments }}"
           </p>
         </div>
       </div>
 
-      <!-- Navegación Flotante -->
+      <!-- Navegación Flotante Fija -->
       <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
         <div class="max-w-md mx-auto flex items-center gap-3">
-          <BaseButton variant="outline" size="lg" @click="navigateToStep(3)">
+          <BaseButton variant="outline" size="lg" @click="router.push('/restaurante/paso3')">
             <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
             Volver
           </BaseButton>
 
-          <BaseButton variant="success" size="lg" fullWidth @click="handleSendRequest">
+          <BaseButton variant="primary" size="lg" fullWidth @click="handleSendRequest">
             <Send class="w-5 h-5 mr-1.5 stroke-[2.5]" />
             Enviar Solicitud
           </BaseButton>
@@ -323,9 +317,9 @@ function handleGoToCamping() {
       </div>
     </div>
 
-    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA CON VENTA CRUZADA (HU-5.2) -->
+    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA CON VENTA CRUZADA -->
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
-      <div class="w-16 h-16 bg-emerald-100 text-status-success rounded-full flex items-center justify-center mx-auto shadow-xs">
+      <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-xs border-2 border-emerald-300">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
       </div>
 
@@ -340,18 +334,18 @@ function handleGoToCamping() {
         </h2>
 
         <p class="text-xs sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
-          Registramos tu solicitud de menú para <strong class="text-brand-dark font-black">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
+          Registramos tu solicitud de restaurante para tu grupo de <strong class="text-brand-dark font-black">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
         </p>
       </div>
 
       <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-xs font-bold text-gray-700">
         <div class="flex justify-between items-center">
           <span class="text-gray-500">Servicio:</span>
-          <span class="text-brand-dark font-black">Menús de Restaurante</span>
+          <span class="text-brand-dark font-black">{{ activeMealNames }}</span>
         </div>
-        <div class="flex justify-between items-center">
-          <span class="text-gray-500">Fecha:</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }}</span>
+        <div class="flex justify-between items-start gap-2">
+          <span class="text-gray-500 shrink-0">Fecha y Horario:</span>
+          <span class="text-brand-dark font-black text-right">{{ formattedScheduleDisplay }}</span>
         </div>
         <div class="flex justify-between items-center border-t border-gray-200/60 pt-2 mt-1">
           <span class="text-gray-500">Total Estimado:</span>
@@ -359,15 +353,15 @@ function handleGoToCamping() {
         </div>
       </div>
 
-      <!-- BANNER DE VENTA CRUZADA CON DATOS CONSERVADOS (HU-5.2) -->
+      <!-- Venta Cruzada con Conservación de Datos -->
       <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl text-left space-y-3">
         <div class="flex items-center gap-2 text-amber-950 font-black text-sm">
-          <Utensils class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
-          <span>¿Quieres alojar en cabaña o acampar?</span>
+          <Home class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
+          <span>¿Quieres agregar alojamiento o espacio de camping?</span>
         </div>
 
         <p class="text-xs font-semibold text-amber-900 leading-relaxed">
-          Conservamos las fechas y tu grupo de <strong class="text-amber-950 font-black">{{ store.guestsCount }} personas</strong> para que agregues cabañas o camping sin volver a llenar tus datos.
+          Conservamos la fecha y tu grupo de <strong class="text-amber-950 font-black">{{ store.guestsCount }} personas</strong> para que selecciones tus alojamientos sin volver a llenar datos.
         </p>
 
         <div class="grid grid-cols-2 gap-2 pt-1">
@@ -376,8 +370,8 @@ function handleGoToCamping() {
             @click="handleGoToCabana"
             class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
           >
-            <BedDouble class="w-4 h-4 stroke-[2.5]" />
-            <span>Cabañas</span>
+            <Home class="w-4 h-4 stroke-[2.5]" />
+            <span>Cabaña</span>
           </button>
 
           <button
@@ -398,5 +392,6 @@ function handleGoToCamping() {
         </BaseButton>
       </div>
     </div>
+
   </div>
 </template>

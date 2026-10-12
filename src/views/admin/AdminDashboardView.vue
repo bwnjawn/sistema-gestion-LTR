@@ -1,98 +1,132 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { 
+  Home, Inbox, Calendar, Grid, Settings, ArrowRight, 
+  Users, CheckCircle2, Clock, AlertCircle 
+} from 'lucide-vue-next'
+import AdminBottomNav from '../../components/admin/AdminBottomNav.vue'
+import { useRequestsStore } from '../../stores/requestsStore'
+import { useCatalogStore } from '../../stores/catalogStore'
+import { formatCLP } from '../../lib/format'
+
+const router = useRouter()
+const requestsStore = useRequestsStore()
+const catalogStore = useCatalogStore()
+
+const pendingRequests = computed(() => requestsStore.requests.filter(r => r.status === 'pending'))
+const confirmedRequests = computed(() => requestsStore.requests.filter(r => r.status === 'confirmed'))
+
+const totalRevenue = computed(() => {
+  return confirmedRequests.value.reduce((acc, r) => acc + (r.totalAmount || 0), 0)
+})
+
+function navigateTo(path: string) {
+  router.push(path)
+}
+</script>
+
 <template>
-  <div class="space-y-6">
-    <!-- Banner de Sincronización / Conflictos Offline (si existen) -->
-    <div 
-      v-if="adminStore.hasConflicts" 
-      class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg shadow-sm"
-    >
-      <div class="flex items-start justify-between">
-        <div>
-          <h3 class="text-sm font-bold text-amber-800">Sincronización pendiente</h3>
-          <p class="text-xs text-amber-700 mt-1">
-            Se detectaron reservas ingresadas sin conexión que requieren revisión.
-          </p>
+  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+    <!-- Encabezado Inicio -->
+    <div class="bg-brand-dark text-white p-5 rounded-3xl border-2 border-brand-border shadow-sm flex items-center justify-between">
+      <div>
+        <span class="text-[10px] font-black text-emerald-300 uppercase tracking-wider block">
+          Panel Principal
+        </span>
+        <h1 class="text-xl font-black tracking-tight">Los Troncos de Repil</h1>
+      </div>
+      <div class="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20">
+        <Home class="w-5 h-5 text-emerald-300 stroke-[2.5]" />
+      </div>
+    </div>
+
+    <!-- Métricas Generales -->
+    <div class="grid grid-cols-2 gap-3">
+      <div 
+        @click="navigateTo('/admin/solicitudes')"
+        class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs cursor-pointer hover:border-brand-dark transition-all"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-black text-amber-800 uppercase bg-amber-100 px-2 py-0.5 rounded-full">
+            Pendientes
+          </span>
+          <Clock class="w-4 h-4 text-amber-600 stroke-[2.5]" />
         </div>
-        <button 
-          @click="router.push('/admin/solicitudes')"
-          class="text-xs bg-amber-600 text-white px-3 py-1.5 rounded-md font-medium hover:bg-amber-700"
+        <span class="text-3xl font-black text-brand-dark block">{{ pendingRequests.length }}</span>
+        <span class="text-[11px] font-bold text-gray-500">Solicitudes por revisar</span>
+      </div>
+
+      <div 
+        @click="navigateTo('/admin/solicitudes')"
+        class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs cursor-pointer hover:border-brand-dark transition-all"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-black text-emerald-800 uppercase bg-emerald-100 px-2 py-0.5 rounded-full">
+            Confirmadas
+          </span>
+          <CheckCircle2 class="w-4 h-4 text-emerald-600 stroke-[2.5]" />
+        </div>
+        <span class="text-3xl font-black text-brand-dark block">{{ confirmedRequests.length }}</span>
+        <span class="text-[11px] font-bold text-gray-500">Reservas activas</span>
+      </div>
+    </div>
+
+    <!-- Tarjeta de Ingresos Estimados -->
+    <div class="bg-emerald-900 text-white p-4 rounded-3xl border-2 border-emerald-950 shadow-xs flex items-center justify-between">
+      <div>
+        <span class="text-[10px] font-black text-emerald-300 uppercase block">Total Proyectado</span>
+        <span class="text-xl font-black text-white">{{ formatCLP(totalRevenue) }}</span>
+      </div>
+      <span class="text-xs font-bold bg-white/10 px-3 py-1 rounded-full border border-white/20">
+        {{ confirmedRequests.length }} confirmadas
+      </span>
+    </div>
+
+    <!-- Accesos Rápidos Directos -->
+    <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
+      <h2 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Gestión Rápida</h2>
+
+      <div class="space-y-2">
+        <button
+          type="button"
+          @click="navigateTo('/admin/solicitudes')"
+          class="w-full p-3.5 bg-brand-light hover:bg-gray-200 border-2 border-brand-border rounded-2xl flex items-center justify-between text-xs font-black text-brand-dark transition-all touch-target"
         >
-          Resolver
+          <div class="flex items-center gap-2.5">
+            <Inbox class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            <span>Ver Solicitudes de Clientes</span>
+          </div>
+          <ArrowRight class="w-4 h-4 stroke-[2.5]" />
+        </button>
+
+        <button
+          type="button"
+          @click="navigateTo('/admin/calendario')"
+          class="w-full p-3.5 bg-brand-light hover:bg-gray-200 border-2 border-brand-border rounded-2xl flex items-center justify-between text-xs font-black text-brand-dark transition-all touch-target"
+        >
+          <div class="flex items-center gap-2.5">
+            <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            <span>Calendario de Ocupación</span>
+          </div>
+          <ArrowRight class="w-4 h-4 stroke-[2.5]" />
+        </button>
+
+        <button
+          type="button"
+          @click="navigateTo('/admin/catalogo')"
+          class="w-full p-3.5 bg-brand-light hover:bg-gray-200 border-2 border-brand-border rounded-2xl flex items-center justify-between text-xs font-black text-brand-dark transition-all touch-target"
+        >
+          <div class="flex items-center gap-2.5">
+            <Grid class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            <span>Editar Precios y Cabañas</span>
+          </div>
+          <ArrowRight class="w-4 h-4 stroke-[2.5]" />
         </button>
       </div>
     </div>
 
-    <!-- Resumen de Ocupación del Día -->
-    <section>
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-base font-bold text-gray-800">Ocupación de Hoy</h2>
-        <span class="text-xs text-gray-500 capitalize">{{ currentDateFormatted }}</span>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div 
-          v-for="resource in occupancyList" 
-          :key="resource.id"
-          class="bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-between"
-        >
-          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ resource.type }}</span>
-          <p class="text-sm font-bold text-gray-800 mt-1">{{ resource.name }}</p>
-          
-          <div class="mt-3 flex items-center justify-between">
-            <span 
-              class="text-[11px] px-2 py-0.5 rounded-full font-medium"
-              :class="resource.isOccupied ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'"
-            >
-              {{ resource.isOccupied ? 'Ocupado' : 'Disponible' }}
-            </span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Acceso Rápido a Solicitudes Pendientes -->
-    <section class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="text-sm font-bold text-gray-800">Solicitudes Pendientes</h3>
-        <span class="bg-[#25636B] text-white text-xs px-2 py-0.5 rounded-full font-bold">
-          {{ adminStore.pendingCount }}
-        </span>
-      </div>
-      <p class="text-xs text-gray-600 mb-3">
-        Revisa las nuevas reservas ingresadas por clientes o recibidas por teléfono.
-      </p>
-      <button 
-        @click="router.push('/admin/solicitudes')"
-        class="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-[#1E4620] font-semibold text-xs rounded-lg border border-gray-200 transition-colors"
-      >
-        Ver todas las solicitudes
-      </button>
-    </section>
+    <!-- Navegación Inferior -->
+    <AdminBottomNav />
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAdminStore } from '../../stores/adminStore'
-
-const router = useRouter()
-const adminStore = useAdminStore()
-
-const currentDateFormatted = computed(() => {
-  return new Date().toLocaleDateString('es-CL', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short'
-  })
-})
-
-// Mapea los recursos reales declarados en adminStore.ts (cabañas, camping, restaurante)
-const occupancyList = computed(() => {
-  return (adminStore.resources || []).map(res => ({
-    id: res.id,
-    name: res.name,
-    type: res.type === 'cabin' ? 'Cabaña' : res.type === 'camping' ? 'Camping' : 'Comida',
-    isOccupied: res.occupied >= res.total
-  }))
-})
-</script>

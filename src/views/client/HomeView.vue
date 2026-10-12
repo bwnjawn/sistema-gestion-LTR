@@ -1,19 +1,60 @@
-<template>
-  <div class="min-h-screen bg-brand-light flex flex-col pb-20">
-    <!-- Encabezado Reutilizable con Botón Admin -->
-    <ClientHeader 
-      show-admin 
-      @admin-click="goToAdmin" 
-    />
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { ChevronRight } from 'lucide-vue-next'
+import { useReservationStore } from '../../stores/reservationStore'
+import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
 
-    <!-- CONTENIDO PRINCIPAL: TARJETAS DE SERVICIO -->
-    <main class="p-4 space-y-4 grow max-w-md mx-auto w-full">
+const router = useRouter()
+const reservationStore = useReservationStore()
+
+function selectService(service: 'cabana' | 'camping' | 'restaurant') {
+  reservationStore.setService(service)
+  if (service === 'cabana') {
+    router.push('/cabana/paso1')
+  } else if (service === 'camping') {
+    router.push('/camping/paso1')
+  } else if (service === 'restaurant') {
+    router.push('/restaurante/paso1')
+  }
+}
+</script>
+
+<template>
+  <div class="flex flex-col min-h-[85vh]">
+    <main class="p-4 space-y-4 grow max-w-md mx-auto w-full pb-24">
+      
+      <!-- Encabezado con Logo y Título Institucional Reincorporado -->
+      <div class="bg-brand-dark text-white p-4 rounded-3xl border-2 border-brand-border shadow-md flex items-center gap-3.5">
+        <div class="w-16 h-16 bg-white rounded-2xl p-2 shrink-0 flex items-center justify-center shadow-xs border border-emerald-100">
+          <img 
+            src="/images/logo.png" 
+            alt="Logo Los Troncos de Repil" 
+            class="w-full h-full object-contain"
+            @error="(e) => { (e.target as HTMLImageElement).src = '/favicon.ico' }"
+          />
+        </div>
+
+        <div class="space-y-0.5">
+          <span class="text-[10px] font-extrabold text-emerald-300 uppercase tracking-widest block leading-none">
+            Centro Turístico
+          </span>
+          <h1 class="text-xl font-black text-white tracking-tight leading-tight">
+            Los Troncos de Repil
+          </h1>
+          <span class="text-[11px] font-bold text-gray-300 block leading-none">
+            Fresia, Los Lagos
+          </span>
+        </div>
+      </div>
+
+      <!-- Título de Sección -->
       <div class="space-y-1">
         <h2 class="text-xl font-black text-brand-dark tracking-tight">
           ¿Qué quieres reservar?
         </h2>
       </div>
 
+      <!-- Tarjetas de Servicio -->
       <div class="space-y-3.5">
         <!-- CARD 1: CABAÑA -->
         <div 
@@ -98,33 +139,7 @@
       </div>
     </main>
 
-    <!-- Barra de Navegación Inferior Reutilizable -->
+    <!-- Navegación Inferior -->
     <ClientBottomNav />
   </div>
 </template>
-
-<script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { ChevronRight } from 'lucide-vue-next'
-import ClientHeader from '../../components/ui/ClientHeader.vue'
-import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
-import { useReservationStore } from '../../stores/reservationStore'
-
-const router = useRouter()
-const reservationStore = useReservationStore()
-
-const selectService = (service: 'cabana' | 'camping' | 'restaurant') => {
-  reservationStore.setService(service)
-  if (service === 'cabana') {
-    router.push({ name: 'cabana-step1' })
-  } else if (service === 'camping') {
-    router.push({ name: 'camping-step1' })
-  } else if (service === 'restaurant') {
-    router.push({ name: 'restaurant-step1' })
-  }
-}
-
-const goToAdmin = () => {
-  router.push({ name: 'admin-dashboard' })
-}
-</script>

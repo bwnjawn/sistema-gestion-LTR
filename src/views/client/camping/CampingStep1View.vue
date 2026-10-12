@@ -1,129 +1,127 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight, ArrowLeft, Users, Sun, Moon, Tent } from 'lucide-vue-next'
-import { useReservationStore } from '../../../stores/reservationStore'
-import BaseButton from '../../../components/ui/BaseButton.vue'
+import { ArrowLeft, ArrowRight, Tent, Sun, Moon, Users } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseCalendar from '../../../components/ui/BaseCalendar.vue'
+import BaseButton from '../../../components/ui/BaseButton.vue'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import { useReservationStore } from '../../../stores/reservationStore'
 
 const router = useRouter()
 const store = useReservationStore()
 
-const campingType = ref<'diario' | 'pernoctar'>(store.campingType || 'diario')
+store.setService('camping')
 
-const checkIn = ref<Date | null>(
-  store.checkInDate ? new Date(store.checkInDate + 'T00:00:00') : new Date(2026, 9, 10)
-)
-const checkOut = ref<Date | null>(
-  store.checkOutDate ? new Date(store.checkOutDate + 'T00:00:00') : new Date(2026, 9, 11)
-)
-const guests = ref<number>(store.guestsCount || 4)
+const campingType = computed(() => store.campingType)
 
 function setCampingType(type: 'diario' | 'pernoctar') {
-  campingType.value = type
   store.campingType = type
-  if (type === 'diario' && checkIn.value) {
-    checkOut.value = new Date(checkIn.value)
+  if (type === 'diario') {
+    store.checkOutDate = store.checkInDate
   }
 }
 
-function handleCalendarChange(payload: { start: Date | null; end: Date | null }) {
-  checkIn.value = payload.start
-  if (campingType.value === 'diario') {
-    checkOut.value = payload.start
-  } else {
-    checkOut.value = payload.end
-  }
-  
-  if (checkIn.value) store.checkInDate = formatDateISO(checkIn.value)
-  if (checkOut.value) store.checkOutDate = formatDateISO(checkOut.value)
-}
-
-function formatDateISO(d: Date) {
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function formatDateShort(d: Date | null) {
-  if (!d) return '—'
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
-}
-
-const nightsCount = computed(() => {
-  if (campingType.value === 'diario') return 0
-  if (!checkIn.value || !checkOut.value) return 0
-  const diffTime = checkOut.value.getTime() - checkIn.value.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24))
-  return Math.max(0, diffDays)
+// Conversión de string YYYY-MM-DD a objeto Date para BaseCalendar
+const calendarStartDate = computed<Date | null>(() => {
+  if (!store.checkInDate) return null
+  const [y, m, d] = store.checkInDate.split('-').map(Number)
+  return new Date(y, m - 1, d)
 })
 
-function handleGuestsInput(e: Event) {
-  const target = e.target as HTMLInputElement
-  let val = parseInt(target.value) || 1
-  if (val < 1) val = 1
-  if (val > 150) val = 150
-  guests.value = val
-  store.guestsCount = val
+const calendarEndDate = computed<Date | null>(() => {
+  if (store.campingType === 'diario') return calendarStartDate.value
+  if (!store.checkOutDate) return null
+  const [y, m, d] = store.checkOutDate.split('-').map(Number)
+  return new Date(y, m - 1, d)
+})
+
+function handleCalendarChange(payload: { start: Date | null; end: Date | null }) {
+  if (payload.start) {
+    const year = payload.start.getFullYear()
+    const month = String(payload.start.getMonth() + 1).padStart(2, '0')
+    const day = String(payload.start.getDate()).padStart(2, '0')
+    store.checkInDate = `${year}-${month}-${day}`
+    if (store.campingType === 'diario') {
+      store.checkOutDate = `${year}-${month}-${day}`
+    }
+  } else {
+    store.checkInDate = ''
+  }
+
+  if (store.campingType === 'pernoctar') {
+    if (payload.end) {
+      const year = payload.end.getFullYear()
+      const month = String(payload.end.getMonth() + 1).padStart(2, '0')
+      const day = String(payload.end.getDate()).padStart(2, '0')
+      store.checkOutDate = `${year}-${month}-${day}`
+    } else {
+      store.checkOutDate = ''
+    }
+  }
 }
 
 function incrementGuests() {
-  if (guests.value < 150) {
-    guests.value++
-    store.guestsCount = guests.value
-  }
+  store.guestsCount++
 }
 
 function decrementGuests() {
-  if (guests.value > 1) {
-    guests.value--
-    store.guestsCount = guests.value
+  if (store.guestsCount > 1) {
+    store.guestsCount--
   }
+}
+
+function handleGuestsInput(event: Event) {
+  const target = event.target as HTMLInputElement
+  const val = parseInt(target.value, 10)
+  if (isNaN(val) || val < 1) {
+    store.guestsCount = 1
+  } else {
+    store.guestsCount = Math.min(150, val)
+  }
+}
+
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return '-'
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  return `${d} ${months[m - 1]}`
 }
 
 const isValid = computed(() => {
-  if (!checkIn.value) return false
-  if (campingType.value === 'pernoctar') {
-    return !!checkOut.value && nightsCount.value >= 1
-  }
-  return true
+  if (!store.checkInDate) return false
+  if (store.campingType === 'pernoctar' && !store.checkOutDate) return false
+  return store.guestsCount > 0
 })
-
-function handleNext() {
-  if (!isValid.value || !checkIn.value) return
-  
-  store.campingType = campingType.value
-  store.checkInDate = formatDateISO(checkIn.value)
-  store.checkOutDate = checkOut.value ? formatDateISO(checkOut.value) : formatDateISO(checkIn.value)
-  store.guestsCount = guests.value
-  
-  store.nextStep()
-  router.push({ name: 'camping-step2' })
-}
 
 function handleBack() {
   router.push('/')
 }
+
+function handleNext() {
+  if (isValid.value) {
+    store.nextStep()
+    router.push('/camping/paso2')
+  }
+}
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto pb-28">
-    
+  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+    <!-- Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="1" />
     </div>
 
+    <!-- Alerta Informativa -->
     <BaseAlert variant="info" title="Reserva de Camping">
       Selecciona la modalidad (Paseo por el día o Pernoctar con carpa), la fecha y la cantidad de visitantes.
     </BaseAlert>
 
+    <!-- Formulario Principal -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       
+      <!-- Selección de Modalidad -->
       <div class="space-y-2">
         <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Tent class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -167,17 +165,19 @@ function handleBack() {
         </div>
       </div>
 
+      <!-- Calendario -->
       <div class="space-y-2 pt-2 border-t-2 border-gray-100">
         <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider">
           {{ campingType === 'diario' ? 'Fecha de Visita' : 'Selecciona Estadía (Llegada - Salida)' }}
         </label>
         <BaseCalendar 
-          :start-date="checkIn"
-          :end-date="campingType === 'pernoctar' ? checkOut : checkIn"
+          :start-date="calendarStartDate"
+          :end-date="calendarEndDate"
           @change="handleCalendarChange"
         />
       </div>
 
+      <!-- Selector de Visitantes (+, - e input centrado) -->
       <div class="pt-3 border-t-2 border-gray-100 space-y-2">
         <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -196,14 +196,14 @@ function handleBack() {
           <div class="flex flex-col items-center grow">
             <input 
               type="number"
-              :value="guests"
+              :value="store.guestsCount"
               @input="handleGuestsInput"
               min="1"
               max="150"
               class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
-            <span class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mt-1 block">
-              {{ guests === 1 ? 'Persona' : 'Personas' }}
+            <span class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
+              {{ store.guestsCount === 1 ? 'Persona' : 'Personas' }}
             </span>
           </div>
 
@@ -217,6 +217,7 @@ function handleBack() {
         </div>
       </div>
 
+      <!-- Resumen Fijo -->
       <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-xs font-bold text-gray-700">
         <div>
           <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Modalidad</span>
@@ -224,17 +225,17 @@ function handleBack() {
         </div>
         <div class="text-center border-x border-gray-200 px-3">
           <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Fecha</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(checkIn) }}</span>
+          <span class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }}</span>
         </div>
         <div class="text-right">
           <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Visitantes</span>
-          <span class="text-brand-dark font-black">{{ guests }} pers.</span>
+          <span class="text-brand-dark font-black">{{ store.guestsCount }} pers.</span>
         </div>
       </div>
 
     </div>
 
-    <!-- BOTONES FIJOS EN LA PARTE INFERIOR -->
+    <!-- Botones Flotantes Inferiores -->
     <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
       <div class="max-w-md mx-auto flex items-center gap-3">
         <BaseButton variant="outline" size="lg" @click="handleBack">
@@ -254,6 +255,5 @@ function handleBack() {
         </BaseButton>
       </div>
     </div>
-
   </div>
 </template>

@@ -2,86 +2,75 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  ArrowLeft, 
-  ArrowRight, 
-  User, 
-  Phone, 
-  FileText, 
-  Building2, 
-  Clock 
+  ArrowLeft, ArrowRight, User, Phone, Mail, FileText, 
+  Building2, Clock 
 } from 'lucide-vue-next'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
-import BaseButton from '../../../components/ui/BaseButton.vue'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
+import BaseButton from '../../../components/ui/BaseButton.vue'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
-import { useAdminStore } from '../../../stores/adminStore'
+import { useCatalogStore } from '../../../stores/catalogStore'
 
 const router = useRouter()
 const store = useReservationStore()
-const adminStore = useAdminStore()
+const catalogStore = useCatalogStore()
+
+const selectedCabin = computed(() => {
+  return catalogStore.cabins.find(c => c.id === store.selectedCabinId)
+})
 
 const nightsCount = computed(() => {
   if (!store.checkInDate || !store.checkOutDate) return 1
-  const start = new Date(store.checkInDate)
-  const end = new Date(store.checkOutDate)
-  const diffTime = Math.abs(end.getTime() - start.getTime())
-  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+  const diff = new Date(store.checkOutDate).getTime() - new Date(store.checkInDate).getTime()
+  const days = Math.ceil(diff / (1000 * 3600 * 24))
+  return days > 0 ? days : 1
 })
 
 function formatDateShort(dateStr: string): string {
-  if (!dateStr) return ''
-  const [, month, day] = dateStr.split('-')
-  if (!day || !month) return dateStr
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  const monthIdx = parseInt(month, 10) - 1
-  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
+  if (!dateStr) return '-'
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  return `${d} ${months[m - 1]}`
 }
 
-// FORMATO UNIFICADO Y DINÁMICO: Remplaza "Día de ingreso/salida" por las fechas reales del cliente
 const formattedScheduleDisplay = computed(() => {
-  const inTime = adminStore.cabinSchedules.checkIn
-  const outTime = adminStore.cabinSchedules.checkOut
-  if (store.checkInDate && store.checkOutDate) {
-    const inDate = formatDateShort(store.checkInDate)
-    const outDate = formatDateShort(store.checkOutDate)
-    return `${inDate} (${inTime} hrs) - ${outDate} (${outTime} hrs)`
-  }
-  return `Día de ingreso (${inTime} hrs) - Día de salida (${outTime} hrs)`
-})
-
-const selectedCabin = computed(() => {
-  return adminStore.cabins.find(c => c.id === store.selectedCabinId)
+  if (!store.checkInDate || !store.checkOutDate) return 'Fechas no seleccionadas'
+  return `${formatDateShort(store.checkInDate)} al ${formatDateShort(store.checkOutDate)}`
 })
 
 const isFormValid = computed(() => {
-  return store.clientName.trim().length >= 2 && store.clientPhone.trim().length >= 8
+  const nameOk = !!store.clientName.trim()
+  const phoneOk = !!store.clientPhone.trim() && store.clientPhone.trim() !== '+56 9'
+  return nameOk && phoneOk
 })
+
+function handleBack() {
+  store.prevStep()
+  router.push('/cabana/paso2')
+}
 
 function handleNext() {
   if (isFormValid.value) {
+    store.nextStep()
     router.push('/cabana/paso4')
   }
-}
-
-function handleBack() {
-  router.push('/cabana/paso2')
 }
 </script>
 
 <template>
-  <div class="space-y-4 pb-24">
-    <!-- 1. Indicador de Pasos -->
+  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+    <!-- Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="3" />
     </div>
 
-    <!-- 2. Alerta Guiada -->
+    <!-- Alerta Guiada -->
     <BaseAlert variant="info" title="Tus datos de contacto">
       Ingresa tu información para que los dueños puedan confirmar tu solicitud de reserva por teléfono.
     </BaseAlert>
 
-    <!-- 3. Formulario "Tus Datos" -->
-    <div class="bg-white p-5 rounded-2xl border-2 border-brand-border shadow-sm space-y-5">
+    <!-- Formulario "Tus Datos" -->
+    <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-5">
       
       <!-- Campo: Nombre o Institución -->
       <div class="space-y-1.5">
@@ -97,7 +86,7 @@ function handleBack() {
         />
       </div>
 
-      <!-- Campo: Teléfono de Contacto (inputmode="numeric") -->
+      <!-- Campo: Teléfono de Contacto -->
       <div class="space-y-1.5">
         <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -115,6 +104,20 @@ function handleBack() {
         </span>
       </div>
 
+      <!-- Campo: Correo Electrónico (Opcional) -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+          <Mail class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+          Correo Electrónico (Opcional)
+        </label>
+        <input 
+          type="email"
+          v-model="store.clientEmail"
+          placeholder="ejemplo@correo.com"
+          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-semibold text-sm focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
+        />
+      </div>
+
       <!-- Campo: Comentarios u Observaciones -->
       <div class="space-y-1.5">
         <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -129,7 +132,7 @@ function handleBack() {
         ></textarea>
       </div>
 
-      <!-- Resumen Fijo Unificado (Sin Duplicidad) -->
+      <!-- Resumen Fijo Unificado -->
       <div class="bg-brand-light p-3.5 rounded-xl border border-brand-border space-y-1 text-xs font-bold text-gray-700">
         <div class="flex justify-between">
           <span>Servicio:</span>
@@ -153,7 +156,7 @@ function handleBack() {
 
     </div>
 
-    <!-- 4. Botones de Navegación Flotantes Fijos -->
+    <!-- Navegación Flotante Fija -->
     <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
       <div class="max-w-md mx-auto flex items-center gap-3">
         <BaseButton variant="outline" size="lg" @click="handleBack">

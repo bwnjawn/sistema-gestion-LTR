@@ -2,89 +2,59 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  Calendar, 
-  Receipt, 
-  Send, 
-  ArrowLeft, 
-  FileText, 
-  CheckCircle2, 
-  FileCheck, 
-  Tent, 
-  Utensils, 
-  RotateCcw,
-  User,
-  Phone,
-  Clock,
-  Pencil
+  ArrowLeft, Calendar, Pencil, Clock, Receipt, User, Phone, 
+  FileText, Send, CheckCircle2, FileCheck, Utensils, Tent, RotateCcw 
 } from 'lucide-vue-next'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
-import { useAdminStore } from '../../../stores/adminStore'
+import { useCatalogStore } from '../../../stores/catalogStore'
+import { formatCLP } from '../../../lib/format'
+import { useRequestsStore } from '../../../stores/requestsStore'
 
 const router = useRouter()
 const store = useReservationStore()
-const adminStore = useAdminStore()
+const catalogStore = useCatalogStore()
 
 const isSubmitted = ref(false)
 const reservationCode = ref('')
 
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return ''
-  const [, month, day] = dateStr.split('-')
-  if (!day || !month) return dateStr
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  const monthIdx = parseInt(month, 10) - 1
-  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
-}
-
 const selectedCabin = computed(() => {
-  return adminStore.cabins.find(c => c.id === store.selectedCabinId)
+  return catalogStore.cabins.find(c => c.id === store.selectedCabinId)
 })
 
 const nightsCount = computed(() => {
   if (!store.checkInDate || !store.checkOutDate) return 1
-  const start = new Date(store.checkInDate)
-  const end = new Date(store.checkOutDate)
-  const diffTime = Math.abs(end.getTime() - start.getTime())
-  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+  const diff = new Date(store.checkOutDate).getTime() - new Date(store.checkInDate).getTime()
+  const days = Math.ceil(diff / (1000 * 3600 * 24))
+  return days > 0 ? days : 1
 })
 
 const subtotal = computed(() => {
-  if (!selectedCabin.value) return 0
-  return selectedCabin.value.pricePerNight * nightsCount.value
+  return (selectedCabin.value?.pricePerNight || 65000) * nightsCount.value
 })
 
-const ivaAmount = computed(() => Math.round(subtotal.value * 0.19))
-const totalWithIva = computed(() => subtotal.value + ivaAmount.value)
+const ivaAmount = computed(() => {
+  return Math.round(subtotal.value * 0.19)
+})
 
-// REEMPLAZO DINÁMICO DE FECHAS DE ENTRADA Y SALIDA + HORARIOS
+const totalWithIva = computed(() => {
+  return subtotal.value + ivaAmount.value
+})
+
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return '-'
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  return `${d} ${months[m - 1]}`
+}
+
 const formattedScheduleRange = computed(() => {
-  const inDate = formatDateShort(store.checkInDate)
-  const outDate = formatDateShort(store.checkOutDate)
-  const checkInTime = adminStore.cabinSchedules?.checkIn || '15:00'
-  const checkOutTime = adminStore.cabinSchedules?.checkOut || '11:00'
-
-  if (inDate && outDate) {
-    return `${inDate} (${checkInTime} hrs) - ${outDate} (${checkOutTime} hrs)`
-  }
-  return `Día de ingreso (${checkInTime} hrs) - Día de salida (${checkOutTime} hrs)`
+  if (!store.checkInDate || !store.checkOutDate) return 'No definido'
+  return `${formatDateShort(store.checkInDate)} al ${formatDateShort(store.checkOutDate)}`
 })
-
-function formatCLP(amount: number): string {
-  return `$${amount.toLocaleString('es-CL')}`
-}
-
-function handleSendRequest() {
-  reservationCode.value = 'SOL-' + Math.floor(1000 + Math.random() * 9000)
-  isSubmitted.value = true
-}
-
-function handleGoHome() {
-  store.resetStore()
-  router.push('/')
-}
 
 function handleGoToRestaurant() {
   store.prepareCrossServiceBooking('restaurant')
@@ -95,18 +65,53 @@ function handleGoToCamping() {
   store.prepareCrossServiceBooking('camping')
   router.push('/camping/paso1')
 }
+
+function handleGoHome() {
+  store.resetStore()
+  router.push('/')
+}
+const requestsStore = useRequestsStore()
+
+function handleSendRequest() {
+  // 1. Guardar en el store de solicitudes
+  requestsStore.addRequest({
+    requestCode: reservationCode.value,
+    clientName: store.clientName,
+    clientPhone: store.clientPhone,
+    type: 'cabana', // o 'camping' / 'restaurante'
+    resourceName: selectedCabin.value?.name || 'Cabaña',
+    date: store.checkInDate,
+    timeOrDuration: `${nightsCount.value} noche(s)`,
+    guestsCount: store.guestsCount,
+    totalAmount: totalWithIva.value,
+    depositAmount: Math.round(totalWithIva.value * 0.3),
+    details: {
+      comments: store.comments
+    }
+  })
+
+  // 2. Mostrar pantalla de éxito
+  isSubmitted.value = true
+}
+
 </script>
 
 <template>
-  <div class="space-y-4 pb-24">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+    
     <!-- PANTALLA A: REVISIÓN DE LA SOLICITUD -->
     <div v-if="!isSubmitted" class="space-y-4">
+      <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
+        <StepIndicator :current-step="4" />
+      </div>
+
       <BaseAlert variant="info" title="Revisa tu solicitud antes de enviar">
         Verifica todos los parámetros antes de confirmar la reserva de cabaña.
       </BaseAlert>
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
-        <!-- 1. Fechas y Horario Dinámico con Botón Editar -->
+        
+        <!-- 1. Fechas y Horarios con Botón Editar -->
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -225,7 +230,7 @@ function handleGoToCamping() {
         </div>
       </div>
 
-      <!-- Navegación Flotante -->
+      <!-- Navegación Flotante Fija -->
       <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
         <div class="max-w-md mx-auto flex items-center gap-3">
           <BaseButton variant="outline" size="lg" @click="router.push('/cabana/paso3')">
@@ -233,7 +238,7 @@ function handleGoToCamping() {
             Volver
           </BaseButton>
 
-          <BaseButton variant="success" size="lg" fullWidth @click="handleSendRequest">
+          <BaseButton variant="primary" size="lg" fullWidth @click="handleSendRequest">
             <Send class="w-5 h-5 mr-1.5 stroke-[2.5]" />
             Enviar Solicitud
           </BaseButton>
@@ -241,9 +246,9 @@ function handleGoToCamping() {
       </div>
     </div>
 
-    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA -->
+    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA CON VENTA CRUZADA -->
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
-      <div class="w-16 h-16 bg-emerald-100 text-status-success rounded-full flex items-center justify-center mx-auto shadow-xs">
+      <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-xs border-2 border-emerald-300">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
       </div>
 
@@ -316,5 +321,6 @@ function handleGoToCamping() {
         </BaseButton>
       </div>
     </div>
+
   </div>
 </template>
