@@ -9,16 +9,16 @@ import {
   FileText, 
   CheckCircle2, 
   FileCheck, 
-  Utensils, 
   Tent, 
+  Utensils, 
   RotateCcw,
   User,
   Phone,
-  Clock
+  Clock,
+  Pencil
 } from 'lucide-vue-next'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
-import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useAdminStore } from '../../../stores/adminStore'
@@ -30,18 +30,6 @@ const adminStore = useAdminStore()
 const isSubmitted = ref(false)
 const reservationCode = ref('')
 
-const nightsCount = computed(() => {
-  if (!store.checkInDate || !store.checkOutDate) return 1
-  const start = new Date(store.checkInDate)
-  const end = new Date(store.checkOutDate)
-  const diffTime = Math.abs(end.getTime() - start.getTime())
-  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
-})
-
-const selectedCabin = computed(() => {
-  return adminStore.cabins.find(c => c.id === store.selectedCabinId) || adminStore.cabins[0]
-})
-
 function formatDateShort(dateStr: string): string {
   if (!dateStr) return ''
   const [, month, day] = dateStr.split('-')
@@ -51,21 +39,38 @@ function formatDateShort(dateStr: string): string {
   return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
 }
 
-// Rango de horarios estandarizado: "15 oct (15:00 hrs) - 17 oct (11:00 hrs)"
-const formattedScheduleRange = computed(() => {
-  const inDate = formatDateShort(store.checkInDate)
-  const outDate = formatDateShort(store.checkOutDate)
-  const inTime = adminStore.cabinSchedules.checkIn
-  const outTime = adminStore.cabinSchedules.checkOut
-  return `${inDate} (${inTime} hrs) - ${outDate} (${outTime} hrs)`
+const selectedCabin = computed(() => {
+  return adminStore.cabins.find(c => c.id === store.selectedCabinId)
+})
+
+const nightsCount = computed(() => {
+  if (!store.checkInDate || !store.checkOutDate) return 1
+  const start = new Date(store.checkInDate)
+  const end = new Date(store.checkOutDate)
+  const diffTime = Math.abs(end.getTime() - start.getTime())
+  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
 })
 
 const subtotal = computed(() => {
-  return (selectedCabin.value?.pricePerNight || 0) * nightsCount.value
+  if (!selectedCabin.value) return 0
+  return selectedCabin.value.pricePerNight * nightsCount.value
 })
 
 const ivaAmount = computed(() => Math.round(subtotal.value * 0.19))
 const totalWithIva = computed(() => subtotal.value + ivaAmount.value)
+
+// REEMPLAZO DINÁMICO DE FECHAS DE ENTRADA Y SALIDA + HORARIOS
+const formattedScheduleRange = computed(() => {
+  const inDate = formatDateShort(store.checkInDate)
+  const outDate = formatDateShort(store.checkOutDate)
+  const checkInTime = adminStore.cabinSchedules?.checkIn || '15:00'
+  const checkOutTime = adminStore.cabinSchedules?.checkOut || '11:00'
+
+  if (inDate && outDate) {
+    return `${inDate} (${checkInTime} hrs) - ${outDate} (${checkOutTime} hrs)`
+  }
+  return `Día de ingreso (${checkInTime} hrs) - Día de salida (${checkOutTime} hrs)`
+})
 
 function formatCLP(amount: number): string {
   return `$${amount.toLocaleString('es-CL')}`
@@ -82,22 +87,18 @@ function handleGoHome() {
 }
 
 function handleGoToRestaurant() {
-  store.selectedService = 'restaurant'
+  store.prepareCrossServiceBooking('restaurant')
   router.push('/restaurante/paso1')
 }
 
 function handleGoToCamping() {
-  store.selectedService = 'camping'
+  store.prepareCrossServiceBooking('camping')
   router.push('/camping/paso1')
 }
 </script>
 
 <template>
   <div class="space-y-4 pb-24">
-    <div v-if="!isSubmitted" class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
-      <StepIndicator :current-step="4" />
-    </div>
-
     <!-- PANTALLA A: REVISIÓN DE LA SOLICITUD -->
     <div v-if="!isSubmitted" class="space-y-4">
       <BaseAlert variant="info" title="Revisa tu solicitud antes de enviar">
@@ -105,12 +106,22 @@ function handleGoToCamping() {
       </BaseAlert>
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
-        <!-- 1. Fechas y Horario Dinámico -->
+        <!-- 1. Fechas y Horario Dinámico con Botón Editar -->
         <div class="space-y-2">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Fechas y Horarios
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Fechas y Horarios
+            </h3>
+            <button 
+              type="button" 
+              @click="router.push('/cabana/paso1')"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
 
           <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
             <div class="flex justify-between">
@@ -118,7 +129,7 @@ function handleGoToCamping() {
               <span class="text-brand-dark font-black uppercase">{{ selectedCabin?.name }}</span>
             </div>
             <div class="flex justify-between items-start gap-2">
-              <span class="shrink-0">Horario Permitido:</span>
+              <span class="shrink-0">Fechas y Horarios:</span>
               <span class="text-brand-dark font-black text-right flex items-center justify-end gap-1">
                 <Clock class="w-3.5 h-3.5 text-brand-accent shrink-0 stroke-[2.5]" />
                 {{ formattedScheduleRange }}
@@ -135,7 +146,7 @@ function handleGoToCamping() {
           </div>
         </div>
 
-        <!-- 2. Presupuesto + Componente DepositInfoCard -->
+        <!-- 2. Presupuesto -->
         <div class="space-y-3">
           <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
             <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -157,16 +168,25 @@ function handleGoToCamping() {
             </div>
           </div>
 
-          <!-- Componente Reutilizable de Abono (30% Configurable) -->
           <DepositInfoCard :total-with-iva="totalWithIva" service-name="cabana" />
         </div>
 
-        <!-- 3. Contacto del Cliente -->
+        <!-- 3. Contacto del Cliente con Botón Editar -->
         <div class="space-y-3">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Contacto del Cliente
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Contacto del Cliente
+            </h3>
+            <button 
+              type="button" 
+              @click="router.push('/cabana/paso3')"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
 
           <div class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
             <div class="flex justify-between">
@@ -183,12 +203,22 @@ function handleGoToCamping() {
           </div>
         </div>
 
-        <!-- 4. Comentarios -->
+        <!-- 4. Comentarios con Botón Editar -->
         <div v-if="store.comments" class="space-y-2">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Comentarios u Observaciones
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Comentarios u Observaciones
+            </h3>
+            <button 
+              type="button" 
+              @click="router.push('/cabana/paso3')"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
           <p class="bg-brand-light p-3.5 rounded-2xl border border-brand-border text-xs font-bold text-gray-700 italic">
             "{{ store.comments }}"
           </p>
@@ -238,7 +268,7 @@ function handleGoToCamping() {
           <span class="text-brand-dark font-black">{{ selectedCabin?.name }}</span>
         </div>
         <div class="flex justify-between items-start gap-2">
-          <span class="text-gray-500 shrink-0">Horarios:</span>
+          <span class="text-gray-500 shrink-0">Fechas y Horarios:</span>
           <span class="text-brand-dark font-black text-right">{{ formattedScheduleRange }}</span>
         </div>
         <div class="flex justify-between items-center border-t border-gray-200/60 pt-2 mt-1">
@@ -247,7 +277,7 @@ function handleGoToCamping() {
         </div>
       </div>
 
-      <!-- Venta Cruzada -->
+      <!-- Venta Cruzada con Conservación de Datos -->
       <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl text-left space-y-3">
         <div class="flex items-center gap-2 text-amber-950 font-black text-sm">
           <Utensils class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
@@ -255,7 +285,7 @@ function handleGoToCamping() {
         </div>
 
         <p class="text-xs font-semibold text-amber-900 leading-relaxed">
-          Puedes reservar menú de restaurante o sitio de camping para tu grupo.
+          Conservamos las fechas y tu grupo de <strong class="text-amber-950 font-black">{{ store.guestsCount }} personas</strong> para que selecciones tus servicios adicionales sin volver a llenar datos.
         </p>
 
         <div class="grid grid-cols-2 gap-2 pt-1">

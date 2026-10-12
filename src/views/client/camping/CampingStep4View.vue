@@ -14,14 +14,16 @@ import {
   RotateCcw,
   User,
   Phone,
-  Clock
+  Clock,
+  Tent,
+  Pencil
 } from 'lucide-vue-next'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
-import { type CampingSite, useAdminStore } from '../../../stores/adminStore'
+import { useAdminStore } from '../../../stores/adminStore'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -30,21 +32,7 @@ const adminStore = useAdminStore()
 const isSubmitted = ref(false)
 const reservationCode = ref('')
 
-const isDiario = computed(() => store.campingType === 'diario')
-const guests = computed(() => store.guestsCount)
-
-const selectedCampingInfo = computed((): CampingSite => {
-  return adminStore.campingSites.find(s => s.id === store.selectedCampingId) || adminStore.campingSites[0]
-})
-
-const nightsCount = computed(() => {
-  if (isDiario.value || !store.checkInDate || !store.checkOutDate) return 1
-  const start = new Date(store.checkInDate)
-  const end = new Date(store.checkOutDate)
-  const diffTime = Math.abs(end.getTime() - start.getTime())
-  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
-})
-
+// Función utilitaria para formatear la fecha a texto corto (ej: 15 nov)
 function formatDateShort(dateStr: string): string {
   if (!dateStr) return ''
   const [, month, day] = dateStr.split('-')
@@ -54,34 +42,51 @@ function formatDateShort(dateStr: string): string {
   return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
 }
 
-const formattedScheduleRange = computed(() => {
-  if (isDiario.value) {
-    const checkIn = adminStore.campingSchedules.diario.checkIn
-    const checkOut = adminStore.campingSchedules.diario.checkOut
-    if (store.checkInDate) {
-      const dateFormatted = formatDateShort(store.checkInDate)
-      return `${dateFormatted} (${checkIn} hrs) - ${dateFormatted} (${checkOut} hrs)`
-    }
-    return `Día de ingreso (${checkIn} hrs) - Día de ingreso (${checkOut} hrs)`
-  } else {
-    const checkIn = adminStore.campingSchedules.pernoctar.checkIn
-    const checkOut = adminStore.campingSchedules.pernoctar.checkOut
-    if (store.checkInDate && store.checkOutDate) {
-      const inDate = formatDateShort(store.checkInDate)
-      const outDate = formatDateShort(store.checkOutDate)
-      return `${inDate} (${checkIn} hrs) - ${outDate} (${checkOut} hrs)`
-    }
-    return `Día de ingreso (${checkIn} hrs) - Día de salida (${checkOut} hrs)`
+function navigateToStep(stepNumber: number) {
+  router.push(`/camping/paso${stepNumber}`)
+}
+
+const isDiario = computed(() => store.campingType === 'diario')
+
+const guests = computed(() => store.guestsCount || 1)
+
+const nightsCount = computed(() => {
+  if (isDiario.value || !store.checkInDate || !store.checkOutDate) return 1
+  const start = new Date(store.checkInDate)
+  const end = new Date(store.checkOutDate)
+  const diffTime = Math.abs(end.getTime() - start.getTime())
+  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+})
+
+// SOLUCIÓN TS2339: Retorna estrictamente un objeto único (nunca un array)
+const selectedCampingOption = computed(() => {
+  if (store.selectedCampingId) {
+    const found = adminStore.campingSites.find(s => s.id === store.selectedCampingId)
+    if (found) return found
+  }
+  return adminStore.campingSites[0] || {
+    id: 'default',
+    name: 'Camping General',
+    description: 'Sitio de camping equipado',
+    pricePerPerson: 10000
   }
 })
 
+const pricePerPerson = computed(() => selectedCampingOption.value.pricePerPerson || 10000)
+
 const subtotal = computed(() => {
-  const nights = isDiario.value ? 1 : nightsCount.value
-  return selectedCampingInfo.value.pricePerPerson * guests.value * nights
+  return pricePerPerson.value * guests.value * (isDiario.value ? 1 : nightsCount.value)
 })
 
 const ivaAmount = computed(() => Math.round(subtotal.value * 0.19))
 const totalWithIva = computed(() => subtotal.value + ivaAmount.value)
+
+const formattedScheduleRange = computed(() => {
+  if (isDiario.value) {
+    return adminStore.campingSchedules.diario.display
+  }
+  return adminStore.campingSchedules.pernoctar.display
+})
 
 function formatCLP(amount: number): string {
   return `$${amount.toLocaleString('es-CL')}`
@@ -98,12 +103,12 @@ function handleGoHome() {
 }
 
 function handleGoToRestaurant() {
-  store.selectedService = 'restaurant'
+  store.prepareCrossServiceBooking('restaurante')
   router.push('/restaurante/paso1')
 }
 
 function handleGoToCabana() {
-  store.selectedService = 'cabana'
+  store.prepareCrossServiceBooking('cabana')
   router.push('/cabana/paso1')
 }
 </script>
@@ -121,21 +126,41 @@ function handleGoToCabana() {
       </BaseAlert>
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
-        <!-- 1. Fechas y Horarios -->
+        
+        <!-- 1. Fechas y Horarios con Edición (Uso de formatDateShort) -->
         <div class="space-y-2">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Fechas y Horarios
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Fechas y Horarios
+            </h3>
+            <button 
+              type="button" 
+              @click="navigateToStep(1)"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
 
           <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
+            <div class="flex justify-between">
+              <span>Fecha Visita:</span>
+              <span class="text-brand-dark font-black uppercase">
+                {{ formatDateShort(store.checkInDate) }}
+                <template v-if="!isDiario && store.checkOutDate">
+                  a {{ formatDateShort(store.checkOutDate) }}
+                </template>
+              </span>
+            </div>
             <div class="flex justify-between">
               <span>Modalidad:</span>
               <span class="text-brand-dark font-black uppercase">
                 {{ isDiario ? 'Por el Día' : 'Pernoctar (' + nightsCount + ' noche/s)' }}
               </span>
             </div>
-            <div class="flex justify-between items-start gap-2">
+            <div class="flex justify-between items-start gap-2 border-t border-gray-200/60 pt-1">
               <span class="shrink-0">Horario Permitido:</span>
               <span class="text-brand-dark font-black text-right flex items-center justify-end gap-1">
                 <Clock class="w-3.5 h-3.5 text-brand-accent shrink-0 stroke-[2.5]" />
@@ -149,7 +174,33 @@ function handleGoToCabana() {
           </div>
         </div>
 
-        <!-- 2. Presupuesto -->
+        <!-- 2. Opción de Camping Seleccionada -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Tent class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Espacio Asignado
+            </h3>
+            <button 
+              type="button" 
+              @click="navigateToStep(2)"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
+
+          <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-1 text-xs font-bold text-gray-700">
+            <div class="flex justify-between items-center font-black text-brand-dark text-sm">
+              <span>{{ selectedCampingOption.name }}</span>
+              <span>{{ formatCLP(pricePerPerson) }} / pers</span>
+            </div>
+            <p class="text-[11px] text-gray-500 font-semibold">{{ selectedCampingOption.description }}</p>
+          </div>
+        </div>
+
+        <!-- 3. Presupuesto -->
         <div class="space-y-3">
           <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
             <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -174,12 +225,22 @@ function handleGoToCabana() {
           <DepositInfoCard :total-with-iva="totalWithIva" service-name="camping" />
         </div>
 
-        <!-- 3. Contacto del Cliente (Sin Categoría) -->
+        <!-- 4. Contacto del Cliente -->
         <div class="space-y-3">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Contacto del Cliente
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Contacto del Cliente
+            </h3>
+            <button 
+              type="button" 
+              @click="navigateToStep(3)"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
 
           <div class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
             <div class="flex justify-between">
@@ -196,12 +257,22 @@ function handleGoToCabana() {
           </div>
         </div>
 
-        <!-- 4. Comentarios -->
+        <!-- 5. Comentarios -->
         <div v-if="store.comments" class="space-y-2">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Comentarios u Observaciones
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Comentarios u Observaciones
+            </h3>
+            <button 
+              type="button" 
+              @click="navigateToStep(3)"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
           <p class="bg-brand-light p-3.5 rounded-2xl border border-brand-border text-xs font-bold text-gray-700 italic">
             "{{ store.comments }}"
           </p>
@@ -211,7 +282,7 @@ function handleGoToCabana() {
       <!-- Navegación Flotante -->
       <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
         <div class="max-w-md mx-auto flex items-center gap-3">
-          <BaseButton variant="outline" size="lg" @click="router.push('/camping/paso3')">
+          <BaseButton variant="outline" size="lg" @click="navigateToStep(3)">
             <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
             Volver
           </BaseButton>
@@ -224,7 +295,7 @@ function handleGoToCabana() {
       </div>
     </div>
 
-    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA -->
+    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA CON VENTA CRUZADA -->
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
       <div class="w-16 h-16 bg-emerald-100 text-status-success rounded-full flex items-center justify-center mx-auto shadow-xs">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
@@ -248,7 +319,7 @@ function handleGoToCabana() {
       <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-xs font-bold text-gray-700">
         <div class="flex justify-between items-center">
           <span class="text-gray-500">Servicio:</span>
-          <span class="text-brand-dark font-black">{{ selectedCampingInfo.name }}</span>
+          <span class="text-brand-dark font-black">{{ selectedCampingOption.name }}</span>
         </div>
         <div class="flex justify-between items-start gap-2">
           <span class="text-gray-500 shrink-0">Horario Asignado:</span>
@@ -260,6 +331,7 @@ function handleGoToCabana() {
         </div>
       </div>
 
+      <!-- BANNER DE VENTA CRUZADA CON DATOS CONSERVADOS -->
       <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl text-left space-y-3">
         <div class="flex items-center gap-2 text-amber-950 font-black text-sm">
           <Utensils class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
@@ -267,7 +339,7 @@ function handleGoToCabana() {
         </div>
 
         <p class="text-xs font-semibold text-amber-900 leading-relaxed">
-          Puedes reservar menú de restaurante o una cabaña equipada para tu mismo grupo de <strong>{{ guests }} personas</strong>.
+          Conservamos tu grupo de <strong class="text-amber-950 font-black">{{ guests }} personas</strong> y tus fechas para que reserves tu menú o cabaña sin volver a escribir tus datos.
         </p>
 
         <div class="grid grid-cols-2 gap-2 pt-1">

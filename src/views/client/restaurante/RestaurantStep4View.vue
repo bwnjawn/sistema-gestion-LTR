@@ -41,12 +41,10 @@ function formatDateShort(dateStr: string): string {
   return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
 }
 
-// Navegación directa para editar secciones (HU-3.7)
 function navigateToStep(stepNumber: number) {
   router.push(`/restaurante/paso${stepNumber}`)
 }
 
-// Mapeo dinámico de platos seleccionados procesando la tienda Pinia
 const displayMeals = computed(() => {
   if (Array.isArray(store.selectedMeals) && store.selectedMeals.length > 0) {
     return store.selectedMeals.filter((m: any) => (m.count || m.quantity || 0) > 0)
@@ -73,7 +71,6 @@ const displayMeals = computed(() => {
   return []
 })
 
-// Cálculo dinámico de Subtotal Neto, IVA y Total
 const subtotal = computed(() => {
   return displayMeals.value.reduce((sum: number, meal: any) => {
     const price = Number(meal.price || meal.unitPrice || 0)
@@ -99,13 +96,14 @@ function handleGoHome() {
   router.push('/')
 }
 
+// HU-5.2: Redirección con preservación de estado global (Fechas, huéspedes y contacto)
 function handleGoToCabana() {
-  store.selectedService = 'cabana'
+  store.prepareCrossServiceBooking('cabana')
   router.push('/cabana/paso1')
 }
 
 function handleGoToCamping() {
-  store.selectedService = 'camping'
+  store.prepareCrossServiceBooking('camping')
   router.push('/camping/paso1')
 }
 </script>
@@ -124,7 +122,7 @@ function handleGoToCamping() {
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
         
-        <!-- 1. Fechas y Horario con botón Editar (Navega a Paso 1) -->
+        <!-- 1. Fechas y Horario con Edición (Paso 1) -->
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -147,7 +145,6 @@ function handleGoToCamping() {
               <span class="text-brand-dark font-black uppercase">{{ formatDateShort(store.checkInDate) }}</span>
             </div>
             
-            <!-- Desglose de horarios si existen selecciones por servicio -->
             <div v-if="store.selectedMealTypes && store.selectedMealTypes.length > 0" class="space-y-1 pt-1 border-t border-gray-200/60">
               <div 
                 v-for="mId in store.selectedMealTypes" 
@@ -177,7 +174,7 @@ function handleGoToCamping() {
           </div>
         </div>
 
-        <!-- 2. Desglose de Platos Seleccionados con botón Editar (Navega a Paso 2) -->
+        <!-- 2. Desglose de Platos Seleccionados con Edición (Paso 2) -->
         <div class="space-y-3">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -230,7 +227,7 @@ function handleGoToCamping() {
           </div>
         </div>
 
-        <!-- 3. Presupuesto + DepositInfoCard -->
+        <!-- 3. Presupuesto -->
         <div class="space-y-3">
           <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
             <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -252,11 +249,10 @@ function handleGoToCamping() {
             </div>
           </div>
 
-          <!-- Componente Reutilizable de Abono (30% Configurable) -->
           <DepositInfoCard :total-with-iva="totalWithIva" service-name="restaurante" />
         </div>
 
-        <!-- 4. Contacto del Cliente con botón Editar (Navega a Paso 3) -->
+        <!-- 4. Contacto del Cliente con Edición (Paso 3) -->
         <div class="space-y-3">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -288,7 +284,7 @@ function handleGoToCamping() {
           </div>
         </div>
 
-        <!-- 5. Comentarios u Observaciones con botón Editar (Navega a Paso 3) -->
+        <!-- 5. Comentarios u Observaciones con Edición (Paso 3) -->
         <div v-if="store.comments" class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -311,7 +307,7 @@ function handleGoToCamping() {
         </div>
       </div>
 
-      <!-- Navegación Flotante Fija -->
+      <!-- Navegación Flotante -->
       <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
         <div class="max-w-md mx-auto flex items-center gap-3">
           <BaseButton variant="outline" size="lg" @click="navigateToStep(3)">
@@ -327,7 +323,7 @@ function handleGoToCamping() {
       </div>
     </div>
 
-    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA -->
+    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA CON VENTA CRUZADA (HU-5.2) -->
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
       <div class="w-16 h-16 bg-emerald-100 text-status-success rounded-full flex items-center justify-center mx-auto shadow-xs">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
@@ -363,7 +359,7 @@ function handleGoToCamping() {
         </div>
       </div>
 
-      <!-- Venta Cruzada -->
+      <!-- BANNER DE VENTA CRUZADA CON DATOS CONSERVADOS (HU-5.2) -->
       <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl text-left space-y-3">
         <div class="flex items-center gap-2 text-amber-950 font-black text-sm">
           <Utensils class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
@@ -371,7 +367,7 @@ function handleGoToCamping() {
         </div>
 
         <p class="text-xs font-semibold text-amber-900 leading-relaxed">
-          Puedes reservar cabañas equipadas o sitios de camping para completar tu visita.
+          Conservamos las fechas y tu grupo de <strong class="text-amber-950 font-black">{{ store.guestsCount }} personas</strong> para que agregues cabañas o camping sin volver a llenar tus datos.
         </p>
 
         <div class="grid grid-cols-2 gap-2 pt-1">
