@@ -1,103 +1,76 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight, ArrowLeft, Users, Clock, Utensils, Check, AlertCircle } from 'lucide-vue-next'
-import { useReservationStore } from '../../../stores/reservationStore'
-import BaseButton from '../../../components/ui/BaseButton.vue'
-import StepIndicator from '../../../components/ui/StepIndicator.vue'
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  Users, 
+  Utensils, 
+  Check, 
+  Clock, 
+  AlertCircle 
+} from 'lucide-vue-next'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseCalendar from '../../../components/ui/BaseCalendar.vue'
+import StepIndicator from '../../../components/ui/StepIndicator.vue'
+import { useReservationStore } from '../../../stores/reservationStore'
+import { useAdminStore } from '../../../stores/adminStore'
 
 const router = useRouter()
 const store = useReservationStore()
+const adminStore = useAdminStore()
 
-interface MealOption {
-  id: 'desayuno' | 'almuerzo' | 'once'
-  label: string
-  times: string[]
-}
+const todayStr = new Date().toISOString().substring(0, 10)
+const selectedDate = ref<string>(store.checkInDate || todayStr)
+const guests = ref<number>(store.guestsCount || 1)
+const selectedMealTypes = ref<string[]>(store.selectedMealTypes || [])
+const mealTimes = ref<Record<string, string>>(store.mealTimes || {})
 
-const mealOptions: MealOption[] = [
-  {
-    id: 'desayuno',
-    label: 'Desayuno',
-    times: ['09:00', '09:30', '10:30']
+// Conversión de string 'YYYY-MM-DD' a objeto Date para BaseCalendar
+const calendarDate = computed<Date>(() => {
+  if (!selectedDate.value) return new Date()
+  const [year, month, day] = selectedDate.value.split('-').map(Number)
+  return new Date(year, (month || 1) - 1, day || 1)
+})
+
+// Opciones de servicio obtenidas desde adminStore para permitir su editabilidad posterior desde la BD
+const mealOptions = computed(() => [
+  { 
+    id: 'desayuno', 
+    label: 'Desayuno', 
+    rangeText: `${adminStore.restaurantSchedules.desayuno.start} a ${adminStore.restaurantSchedules.desayuno.end} hrs`,
+    times: adminStore.restaurantSchedules.desayuno.times 
   },
-  {
-    id: 'almuerzo',
-    label: 'Almuerzo',
-    times: ['12:30', '13:30', '14:30']
+  { 
+    id: 'almuerzo', 
+    label: 'Almuerzo', 
+    rangeText: `${adminStore.restaurantSchedules.almuerzo.start} a ${adminStore.restaurantSchedules.almuerzo.end} hrs`,
+    times: adminStore.restaurantSchedules.almuerzo.times 
   },
-  {
-    id: 'once',
-    label: 'Once',
-    times: ['17:30', '18:30', '19:30']
+  { 
+    id: 'once', 
+    label: 'Once', 
+    rangeText: `${adminStore.restaurantSchedules.once.start} a ${adminStore.restaurantSchedules.once.end} hrs`,
+    times: adminStore.restaurantSchedules.once.times 
   }
-]
+])
 
-const selectedDate = ref<Date | null>(
-  store.checkInDate ? new Date(store.checkInDate + 'T00:00:00') : new Date(2026, 9, 6)
-)
-const guests = ref<number>(store.guestsCount || 5)
+onMounted(() => {
+  if (!store.checkInDate) store.checkInDate = selectedDate.value
+})
 
-// Inicia estrictamente vacío (sin ningún servicio pre-seleccionado)
-const selectedMealTypes = ref<string[]>(
-  store.selectedMealTypes ? [...store.selectedMealTypes] : []
-)
-
-const mealTimes = ref<Record<string, string>>(
-  store.mealTimes ? { ...store.mealTimes } : {}
-)
-
-function toggleMealType(id: string) {
-  const index = selectedMealTypes.value.indexOf(id)
-  if (index > -1) {
-    selectedMealTypes.value.splice(index, 1)
-    delete mealTimes.value[id]
-  } else {
-    selectedMealTypes.value.push(id)
-    const defaultTime = mealOptions.find(m => m.id === id)?.times[0] || ''
-    mealTimes.value[id] = defaultTime
+// Evento de cambio del calendario recibiendo objetos Date
+function handleCalendarChange(range: { start: Date | null; end: Date | null }) {
+  if (range.start) {
+    const y = range.start.getFullYear()
+    const m = String(range.start.getMonth() + 1).padStart(2, '0')
+    const d = String(range.start.getDate()).padStart(2, '0')
+    const dateStr = `${y}-${m}-${d}`
+    selectedDate.value = dateStr
+    store.checkInDate = dateStr
+    store.checkOutDate = dateStr
   }
-}
-
-function toggleMealTime(mealId: string, time: string) {
-  if (mealTimes.value[mealId] === time) {
-    mealTimes.value[mealId] = ''
-  } else {
-    mealTimes.value[mealId] = time
-  }
-}
-
-function handleCalendarChange(payload: { start: Date | null; end: Date | null }) {
-  selectedDate.value = payload.start
-  if (payload.start) {
-    store.checkInDate = formatDateISO(payload.start)
-    store.checkOutDate = formatDateISO(payload.start)
-  }
-}
-
-function formatDateISO(d: Date) {
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function formatDateShort(d: Date | null) {
-  if (!d) return '—'
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
-}
-
-function handleGuestsInput(e: Event) {
-  const target = e.target as HTMLInputElement
-  let val = parseInt(target.value) || 1
-  if (val < 1) val = 1
-  if (val > 200) val = 200
-  guests.value = val
-  store.guestsCount = val
 }
 
 function incrementGuests() {
@@ -114,24 +87,68 @@ function decrementGuests() {
   }
 }
 
-// Requiere fecha, al menos un servicio activo y su horario correspondiente elegido
+function handleGuestsInput(e: Event) {
+  const val = parseInt((e.target as HTMLInputElement).value) || 1
+  guests.value = Math.max(1, Math.min(200, val))
+  store.guestsCount = guests.value
+}
+
+function toggleMealType(id: string) {
+  const idx = selectedMealTypes.value.indexOf(id)
+  if (idx >= 0) {
+    selectedMealTypes.value.splice(idx, 1)
+    delete mealTimes.value[id]
+  } else {
+    selectedMealTypes.value.push(id)
+    const option = mealOptions.value.find(m => m.id === id)
+    if (option && option.times.length > 0) {
+      mealTimes.value[id] = option.times[0]
+    }
+  }
+  store.selectedMealTypes = [...selectedMealTypes.value]
+  store.mealTimes = { ...mealTimes.value }
+}
+
+function selectMealTime(mealId: string, timeSlot: string) {
+  mealTimes.value[mealId] = timeSlot
+  store.mealTimes = { ...mealTimes.value }
+  
+  // Acceso correcto usando el primer tipo de servicio como string
+  const firstService = selectedMealTypes.value[0]
+  if (firstService && mealTimes.value[firstService]) {
+    store.restaurantTime = mealTimes.value[firstService]
+  } else {
+    store.restaurantTime = timeSlot
+  }
+}
+
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return ''
+  const [, month, day] = dateStr.split('-')
+  if (!day || !month) return dateStr
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  const monthIdx = parseInt(month, 10) - 1
+  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
+}
+
 const isValid = computed(() => {
-  if (!selectedDate.value) return false
   if (selectedMealTypes.value.length === 0) return false
-  return selectedMealTypes.value.every(mealId => !!mealTimes.value[mealId])
+  return selectedMealTypes.value.every(mId => !!mealTimes.value[mId])
 })
 
 function handleNext() {
-  if (!isValid.value || !selectedDate.value) return
-  
-  store.checkInDate = formatDateISO(selectedDate.value)
-  store.checkOutDate = formatDateISO(selectedDate.value)
+  if (!isValid.value) return
+
+  store.checkInDate = selectedDate.value
+  store.checkOutDate = selectedDate.value
   store.guestsCount = guests.value
   store.selectedMealTypes = [...selectedMealTypes.value]
   store.mealTimes = { ...mealTimes.value }
   
-  store.nextStep()
-  router.push({ name: 'restaurant-step2' })
+  const firstService = selectedMealTypes.value[0]
+  store.restaurantTime = (firstService && mealTimes.value[firstService]) ? mealTimes.value[firstService] : ''
+
+  router.push('/restaurante/paso2')
 }
 
 function handleBack() {
@@ -140,16 +157,15 @@ function handleBack() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto pb-28">
-    
-    <!-- Indicador de Pasos Estándar -->
+  <div class="space-y-4 pb-24">
+    <!-- Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="1" />
     </div>
 
     <!-- Alerta de Guía -->
     <BaseAlert variant="info" title="Reserva de Restaurante">
-      Selecciona la fecha, la cantidad de personas y marca al menos una opción de servicio (Desayuno, Almuerzo o Once) para continuar.
+      Selecciona la fecha, cantidad de personas y marca los servicios que deseas para definir su hora de atención.
     </BaseAlert>
 
     <!-- Formulario Principal -->
@@ -161,8 +177,8 @@ function handleBack() {
           Fecha de Visita
         </label>
         <BaseCalendar 
-          :start-date="selectedDate"
-          :end-date="selectedDate"
+          :start-date="calendarDate"
+          :end-date="calendarDate"
           @change="handleCalendarChange"
         />
       </div>
@@ -207,11 +223,11 @@ function handleBack() {
         </div>
       </div>
 
-      <!-- Selección de Servicios (Comienza Desmarcado) -->
+      <!-- Selección de Servicios -->
       <div class="pt-3 border-t-2 border-gray-100 space-y-3">
         <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          Servicios Deseados * (Selecciona al menos uno)
+          Servicios Deseados * (Marca al menos uno)
         </label>
 
         <div class="grid grid-cols-3 gap-2">
@@ -237,17 +253,16 @@ function handleBack() {
           </button>
         </div>
 
-        <!-- Aviso si no hay nada seleccionado -->
         <div 
           v-if="selectedMealTypes.length === 0" 
           class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs font-bold text-amber-900 flex items-center gap-2"
         >
           <AlertCircle class="w-4 h-4 text-amber-700 shrink-0 stroke-[2.5]" />
-          <span>Haz clic en Desayuno, Almuerzo y/o Once para habilitar sus horarios.</span>
+          <span>Haz clic en Desayuno, Almuerzo o Once para seleccionar los horarios permitidos.</span>
         </div>
       </div>
 
-      <!-- Horarios por Servicio Seleccionado -->
+      <!-- Horarios Específicos por Rango para Cada Servicio Seleccionado -->
       <div 
         v-for="mealId in selectedMealTypes" 
         :key="mealId"
@@ -258,17 +273,18 @@ function handleBack() {
             <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
             Horario para {{ mealOptions.find(m => m.id === mealId)?.label }}
           </span>
-          <span class="text-[11px] font-black text-brand-accent bg-white px-2.5 py-0.5 rounded-full border border-brand-border">
-            {{ mealTimes[mealId] ? mealTimes[mealId] + ' hrs' : 'Selecciona hora' }}
+          <span class="text-[10px] font-extrabold text-gray-500">
+            ({{ mealOptions.find(m => m.id === mealId)?.rangeText }})
           </span>
         </div>
 
+        <!-- Botones de Horario en el Rango -->
         <div class="grid grid-cols-3 gap-2">
           <button
             type="button"
             v-for="timeSlot in mealOptions.find(m => m.id === mealId)?.times"
             :key="timeSlot"
-            @click="toggleMealTime(mealId, timeSlot)"
+            @click="selectMealTime(mealId, timeSlot)"
             :class="[
               'py-2.5 px-3 rounded-xl font-black text-xs transition-all touch-target border-2',
               mealTimes[mealId] === timeSlot
@@ -294,14 +310,14 @@ function handleBack() {
         <div class="text-right">
           <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Servicios</span>
           <span class="text-brand-dark font-black">
-            {{ selectedMealTypes.length > 0 ? selectedMealTypes.length + ' elegido(s)' : 'Ninguno' }}
+            {{ selectedMealTypes.length > 0 ? selectedMealTypes.length + ' activo(s)' : 'Ninguno' }}
           </span>
         </div>
       </div>
 
     </div>
 
-    <!-- BOTONES FIJOS EN LA PARTE INFERIOR -->
+    <!-- Botones Flotantes -->
     <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
       <div class="max-w-md mx-auto flex items-center gap-3">
         <BaseButton variant="outline" size="lg" @click="handleBack">
@@ -321,6 +337,5 @@ function handleBack() {
         </BaseButton>
       </div>
     </div>
-
   </div>
 </template>

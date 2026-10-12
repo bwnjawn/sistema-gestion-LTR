@@ -1,37 +1,30 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  ArrowRight, 
   ArrowLeft, 
-  ChevronRight, 
-  Plus, 
+  ArrowRight, 
   Minus, 
+  Plus, 
+  Sparkles, 
   Check, 
-  AlertTriangle, 
-  Info, 
-  Utensils, 
-  Sparkles 
+  AlertTriangle,
+  Utensils,
+  CheckCircle2,
+  X,
+  AlertCircle
 } from 'lucide-vue-next'
-import { useReservationStore } from '../../../stores/reservationStore'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import { useReservationStore } from '../../../stores/reservationStore'
+import { useAdminStore, type Dish } from '../../../stores/adminStore'
 
 const router = useRouter()
 const store = useReservationStore()
+const adminStore = useAdminStore()
 
 const totalGuests = computed(() => store.guestsCount || 1)
-
-// Tipos de servicio activos según lo seleccionado en el Paso 1
-const activeMealTypes = computed(() => {
-  return store.selectedMealTypes && store.selectedMealTypes.length > 0
-    ? store.selectedMealTypes
-    : ['desayuno', 'almuerzo', 'once']
-})
-
-const activeMealIndex = ref(0)
-const currentMealType = computed(() => activeMealTypes.value[activeMealIndex.value] || 'desayuno')
 
 const mealLabels: Record<string, string> = {
   desayuno: 'Desayuno',
@@ -39,265 +32,337 @@ const mealLabels: Record<string, string> = {
   once: 'Once'
 }
 
-const currentMealLabel = computed(() => mealLabels[currentMealType.value])
+const MEAL_ORDER = ['desayuno', 'almuerzo', 'once']
 
-interface Dish {
-  id: string
-  name: string
-  mealType: 'desayuno' | 'almuerzo' | 'once'
-  price: number
-  description: string
-  image: string
-  availableSideDishes: string[]
-}
+const activeMealTypes = computed(() => {
+  const selected = (store.selectedMealTypes && store.selectedMealTypes.length > 0)
+    ? store.selectedMealTypes
+    : ['almuerzo']
+  return MEAL_ORDER.filter(m => selected.includes(m))
+})
 
-// Catálogo de platos de r2.txt con imagen agregada
-const allDishes: Dish[] = [
-  // Desayunos
-  {
-    id: 'desayuno-campesino',
-    name: 'Desayuno Campestre',
-    mealType: 'desayuno',
-    price: 10800,
-    description: 'Frutas, yogurt, cereales, pan amasado, huevos de campo, mermelada casera, café, té o mate.',
-    image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=800&q=80',
-    availableSideDishes: []
-  },
-  {
-    id: 'desayuno-tradicional',
-    name: 'Desayuno Tradicional',
-    mealType: 'desayuno',
-    price: 6000,
-    description: 'Un sándwich jamón queso en pan casero, té, café o leche y un bocado dulce.',
-    image: 'https://images.unsplash.com/photo-1495214783159-3503fd1b572d?auto=format&fit=crop&w=800&q=80',
-    availableSideDishes: []
-  },
-
-  // Almuerzos
-  {
-    id: 'almuerzo-cordero-cerdo',
-    name: 'Asado de Cordero y Cerdo al Palo',
-    mealType: 'almuerzo',
-    price: 20000,
-    description: 'Asado tradicional cocinado a fuego lento con leña nativa. Incluye buffet de ensaladas, pan amasado y postre.',
-    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-    availableSideDishes: ['Papas al vapor', 'Puré casero', 'Papas rústicas']
-  },
-  {
-    id: 'almuerzo-vacuno-bechamel',
-    name: 'Vacuno con Salsa Bechamel',
-    mealType: 'almuerzo',
-    price: 21000,
-    description: 'Tierno corte de vacuno con suave salsa cremosa. Incluye buffet de ensaladas, pan amasado y postre.',
-    image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=800&q=80',
-    availableSideDishes: ['Papas rústicas', 'Puré casero', 'Arroz primavera']
-  },
-  {
-    id: 'almuerzo-salmon-camarones',
-    name: 'Salmón con Salsa de Camarones',
-    mealType: 'almuerzo',
-    price: 21000,
-    description: 'Salmón fresco bañado en salsa de camarones. Incluye buffet de ensaladas, pan amasado y postre.',
-    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80',
-    availableSideDishes: ['Puré casero', 'Papas rústicas', 'Arroz primavera']
-  },
-  {
-    id: 'almuerzo-chuletas-cerdo',
-    name: 'Chuletas de Cerdo Criollas',
-    mealType: 'almuerzo',
-    price: 13000,
-    description: 'Jugosas chuletas de cerdo doradas. Incluye buffet de ensaladas, pan amasado y postre.',
-    image: 'https://images.unsplash.com/photo-1432139555190-58524dae6a55?auto=format&fit=crop&w=800&q=80',
-    availableSideDishes: ['Puré casero', 'Papas al vapor', 'Papas rústicas']
-  },
-  {
-    id: 'almuerzo-vegetariano',
-    name: 'Almuerzo Vegetariano / Vegano',
-    mealType: 'almuerzo',
-    price: 12000,
-    description: 'Pastel, chupe o budín de verduras a acordar. Incluye buffet de ensalada, postre y té de hierba.',
-    image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80',
-    availableSideDishes: []
-  },
-
-  // Onces
-  {
-    id: 'once-campesina',
-    name: 'Once Campesina',
-    mealType: 'once',
-    price: 12000,
-    description: 'Jugo natural, té, café o mate. Sopaipillas, pan casero, pastas para acompañar, queso, mermeladas y kuchen.',
-    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
-    availableSideDishes: []
-  },
-  {
-    id: 'once-tradicional',
-    name: 'Once Tradicional / Infantil',
-    mealType: 'once',
-    price: 7500,
-    description: 'Un hot dog o completo, un vaso de bebida y una paleta de helado.',
-    image: 'https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80',
-    availableSideDishes: []
-  }
-]
-
-interface DishSelection {
-  count: number
-  sides: Record<string, number>
-}
-
-// Carga de selecciones
-const selections = ref<Record<string, DishSelection>>(
-  store.selectedMenus && Object.keys(store.selectedMenus).length > 0
-    ? JSON.parse(JSON.stringify(store.selectedMenus))
-    : {}
-)
+const activeMealIndex = ref(0)
+const currentMealType = computed(() => activeMealTypes.value[activeMealIndex.value] || 'almuerzo')
 
 const currentMealDishes = computed(() => {
-  return allDishes.filter(d => d.mealType === currentMealType.value)
+  const catLabel = mealLabels[currentMealType.value]?.toLowerCase() || 'almuerzo'
+  return adminStore.dishes.filter(d => {
+    const dishCategory = (d.mealCategory || '').toLowerCase()
+    return dishCategory === catLabel || (currentMealType.value === 'almuerzo' && !d.mealCategory)
+  })
 })
+
+const selections = ref<Record<string, { count: number; sides: Record<string, number> }>>({})
+const showIncompleteModal = ref(false) // Estado para controlar el modal de selección incompleta
+
+onMounted(() => {
+  if (store.selectedMenus && Object.keys(store.selectedMenus).length > 0) {
+    selections.value = JSON.parse(JSON.stringify(store.selectedMenus))
+  } else if (Array.isArray(store.selectedMeals) && store.selectedMeals.length > 0) {
+    store.selectedMeals.forEach((meal: any) => {
+      selections.value[meal.id] = {
+        count: meal.count || 1,
+        sides: meal.sides || {}
+      }
+    })
+  }
+})
+
+function getSideDishes(dish: Dish): string[] {
+  return dish.availableSideDishes || dish.availableSides || []
+}
+
+const dishStatusMap = computed(() => {
+  const map: Record<string, { assignedSides: number; requiredSides: number; missing: number; isComplete: boolean }> = {}
+  
+  adminStore.dishes.forEach(dish => {
+    const sel = selections.value[dish.id] || { count: 0, sides: {} }
+    const count = sel.count || 0
+    const sides = sel.sides || {}
+
+    if (dish.fixedSide) {
+      map[dish.id] = { assignedSides: count, requiredSides: count, missing: 0, isComplete: true }
+      return
+    }
+
+    const availableSides = getSideDishes(dish)
+    const requiredSides = availableSides.length > 0 ? count : 0
+    const assignedSides = Object.values(sides).reduce((a, b) => a + Number(b), 0)
+    const missing = Math.max(0, requiredSides - assignedSides)
+    const isComplete = count === 0 || requiredSides === 0 || assignedSides >= requiredSides
+
+    map[dish.id] = { assignedSides, requiredSides, missing, isComplete }
+  })
+
+  return map
+})
+
+const distinctSelectedInCurrentMeal = computed(() => {
+  return currentMealDishes.value.filter(dish => (selections.value[dish.id]?.count || 0) > 0).length
+})
+
+const isGroupOver30 = computed(() => totalGuests.value > 30)
+const showVarietyLimitWarning = ref(false)
 
 function updateDishCount(dishId: string, delta: number) {
   if (!selections.value[dishId]) {
     selections.value[dishId] = { count: 0, sides: {} }
   }
-  const current = selections.value[dishId].count
-  const next = Math.max(0, current + delta)
-  selections.value[dishId].count = next
+  const currentCount = selections.value[dishId].count
 
-  if (next === 0) {
+  if (delta > 0 && currentCount === 0 && isGroupOver30.value && distinctSelectedInCurrentMeal.value >= 3) {
+    showVarietyLimitWarning.value = true
+    return
+  }
+
+  showVarietyLimitWarning.value = false
+  const newCount = Math.max(0, currentCount + delta)
+  selections.value[dishId].count = newCount
+
+  if (newCount === 0) {
     selections.value[dishId].sides = {}
   }
 }
 
-function updateSideCount(dishId: string, side: string, delta: number) {
-  if (!selections.value[dishId] || selections.value[dishId].count <= 0) return
-  if (!selections.value[dishId].sides) {
+function handleDishCountInput(dishId: string, event: Event) {
+  const input = event.target as HTMLInputElement
+  let val = parseInt(input.value, 10)
+  if (isNaN(val) || val < 0) val = 0
+
+  if (!selections.value[dishId]) {
+    selections.value[dishId] = { count: 0, sides: {} }
+  }
+
+  const currentCount = selections.value[dishId].count
+  if (val > 0 && currentCount === 0 && isGroupOver30.value && distinctSelectedInCurrentMeal.value >= 3) {
+    showVarietyLimitWarning.value = true
+    selections.value[dishId].count = 0
+    input.value = '0'
+    return
+  }
+
+  showVarietyLimitWarning.value = false
+  selections.value[dishId].count = val
+  if (val === 0) {
     selections.value[dishId].sides = {}
-  }
-  const current = selections.value[dishId].sides[side] || 0
-  
-  // Calcular total de acompañamientos ya asignados
-  const totalAssigned = Object.values(selections.value[dishId].sides).reduce((a, b) => a + b, 0)
-  const maxAllowed = selections.value[dishId].count
-
-  if (delta > 0 && totalAssigned >= maxAllowed) {
-    return // No permite asignar más acompañamientos que platos
-  }
-
-  const next = Math.max(0, current + delta)
-  selections.value[dishId].sides[side] = next
-  
-  if (next === 0) {
-    delete selections.value[dishId].sides[side]
   }
 }
 
-// Mapa de validación de acompañamientos por plato (original r2.txt)
-const dishStatusMap = computed(() => {
-  const map: Record<string, { assignedSides: number; requiredSides: number; missing: number; isComplete: boolean }> = {}
-  allDishes.forEach(dish => {
-    const sel = selections.value[dish.id] || { count: 0, sides: {} }
-    const count = sel.count || 0
-    if (count === 0 || dish.availableSideDishes.length === 0) {
-      map[dish.id] = { assignedSides: 0, requiredSides: 0, missing: 0, isComplete: true }
-    } else {
-      const assigned = Object.values(sel.sides || {}).reduce((a, b) => a + b, 0)
-      const required = count
-      const missing = Math.max(0, required - assigned)
-      map[dish.id] = {
-        assignedSides: assigned,
-        requiredSides: required,
-        missing,
-        isComplete: missing === 0
-      }
-    }
+function updateSideCount(dishId: string, sideName: string, delta: number) {
+  if (!selections.value[dishId]) return
+  const dishCount = selections.value[dishId].count || 0
+  const currentSides = selections.value[dishId].sides || {}
+  const currentSideCount = currentSides[sideName] || 0
+  const totalAssigned = Object.values(currentSides).reduce((a, b) => a + Number(b), 0)
+
+  if (delta > 0 && totalAssigned >= dishCount) {
+    return
+  }
+
+  const newSideCount = Math.max(0, currentSideCount + delta)
+  selections.value[dishId].sides = {
+    ...currentSides,
+    [sideName]: newSideCount
+  }
+}
+
+function handleSideCountInput(dishId: string, sideName: string, event: Event) {
+  const input = event.target as HTMLInputElement
+  let val = parseInt(input.value, 10)
+  if (isNaN(val) || val < 0) val = 0
+
+  if (!selections.value[dishId]) return
+  const dishCount = selections.value[dishId].count || 0
+  const currentSides = { ...(selections.value[dishId].sides || {}) }
+  
+  delete currentSides[sideName]
+  const otherAssigned = Object.values(currentSides).reduce((a, b) => a + Number(b), 0)
+  
+  const maxAllowedForThisSide = Math.max(0, dishCount - otherAssigned)
+  const finalVal = Math.min(val, maxAllowedForThisSide)
+
+  input.value = String(finalVal)
+  selections.value[dishId].sides = {
+    ...(selections.value[dishId].sides || {}),
+    [sideName]: finalVal
+  }
+}
+
+function getMealSelectedCount(mealType: string): number {
+  const catLabel = mealLabels[mealType]?.toLowerCase() || ''
+  const mealDishes = adminStore.dishes.filter(d => (d.mealCategory || '').toLowerCase() === catLabel)
+  return mealDishes.reduce((sum, dish) => sum + (selections.value[dish.id]?.count || 0), 0)
+}
+
+function isMealValid(mealType: string): boolean {
+  const catLabel = mealLabels[mealType]?.toLowerCase() || ''
+  const mealDishes = adminStore.dishes.filter(d => (d.mealCategory || '').toLowerCase() === catLabel)
+  return mealDishes.every(dish => {
+    const sel = selections.value[dish.id]
+    if (!sel || sel.count === 0) return true
+    return dishStatusMap.value[dish.id]?.isComplete
   })
-  return map
+}
+
+const totalSelectedDishes = computed(() => {
+  return Object.values(selections.value).reduce((acc, item) => acc + (item.count || 0), 0)
 })
 
-function getMealSelectedCount(mId: string): number {
-  return allDishes
-    .filter(d => d.mealType === mId)
-    .reduce((sum, d) => sum + (selections.value[d.id]?.count || 0), 0)
-}
+const isFormValid = computed(() => {
+  if (totalSelectedDishes.value === 0) return false
 
-function isMealValid(mId: string): boolean {
-  const mealDishes = allDishes.filter(d => d.mealType === mId)
-  const count = getMealSelectedCount(mId)
-  if (count > totalGuests.value) return false
-  return mealDishes.every(d => dishStatusMap.value[d.id].isComplete)
-}
+  return Object.keys(selections.value).every(dishId => {
+    const count = selections.value[dishId]?.count || 0
+    if (count === 0) return true
+    return dishStatusMap.value[dishId]?.isComplete
+  })
+})
 
-const mealSelectedCount = computed(() => getMealSelectedCount(currentMealType.value))
-const isCurrentMealValid = computed(() => isMealValid(currentMealType.value))
-const areAllMealsValid = computed(() => activeMealTypes.value.every(mId => isMealValid(mId)))
+function formatCLP(amount: number): string {
+  return `$${amount.toLocaleString('es-CL')}`
+}
 
 function selectMealTab(idx: number) {
   activeMealIndex.value = idx
+  showVarietyLimitWarning.value = false
 }
 
-function handleNextMeal() {
-  if (activeMealIndex.value < activeMealTypes.value.length - 1) {
-    activeMealIndex.value++
+// Evaluación antes de avanzar
+function handleNext() {
+  if (!isFormValid.value) return
+
+  // 1. Si los menús seleccionados son menores que la cantidad de personas, abrir modal de confirmación
+  if (totalSelectedDishes.value < totalGuests.value) {
+    showIncompleteModal.value = true
+    return
   }
+
+  proceedToStep3()
 }
 
-const showPartialModal = ref(false)
+// Guarda selecciones y navega al Paso 3
+function proceedToStep3() {
+  showIncompleteModal.value = false
+  store.selectedMenus = JSON.parse(JSON.stringify(selections.value))
 
-const partialSummary = computed(() => {
-  return activeMealTypes.value
-    .map(mId => `${mealLabels[mId]}: ${getMealSelectedCount(mId)} de ${totalGuests.value}`)
-    .join(' · ')
-})
+  const mealsList: any[] = []
+  Object.entries(selections.value).forEach(([dishId, data]) => {
+    if (data && data.count > 0) {
+      const dish = adminStore.dishes.find(d => d.id === dishId)
+      if (dish) {
+        let finalSides = data.sides || {}
+        if (dish.fixedSide) {
+          finalSides = { [dish.fixedSide]: data.count }
+        }
 
-function handleGoToStep3() {
-  const hasPartial = activeMealTypes.value.some(mId => {
-    const cnt = getMealSelectedCount(mId)
-    return cnt > 0 && cnt < totalGuests.value
+        mealsList.push({
+          id: dish.id,
+          name: dish.name,
+          price: dish.price,
+          count: data.count,
+          sides: finalSides,
+          fixedSide: dish.fixedSide,
+          mealCategory: dish.mealCategory
+        })
+      }
+    }
   })
 
-  if (hasPartial) {
-    showPartialModal.value = true
-  } else {
-    confirmAndProceed()
-  }
-}
-
-function confirmAndProceed() {
-  store.selectedMenus = JSON.parse(JSON.stringify(selections.value))
-  store.nextStep()
-  router.push({ name: 'restaurant-step3' })
+  store.selectedMeals = mealsList
+  router.push('/restaurante/paso3')
 }
 
 function handleBack() {
-  if (activeMealIndex.value > 0) {
-    activeMealIndex.value--
-  } else {
-    store.prevStep()
-    router.push({ name: 'restaurant-step1' })
-  }
-}
-
-function formatCLP(val: number): string {
-  return '\$' + val.toLocaleString('es-CL')
+  router.push('/restaurante/paso1')
 }
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto pb-28">
+  <div class="space-y-4 pb-24 relative">
     
-    <!-- Indicador de Pasos Estándar -->
+    <!-- 1. MODAL DE CONFIRMACIÓN POR SELECCIÓN INCOMPLETA -->
+    <Transition name="fade">
+      <div 
+        v-if="showIncompleteModal" 
+        class="fixed inset-0 z-50 bg-brand-dark/60 backdrop-blur-xs flex items-center justify-center p-4"
+      >
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full border-2 border-brand-border shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div class="w-12 h-12 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle class="w-7 h-7 stroke-[2.5]" />
+          </div>
+
+          <div class="text-center space-y-2">
+            <h3 class="text-lg font-black text-brand-dark">Menús Incompletos</h3>
+            <p class="text-xs font-semibold text-gray-600 leading-relaxed">
+              Has asignado <strong class="text-brand-dark font-black">{{ totalSelectedDishes }} de {{ totalGuests }}</strong> menús para tu grupo.
+            </p>
+            <p class="text-[11px] font-bold text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+              ¿Deseas continuar con estos menús o prefieres ajustar las cantidades antes de avanzar?
+            </p>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <BaseButton 
+              variant="primary" 
+              size="lg" 
+              fullWidth 
+              @click="proceedToStep3"
+            >
+              Continuar de todos modos
+            </BaseButton>
+
+            <BaseButton 
+              variant="outline" 
+              size="lg" 
+              fullWidth 
+              @click="showIncompleteModal = false"
+            >
+              Ajustar Menús
+            </BaseButton>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- AVISO FLOTANTE SUPERIOR FIJO PARA LÍMITE DE 3 MENÚS -->
+    <Transition name="fade">
+      <div 
+        v-if="showVarietyLimitWarning" 
+        class="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto bg-amber-500 text-white p-3.5 rounded-2xl shadow-2xl border-2 border-amber-600 font-bold text-xs flex items-center justify-between gap-3"
+      >
+        <div class="flex items-center gap-2">
+          <AlertTriangle class="w-5 h-5 text-white shrink-0 stroke-[2.5]" />
+          <span>
+            Para grupos de más de 30 personas, se permite un <strong>máximo de 3 variedades de menú en {{ mealLabels[currentMealType] }}</strong>.
+          </span>
+        </div>
+        <button 
+          type="button" 
+          @click="showVarietyLimitWarning = false"
+          class="p-1 hover:bg-amber-600 rounded-lg transition-colors shrink-0"
+        >
+          <X class="w-4 h-4 text-white stroke-[2.5]" />
+        </button>
+      </div>
+    </Transition>
+
+    <!-- Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="2" />
     </div>
 
-    <!-- Alerta de Guía r2.txt -->
+    <!-- Alerta Guiada -->
     <BaseAlert variant="info" title="Selección de Menú por Servicio">
-      Asigna los menús para tus {{ totalGuests }} comensales. Si deseas, puedes asignar menús solo a una parte del grupo.
+      <div class="flex items-center justify-between gap-2">
+        <span>Asigna los menús para tus {{ totalGuests }} comensales.</span>
+        <span class="bg-brand-dark text-white px-2.5 py-0.5 rounded-full font-black text-xs shrink-0 flex items-center gap-1">
+          <Utensils class="w-3.5 h-3.5 text-emerald-300 stroke-[2.5]" />
+          {{ totalSelectedDishes }} / {{ totalGuests }}
+        </span>
+      </div>
     </BaseAlert>
 
-    <!-- Pestañas Ordenadas Estrictamente (Desayuno -> Almuerzo -> Once) -->
+    <!-- Pestañas Ordenadas -->
     <div v-if="activeMealTypes.length > 1" class="flex gap-2 p-1 bg-brand-light rounded-2xl border-2 border-brand-border">
       <button
         type="button"
@@ -305,7 +370,7 @@ function formatCLP(val: number): string {
         :key="mId"
         @click="selectMealTab(idx)"
         :class="[
-          'flex-1 py-2.5 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 border',
+          'flex-1 py-2.5 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 border touch-target',
           activeMealIndex === idx
             ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
             : 'bg-white text-brand-dark border-brand-border hover:bg-gray-100'
@@ -314,7 +379,7 @@ function formatCLP(val: number): string {
         <span>{{ mealLabels[mId] }}</span>
         <span 
           :class="[
-            'text-[10px] px-1.5 py-0.2 rounded-full font-extrabold',
+            'text-[10px] px-1.5 py-0.5 rounded-full font-extrabold',
             isMealValid(mId) && getMealSelectedCount(mId) > 0
               ? 'bg-emerald-400 text-brand-dark'
               : 'bg-gray-200 text-gray-700'
@@ -325,24 +390,24 @@ function formatCLP(val: number): string {
       </button>
     </div>
 
-    <!-- Lista de Platos por Servicio con Foto -->
+    <!-- Lista de Platos -->
     <div class="space-y-4">
       <div 
         v-for="dish in currentMealDishes" 
         :key="dish.id"
         :class="[
           'bg-white rounded-3xl border-2 p-4 transition-all shadow-sm space-y-3 relative',
-          dish.availableSideDishes.length > 0 && selections[dish.id]?.count > 0 && !dishStatusMap[dish.id].isComplete
+          !dish.fixedSide && getSideDishes(dish).length > 0 && selections[dish.id]?.count > 0 && !dishStatusMap[dish.id]?.isComplete
             ? 'border-rose-500 bg-rose-50/20 ring-4 ring-rose-500/10'
             : selections[dish.id]?.count > 0
               ? 'border-brand-dark bg-white'
               : 'border-brand-border hover:border-gray-400'
         ]"
       >
-        <!-- Imagen del Plato -->
+        <!-- Foto con Precio Flotante -->
         <div class="relative h-40 w-full bg-gray-100 rounded-2xl overflow-hidden mb-1">
           <img 
-            :src="dish.image" 
+            :src="dish.image || dish.mainImage || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'" 
             :alt="dish.name"
             class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
             @error="(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80' }"
@@ -358,7 +423,7 @@ function formatCLP(val: number): string {
             <p class="text-xs font-bold text-gray-500 leading-relaxed">{{ dish.description }}</p>
           </div>
 
-          <!-- Contadores de Plato -->
+          <!-- CONTADOR DE PLATOS CON TECLADO NUMÉRICO ESTRICTO (pattern="[0-9]*" + inputmode="numeric") -->
           <div class="flex items-center gap-1.5 bg-brand-light p-1.5 rounded-2xl border-2 border-brand-border shrink-0">
             <button
               type="button"
@@ -367,9 +432,16 @@ function formatCLP(val: number): string {
             >
               <Minus class="w-4 h-4 stroke-[2.5]" />
             </button>
-            <span class="w-7 text-center font-black text-lg text-brand-dark">
-              {{ selections[dish.id]?.count || 0 }}
-            </span>
+
+            <input
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              :value="selections[dish.id]?.count || 0"
+              @input="(e) => handleDishCountInput(dish.id, e)"
+              class="w-12 text-center font-black text-base text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none focus:border-brand-dark p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+
             <button
               type="button"
               @click="updateDishCount(dish.id, 1)"
@@ -380,9 +452,20 @@ function formatCLP(val: number): string {
           </div>
         </div>
 
-        <!-- Acompañamientos según r2.txt -->
+        <!-- Acompañamiento Fijo -->
         <div 
-          v-if="selections[dish.id]?.count > 0 && dish.availableSideDishes.length > 0"
+          v-if="selections[dish.id]?.count > 0 && dish.fixedSide"
+          class="pt-3 border-t-2 border-gray-100"
+        >
+          <div class="bg-emerald-50 border border-emerald-300 text-emerald-950 p-3 rounded-2xl text-xs font-bold flex items-center gap-2">
+            <CheckCircle2 class="w-4 h-4 text-emerald-700 shrink-0 stroke-[2.5]" />
+            <span>Acompañamiento fijo incluido: <strong>{{ dish.fixedSide }}</strong></span>
+          </div>
+        </div>
+
+        <!-- Acompañamientos Elegibles -->
+        <div 
+          v-if="selections[dish.id]?.count > 0 && !dish.fixedSide && getSideDishes(dish).length > 0"
           class="pt-3 border-t-2 border-gray-100 space-y-2.5"
         >
           <div class="flex items-center justify-between">
@@ -394,28 +477,28 @@ function formatCLP(val: number): string {
             <span 
               :class="[
                 'text-xs font-black px-2.5 py-0.5 rounded-full flex items-center gap-1',
-                dishStatusMap[dish.id].isComplete
+                dishStatusMap[dish.id]?.isComplete
                   ? 'bg-emerald-100 text-emerald-800'
                   : 'bg-rose-100 text-rose-800 animate-pulse'
               ]"
             >
-              <Check v-if="dishStatusMap[dish.id].isComplete" class="w-3.5 h-3.5 stroke-[2.5]" />
+              <Check v-if="dishStatusMap[dish.id]?.isComplete" class="w-3.5 h-3.5 stroke-[2.5]" />
               <AlertTriangle v-else class="w-3.5 h-3.5 stroke-[2.5]" />
-              {{ dishStatusMap[dish.id].assignedSides }} de {{ dishStatusMap[dish.id].requiredSides }}
+              {{ dishStatusMap[dish.id]?.assignedSides }} de {{ dishStatusMap[dish.id]?.requiredSides }}
             </span>
           </div>
 
           <div 
-            v-if="!dishStatusMap[dish.id].isComplete"
+            v-if="!dishStatusMap[dish.id]?.isComplete"
             class="bg-rose-50 border border-rose-300 text-rose-900 p-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2"
           >
             <AlertTriangle class="w-4 h-4 text-rose-600 shrink-0 stroke-[2.5]" />
-            <span>Falta asignar {{ dishStatusMap[dish.id].missing }} acompañamiento(s) para este plato.</span>
+            <span>Falta asignar {{ dishStatusMap[dish.id]?.missing }} acompañamiento(s) para este plato.</span>
           </div>
 
           <div class="space-y-2 bg-brand-light p-3 rounded-2xl border border-brand-border">
             <div 
-              v-for="side in dish.availableSideDishes" 
+              v-for="side in getSideDishes(dish)" 
               :key="side"
               class="flex items-center justify-between text-xs font-bold text-gray-700"
             >
@@ -428,13 +511,27 @@ function formatCLP(val: number): string {
                 >
                   <Minus class="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
-                <span class="w-5 text-center font-black text-brand-dark">
-                  {{ selections[dish.id]?.sides[side] || 0 }}
-                </span>
+
+                <!-- INPUT DE ACOMPAÑAMIENTOS CON PAD NUMÉRICO ESTRICTO -->
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  :value="selections[dish.id]?.sides?.[side] || 0"
+                  @input="(e) => handleSideCountInput(dish.id, side, e)"
+                  class="w-10 text-center font-black text-xs text-brand-dark bg-transparent border-b border-brand-accent focus:outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+
                 <button
                   type="button"
+                  :disabled="dishStatusMap[dish.id]?.assignedSides >= (selections[dish.id]?.count || 0)"
                   @click="updateSideCount(dish.id, side, 1)"
-                  class="w-7 h-7 rounded-lg bg-white border border-brand-border font-extrabold flex items-center justify-center active:scale-95 touch-target"
+                  :class="[
+                    'w-7 h-7 rounded-lg font-extrabold flex items-center justify-center touch-target border',
+                    dishStatusMap[dish.id]?.assignedSides >= (selections[dish.id]?.count || 0)
+                      ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
+                      : 'bg-white border-brand-border text-brand-dark active:scale-95'
+                  ]"
                 >
                   <Plus class="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
@@ -442,116 +539,28 @@ function formatCLP(val: number): string {
             </div>
           </div>
         </div>
-
       </div>
     </div>
 
-    <!-- BARRA INFERIOR FIJA: CONTEO EN TIEMPO REAL + NAVEGACIÓN -->
-    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="space-y-2.5">
-        
-        <div class="flex items-center justify-between bg-brand-dark text-white px-3.5 py-2 rounded-xl text-xs">
-          <div class="flex items-center gap-2">
-            <Utensils class="w-4 h-4 text-emerald-300 stroke-[2.5]" />
-            <span class="font-extrabold">
-              {{ currentMealLabel }}: <strong class="text-emerald-300 font-black">{{ mealSelectedCount }} de {{ totalGuests }}</strong> platos
-            </span>
-          </div>
+    <!-- Navegación Flotante Fija -->
+    <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
+      <div class="max-w-md mx-auto flex items-center gap-3">
+        <BaseButton variant="outline" size="lg" @click="handleBack">
+          <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
+          Volver
+        </BaseButton>
 
-          <div>
-            <span 
-              v-if="mealSelectedCount === totalGuests && isCurrentMealValid"
-              class="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1"
-            >
-              <Check class="w-3 h-3 stroke-[2.5]" />
-              Completo
-            </span>
-            <span 
-              v-else-if="mealSelectedCount < totalGuests && isCurrentMealValid"
-              class="bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1"
-            >
-              <Info class="w-3 h-3 stroke-[2.5]" />
-              Parcial ({{ mealSelectedCount }}/{{ totalGuests }})
-            </span>
-            <span 
-              v-else-if="mealSelectedCount > totalGuests"
-              class="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full"
-            >
-              Excede {{ mealSelectedCount - totalGuests }}
-            </span>
-            <span 
-              v-else
-              class="bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full"
-            >
-              Acompañamientos pendientes
-            </span>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <BaseButton variant="outline" size="lg" @click="handleBack">
-            <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
-            Volver
-          </BaseButton>
-
-          <BaseButton 
-            v-if="activeMealIndex < activeMealTypes.length - 1"
-            variant="primary" 
-            size="lg" 
-            fullWidth 
-            :disabled="!isCurrentMealValid"
-            @click="handleNextMeal"
-          >
-            Siguiente: {{ mealLabels[activeMealTypes[activeMealIndex + 1]] }}
-            <ChevronRight class="w-5 h-5 ml-1 stroke-[2.5]" />
-          </BaseButton>
-
-          <BaseButton 
-            v-else
-            variant="primary" 
-            size="lg" 
-            fullWidth 
-            :disabled="!areAllMealsValid"
-            @click="handleGoToStep3"
-          >
-            Tus Datos
-            <ArrowRight class="w-5 h-5 ml-1 stroke-[2.5]" />
-          </BaseButton>
-        </div>
-
+        <BaseButton 
+          variant="primary" 
+          size="lg" 
+          fullWidth 
+          :disabled="!isFormValid"
+          @click="handleNext"
+        >
+          Tus Datos
+          <ArrowRight class="w-5 h-5 ml-1.5 stroke-[2.5]" />
+        </BaseButton>
       </div>
     </div>
-
-    <!-- MODAL DE CONFIRMACIÓN PARA ASIGNACIÓN PARCIAL -->
-    <div 
-      v-if="showPartialModal" 
-      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-    >
-      <div class="bg-white rounded-3xl p-6 border-2 border-brand-border shadow-2xl max-w-sm w-full space-y-4 text-center">
-        <div class="w-12 h-12 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto">
-          <AlertTriangle class="w-7 h-7 stroke-[2.5]" />
-        </div>
-
-        <div class="space-y-1.5">
-          <h3 class="text-lg font-black text-brand-dark">¿Confirmar platos parciales?</h3>
-          <p class="text-xs font-semibold text-gray-600 leading-relaxed">
-            Hemos detectado que en algunos servicios asignaste menos platos que el total de comensales (<strong>{{ totalGuests }} personas</strong>):
-          </p>
-          <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-xl text-xs font-black text-amber-950 mt-2">
-            {{ partialSummary }}
-          </div>
-        </div>
-
-        <div class="space-y-2 pt-2">
-          <BaseButton variant="primary" size="lg" fullWidth @click="confirmAndProceed">
-            Sí, continuar a tus datos
-          </BaseButton>
-          <BaseButton variant="outline" size="lg" fullWidth @click="showPartialModal = false">
-            Volver a revisar los menús
-          </BaseButton>
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>

@@ -15,7 +15,8 @@ import {
   User,
   Phone,
   Utensils,
-  Clock
+  Clock,
+  Pencil
 } from 'lucide-vue-next'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
@@ -40,14 +41,17 @@ function formatDateShort(dateStr: string): string {
   return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
 }
 
-// Extrae la lista de platos seleccionados procesando selectedMeals o selectedMenus
+// Navegación directa para editar secciones (HU-3.7)
+function navigateToStep(stepNumber: number) {
+  router.push(`/restaurante/paso${stepNumber}`)
+}
+
+// Mapeo dinámico de platos seleccionados procesando la tienda Pinia
 const displayMeals = computed(() => {
-  // Opción 1: Arreglo directo selectedMeals
   if (Array.isArray(store.selectedMeals) && store.selectedMeals.length > 0) {
     return store.selectedMeals.filter((m: any) => (m.count || m.quantity || 0) > 0)
   }
   
-  // Opción 2: Diccionario selectedMenus
   if (store.selectedMenus && Object.keys(store.selectedMenus).length > 0) {
     const list: any[] = []
     Object.entries(store.selectedMenus).forEach(([dishId, data]: [string, any]) => {
@@ -58,7 +62,8 @@ const displayMeals = computed(() => {
           name: dish?.name || data.name || 'Menú Seleccionado',
           price: dish?.price || data.price || 0,
           count: data.count,
-          sides: data.sides || {}
+          sides: data.sides || {},
+          fixedSide: dish?.fixedSide
         })
       }
     })
@@ -68,10 +73,10 @@ const displayMeals = computed(() => {
   return []
 })
 
-// Cálculo dinámico del subtotal
+// Cálculo dinámico de Subtotal Neto, IVA y Total
 const subtotal = computed(() => {
   return displayMeals.value.reduce((sum: number, meal: any) => {
-    const price = Number(meal.price || meal.unitPrice || meal.pricePerPerson || 0)
+    const price = Number(meal.price || meal.unitPrice || 0)
     const count = Number(meal.count || meal.quantity || 1)
     return sum + (price * count)
   }, 0)
@@ -111,45 +116,83 @@ function handleGoToCamping() {
       <StepIndicator :current-step="4" />
     </div>
 
-    <!-- PANTALLA A: REVISIÓN DE LA SOLICITUD DE RESTAURANTE -->
+    <!-- PANTALLA A: REVISIÓN DE LA SOLICITUD -->
     <div v-if="!isSubmitted" class="space-y-4">
       <BaseAlert variant="info" title="Revisa tu solicitud de restaurante">
-        Verifica tu selección de menús y horarios antes de confirmar.
+        Verifica tu selección de menús y horarios antes de confirmar. Puedes editar cualquier sección.
       </BaseAlert>
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
-        <!-- 1. Fechas y Horario -->
+        
+        <!-- 1. Fechas y Horario con botón Editar (Navega a Paso 1) -->
         <div class="space-y-2">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Fecha y Horario de Atención
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Fecha y Horario de Atención
+            </h3>
+            <button 
+              type="button" 
+              @click="navigateToStep(1)"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
 
           <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
             <div class="flex justify-between">
               <span>Fecha:</span>
               <span class="text-brand-dark font-black uppercase">{{ formatDateShort(store.checkInDate) }}</span>
             </div>
-            <div class="flex justify-between">
+            
+            <!-- Desglose de horarios si existen selecciones por servicio -->
+            <div v-if="store.selectedMealTypes && store.selectedMealTypes.length > 0" class="space-y-1 pt-1 border-t border-gray-200/60">
+              <div 
+                v-for="mId in store.selectedMealTypes" 
+                :key="mId" 
+                class="flex justify-between items-center"
+              >
+                <span class="capitalize text-gray-600">{{ mId }}:</span>
+                <span class="text-brand-dark font-black flex items-center gap-1">
+                  <Clock class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
+                  {{ store.mealTimes?.[mId] || store.restaurantTime || 'Por definir' }} hrs
+                </span>
+              </div>
+            </div>
+
+            <div v-else class="flex justify-between">
               <span>Hora solicitada:</span>
               <span class="text-brand-dark font-black flex items-center gap-1">
                 <Clock class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
                 {{ store.restaurantTime || 'Por coordinar' }}
               </span>
             </div>
-            <div class="flex justify-between">
+
+            <div class="flex justify-between pt-1 border-t border-gray-200/60">
               <span>Comensales:</span>
               <span class="text-brand-dark font-black">{{ store.guestsCount }} personas</span>
             </div>
           </div>
         </div>
 
-        <!-- 2. Desglose de Platos Seleccionados -->
+        <!-- 2. Desglose de Platos Seleccionados con botón Editar (Navega a Paso 2) -->
         <div class="space-y-3">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Menús Seleccionados
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Menús Seleccionados
+            </h3>
+            <button 
+              type="button" 
+              @click="navigateToStep(2)"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
 
           <div v-if="displayMeals.length > 0" class="space-y-2">
             <div 
@@ -164,12 +207,17 @@ function handleGoToCamping() {
               <div class="text-gray-500 font-bold text-[11px]">
                 <span>Precio unitario: {{ formatCLP(meal.price || 0) }}</span>
               </div>
-              <div v-if="meal.sides && Object.keys(meal.sides).length > 0" class="text-[11px] text-brand-accent font-semibold pt-0.5">
+
+              <!-- HU-3.3: Muestra Acompañamiento Fijo o Lista Elegida -->
+              <div v-if="meal.fixedSide" class="text-[11px] text-emerald-800 font-bold pt-0.5">
+                <span>Acompañamiento fijo: <strong>{{ meal.fixedSide }}</strong></span>
+              </div>
+              <div v-else-if="meal.sides && Object.keys(meal.sides).length > 0" class="text-[11px] text-brand-accent font-semibold pt-0.5">
                 <span class="font-extrabold">Acompañamientos: </span>
                 <span>
                   {{ 
                     typeof meal.sides === 'object' && !Array.isArray(meal.sides)
-                      ? Object.entries(meal.sides).map(([s, c]) => `${c} ${s}`).join(', ')
+                      ? Object.entries(meal.sides).filter(([, c]) => Number(c) > 0).map(([s, c]) => `${c} ${s}`).join(', ')
                       : Array.isArray(meal.sides) ? meal.sides.join(', ') : meal.sides
                   }}
                 </span>
@@ -204,16 +252,26 @@ function handleGoToCamping() {
             </div>
           </div>
 
-          <!-- Componente Reutilizable de Abono (30%) -->
+          <!-- Componente Reutilizable de Abono (30% Configurable) -->
           <DepositInfoCard :total-with-iva="totalWithIva" service-name="restaurante" />
         </div>
 
-        <!-- 4. Contacto del Cliente -->
+        <!-- 4. Contacto del Cliente con botón Editar (Navega a Paso 3) -->
         <div class="space-y-3">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Contacto del Cliente
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Contacto del Cliente
+            </h3>
+            <button 
+              type="button" 
+              @click="navigateToStep(3)"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
 
           <div class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
             <div class="flex justify-between">
@@ -230,22 +288,33 @@ function handleGoToCamping() {
           </div>
         </div>
 
-        <!-- 5. Comentarios -->
+        <!-- 5. Comentarios u Observaciones con botón Editar (Navega a Paso 3) -->
         <div v-if="store.comments" class="space-y-2">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Comentarios u Observaciones
-          </h3>
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Comentarios u Observaciones
+            </h3>
+            <button 
+              type="button" 
+              @click="navigateToStep(3)"
+              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
+            >
+              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
+              Editar
+            </button>
+          </div>
+          
           <p class="bg-brand-light p-3.5 rounded-2xl border border-brand-border text-xs font-bold text-gray-700 italic">
             "{{ store.comments }}"
           </p>
         </div>
       </div>
 
-      <!-- Navegación Flotante -->
+      <!-- Navegación Flotante Fija -->
       <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
         <div class="max-w-md mx-auto flex items-center gap-3">
-          <BaseButton variant="outline" size="lg" @click="router.push('/restaurante/paso3')">
+          <BaseButton variant="outline" size="lg" @click="navigateToStep(3)">
             <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
             Volver
           </BaseButton>
@@ -285,8 +354,8 @@ function handleGoToCamping() {
           <span class="text-brand-dark font-black">Menús de Restaurante</span>
         </div>
         <div class="flex justify-between items-center">
-          <span class="text-gray-500">Fecha y Hora:</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }} ({{ store.restaurantTime }})</span>
+          <span class="text-gray-500">Fecha:</span>
+          <span class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }}</span>
         </div>
         <div class="flex justify-between items-center border-t border-gray-200/60 pt-2 mt-1">
           <span class="text-gray-500">Total Estimado:</span>
