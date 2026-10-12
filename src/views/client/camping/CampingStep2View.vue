@@ -1,41 +1,150 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles, Clock } from 'lucide-vue-next'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import BaseButton from '../../../components/ui/BaseButton.vue'
+import CampingCard from '../../../components/catalog/CampingCard.vue'
+import CampingDetailModal from '../../../components/catalog/CampingDetailModal.vue'
+import { useReservationStore } from '../../../stores/reservationStore'
+import { type CampingSite, useAdminStore } from '../../../stores/adminStore'
+
+const router = useRouter()
+const store = useReservationStore()
+const adminStore = useAdminStore()
+
+const isModalOpen = ref(false)
+
+const isDiario = computed(() => store.campingType === 'diario')
+const guests = computed(() => store.guestsCount)
+
+const nightsCount = computed(() => {
+  if (isDiario.value || !store.checkInDate || !store.checkOutDate) return 1
+  const start = new Date(store.checkInDate)
+  const end = new Date(store.checkOutDate)
+  const diffTime = Math.abs(end.getTime() - start.getTime())
+  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+})
+
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return ''
+  const [, month, day] = dateStr.split('-')
+  if (!day || !month) return dateStr
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  const monthIdx = parseInt(month, 10) - 1
+  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
+}
+
+const formattedScheduleDisplay = computed(() => {
+  if (isDiario.value) {
+    const checkIn = adminStore.campingSchedules.diario.checkIn
+    const checkOut = adminStore.campingSchedules.diario.checkOut
+    if (store.checkInDate) {
+      const dateFormatted = formatDateShort(store.checkInDate)
+      return `${dateFormatted} (${checkIn} hrs) - ${dateFormatted} (${checkOut} hrs)`
+    }
+    return `Día de ingreso (${checkIn} hrs) - Día de ingreso (${checkOut} hrs)`
+  } else {
+    const checkIn = adminStore.campingSchedules.pernoctar.checkIn
+    const checkOut = adminStore.campingSchedules.pernoctar.checkOut
+    if (store.checkInDate && store.checkOutDate) {
+      const inDate = formatDateShort(store.checkInDate)
+      const outDate = formatDateShort(store.checkOutDate)
+      return `${inDate} (${checkIn} hrs) - ${outDate} (${checkOut} hrs)`
+    }
+    return `Día de ingreso (${checkIn} hrs) - Día de salida (${checkOut} hrs)`
+  }
+})
+
+// CORREGIDO: Retorna estrictamente un objeto CampingSite
+const selectedCampingOption = computed((): CampingSite => {
+  if (guests.value >= 10) {
+    return adminStore.campingSites.find(s => s.isSpecial) || adminStore.campingSites[0]
+  } else {
+    return adminStore.campingSites.find(s => !s.isSpecial) || adminStore.campingSites[0]
+  }
+})
+
+onMounted(() => {
+  if (selectedCampingOption.value) {
+    store.selectedCampingId = selectedCampingOption.value.id
+  }
+})
+
+const subtotal = computed(() => {
+  if (!selectedCampingOption.value) return 0
+  const nights = isDiario.value ? 1 : nightsCount.value
+  return selectedCampingOption.value.pricePerPerson * guests.value * nights
+})
+
+function handleNext() {
+  if (store.selectedCampingId) {
+    router.push('/camping/paso3')
+  }
+}
+
+function handleBack() {
+  router.push('/camping/paso1')
+}
+</script>
+
 <template>
   <div class="space-y-4 pb-24">
-    <!-- Indicador de Paso 2 -->
-    <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
-      <StepIndicator :current-step="2" />
-    </div>
-
-    <!-- Alerta Informativa -->
-    <BaseAlert variant="info" title="Selecciona la opción de Camping">
-      Elige el tipo de sitio para tu grupo de {{ guests }} personas ({{ isDiario ? 'Paseo por el día' : nightsCount + ' noche/s' }}).
+    <BaseAlert variant="info" title="Espacio Asignado según tu Grupo">
+      Para tu grupo de <strong>{{ guests }} personas</strong> ({{ isDiario ? 'Paseo por el día' : nightsCount + ' noche(s)' }}), se ha asignado automáticamente la opción correspondiente.
     </BaseAlert>
 
-    <!-- Lista de Opciones de Camping con Fotos Visibles -->
-    <div class="space-y-3">
+    <div class="bg-brand-light border-2 border-brand-border p-4 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-800">
+      <div class="flex items-center gap-2">
+        <Clock class="w-4 h-4 text-brand-accent shrink-0 stroke-[2.5]" />
+        <div>
+          <span class="block text-[10px] uppercase font-black text-gray-500">Horario de Servicio ({{ isDiario ? 'Día' : 'Noche' }}):</span>
+          <span class="text-brand-dark font-black">
+            {{ formattedScheduleDisplay }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border-2 border-brand-border p-5 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <span class="inline-flex items-center gap-1 bg-brand-light text-brand-dark px-3 py-1 rounded-full text-xs font-black border border-brand-border">
+          <Sparkles class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
+          {{ guests >= 10 ? 'Espacio para Grupos Grandes (≥10 pers)' : 'Camping Estándar (<10 pers)' }}
+        </span>
+        <span class="text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-200">
+          <CheckCircle2 class="w-3.5 h-3.5 stroke-[2.5]" /> Asignado
+        </span>
+      </div>
+
       <CampingCard
-        v-for="option in activeCatalog"
-        :key="option.id"
-        :site="option"
-        :selected-option-id="selectedOptionId"
+        v-if="selectedCampingOption"
+        :site="selectedCampingOption"
+        :selected-option-id="store.selectedCampingId"
         :is-diario="isDiario"
-        @select="selectOption"
+        @click="isModalOpen = true"
       />
     </div>
 
-    <!-- Resumen del Total -->
-    <div v-if="selectedOption" class="bg-brand-dark text-white p-4 rounded-2xl border-2 border-brand-border shadow-xs flex items-center justify-between">
+    <div class="bg-brand-dark text-white p-4 rounded-2xl border-2 border-brand-border shadow-xs flex items-center justify-between">
       <div>
         <span class="text-[10px] font-extrabold text-emerald-300 uppercase tracking-wider block">
-          Total Estimado ({{ guests }} pers. {{ !isDiario ? 'x ' + nightsCount + ' noc.' : '' }})
+          Subtotal Neto ({{ guests }} pers. {{ !isDiario ? 'x ' + nightsCount + ' noc.' : '' }})
         </span>
-        <span class="text-xs font-bold text-gray-300">{{ selectedOption.name }}</span>
+        <span class="text-xs font-bold text-gray-300">{{ selectedCampingOption?.name }}</span>
       </div>
       <span class="text-xl font-black text-white">
-        ${{ totalPrice.toLocaleString('es-CL') }}
+        \${{ subtotal.toLocaleString('es-CL') }}
       </span>
     </div>
 
-    <!-- Botones Fijos de Navegación Inferior -->
+    <CampingDetailModal
+      v-if="selectedCampingOption"
+      :isOpen="isModalOpen"
+      :site="selectedCampingOption"
+      @close="isModalOpen = false"
+    />
+
     <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
       <div class="max-w-md mx-auto flex items-center gap-3">
         <BaseButton variant="outline" size="lg" @click="handleBack">
@@ -47,7 +156,6 @@
           variant="primary" 
           size="lg" 
           fullWidth 
-          :disabled="!selectedOptionId"
           @click="handleNext"
         >
           Tus Datos
@@ -57,85 +165,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { ArrowLeft, ArrowRight } from 'lucide-vue-next'
-import { useReservationStore } from '../../../stores/reservationStore'
-import StepIndicator from '../../../components/ui/StepIndicator.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
-import BaseButton from '../../../components/ui/BaseButton.vue'
-import CampingCard, { type CampingItem } from '../../../components/catalog/CampingCard.vue'
-
-const router = useRouter()
-const store = useReservationStore()
-
-const selectedOptionId = ref('cmp-1')
-
-const activeCatalog = ref<CampingItem[]>([
-  {
-    id: 'cmp-1',
-    name: 'Camping Zona General (Pernoctar)',
-    modality: 'pernoctar',
-    pricePerPerson: 10000,
-    maxCapacity: 150,
-    description: 'Acceso a sitios con sombra natural, agua potable, baños con ducha de agua caliente y piscina al aire libre.',
-    image: 'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80',
-    features: [
-      { icon: 'Bath', text: 'Baños con ducha' },
-      { icon: 'Sun', text: 'Acceso a piscina' },
-      { icon: 'Flame', text: 'Quinchos y parrillas' },
-      { icon: 'Trees', text: 'Parque de árboles nativos' }
-    ]
-  },
-  {
-    id: 'cmp-2',
-    name: 'Paseo de Campo por el Día',
-    modality: 'diario',
-    pricePerPerson: 10000,
-    maxCapacity: 40,
-    description: 'Uso de pérgolas, zonas de picnic, quinchos y áreas recreativas sin pernoctar.',
-    image: 'https://images.unsplash.com/photo-1537225228614-56cc3556d7ed?auto=format&fit=crop&w=800&q=80',
-    features: [
-      { icon: 'Utensils', text: 'Áreas de picnic' },
-      { icon: 'Sun', text: 'Piscina exterior' },
-      { icon: 'Trees', text: 'Acceso a senderos y río' }
-    ]
-  }
-])
-
-const guests = computed(() => store.guestsCount || 1)
-const isDiario = computed(() => store.campingType === 'diario')
-
-const nightsCount = computed(() => {
-  if (!store.checkInDate || !store.checkOutDate) return 1
-  const start = new Date(store.checkInDate).getTime()
-  const end = new Date(store.checkOutDate).getTime()
-  const diffDays = Math.ceil((end - start) / (1000 * 3600 * 24))
-  return diffDays > 0 ? diffDays : 1
-})
-
-const selectedOption = computed(() => activeCatalog.value.find(o => o.id === selectedOptionId.value))
-
-const totalPrice = computed(() => {
-  if (!selectedOption.value) return 0
-  const perPerson = selectedOption.value.pricePerPerson * guests.value
-  return isDiario.value ? perPerson : perPerson * nightsCount.value
-})
-
-const selectOption = (id: string) => {
-  selectedOptionId.value = id
-}
-
-const handleBack = () => {
-  store.prevStep()
-  router.push({ name: 'camping-step1' })
-}
-
-const handleNext = () => {
-  if (!selectedOptionId.value) return
-  store.nextStep()
-  router.push({ name: 'camping-step3' })
-}
-</script>

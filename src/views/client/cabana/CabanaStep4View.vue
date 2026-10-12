@@ -2,98 +2,78 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  Send, 
-  Building2, 
   Calendar, 
-  Users, 
-  Phone, 
-  User, 
-  Info, 
+  Receipt, 
+  Send, 
+  ArrowLeft, 
+  FileText, 
+  CheckCircle2, 
+  FileCheck, 
   Utensils, 
+  Tent, 
   RotateCcw,
-  Receipt,
-  BedDouble,
-  FileCheck
+  User,
+  Phone,
+  Clock
 } from 'lucide-vue-next'
-import { useReservationStore } from '../../../stores/reservationStore.ts'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
+import { useReservationStore } from '../../../stores/reservationStore'
+import { useAdminStore } from '../../../stores/adminStore'
 
 const router = useRouter()
 const store = useReservationStore()
+const adminStore = useAdminStore()
 
 const isSubmitted = ref(false)
 const reservationCode = ref('')
 
-// Tarifas base de las cabañas
-const cabinPrices: Record<string, { name: string; pricePerNight: number }> = {
-  'cabana-6': { name: 'Cabaña 6', pricePerNight: 65000 },
-  'cabana-8': { name: 'Cabaña 8', pricePerNight: 120000 }
-}
-
-const selectedCabin = computed(() => {
-  const id = store.selectedCabinId || 'cabana-6'
-  return cabinPrices[id] || cabinPrices['cabana-6']
-})
-
-// Cálculo dinámico de noches de estadía
 const nightsCount = computed(() => {
   if (!store.checkInDate || !store.checkOutDate) return 1
-  const start = new Date(store.checkInDate + 'T00:00:00')
-  const end = new Date(store.checkOutDate + 'T00:00:00')
+  const start = new Date(store.checkInDate)
+  const end = new Date(store.checkOutDate)
   const diffTime = Math.abs(end.getTime() - start.getTime())
   return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
 })
 
-// Cálculos Monetarios
-const pricePerNight = computed(() => selectedCabin.value.pricePerNight)
-const subtotal = computed(() => pricePerNight.value * nightsCount.value)
-const ivaAmount = computed(() => Math.round(subtotal.value * 0.19))
-const totalWithIva = computed(() => subtotal.value + ivaAmount.value)
-const deposit30 = computed(() => Math.round(totalWithIva.value * 0.3))
-const remainingBalance = computed(() => totalWithIva.value - deposit30.value)
+const selectedCabin = computed(() => {
+  return adminStore.cabins.find(c => c.id === store.selectedCabinId) || adminStore.cabins[0]
+})
 
-function formatCLP(val: number): string {
-  return '\$' + val.toLocaleString('es-CL')
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return ''
+  const [, month, day] = dateStr.split('-')
+  if (!day || !month) return dateStr
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  const monthIdx = parseInt(month, 10) - 1
+  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
 }
 
-function formatDateShort(dateStr: string) {
-  if (!dateStr) return '—'
-  const d = new Date(dateStr + 'T00:00:00')
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
+// Rango de horarios estandarizado: "15 oct (15:00 hrs) - 17 oct (11:00 hrs)"
+const formattedScheduleRange = computed(() => {
+  const inDate = formatDateShort(store.checkInDate)
+  const outDate = formatDateShort(store.checkOutDate)
+  const inTime = adminStore.cabinSchedules.checkIn
+  const outTime = adminStore.cabinSchedules.checkOut
+  return `${inDate} (${inTime} hrs) - ${outDate} (${outTime} hrs)`
+})
+
+const subtotal = computed(() => {
+  return (selectedCabin.value?.pricePerNight || 0) * nightsCount.value
+})
+
+const ivaAmount = computed(() => Math.round(subtotal.value * 0.19))
+const totalWithIva = computed(() => subtotal.value + ivaAmount.value)
+
+function formatCLP(amount: number): string {
+  return `$${amount.toLocaleString('es-CL')}`
 }
 
 function handleSendRequest() {
-  const randomNum = Math.floor(1000 + Math.random() * 9000)
-  reservationCode.value = `SOL-${randomNum}`
+  reservationCode.value = 'SOL-' + Math.floor(1000 + Math.random() * 9000)
   isSubmitted.value = true
-}
-
-function handleGoToRestaurant() {
-  const savedGuests = store.guestsCount
-  const savedDate = store.checkInDate
-  const savedClientName = store.clientName
-  const savedClientPhone = store.clientPhone
-
-  store.resetStore()
-  store.setService('restaurant')
-  
-  if (savedGuests) store.guestsCount = savedGuests
-  if (savedDate) {
-    store.checkInDate = savedDate
-    store.checkOutDate = savedDate
-  }
-  if (savedClientName) store.clientName = savedClientName
-  if (savedClientPhone) store.clientPhone = savedClientPhone
-
-  router.push('/restaurante/paso-1').catch(() => {
-    router.push({ name: 'restaurant-step1' })
-  })
 }
 
 function handleGoHome() {
@@ -101,156 +81,92 @@ function handleGoHome() {
   router.push('/')
 }
 
-function handleEditContact() {
-  router.push({ name: 'cabana-step3' })
+function handleGoToRestaurant() {
+  store.selectedService = 'restaurant'
+  router.push('/restaurante/paso1')
 }
 
-function handleBack() {
-  store.prevStep()
-  router.push({ name: 'cabana-step3' })
+function handleGoToCamping() {
+  store.selectedService = 'camping'
+  router.push('/camping/paso1')
 }
 </script>
 
 <template>
-  <div class="space-y-5 max-w-md mx-auto pb-6">
-    
-    <!-- Indicador de Pasos (Visible durante revisión) -->
+  <div class="space-y-4 pb-24">
     <div v-if="!isSubmitted" class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="4" />
     </div>
 
     <!-- PANTALLA A: REVISIÓN DE LA SOLICITUD -->
     <div v-if="!isSubmitted" class="space-y-4">
-      
       <BaseAlert variant="info" title="Revisa tu solicitud antes de enviar">
-        Comprueba que los datos estén correctos. Nos comunicaremos contigo por teléfono para confirmar la reserva.
+        Verifica todos los parámetros antes de confirmar la reserva de cabaña.
       </BaseAlert>
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
-        
-        <!-- Detalle de la Reserva -->
-        <div class="space-y-3">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-2 flex items-center gap-1.5">
-            <BedDouble class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Detalle de la Reserva
+        <!-- 1. Fechas y Horario Dinámico -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Fechas y Horarios
           </h3>
 
-          <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-3 text-sm">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500">Alojamiento:</span>
-              <span class="font-black text-brand-dark flex items-center gap-1.5">
-                <Building2 class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-                {{ selectedCabin.name }}
+          <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
+            <div class="flex justify-between">
+              <span>Cabaña:</span>
+              <span class="text-brand-dark font-black uppercase">{{ selectedCabin?.name }}</span>
+            </div>
+            <div class="flex justify-between items-start gap-2">
+              <span class="shrink-0">Horario Permitido:</span>
+              <span class="text-brand-dark font-black text-right flex items-center justify-end gap-1">
+                <Clock class="w-3.5 h-3.5 text-brand-accent shrink-0 stroke-[2.5]" />
+                {{ formattedScheduleRange }}
               </span>
             </div>
-
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500">Fechas:</span>
-              <span class="font-extrabold text-brand-dark flex items-center gap-1.5">
-                <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-                {{ formatDateShort(store.checkInDate) }} → {{ formatDateShort(store.checkOutDate) }}
-              </span>
+            <div class="flex justify-between">
+              <span>Duración:</span>
+              <span class="text-brand-dark font-black">{{ nightsCount }} noche(s)</span>
             </div>
-
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500">Duración:</span>
-              <span class="font-extrabold text-brand-dark">
-                {{ nightsCount }} {{ nightsCount === 1 ? 'Noche' : 'Noches' }}
-              </span>
-            </div>
-
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500">Integrantes:</span>
-              <span class="font-extrabold text-brand-dark flex items-center gap-1.5">
-                <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-                {{ store.guestsCount }} {{ store.guestsCount === 1 ? 'Persona' : 'Personas' }}
-              </span>
+            <div class="flex justify-between">
+              <span>Huéspedes:</span>
+              <span class="text-brand-dark font-black">{{ store.guestsCount }} personas</span>
             </div>
           </div>
         </div>
 
-        <!-- Desglose del Presupuesto -->
+        <!-- 2. Presupuesto + Componente DepositInfoCard -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              Desglose del Presupuesto
-            </h3>
-            <span class="text-[11px] font-extrabold text-brand-accent bg-brand-light px-2.5 py-0.5 rounded-full border border-brand-border">
-              Valores en CLP
-            </span>
-          </div>
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Presupuesto
+          </h3>
 
-          <div class="space-y-2.5 text-sm">
-            <div class="flex justify-between items-center text-gray-600 font-bold">
-              <span>Tarifa por noche:</span>
-              <span class="text-brand-dark font-extrabold">{{ formatCLP(pricePerNight) }}</span>
-            </div>
-
-            <div class="flex justify-between items-center text-gray-600 font-bold">
-              <span>Cantidad de noches:</span>
-              <span class="text-brand-dark font-extrabold">{{ nightsCount }} {{ nightsCount === 1 ? 'noche' : 'noches' }}</span>
-            </div>
-
-            <div class="flex justify-between items-center text-gray-700 font-extrabold pt-2 border-t border-gray-100">
+          <div class="space-y-2 text-sm font-bold">
+            <div class="flex justify-between">
               <span>Subtotal Neto:</span>
-              <span class="text-brand-dark text-base">{{ formatCLP(subtotal) }}</span>
+              <span class="text-brand-dark">{{ formatCLP(subtotal) }}</span>
             </div>
-
-            <div class="flex justify-between items-center text-gray-600 font-bold">
+            <div class="flex justify-between text-gray-500">
               <span>IVA (19%):</span>
-              <span class="text-gray-700 font-extrabold">{{ formatCLP(ivaAmount) }}</span>
+              <span>{{ formatCLP(ivaAmount) }}</span>
             </div>
-
-            <!-- Total Destacado -->
-            <div class="bg-brand-dark text-white p-4 rounded-2xl flex justify-between items-center shadow-xs">
-              <div>
-                <span class="text-xs font-extrabold block text-emerald-300 uppercase tracking-wider">Total Estimado</span>
-                <span class="text-[10px] text-gray-300 font-bold">IVA incluido</span>
-              </div>
-              <span class="text-2xl font-black text-white">{{ formatCLP(totalWithIva) }}</span>
+            <div class="bg-brand-dark text-white p-3.5 rounded-2xl flex justify-between items-center text-lg font-black">
+              <span>Total con IVA:</span>
+              <span>{{ formatCLP(totalWithIva) }}</span>
             </div>
           </div>
 
-          <!-- Información de Abono -->
-          <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl space-y-2 text-amber-950">
-            <div class="flex items-center gap-2 font-black text-sm">
-              <Info class="w-4 h-4 text-amber-700 shrink-0 stroke-[2.5]" />
-              <span>Forma de Pago y Confirmación</span>
-            </div>
-            
-            <div class="space-y-1.5 text-xs font-bold text-amber-900 border-t border-amber-200/80 pt-2">
-              <div class="flex justify-between items-center">
-                <span>Abono requerido para reservar (30%):</span>
-                <span class="text-sm font-black text-amber-950">{{ formatCLP(deposit30) }}</span>
-              </div>
-              <div class="flex justify-between items-center text-amber-800">
-                <span>Saldo pendiente al llegar:</span>
-                <span class="font-extrabold">{{ formatCLP(remainingBalance) }}</span>
-              </div>
-            </div>
-
-            <p class="text-[11px] font-semibold text-amber-800 leading-relaxed pt-1">
-              No se cobra en línea. El abono del 30% se coordina por llamada telefónica tras confirmar la disponibilidad.
-            </p>
-          </div>
+          <!-- Componente Reutilizable de Abono (30% Configurable) -->
+          <DepositInfoCard :total-with-iva="totalWithIva" service-name="cabana" />
         </div>
 
-        <!-- Datos de Contacto -->
+        <!-- 3. Contacto del Cliente -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              Datos de Contacto
-            </h3>
-            <button 
-              type="button" 
-              @click="handleEditContact"
-              class="text-xs font-black text-brand-accent hover:underline"
-            >
-              Cambiar
-            </button>
-          </div>
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Contacto del Cliente
+          </h3>
 
           <div class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
             <div class="flex justify-between">
@@ -264,44 +180,43 @@ function handleBack() {
                 {{ store.clientPhone || 'Sin registrar' }}
               </span>
             </div>
-            <div class="flex justify-between">
-              <span>Categoría:</span>
-              <span class="text-brand-dark font-black">{{ store.eventReason || 'Particular' }}</span>
-            </div>
           </div>
         </div>
 
-        <!-- Botones de Acción -->
-        <div class="pt-2 flex items-center gap-3">
-          <BaseButton variant="outline" size="lg" @click="handleBack">
-            <ArrowLeft class="w-5 h-5 mr-1.5 stroke-[2.5]" />
+        <!-- 4. Comentarios -->
+        <div v-if="store.comments" class="space-y-2">
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Comentarios u Observaciones
+          </h3>
+          <p class="bg-brand-light p-3.5 rounded-2xl border border-brand-border text-xs font-bold text-gray-700 italic">
+            "{{ store.comments }}"
+          </p>
+        </div>
+      </div>
+
+      <!-- Navegación Flotante -->
+      <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
+        <div class="max-w-md mx-auto flex items-center gap-3">
+          <BaseButton variant="outline" size="lg" @click="router.push('/cabana/paso3')">
+            <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
             Volver
           </BaseButton>
 
-          <BaseButton 
-            variant="success" 
-            size="lg" 
-            fullWidth 
-            @click="handleSendRequest"
-          >
+          <BaseButton variant="success" size="lg" fullWidth @click="handleSendRequest">
             <Send class="w-5 h-5 mr-1.5 stroke-[2.5]" />
             Enviar Solicitud
           </BaseButton>
         </div>
-
       </div>
-
     </div>
 
-    <!-- PANTALLA B: CONFIRMACIÓN DE ENVÍO EXITOSO (DISEÑO ARMONIZADO) -->
+    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA -->
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
-      
-      <!-- Icono Principal de Éxito -->
-      <div class="w-18 h-18  text-status-success rounded-full flex items-center justify-center mx-auto shadow-xs">
-        <CheckCircle2 class="w-12 h-12 stroke-[2.5]" />
+      <div class="w-16 h-16 bg-emerald-100 text-status-success rounded-full flex items-center justify-center mx-auto shadow-xs">
+        <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
       </div>
 
-      <!-- Encabezado y Código de Solicitud -->
       <div class="space-y-2.5">
         <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-xs font-black text-brand-dark shadow-2xs">
           <FileCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -309,23 +224,22 @@ function handleBack() {
         </div>
 
         <h2 class="text-2xl font-black text-brand-dark tracking-tight">
-          ¡Solicitud Recibida!
+          ¡Solicitud de Cabaña Registrada!
         </h2>
 
         <p class="text-xs sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
-          Hemos registrado tu solicitud para la <strong class="text-brand-dark font-black">{{ selectedCabin.name }}</strong>. Nos comunicaremos al número <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong> a la brevedad para confirmar los detalles.
+          Registramos tu solicitud para <strong class="text-brand-dark font-black">{{ selectedCabin?.name }}</strong> ({{ nightsCount }} noche/s). Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
         </p>
       </div>
 
-      <!-- Resumen Compacto de la Solicitud -->
       <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-xs font-bold text-gray-700">
         <div class="flex justify-between items-center">
-          <span class="text-gray-500">Alojamiento:</span>
-          <span class="text-brand-dark font-black">{{ selectedCabin.name }}</span>
+          <span class="text-gray-500">Servicio:</span>
+          <span class="text-brand-dark font-black">{{ selectedCabin?.name }}</span>
         </div>
-        <div class="flex justify-between items-center">
-          <span class="text-gray-500">Fechas:</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }} → {{ formatDateShort(store.checkOutDate) }}</span>
+        <div class="flex justify-between items-start gap-2">
+          <span class="text-gray-500 shrink-0">Horarios:</span>
+          <span class="text-brand-dark font-black text-right">{{ formattedScheduleRange }}</span>
         </div>
         <div class="flex justify-between items-center border-t border-gray-200/60 pt-2 mt-1">
           <span class="text-gray-500">Total Estimado:</span>
@@ -333,36 +247,44 @@ function handleBack() {
         </div>
       </div>
 
-      <!-- Módulo de Venta Cruzada (Restaurante) -->
+      <!-- Venta Cruzada -->
       <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl text-left space-y-3">
         <div class="flex items-center gap-2 text-amber-950 font-black text-sm">
           <Utensils class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
-          <span>¿Deseas agregar comida en el Restaurante?</span>
+          <span>¿Quieres agregar comida o espacio de camping?</span>
         </div>
 
         <p class="text-xs font-semibold text-amber-900 leading-relaxed">
-          Puedes asegurar con anticipación desayunos campesinos, almuerzo tradicional u once para tu grupo de <strong>{{ store.guestsCount }} personas</strong>.
+          Puedes reservar menú de restaurante o sitio de camping para tu grupo.
         </p>
 
-        <button
-          type="button"
-          @click="handleGoToRestaurant"
-          class="w-full bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-xs touch-target active:scale-95 transition-transform"
-        >
-          <Utensils class="w-4 h-4 stroke-[2.5]" />
-          <span>Reservar Menú de Restaurante</span>
-        </button>
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button
+            type="button"
+            @click="handleGoToRestaurant"
+            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
+          >
+            <Utensils class="w-4 h-4 stroke-[2.5]" />
+            <span>Restaurante</span>
+          </button>
+
+          <button
+            type="button"
+            @click="handleGoToCamping"
+            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
+          >
+            <Tent class="w-4 h-4 stroke-[2.5]" />
+            <span>Camping</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Botón de Retorno -->
       <div class="pt-1">
         <BaseButton variant="outline" size="lg" fullWidth @click="handleGoHome">
           <RotateCcw class="w-5 h-5 mr-1.5 stroke-[2.5]" />
           Volver al Inicio
         </BaseButton>
       </div>
-
     </div>
-
   </div>
 </template>

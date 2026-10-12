@@ -7,24 +7,25 @@ export const useReservationStore = defineStore('reservation', () => {
   const checkInDate = ref('')
   const checkOutDate = ref('')
   const guestsCount = ref(1)
-  
+
   // Cabaña
   const selectedCabinId = ref('')
 
-  // Restaurante (Inicia en blanco para exigir selección explícita)
+  // Camping
+  const campingType = ref<'diario' | 'pernoctar'>('diario')
+  const selectedCampingId = ref('')
+
+  // Restaurante
   const restaurantTime = ref('')
   const selectedMealTypes = ref<string[]>([])
   const mealTimes = ref<Record<string, string>>({})
   const selectedMenus = ref<Record<string, { count: number; sides: Record<string, number> }>>({})
   const selectedMeals = ref<any[]>([])
 
-  // Camping
-  const campingType = ref<'diario' | 'pernoctar'>('diario')
-
-  // Datos Cliente
+  // Datos Cliente & Comentarios
   const clientName = ref('')
-  const clientPhone = ref('+56 9 ')
-  const eventReason = ref('Particular')
+  const clientPhone = ref('+56 9 ') // Pre-rellenado y editable
+  const comments = ref('')
 
   function setService(service: 'cabana' | 'camping' | 'restaurant') {
     selectedService.value = service
@@ -53,9 +54,10 @@ export const useReservationStore = defineStore('reservation', () => {
     selectedMenus.value = {}
     selectedMeals.value = []
     campingType.value = 'diario'
+    selectedCampingId.value = ''
     clientName.value = ''
     clientPhone.value = '+56 9 '
-    eventReason.value = 'Particular'
+    comments.value = ''
   }
 
   return {
@@ -65,15 +67,16 @@ export const useReservationStore = defineStore('reservation', () => {
     checkOutDate,
     guestsCount,
     selectedCabinId,
+    campingType,
+    selectedCampingId,
     restaurantTime,
     selectedMealTypes,
     mealTimes,
     selectedMenus,
     selectedMeals,
-    campingType,
     clientName,
     clientPhone,
-    eventReason,
+    comments,
     setService,
     nextStep,
     prevStep,

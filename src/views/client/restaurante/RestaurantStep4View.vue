@@ -2,119 +2,91 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  Send, 
   Calendar, 
-  Users, 
-  Phone, 
-  User, 
+  Receipt, 
+  Send, 
+  ArrowLeft, 
+  FileText, 
+  CheckCircle2, 
+  FileCheck, 
   BedDouble, 
+  Tent, 
   RotateCcw,
-  Receipt,
+  User,
+  Phone,
   Utensils,
-  Edit2,
-  FileCheck,
-  Tent
+  Clock
 } from 'lucide-vue-next'
-import { useReservationStore } from '../../../stores/reservationStore'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
+import { useReservationStore } from '../../../stores/reservationStore'
+import { useAdminStore } from '../../../stores/adminStore'
 
 const router = useRouter()
 const store = useReservationStore()
+const adminStore = useAdminStore()
 
 const isSubmitted = ref(false)
 const reservationCode = ref('')
 
-const fullMenuCatalog: Record<string, { name: string; price: number; mealType: string }> = {
-  'desayuno-campesino': { name: 'Desayuno Campesino', price: 8000, mealType: 'Desayuno' },
-  'desayuno-tradicional': { name: 'Desayuno Tradicional', price: 6000, mealType: 'Desayuno' },
-  'almuerzo-cordero-cerdo': { name: 'Cordero y cerdo', price: 20000, mealType: 'Almuerzo' },
-  'almuerzo-vacuno-bechamel': { name: 'Vacuno con bechamel', price: 21000, mealType: 'Almuerzo' },
-  'almuerzo-salmon-camarones': { name: 'Salmón con salsa de camarones', price: 21000, mealType: 'Almuerzo' },
-  'almuerzo-chuletas-cerdo': { name: 'Chuletas de cerdo', price: 13000, mealType: 'Almuerzo' },
-  'once-campesina': { name: 'Once Campesina', price: 10000, mealType: 'Once' },
-  'once-tradicional': { name: 'Once Tradicional', price: 7000, mealType: 'Once' }
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return ''
+  const [, month, day] = dateStr.split('-')
+  if (!day || !month) return dateStr
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  const monthIdx = parseInt(month, 10) - 1
+  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
 }
 
-const selectedItemList = computed(() => {
-  const list: { id: string; name: string; mealType: string; count: number; unitPrice: number; totalPrice: number; sides: string }[] = []
-  const menus = store.selectedMenus || {}
+// Extrae la lista de platos seleccionados procesando selectedMeals o selectedMenus
+const displayMeals = computed(() => {
+  // Opción 1: Arreglo directo selectedMeals
+  if (Array.isArray(store.selectedMeals) && store.selectedMeals.length > 0) {
+    return store.selectedMeals.filter((m: any) => (m.count || m.quantity || 0) > 0)
+  }
   
-  Object.entries(menus).forEach(([id, data]) => {
-    if (data && data.count > 0) {
-      const itemInfo = fullMenuCatalog[id]
-      if (itemInfo) {
-        const sidesText = Object.entries(data.sides || {})
-          .filter(([_, qty]) => qty > 0)
-          .map(([sideName, qty]) => `${qty} ${sideName}`)
-          .join(', ')
-        
+  // Opción 2: Diccionario selectedMenus
+  if (store.selectedMenus && Object.keys(store.selectedMenus).length > 0) {
+    const list: any[] = []
+    Object.entries(store.selectedMenus).forEach(([dishId, data]: [string, any]) => {
+      if (data && data.count > 0) {
+        const dish = adminStore.dishes?.find((d: any) => d.id === dishId)
         list.push({
-          id,
-          name: itemInfo.name,
-          mealType: itemInfo.mealType,
+          id: dishId,
+          name: dish?.name || data.name || 'Menú Seleccionado',
+          price: dish?.price || data.price || 0,
           count: data.count,
-          unitPrice: itemInfo.price,
-          totalPrice: itemInfo.price * data.count,
-          sides: sidesText || 'Sin acompañamientos'
+          sides: data.sides || {}
         })
       }
-    }
-  })
+    })
+    return list
+  }
   
-  return list
+  return []
 })
 
+// Cálculo dinámico del subtotal
 const subtotal = computed(() => {
-  return selectedItemList.value.reduce((sum, item) => sum + item.totalPrice, 0)
+  return displayMeals.value.reduce((sum: number, meal: any) => {
+    const price = Number(meal.price || meal.unitPrice || meal.pricePerPerson || 0)
+    const count = Number(meal.count || meal.quantity || 1)
+    return sum + (price * count)
+  }, 0)
 })
 
 const ivaAmount = computed(() => Math.round(subtotal.value * 0.19))
 const totalWithIva = computed(() => subtotal.value + ivaAmount.value)
 
-function formatCLP(val: number): string {
-  return '\$' + val.toLocaleString('es-CL')
-}
-
-function formatDateShort(dateStr: string) {
-  if (!dateStr) return '—'
-  const d = new Date(dateStr + 'T00:00:00')
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
-}
-
-function handleEditDateTime() {
-  router.push({ name: 'restaurant-step1' })
-}
-
-function handleEditMenus() {
-  router.push({ name: 'restaurant-step2' })
-}
-
-function handleEditContact() {
-  router.push({ name: 'restaurant-step3' })
+function formatCLP(amount: number): string {
+  return `$${amount.toLocaleString('es-CL')}`
 }
 
 function handleSendRequest() {
-  const randomNum = Math.floor(1000 + Math.random() * 9000)
-  reservationCode.value = `SOL-${randomNum}`
+  reservationCode.value = 'SOL-' + Math.floor(1000 + Math.random() * 9000)
   isSubmitted.value = true
-}
-
-function handleGoToCabana() {
-  store.resetStore()
-  store.setService('cabana')
-  router.push({ name: 'cabana-step1' })
-}
-
-function handleGoToCamping() {
-  store.resetStore()
-  store.setService('camping')
-  router.push({ name: 'camping-step1' })
 }
 
 function handleGoHome() {
@@ -122,160 +94,126 @@ function handleGoHome() {
   router.push('/')
 }
 
-function handleBack() {
-  store.prevStep()
-  router.push({ name: 'restaurant-step3' })
+function handleGoToCabana() {
+  store.selectedService = 'cabana'
+  router.push('/cabana/paso1')
+}
+
+function handleGoToCamping() {
+  store.selectedService = 'camping'
+  router.push('/camping/paso1')
 }
 </script>
 
 <template>
-  <div :class="['space-y-5 max-w-md mx-auto', !isSubmitted ? 'pb-28' : 'pb-6']">
-    
+  <div class="space-y-4 pb-24">
     <div v-if="!isSubmitted" class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="4" />
     </div>
 
+    <!-- PANTALLA A: REVISIÓN DE LA SOLICITUD DE RESTAURANTE -->
     <div v-if="!isSubmitted" class="space-y-4">
-      
-      <BaseAlert variant="info" title="Revisa tu solicitud antes de enviar">
-        Puedes modificar cualquier sección antes de confirmar tu reserva.
+      <BaseAlert variant="info" title="Revisa tu solicitud de restaurante">
+        Verifica tu selección de menús y horarios antes de confirmar.
       </BaseAlert>
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
-        
-        <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              1. Fecha y Horario
-            </h3>
-            <button 
-              type="button" 
-              @click="handleEditDateTime"
-              class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1"
-            >
-              <Edit2 class="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Editar</span>
-            </button>
-          </div>
+        <!-- 1. Fechas y Horario -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Fecha y Horario de Atención
+          </h3>
 
-          <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2.5 text-sm">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500">Fecha:</span>
-              <span class="font-extrabold text-brand-dark flex items-center gap-1">
-                <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-                {{ formatDateShort(store.checkInDate) }}
+          <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
+            <div class="flex justify-between">
+              <span>Fecha:</span>
+              <span class="text-brand-dark font-black uppercase">{{ formatDateShort(store.checkInDate) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Hora solicitada:</span>
+              <span class="text-brand-dark font-black flex items-center gap-1">
+                <Clock class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
+                {{ store.restaurantTime || 'Por coordinar' }}
               </span>
             </div>
-
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500">Comensales:</span>
-              <span class="font-extrabold text-brand-dark flex items-center gap-1">
-                <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-                {{ store.guestsCount }} {{ store.guestsCount === 1 ? 'Persona' : 'Personas' }}
-              </span>
-            </div>
-
-            <div class="border-t border-gray-200/80 pt-2 space-y-1">
-              <span class="text-[11px] font-extrabold text-gray-500 uppercase block">Horarios solicitados:</span>
-              <div 
-                v-for="(time, mealKey) in store.mealTimes" 
-                :key="mealKey" 
-                class="flex justify-between items-center text-xs font-bold text-brand-dark"
-              >
-                <span class="capitalize">{{ mealKey }}:</span>
-                <span>{{ time || 'Sin hora' }} hrs</span>
-              </div>
+            <div class="flex justify-between">
+              <span>Comensales:</span>
+              <span class="text-brand-dark font-black">{{ store.guestsCount }} personas</span>
             </div>
           </div>
         </div>
 
+        <!-- 2. Desglose de Platos Seleccionados -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              2. Platos y Acompañamientos
-            </h3>
-            <button 
-              type="button" 
-              @click="handleEditMenus"
-              class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1"
-            >
-              <Edit2 class="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Editar</span>
-            </button>
-          </div>
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Menús Seleccionados
+          </h3>
 
-          <div v-if="selectedItemList.length > 0" class="space-y-2.5">
+          <div v-if="displayMeals.length > 0" class="space-y-2">
             <div 
-              v-for="item in selectedItemList" 
-              :key="item.id"
+              v-for="(meal, idx) in displayMeals" 
+              :key="idx" 
               class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-1 text-xs"
             >
-              <div class="flex justify-between items-start font-black text-brand-dark text-sm">
-                <div>
-                  <span class="text-[10px] font-extrabold uppercase text-brand-accent block">{{ item.mealType }}</span>
-                  <span>{{ item.name }} (x{{ item.count }})</span>
-                </div>
-                <span class="text-brand-dark font-black text-base">{{ formatCLP(item.totalPrice) }}</span>
+              <div class="flex justify-between items-center font-black text-brand-dark text-sm">
+                <span>{{ meal.name }} (x{{ meal.count }})</span>
+                <span>{{ formatCLP((meal.price || 0) * (meal.count || 1)) }}</span>
               </div>
-              <p class="font-semibold text-gray-600 pt-0.5">
-                <strong class="text-gray-700">Acompañamientos:</strong> {{ item.sides }}
-              </p>
+              <div class="text-gray-500 font-bold text-[11px]">
+                <span>Precio unitario: {{ formatCLP(meal.price || 0) }}</span>
+              </div>
+              <div v-if="meal.sides && Object.keys(meal.sides).length > 0" class="text-[11px] text-brand-accent font-semibold pt-0.5">
+                <span class="font-extrabold">Acompañamientos: </span>
+                <span>
+                  {{ 
+                    typeof meal.sides === 'object' && !Array.isArray(meal.sides)
+                      ? Object.entries(meal.sides).map(([s, c]) => `${c} ${s}`).join(', ')
+                      : Array.isArray(meal.sides) ? meal.sides.join(', ') : meal.sides
+                  }}
+                </span>
+              </div>
             </div>
           </div>
-          <div v-else class="text-xs font-bold text-amber-800 bg-amber-50 p-3 rounded-xl border border-amber-200">
-            No se han seleccionado platos aún.
+
+          <div v-else class="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-bold">
+            No se han registrado platos específicos para esta solicitud.
           </div>
         </div>
 
+        <!-- 3. Presupuesto + DepositInfoCard -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              3. Desglose de Valores
-            </h3>
-            <span class="text-[11px] font-extrabold text-brand-accent bg-brand-light px-2.5 py-0.5 rounded-full border border-brand-border">
-              Valores en CLP
-            </span>
-          </div>
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Presupuesto Total
+          </h3>
 
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between items-center text-gray-700 font-extrabold">
+          <div class="space-y-2 text-sm font-bold">
+            <div class="flex justify-between">
               <span>Subtotal Neto:</span>
-              <span class="text-brand-dark text-base">{{ formatCLP(subtotal) }}</span>
+              <span class="text-brand-dark">{{ formatCLP(subtotal) }}</span>
             </div>
-
-            <div class="flex justify-between items-center text-gray-600 font-bold">
+            <div class="flex justify-between text-gray-500">
               <span>IVA (19%):</span>
-              <span class="text-gray-700 font-extrabold">{{ formatCLP(ivaAmount) }}</span>
+              <span>{{ formatCLP(ivaAmount) }}</span>
             </div>
-
-            <div class="bg-brand-dark text-white p-4 rounded-2xl flex justify-between items-center shadow-xs mt-2">
-              <div>
-                <span class="text-xs font-extrabold block text-emerald-300 uppercase tracking-wider">Total Estimado</span>
-                <span class="text-[10px] text-gray-300 font-bold">IVA incluido</span>
-              </div>
-              <span class="text-2xl font-black text-white">{{ formatCLP(totalWithIva) }}</span>
+            <div class="bg-brand-dark text-white p-3.5 rounded-2xl flex justify-between items-center text-lg font-black">
+              <span>Total con IVA:</span>
+              <span>{{ formatCLP(totalWithIva) }}</span>
             </div>
           </div>
+
+          <!-- Componente Reutilizable de Abono (30%) -->
+          <DepositInfoCard :total-with-iva="totalWithIva" service-name="restaurante" />
         </div>
 
+        <!-- 4. Contacto del Cliente -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              4. Contacto del Cliente
-            </h3>
-            <button 
-              type="button" 
-              @click="handleEditContact"
-              class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1"
-            >
-              <Edit2 class="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Editar</span>
-            </button>
-          </div>
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Contacto del Cliente
+          </h3>
 
           <div class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
             <div class="flex justify-between">
@@ -289,40 +227,39 @@ function handleBack() {
                 {{ store.clientPhone || 'Sin registrar' }}
               </span>
             </div>
-            <div class="flex justify-between">
-              <span>Categoría:</span>
-              <span class="text-brand-dark font-black">{{ store.eventReason || 'Particular' }}</span>
-            </div>
           </div>
         </div>
 
+        <!-- 5. Comentarios -->
+        <div v-if="store.comments" class="space-y-2">
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Comentarios u Observaciones
+          </h3>
+          <p class="bg-brand-light p-3.5 rounded-2xl border border-brand-border text-xs font-bold text-gray-700 italic">
+            "{{ store.comments }}"
+          </p>
+        </div>
       </div>
 
-    </div>
+      <!-- Navegación Flotante -->
+      <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
+        <div class="max-w-md mx-auto flex items-center gap-3">
+          <BaseButton variant="outline" size="lg" @click="router.push('/restaurante/paso3')">
+            <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
+            Volver
+          </BaseButton>
 
-    <!-- BOTONES FIJOS EN LA PARTE INFERIOR -->
-    <div v-if="!isSubmitted" class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="max-w-md mx-auto flex items-center gap-3">
-        <BaseButton variant="outline" size="lg" @click="handleBack">
-          <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
-          Volver
-        </BaseButton>
-
-        <BaseButton 
-          variant="success" 
-          size="lg" 
-          fullWidth 
-          @click="handleSendRequest"
-        >
-          <Send class="w-5 h-5 mr-1.5 stroke-[2.5]" />
-          Enviar Solicitud
-        </BaseButton>
+          <BaseButton variant="success" size="lg" fullWidth @click="handleSendRequest">
+            <Send class="w-5 h-5 mr-1.5 stroke-[2.5]" />
+            Enviar Solicitud
+          </BaseButton>
+        </div>
       </div>
     </div>
 
-    <!-- PANTALLA DE CONFIRMACIÓN DE ENVÍO -->
+    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA -->
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
-      
       <div class="w-16 h-16 bg-emerald-100 text-status-success rounded-full flex items-center justify-center mx-auto shadow-xs">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
       </div>
@@ -334,22 +271,22 @@ function handleBack() {
         </div>
 
         <h2 class="text-2xl font-black text-brand-dark tracking-tight">
-          ¡Solicitud Enviada!
+          ¡Solicitud de Restaurante Registrada!
         </h2>
 
         <p class="text-xs sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
-          Registramos tu reserva de Restaurante para <strong class="text-brand-dark font-black">{{ store.guestsCount }} personas</strong>. Te avisaremos al teléfono <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
+          Registramos tu solicitud de menú para <strong class="text-brand-dark font-black">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
         </p>
       </div>
 
       <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-xs font-bold text-gray-700">
         <div class="flex justify-between items-center">
           <span class="text-gray-500">Servicio:</span>
-          <span class="text-brand-dark font-black">Restaurante</span>
+          <span class="text-brand-dark font-black">Menús de Restaurante</span>
         </div>
         <div class="flex justify-between items-center">
-          <span class="text-gray-500">Fecha:</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }}</span>
+          <span class="text-gray-500">Fecha y Hora:</span>
+          <span class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }} ({{ store.restaurantTime }})</span>
         </div>
         <div class="flex justify-between items-center border-t border-gray-200/60 pt-2 mt-1">
           <span class="text-gray-500">Total Estimado:</span>
@@ -357,14 +294,15 @@ function handleBack() {
         </div>
       </div>
 
+      <!-- Venta Cruzada -->
       <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl text-left space-y-3">
         <div class="flex items-center gap-2 text-amber-950 font-black text-sm">
-          <BedDouble class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
-          <span>¿Se quedan a dormir?</span>
+          <Utensils class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
+          <span>¿Quieres alojar en cabaña o acampar?</span>
         </div>
 
         <p class="text-xs font-semibold text-amber-900 leading-relaxed">
-          Puedes complementar tu visita reservando una cabaña o un sitio de camping para tu mismo grupo de <strong>{{ store.guestsCount }} personas</strong>.
+          Puedes reservar cabañas equipadas o sitios de camping para completar tu visita.
         </p>
 
         <div class="grid grid-cols-2 gap-2 pt-1">
@@ -394,8 +332,6 @@ function handleBack() {
           Volver al Inicio
         </BaseButton>
       </div>
-
     </div>
-
   </div>
 </template>

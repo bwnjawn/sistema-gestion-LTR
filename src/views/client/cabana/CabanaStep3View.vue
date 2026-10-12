@@ -1,69 +1,75 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight, ArrowLeft, User, Phone, Mail, FileText, Tag, Building2 } from 'lucide-vue-next'
-import { useReservationStore } from '../../../stores/reservationStore'
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  User, 
+  Phone, 
+  FileText, 
+  Building2, 
+  Clock 
+} from 'lucide-vue-next'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import { useReservationStore } from '../../../stores/reservationStore'
+import { useAdminStore } from '../../../stores/adminStore'
 
 const router = useRouter()
 const store = useReservationStore()
-
-const categories = [
-  { id: 'Particular', label: 'Particular' },
-  { id: 'Empresa', label: 'Empresa' },
-  { id: 'Colegio', label: 'Colegio' },
-  { id: 'Institución', label: 'Institución' }
-]
-
-const selectedCategory = ref(store.eventReason || 'Particular')
-const fullName = ref(store.clientName || '')
-const phone = ref(store.clientPhone || '+56 9 ')
-const email = ref('')
-const eventReason = ref('')
-const comments = ref('')
+const adminStore = useAdminStore()
 
 const nightsCount = computed(() => {
   if (!store.checkInDate || !store.checkOutDate) return 1
-  const d1 = new Date(store.checkInDate + 'T00:00:00')
-  const d2 = new Date(store.checkOutDate + 'T00:00:00')
-  const diffTime = d2.getTime() - d1.getTime()
-  return Math.max(1, Math.ceil(diffTime / (1000 * 3600 * 24)))
+  const start = new Date(store.checkInDate)
+  const end = new Date(store.checkOutDate)
+  const diffTime = Math.abs(end.getTime() - start.getTime())
+  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
 })
 
-function formatDateShort(dateStr: string) {
-  if (!dateStr) return '—'
-  const d = new Date(dateStr + 'T00:00:00')
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return ''
+  const [, month, day] = dateStr.split('-')
+  if (!day || !month) return dateStr
   const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
+  const monthIdx = parseInt(month, 10) - 1
+  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
 }
 
+// FORMATO UNIFICADO Y DINÁMICO: Remplaza "Día de ingreso/salida" por las fechas reales del cliente
+const formattedScheduleDisplay = computed(() => {
+  const inTime = adminStore.cabinSchedules.checkIn
+  const outTime = adminStore.cabinSchedules.checkOut
+  if (store.checkInDate && store.checkOutDate) {
+    const inDate = formatDateShort(store.checkInDate)
+    const outDate = formatDateShort(store.checkOutDate)
+    return `${inDate} (${inTime} hrs) - ${outDate} (${outTime} hrs)`
+  }
+  return `Día de ingreso (${inTime} hrs) - Día de salida (${outTime} hrs)`
+})
+
+const selectedCabin = computed(() => {
+  return adminStore.cabins.find(c => c.id === store.selectedCabinId)
+})
+
 const isFormValid = computed(() => {
-  return fullName.value.trim().length >= 2 && phone.value.trim().length >= 8
+  return store.clientName.trim().length >= 2 && store.clientPhone.trim().length >= 8
 })
 
 function handleNext() {
-  if (!isFormValid.value) return
-  
-  store.clientName = fullName.value.trim()
-  store.clientPhone = phone.value.trim()
-  store.eventReason = selectedCategory.value
-  
-  store.nextStep()
-  router.push({ name: 'cabana-step4' })
+  if (isFormValid.value) {
+    router.push('/cabana/paso4')
+  }
 }
 
 function handleBack() {
-  store.prevStep()
-  router.push({ name: 'cabana-step2' })
+  router.push('/cabana/paso2')
 }
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto pb-28">
-    
+  <div class="space-y-4 pb-24">
     <!-- 1. Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="3" />
@@ -74,32 +80,9 @@ function handleBack() {
       Ingresa tu información para que los dueños puedan confirmar tu solicitud de reserva por teléfono.
     </BaseAlert>
 
-    <!-- 3. Formulario "Tus Datos" (Paso 3) -->
+    <!-- 3. Formulario "Tus Datos" -->
     <div class="bg-white p-5 rounded-2xl border-2 border-brand-border shadow-sm space-y-5">
       
-      <!-- Selector de Tipo de Cliente / Categoría -->
-      <div class="space-y-2">
-        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider">
-          Categoría de Cliente
-        </label>
-        <div class="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            v-for="cat in categories"
-            :key="cat.id"
-            @click="selectedCategory = cat.id"
-            :class="[
-              'py-3 px-3 rounded-xl font-extrabold text-xs transition-all touch-target border-2',
-              selectedCategory === cat.id
-                ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
-                : 'bg-brand-light text-brand-dark border-brand-border hover:bg-gray-200'
-            ]"
-          >
-            {{ cat.label }}
-          </button>
-        </div>
-      </div>
-
       <!-- Campo: Nombre o Institución -->
       <div class="space-y-1.5">
         <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -108,13 +91,13 @@ function handleBack() {
         </label>
         <input 
           type="text"
-          v-model="fullName"
+          v-model="store.clientName"
           placeholder="Ej: Juan Pérez / Colegio San Martín"
           class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
       </div>
 
-      <!-- Campo: Teléfono (+56 9) -->
+      <!-- Campo: Teléfono de Contacto (inputmode="numeric") -->
       <div class="space-y-1.5">
         <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -122,7 +105,8 @@ function handleBack() {
         </label>
         <input 
           type="tel"
-          v-model="phone"
+          inputmode="numeric"
+          v-model="store.clientPhone"
           placeholder="+56 9 1234 5678"
           class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
@@ -131,61 +115,34 @@ function handleBack() {
         </span>
       </div>
 
-      <!-- Campo: Correo Electrónico (Opcional) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-          <Mail class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          Correo Electrónico (Opcional)
-        </label>
-        <input 
-          type="email"
-          v-model="email"
-          placeholder="ejemplo@correo.com"
-          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
-        />
-      </div>
-
-      <!-- Campo: Evento o Motivo -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-          <Tag class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          Evento o Motivo (Opcional)
-        </label>
-        <input 
-          type="text"
-          v-model="eventReason"
-          placeholder="Ej: Paseo familiar, Cumpleaños, Reunión"
-          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
-        />
-      </div>
-
-      <!-- Campo: Comentarios u Observaciones (Opcional) -->
+      <!-- Campo: Comentarios u Observaciones -->
       <div class="space-y-1.5">
         <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Comentarios u Observaciones (Opcional)
         </label>
         <textarea 
-          v-model="comments"
+          v-model="store.comments"
           rows="3"
           placeholder="¿Alguna solicitud especial para tu llegada o estadía?"
           class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-semibold text-sm focus:bg-white focus:border-brand-dark focus:outline-none transition-colors resize-none"
         ></textarea>
       </div>
 
-      <!-- Resumen Fijo -->
+      <!-- Resumen Fijo Unificado (Sin Duplicidad) -->
       <div class="bg-brand-light p-3.5 rounded-xl border border-brand-border space-y-1 text-xs font-bold text-gray-700">
         <div class="flex justify-between">
           <span>Servicio:</span>
           <span class="text-brand-dark font-extrabold flex items-center gap-1">
             <Building2 class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Cabaña ({{ store.selectedCabinId === 'cabana-2' ? 'Cabaña 8' : 'Cabaña 6' }})
+            Cabaña ({{ selectedCabin?.name || 'Cabaña' }})
           </span>
         </div>
-        <div class="flex justify-between">
-          <span>Fechas:</span>
-          <span class="text-brand-dark font-extrabold">
-            {{ formatDateShort(store.checkInDate) }} → {{ formatDateShort(store.checkOutDate) }} ({{ nightsCount }} noc.)
+        <div class="flex justify-between items-center">
+          <span>Fechas y Horario:</span>
+          <span class="text-brand-dark font-extrabold flex items-center gap-1 text-right">
+            <Clock class="w-3.5 h-3.5 text-brand-accent stroke-[2.5] shrink-0" />
+            {{ formattedScheduleDisplay }} ({{ nightsCount }} {{ nightsCount === 1 ? 'noc.' : 'noc.' }})
           </span>
         </div>
         <div class="flex justify-between">
@@ -216,6 +173,5 @@ function handleBack() {
         </BaseButton>
       </div>
     </div>
-
   </div>
 </template>

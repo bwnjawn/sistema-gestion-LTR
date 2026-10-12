@@ -2,133 +2,94 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  Send, 
   Calendar, 
-  Users, 
-  Phone, 
-  User, 
+  Receipt, 
+  Send, 
+  ArrowLeft, 
+  FileText, 
+  CheckCircle2, 
+  FileCheck, 
+  Utensils, 
   BedDouble, 
   RotateCcw,
-  Receipt,
-  Utensils,
-  Edit2,
-  FileCheck,
-  Tent
+  User,
+  Phone,
+  Clock
 } from 'lucide-vue-next'
-import { useReservationStore } from '../../../stores/reservationStore'
+import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
+import { useReservationStore } from '../../../stores/reservationStore'
+import { type CampingSite, useAdminStore } from '../../../stores/adminStore'
 
 const router = useRouter()
 const store = useReservationStore()
+const adminStore = useAdminStore()
 
 const isSubmitted = ref(false)
 const reservationCode = ref('')
 
 const isDiario = computed(() => store.campingType === 'diario')
+const guests = computed(() => store.guestsCount)
 
-const campingCatalog: Record<string, { name: string; pricePerPerson: number }> = {
-  'camping-diario-estandar': { name: 'Paseo por el Día - Entrada General', pricePerPerson: 5000 },
-  'camping-diario-quincho': { name: 'Paseo por el Día + Quincho / Asador', pricePerPerson: 7000 },
-  'camping-pernoctar-estandar': { name: 'Camping Noche - Sitio Estándar', pricePerPerson: 8000 },
-  'camping-pernoctar-premium': { name: 'Camping Noche - Sitio Privado con Quincho', pricePerPerson: 10000 }
-}
-
-const selectedCampingInfo = computed(() => {
-  const id = store.selectedCabinId || (isDiario.value ? 'camping-diario-estandar' : 'camping-pernoctar-estandar')
-  return campingCatalog[id] || { name: 'Servicio de Camping', pricePerPerson: 5000 }
+const selectedCampingInfo = computed((): CampingSite => {
+  return adminStore.campingSites.find(s => s.id === store.selectedCampingId) || adminStore.campingSites[0]
 })
 
 const nightsCount = computed(() => {
-  if (isDiario.value) return 1
-  if (!store.checkInDate || !store.checkOutDate) return 1
-  const d1 = new Date(store.checkInDate + 'T00:00:00')
-  const d2 = new Date(store.checkOutDate + 'T00:00:00')
-  const diffTime = d2.getTime() - d1.getTime()
-  return Math.max(1, Math.ceil(diffTime / (1000 * 3600 * 24)))
+  if (isDiario.value || !store.checkInDate || !store.checkOutDate) return 1
+  const start = new Date(store.checkInDate)
+  const end = new Date(store.checkOutDate)
+  const diffTime = Math.abs(end.getTime() - start.getTime())
+  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
 })
 
-const guests = computed(() => store.guestsCount || 1)
+function formatDateShort(dateStr: string): string {
+  if (!dateStr) return ''
+  const [, month, day] = dateStr.split('-')
+  if (!day || !month) return dateStr
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  const monthIdx = parseInt(month, 10) - 1
+  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
+}
+
+const formattedScheduleRange = computed(() => {
+  if (isDiario.value) {
+    const checkIn = adminStore.campingSchedules.diario.checkIn
+    const checkOut = adminStore.campingSchedules.diario.checkOut
+    if (store.checkInDate) {
+      const dateFormatted = formatDateShort(store.checkInDate)
+      return `${dateFormatted} (${checkIn} hrs) - ${dateFormatted} (${checkOut} hrs)`
+    }
+    return `Día de ingreso (${checkIn} hrs) - Día de ingreso (${checkOut} hrs)`
+  } else {
+    const checkIn = adminStore.campingSchedules.pernoctar.checkIn
+    const checkOut = adminStore.campingSchedules.pernoctar.checkOut
+    if (store.checkInDate && store.checkOutDate) {
+      const inDate = formatDateShort(store.checkInDate)
+      const outDate = formatDateShort(store.checkOutDate)
+      return `${inDate} (${checkIn} hrs) - ${outDate} (${checkOut} hrs)`
+    }
+    return `Día de ingreso (${checkIn} hrs) - Día de salida (${checkOut} hrs)`
+  }
+})
 
 const subtotal = computed(() => {
-  if (isDiario.value) {
-    return selectedCampingInfo.value.pricePerPerson * guests.value
-  }
-  return selectedCampingInfo.value.pricePerPerson * guests.value * nightsCount.value
+  const nights = isDiario.value ? 1 : nightsCount.value
+  return selectedCampingInfo.value.pricePerPerson * guests.value * nights
 })
 
 const ivaAmount = computed(() => Math.round(subtotal.value * 0.19))
 const totalWithIva = computed(() => subtotal.value + ivaAmount.value)
 
-function formatCLP(val: number): string {
-  return '\$' + val.toLocaleString('es-CL')
-}
-
-function formatDateShort(dateStr: string) {
-  if (!dateStr) return '—'
-  const d = new Date(dateStr + 'T00:00:00')
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`
-}
-
-function handleEditDates() {
-  router.push({ name: 'camping-step1' })
-}
-
-function handleEditOption() {
-  router.push({ name: 'camping-step2' })
-}
-
-function handleEditContact() {
-  router.push({ name: 'camping-step3' })
+function formatCLP(amount: number): string {
+  return `$${amount.toLocaleString('es-CL')}`
 }
 
 function handleSendRequest() {
-  const randomNum = Math.floor(1000 + Math.random() * 9000)
-  reservationCode.value = `SOL-${randomNum}`
+  reservationCode.value = 'SOL-' + Math.floor(1000 + Math.random() * 9000)
   isSubmitted.value = true
-}
-
-function handleGoToCabana() {
-  const savedGuests = store.guestsCount
-  const savedDate = store.checkInDate
-  const savedClientName = store.clientName
-  const savedClientPhone = store.clientPhone
-
-  store.resetStore()
-  store.setService('cabana')
-
-  if (savedGuests) store.guestsCount = savedGuests
-  if (savedDate) store.checkInDate = savedDate
-  if (savedClientName) store.clientName = savedClientName
-  if (savedClientPhone) store.clientPhone = savedClientPhone
-
-  router.push('/cabanas/paso-1').catch(() => {
-    router.push({ name: 'cabana-step1' })
-  })
-}
-
-function handleGoToRestaurant() {
-  const savedGuests = store.guestsCount
-  const savedDate = store.checkInDate
-  const savedClientName = store.clientName
-  const savedClientPhone = store.clientPhone
-
-  store.resetStore()
-  store.setService('restaurant')
-
-  if (savedGuests) store.guestsCount = savedGuests
-  if (savedDate) store.checkInDate = savedDate
-  if (savedClientName) store.clientName = savedClientName
-  if (savedClientPhone) store.clientPhone = savedClientPhone
-
-  router.push('/restaurante/paso-1').catch(() => {
-    router.push({ name: 'restaurant-step1' })
-  })
 }
 
 function handleGoHome() {
@@ -136,143 +97,89 @@ function handleGoHome() {
   router.push('/')
 }
 
-function handleBack() {
-  store.prevStep()
-  router.push({ name: 'camping-step3' })
+function handleGoToRestaurant() {
+  store.selectedService = 'restaurant'
+  router.push('/restaurante/paso1')
+}
+
+function handleGoToCabana() {
+  store.selectedService = 'cabana'
+  router.push('/cabana/paso1')
 }
 </script>
 
 <template>
-  <div :class="['space-y-5 max-w-md mx-auto', !isSubmitted ? 'pb-28' : 'pb-6']">
-    
+  <div class="space-y-4 pb-24">
     <div v-if="!isSubmitted" class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="4" />
     </div>
 
+    <!-- PANTALLA A: REVISIÓN DE SOLICITUD -->
     <div v-if="!isSubmitted" class="space-y-4">
-      
       <BaseAlert variant="info" title="Revisa tu solicitud antes de enviar">
-        Puedes modificar cualquier sección antes de confirmar la reserva de camping.
+        Verifica todos los parámetros antes de confirmar la reserva de camping.
       </BaseAlert>
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
-        
-        <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              1. Fechas y Modalidad
-            </h3>
-            <button 
-              type="button" 
-              @click="handleEditDates"
-              class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1"
-            >
-              <Edit2 class="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Editar</span>
-            </button>
-          </div>
+        <!-- 1. Fechas y Horarios -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Fechas y Horarios
+          </h3>
 
-          <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2.5 text-sm">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500">Modalidad:</span>
-              <span class="font-extrabold text-brand-dark uppercase text-xs bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-300">
-                {{ isDiario ? 'Paseo por el Día' : 'Pernoctar' }}
+          <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
+            <div class="flex justify-between">
+              <span>Modalidad:</span>
+              <span class="text-brand-dark font-black uppercase">
+                {{ isDiario ? 'Por el Día' : 'Pernoctar (' + nightsCount + ' noche/s)' }}
               </span>
             </div>
-
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500">Fecha:</span>
-              <span class="font-extrabold text-brand-dark flex items-center gap-1">
-                <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-                {{ formatDateShort(store.checkInDate) }} {{ !isDiario ? 'al ' + formatDateShort(store.checkOutDate) : '' }}
+            <div class="flex justify-between items-start gap-2">
+              <span class="shrink-0">Horario Permitido:</span>
+              <span class="text-brand-dark font-black text-right flex items-center justify-end gap-1">
+                <Clock class="w-3.5 h-3.5 text-brand-accent shrink-0 stroke-[2.5]" />
+                {{ formattedScheduleRange }}
               </span>
             </div>
-
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-gray-500">Visitantes:</span>
-              <span class="font-extrabold text-brand-dark flex items-center gap-1">
-                <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-                {{ guests }} personas
-              </span>
+            <div class="flex justify-between">
+              <span>Visitantes:</span>
+              <span class="text-brand-dark font-black">{{ guests }} personas</span>
             </div>
           </div>
         </div>
 
+        <!-- 2. Presupuesto -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Tent class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              2. Espacio Elegido
-            </h3>
-            <button 
-              type="button" 
-              @click="handleEditOption"
-              class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1"
-            >
-              <Edit2 class="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Editar</span>
-            </button>
-          </div>
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Presupuesto
+          </h3>
 
-          <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-1.5 text-xs">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-black text-brand-dark">{{ selectedCampingInfo.name }}</span>
-              <span class="text-brand-dark font-black text-base">{{ formatCLP(selectedCampingInfo.pricePerPerson) }} / pers.</span>
+          <div class="space-y-2 text-sm font-bold">
+            <div class="flex justify-between">
+              <span>Subtotal Neto:</span>
+              <span class="text-brand-dark">{{ formatCLP(subtotal) }}</span>
             </div>
-            <p class="font-semibold text-gray-500">
-              Acceso a baños, duchas con agua caliente, piscina, zonas de descanso y entorno natural.
-            </p>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              3. Desglose de Valores
-            </h3>
-            <span class="text-[11px] font-extrabold text-brand-accent bg-brand-light px-2.5 py-0.5 rounded-full border border-brand-border">
-              Valores en CLP
-            </span>
-          </div>
-
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between items-center text-gray-700 font-extrabold">
-              <span>Subtotal ({{ guests }} pers. {{ !isDiario ? 'x ' + nightsCount + ' noc.' : '' }}):</span>
-              <span class="text-brand-dark text-base">{{ formatCLP(subtotal) }}</span>
-            </div>
-
-            <div class="flex justify-between items-center text-gray-600 font-bold">
+            <div class="flex justify-between text-gray-500">
               <span>IVA (19%):</span>
-              <span class="text-gray-700 font-extrabold">{{ formatCLP(ivaAmount) }}</span>
+              <span>{{ formatCLP(ivaAmount) }}</span>
             </div>
-
-            <div class="bg-brand-dark text-white p-4 rounded-2xl flex justify-between items-center shadow-xs mt-2">
-              <div>
-                <span class="text-xs font-extrabold block text-emerald-300 uppercase tracking-wider">Total Estimado</span>
-                <span class="text-[10px] text-gray-300 font-bold">IVA incluido</span>
-              </div>
-              <span class="text-2xl font-black text-white">{{ formatCLP(totalWithIva) }}</span>
+            <div class="bg-brand-dark text-white p-3.5 rounded-2xl flex justify-between items-center text-lg font-black">
+              <span>Total con IVA:</span>
+              <span>{{ formatCLP(totalWithIva) }}</span>
             </div>
           </div>
+
+          <DepositInfoCard :total-with-iva="totalWithIva" service-name="camping" />
         </div>
 
+        <!-- 3. Contacto del Cliente (Sin Categoría) -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              4. Contacto del Cliente
-            </h3>
-            <button 
-              type="button" 
-              @click="handleEditContact"
-              class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1"
-            >
-              <Edit2 class="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Editar</span>
-            </button>
-          </div>
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Contacto del Cliente
+          </h3>
 
           <div class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
             <div class="flex justify-between">
@@ -286,40 +193,39 @@ function handleBack() {
                 {{ store.clientPhone || 'Sin registrar' }}
               </span>
             </div>
-            <div class="flex justify-between">
-              <span>Categoría:</span>
-              <span class="text-brand-dark font-black">{{ store.eventReason || 'Particular' }}</span>
-            </div>
           </div>
         </div>
 
+        <!-- 4. Comentarios -->
+        <div v-if="store.comments" class="space-y-2">
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
+            <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+            Comentarios u Observaciones
+          </h3>
+          <p class="bg-brand-light p-3.5 rounded-2xl border border-brand-border text-xs font-bold text-gray-700 italic">
+            "{{ store.comments }}"
+          </p>
+        </div>
       </div>
 
-    </div>
+      <!-- Navegación Flotante -->
+      <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
+        <div class="max-w-md mx-auto flex items-center gap-3">
+          <BaseButton variant="outline" size="lg" @click="router.push('/camping/paso3')">
+            <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
+            Volver
+          </BaseButton>
 
-    <!-- BOTONES FIJOS EN LA PARTE INFERIOR -->
-    <div v-if="!isSubmitted" class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="max-w-md mx-auto flex items-center gap-3">
-        <BaseButton variant="outline" size="lg" @click="handleBack">
-          <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
-          Volver
-        </BaseButton>
-
-        <BaseButton 
-          variant="success" 
-          size="lg" 
-          fullWidth 
-          @click="handleSendRequest"
-        >
-          <Send class="w-5 h-5 mr-1.5 stroke-[2.5]" />
-          Enviar Solicitud
-        </BaseButton>
+          <BaseButton variant="success" size="lg" fullWidth @click="handleSendRequest">
+            <Send class="w-5 h-5 mr-1.5 stroke-[2.5]" />
+            Enviar Solicitud
+          </BaseButton>
+        </div>
       </div>
     </div>
 
-    <!-- PANTALLA DE CONFIRMACIÓN DE ENVÍO -->
+    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA -->
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
-      
       <div class="w-16 h-16 bg-emerald-100 text-status-success rounded-full flex items-center justify-center mx-auto shadow-xs">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
       </div>
@@ -344,9 +250,9 @@ function handleBack() {
           <span class="text-gray-500">Servicio:</span>
           <span class="text-brand-dark font-black">{{ selectedCampingInfo.name }}</span>
         </div>
-        <div class="flex justify-between items-center">
-          <span class="text-gray-500">Fecha:</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }}</span>
+        <div class="flex justify-between items-start gap-2">
+          <span class="text-gray-500 shrink-0">Horario Asignado:</span>
+          <span class="text-brand-dark font-black text-right">{{ formattedScheduleRange }}</span>
         </div>
         <div class="flex justify-between items-center border-t border-gray-200/60 pt-2 mt-1">
           <span class="text-gray-500">Total Estimado:</span>
@@ -391,8 +297,6 @@ function handleBack() {
           Volver al Inicio
         </BaseButton>
       </div>
-
     </div>
-
   </div>
 </template>
