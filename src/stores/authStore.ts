@@ -1,54 +1,51 @@
+// src/stores/authStore.ts
+
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import type { AdminUser } from '../types/domain'
+import { generateUUID } from '../lib/id'
+import { getStorageItem, setStorageItem } from '../lib/persistence'
 
-export interface AdminUser {
-  id: string
-  name: string
-  email: string
-  role: 'owner' | 'admin'
-  createdAt: string
-}
+export type { AdminUser }
 
 export interface AdminUserWithPassword extends AdminUser {
   passwordHash: string
 }
 
+const DEFAULT_ADMINS: AdminUserWithPassword[] = [
+  {
+    id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380c11',
+    name: 'Dueño 1 (Principal)',
+    email: 'dueno1@troncosderepil.cl',
+    passwordHash: 'admin123',
+    role: 'owner',
+    createdAt: '2026-01-01'
+  },
+  {
+    id: 'f2eebc99-9c0b-4ef8-bb6d-6bb9bd380c22',
+    name: 'Dueño 2 (Administración)',
+    email: 'dueno2@troncosderepil.cl',
+    passwordHash: 'admin123',
+    role: 'owner',
+    createdAt: '2026-01-01'
+  }
+]
+
 export const useAuthStore = defineStore('auth', () => {
-  // Cargar lista de administradores desde LocalStorage o usar valores por defecto
-  const savedAdmins = JSON.parse(localStorage.getItem('ltr_admin_list') || 'null')
-  
   const adminsList = ref<AdminUserWithPassword[]>(
-    savedAdmins || [
-      {
-        id: 'usr-1',
-        name: 'Dueño 1 (Principal)',
-        email: 'dueno1@troncosderepil.cl',
-        passwordHash: 'admin123',
-        role: 'owner',
-        createdAt: '2026-01-01'
-      },
-      {
-        id: 'usr-2',
-        name: 'Dueño 2 (Administración)',
-        email: 'dueno2@troncosderepil.cl',
-        passwordHash: 'admin123',
-        role: 'owner',
-        createdAt: '2026-01-01'
-      }
-    ]
+    getStorageItem('admin_list', DEFAULT_ADMINS)
   )
 
-  // Estado del usuario autenticado en la sesión activa
   const currentUser = ref<AdminUser | null>(
-    JSON.parse(localStorage.getItem('ltr_admin_user') || 'null')
+    getStorageItem('admin_user', null)
   )
+
   const isLoading = ref(false)
   const authError = ref<string | null>(null)
-
   const isAuthenticated = computed(() => !!currentUser.value)
 
-  function saveAdminsToStorage() {
-    localStorage.setItem('ltr_admin_list', JSON.stringify(adminsList.value))
+  function saveAdminsToStorage(): void {
+    setStorageItem('admin_list', adminsList.value)
   }
 
   /**
@@ -57,8 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, passwordHash: string): Promise<boolean> {
     isLoading.value = true
     authError.value = null
-
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 300))
 
     try {
       const foundUser = adminsList.value.find(
@@ -73,9 +69,8 @@ export const useAuthStore = defineStore('auth', () => {
           role: foundUser.role,
           createdAt: foundUser.createdAt
         }
-
         currentUser.value = sessionUser
-        localStorage.setItem('ltr_admin_user', JSON.stringify(sessionUser))
+        setStorageItem('admin_user', sessionUser)
         isLoading.value = false
         return true
       } else {
@@ -94,14 +89,13 @@ export const useAuthStore = defineStore('auth', () => {
    * Registro de nuevo usuario administrador
    */
   async function register(
-    name: string, 
-    email: string, 
+    name: string,
+    email: string,
     passwordHash: string
   ): Promise<boolean> {
     isLoading.value = true
     authError.value = null
-
-    await new Promise(resolve => setTimeout(resolve, 600))
+    await new Promise(resolve => setTimeout(resolve, 400))
 
     try {
       const normalizedEmail = email.toLowerCase().trim()
@@ -114,9 +108,8 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       const todayDate: string = new Date().toISOString().substring(0, 10)
-
       const newAdmin: AdminUserWithPassword = {
-        id: `usr-${Date.now()}`,
+        id: generateUUID(),
         name: name.trim(),
         email: normalizedEmail,
         passwordHash,
@@ -127,7 +120,6 @@ export const useAuthStore = defineStore('auth', () => {
       adminsList.value.push(newAdmin)
       saveAdminsToStorage()
 
-      // Iniciar sesión automáticamente tras el registro exitoso
       const sessionUser: AdminUser = {
         id: newAdmin.id,
         name: newAdmin.name,
@@ -135,9 +127,8 @@ export const useAuthStore = defineStore('auth', () => {
         role: newAdmin.role,
         createdAt: newAdmin.createdAt
       }
-
       currentUser.value = sessionUser
-      localStorage.setItem('ltr_admin_user', JSON.stringify(sessionUser))
+      setStorageItem('admin_user', sessionUser)
       isLoading.value = false
       return true
     } catch (e) {
@@ -150,7 +141,7 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Cierre de sesión
    */
-  async function logout() {
+  async function logout(): Promise<void> {
     currentUser.value = null
     localStorage.removeItem('ltr_admin_user')
   }

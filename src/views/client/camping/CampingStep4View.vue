@@ -2,8 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  ArrowLeft, Calendar, Pencil, Clock, Receipt, User, Phone, 
-  FileText, Send, CheckCircle2, FileCheck, Utensils, Home, RotateCcw 
+  ArrowLeft, Calendar, Pencil, Clock, Receipt, User, Phone, Send, CheckCircle2, FileCheck, Utensils, Home, RotateCcw 
 } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
@@ -12,7 +11,6 @@ import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { formatCLP } from '../../../lib/format'
-import { useRequestsStore } from '../../../stores/requestsStore'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -49,7 +47,7 @@ const totalWithIva = computed(() => {
 
 function formatDateShort(dateStr: string): string {
   if (!dateStr) return '-'
-  const [y, m, d] = dateStr.split('-').map(Number)
+  const [ m, d] = dateStr.split('-').map(Number)
   const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
   return `${d} ${months[m - 1]}`
 }
@@ -62,29 +60,20 @@ const formattedScheduleDisplay = computed(() => {
   return `${formatDateShort(store.checkInDate)} al ${formatDateShort(store.checkOutDate)} (${nightsCount.value} noc.)`
 })
 
-const requestsStore = useRequestsStore()
+const isSubmitting = ref(false)
 
-function handleSendRequest() {
-  // 1. Guardar en el store de solicitudes
-  requestsStore.addRequest({
-    requestCode: reservationCode.value,
-    clientName: store.clientName,
-    clientPhone: store.clientPhone,
-    clientEmail: store.clientEmail || undefined,
-    type: 'camping',
-    resourceName: store.campingType === 'pernoctar' ? 'Camping Pernoctar' : 'Camping Día',
-    date: store.checkInDate,
-    timeOrDuration: store.campingType === 'pernoctar' ? `${nightsCount.value} noche(s)` : 'Día completo',
-    guestsCount: store.guestsCount,
-    totalAmount: totalWithIva.value,
-    depositAmount: Math.round(totalWithIva.value * 0.3),
-    details: {
-      comments: store.comments
-    }
-  })
-
-  // 2. Mostrar pantalla de éxito
-  isSubmitted.value = true
+async function handleSendRequest() {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+  try {
+    const code = await store.submitReservationRequest()
+    reservationCode.value = code
+    isSubmitted.value = true
+  } catch (error) {
+    console.error('Error al enviar la solicitud:', error)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 function handleGoToRestaurant() {
@@ -106,134 +95,96 @@ function handleGoHome() {
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
     
-    <!-- PANTALLA A: REVISIÓN DE LA SOLICITUD -->
     <div v-if="!isSubmitted" class="space-y-4">
       <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
         <StepIndicator :current-step="4" />
       </div>
 
       <BaseAlert variant="info" title="Revisa tu solicitud antes de enviar">
-        Verifica los parámetros de tu visita de camping antes de confirmar.
+        Verifica todos los datos de tu reserva de camping antes de confirmar.
       </BaseAlert>
 
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
         
-        <!-- 1. Fechas y Horarios con Botón Editar -->
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              Modalidad y Fechas
+              Fechas y Modalidad
             </h3>
-            <button 
-              type="button" 
-              @click="router.push('/camping/paso1')"
-              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
-            >
-              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
-              Editar
+            <button type="button" @click="router.push('/camping/paso1')" class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1">
+              <Pencil class="w-3.5 h-3.5" /> Editar
             </button>
           </div>
+          <p class="text-sm font-black text-brand-dark">
+            {{ formattedScheduleDisplay }}
+          </p>
+        </div>
 
-          <div class="bg-brand-light p-4 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
-            <div class="flex justify-between">
-              <span>Opción de Camping:</span>
-              <span class="text-brand-dark font-black uppercase">{{ selectedCampingSite?.name }}</span>
-            </div>
-            <div class="flex justify-between items-start gap-2">
-              <span class="shrink-0">Fechas / Modalidad:</span>
-              <span class="text-brand-dark font-black text-right flex items-center justify-end gap-1">
-                <Clock class="w-3.5 h-3.5 text-brand-accent shrink-0 stroke-[2.5]" />
-                {{ formattedScheduleDisplay }}
-              </span>
-            </div>
-            <div class="flex justify-between">
-              <span>Visitantes:</span>
-              <span class="text-brand-dark font-black">{{ store.guestsCount }} personas</span>
-            </div>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+              Espacio Seleccionado
+            </h3>
+            <button type="button" @click="router.push('/camping/paso2')" class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1">
+              <Pencil class="w-3.5 h-3.5" /> Editar
+            </button>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-black text-brand-dark">{{ selectedCampingSite?.name }}</span>
+            <span class="text-xs font-extrabold text-gray-600">{{ store.guestsCount }} personas</span>
           </div>
         </div>
 
-        <!-- 2. Presupuesto -->
-        <div class="space-y-3">
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-2">
-            <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Presupuesto
-          </h3>
-
-          <div class="space-y-2 text-sm font-bold">
-            <div class="flex justify-between">
-              <span>Subtotal Neto:</span>
-              <span class="text-brand-dark">{{ formatCLP(subtotal) }}</span>
-            </div>
-            <div class="flex justify-between text-gray-500">
-              <span>IVA (19%):</span>
-              <span>{{ formatCLP(ivaAmount) }}</span>
-            </div>
-            <div class="bg-brand-dark text-white p-3.5 rounded-2xl flex justify-between items-center text-lg font-black">
-              <span>Total con IVA:</span>
-              <span>{{ formatCLP(totalWithIva) }}</span>
-            </div>
-          </div>
-
-          <DepositInfoCard :total-with-iva="totalWithIva" service-name="camping" />
-        </div>
-
-        <!-- 3. Contacto del Cliente con Botón Editar -->
-        <div class="space-y-3">
+        <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
             <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              Contacto del Cliente
+              Datos del Titular
             </h3>
-            <button 
-              type="button" 
-              @click="router.push('/camping/paso3')"
-              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
-            >
-              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
-              Editar
+            <button type="button" @click="router.push('/camping/paso3')" class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1">
+              <Pencil class="w-3.5 h-3.5" /> Editar
             </button>
           </div>
-
-          <div class="bg-brand-light p-3.5 rounded-2xl border border-brand-border space-y-2 text-xs font-bold text-gray-700">
-            <div class="flex justify-between">
-              <span>Cliente:</span>
-              <span class="text-brand-dark font-black">{{ store.clientName || 'Sin registrar' }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Teléfono:</span>
-              <span class="text-brand-dark font-black flex items-center gap-1">
-                <Phone class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-                {{ store.clientPhone || 'Sin registrar' }}
-              </span>
-            </div>
+          <div class="text-xs font-bold text-gray-700 space-y-1">
+            <p class="text-sm font-black text-brand-dark">{{ store.clientName }}</p>
+            <p class="flex items-center gap-1"><Phone class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" /> {{ store.clientPhone }}</p>
+            <p v-if="store.clientEmail" class="text-gray-500">{{ store.clientEmail }}</p>
           </div>
         </div>
 
-        <!-- 4. Comentarios con Botón Editar -->
-        <div v-if="store.comments" class="space-y-2">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              Comentarios u Observaciones
-            </h3>
-            <button 
-              type="button" 
-              @click="router.push('/camping/paso3')"
-              class="text-xs font-black text-brand-accent hover:text-brand-dark flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-light hover:bg-gray-200 border border-brand-border transition-colors touch-target"
-            >
-              <Pencil class="w-3.5 h-3.5 stroke-[2.5]" />
-              Editar
-            </button>
+        <div v-if="store.comments" class="space-y-1 bg-amber-50 p-3 rounded-2xl border border-amber-200">
+          <span class="text-[10px] font-black text-amber-900 uppercase tracking-wider block">Comentarios Adicionales:</span>
+          <p class="text-xs font-semibold text-amber-950 italic">"{{ store.comments }}"</p>
+        </div>
+
+      </div>
+
+      <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-3">
+        <div class="flex items-center gap-1.5 border-b border-gray-100 pb-2">
+          <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Desglose de Tarifas</h3>
+        </div>
+
+        <div class="space-y-2 text-xs font-bold text-gray-600">
+          <div class="flex justify-between">
+            <span>{{ store.guestsCount }} personas x {{ isDiario ? '1 día' : nightsCount + ' noche/s' }}:</span>
+            <span>{{ formatCLP(subtotal) }}</span>
           </div>
-          <p class="bg-brand-light p-3.5 rounded-2xl border border-brand-border text-xs font-bold text-gray-700 italic">
-            "{{ store.comments }}"
-          </p>
+          <div class="flex justify-between">
+            <span>IVA (19%):</span>
+            <span>{{ formatCLP(ivaAmount) }}</span>
+          </div>
+          <div class="flex justify-between text-base font-black text-brand-dark border-t border-gray-200/60 pt-2">
+            <span>Total Estimado:</span>
+            <span>{{ formatCLP(totalWithIva) }}</span>
+          </div>
         </div>
       </div>
 
-      <!-- Navegación Flotante Fija -->
+      <DepositInfoCard :total-amount="totalWithIva" />
+
       <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
         <div class="max-w-md mx-auto flex items-center gap-3">
           <BaseButton variant="outline" size="lg" @click="router.push('/camping/paso3')">
@@ -241,7 +192,13 @@ function handleGoHome() {
             Volver
           </BaseButton>
 
-          <BaseButton variant="primary" size="lg" fullWidth @click="handleSendRequest">
+          <BaseButton 
+            variant="primary" 
+            size="lg" 
+            fullWidth 
+            :disabled="isSubmitting"
+            @click="handleSendRequest"
+          >
             <Send class="w-5 h-5 mr-1.5 stroke-[2.5]" />
             Enviar Solicitud
           </BaseButton>
@@ -249,7 +206,6 @@ function handleGoHome() {
       </div>
     </div>
 
-    <!-- PANTALLA B: CONFIRMACIÓN EXITOSA CON VENTA CRUZADA -->
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
       <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-xs border-2 border-emerald-300">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
@@ -266,7 +222,7 @@ function handleGoHome() {
         </h2>
 
         <p class="text-xs sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
-          Registramos tu solicitud para <strong class="text-brand-dark font-black">{{ selectedCampingSite?.name }}</strong> ({{ store.guestsCount }} pers.). Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
+          Registramos tu solicitud de camping para tu grupo de <strong class="text-brand-dark font-black">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
         </p>
       </div>
 
@@ -276,7 +232,7 @@ function handleGoHome() {
           <span class="text-brand-dark font-black">{{ selectedCampingSite?.name }}</span>
         </div>
         <div class="flex justify-between items-start gap-2">
-          <span class="text-gray-500 shrink-0">Fechas y Horarios:</span>
+          <span class="text-gray-500 shrink-0">Fechas y Modalidad:</span>
           <span class="text-brand-dark font-black text-right">{{ formattedScheduleDisplay }}</span>
         </div>
         <div class="flex justify-between items-center border-t border-gray-200/60 pt-2 mt-1">
@@ -285,11 +241,10 @@ function handleGoHome() {
         </div>
       </div>
 
-      <!-- Venta Cruzada con Conservación de Datos -->
       <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl text-left space-y-3">
         <div class="flex items-center gap-2 text-amber-950 font-black text-sm">
-          <Utensils class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
-          <span>¿Quieres agregar comida o alojar en cabaña?</span>
+          <Home class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
+          <span>¿Quieres agregar comida o alojamiento en cabaña?</span>
         </div>
 
         <p class="text-xs font-semibold text-amber-900 leading-relaxed">

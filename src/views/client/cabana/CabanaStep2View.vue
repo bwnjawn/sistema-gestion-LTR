@@ -8,17 +8,33 @@ import CabinCard from '../../../components/catalog/CabinCard.vue'
 import CabinModal from '../../../components/catalog/CabinModal.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
-import type { Cabin } from '../../../types/catalog'
+import { useRequestsStore } from '../../../stores/requestsStore'
+import { isCabinAvailable } from '../../../services/availability'
+import type { Cabin } from '../../../types/domain'
 
 const router = useRouter()
 const reservationStore = useReservationStore()
 const catalogStore = useCatalogStore()
+const requestsStore = useRequestsStore()
 
 const showDetailModal = ref(false)
 const selectedCabinForModal = ref<Cabin | null>(null)
 
+// Filtrado de cabañas por capacidad Y disponibilidad real de fechas
 const availableCabins = computed(() => {
-  return catalogStore.cabins.filter(c => c.capacity >= reservationStore.guestsCount)
+  return catalogStore.cabins.filter(c => {
+    const hasCapacity = c.capacity >= reservationStore.guestsCount
+    if (!hasCapacity) return false
+
+    if (!reservationStore.checkInDate || !reservationStore.checkOutDate) return true
+
+    return isCabinAvailable(
+      c.id,
+      reservationStore.checkInDate,
+      reservationStore.checkOutDate,
+      requestsStore.requests
+    )
+  })
 })
 
 function openCabinDetail(cabin: Cabin) {
@@ -46,18 +62,15 @@ function nextStep() {
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
-    <!-- Indicador de pasos unificado -->
     <StepIndicator :current-step="2" />
 
-    <!-- Encabezado de la vista -->
     <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-1">
       <h2 class="text-base font-black text-brand-dark">Selecciona tu Cabaña</h2>
       <p class="text-xs font-medium text-gray-600">
-        Cabañas disponibles para {{ reservationStore.guestsCount }} personas.
+        Cabañas disponibles para {{ reservationStore.guestsCount }} personas en tus fechas.
       </p>
     </div>
 
-    <!-- Listado de Cabañas -->
     <div v-if="availableCabins.length > 0" class="space-y-4">
       <div
         v-for="cabin in availableCabins"
@@ -99,11 +112,10 @@ function nextStep() {
 
     <div v-else class="bg-white p-6 rounded-3xl border-2 border-brand-border text-center space-y-2">
       <p class="text-xs font-bold text-gray-600">
-        No se encontraron cabañas con capacidad suficiente para {{ reservationStore.guestsCount }} personas.
+        No se encontraron cabañas disponibles o con capacidad suficiente para {{ reservationStore.guestsCount }} personas en las fechas seleccionadas.
       </p>
     </div>
 
-    <!-- Modal de Detalles de Cabaña para Cliente -->
     <CabinModal
       :is-open="showDetailModal"
       :cabin="selectedCabinForModal"
@@ -112,7 +124,6 @@ function nextStep() {
       @save="selectCabin(selectedCabinForModal!)"
     />
 
-    <!-- Barra de Navegación Inferior Flotante -->
     <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
       <div class="max-w-md mx-auto flex gap-2">
         <BaseButton

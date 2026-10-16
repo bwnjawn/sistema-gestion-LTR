@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, ArrowRight, Utensils, Minus, Plus, Sparkles, Check, AlertTriangle, AlertCircle, CheckCircle2, X } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, Minus, Plus, Sparkles, Check, AlertTriangle, AlertCircle, CheckCircle2, X } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'

@@ -8,6 +8,7 @@ import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
+import { generateTimeSlots, validateGuestCapacity } from '../../../services/availability'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -15,7 +16,6 @@ const settingsStore = useSettingsStore()
 
 store.setService('restaurant')
 
-// Conversión de string YYYY-MM-DD a Date para BaseCalendar
 const calendarDate = computed<Date | null>(() => {
   if (!store.checkInDate) return null
   const [y, m, d] = store.checkInDate.split('-').map(Number)
@@ -55,6 +55,12 @@ function handleGuestsInput(event: Event) {
   }
 }
 
+// Validación estricta de aforo según reglas del negocio
+const capacityValidation = computed(() => {
+  const maxCap = 200
+  return validateGuestCapacity(store.guestsCount, 1, maxCap)
+})
+
 const mealOptions = computed(() => {
   const sched = settingsStore.restaurantSchedules
   return [
@@ -62,19 +68,25 @@ const mealOptions = computed(() => {
       id: 'desayuno',
       label: 'Desayuno',
       rangeText: `${sched.desayuno.start} - ${sched.desayuno.end}`,
-      times: sched.desayuno.times
+      times: sched.desayuno.times && sched.desayuno.times.length > 0
+        ? sched.desayuno.times
+        : generateTimeSlots(sched.desayuno.start, sched.desayuno.end, 30)
     },
     {
       id: 'almuerzo',
       label: 'Almuerzo',
       rangeText: `${sched.almuerzo.start} - ${sched.almuerzo.end}`,
-      times: sched.almuerzo.times
+      times: sched.almuerzo.times && sched.almuerzo.times.length > 0
+        ? sched.almuerzo.times
+        : generateTimeSlots(sched.almuerzo.start, sched.almuerzo.end, 30)
     },
     {
       id: 'once',
       label: 'Once',
       rangeText: `${sched.once.start} - ${sched.once.end}`,
-      times: sched.once.times
+      times: sched.once.times && sched.once.times.length > 0
+        ? sched.once.times
+        : generateTimeSlots(sched.once.start, sched.once.end, 30)
     }
   ]
 })
@@ -109,7 +121,7 @@ function formatDateShort(dateStr: string): string {
 
 const isValid = computed(() => {
   if (!store.checkInDate) return false
-  if (store.guestsCount < 1) return false
+  if (!capacityValidation.value.isValid) return false
   if (store.selectedMealTypes.length === 0) return false
   for (const mId of store.selectedMealTypes) {
     if (!store.mealTimes[mId]) return false
@@ -131,22 +143,19 @@ function handleNext() {
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
-    <!-- Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="1" />
     </div>
 
-    <!-- Alerta de Guía -->
     <BaseAlert variant="info" title="Reserva de Restaurante">
-      Selecciona la fecha, cantidad de comensales y marca los servicios que deseas para definir su hora de atención.
+      Selecciona la fecha, el número de comensales y el servicio/horario de comida.
     </BaseAlert>
 
-    <!-- Formulario Principal -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       
-      <!-- Calendario -->
       <div class="space-y-2">
-        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider">
+        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+          <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Fecha de Visita
         </label>
         <BaseCalendar 
@@ -156,7 +165,6 @@ function handleNext() {
         />
       </div>
 
-      <!-- Cantidad de Comensales -->
       <div class="pt-3 border-t-2 border-gray-100 space-y-2">
         <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -194,13 +202,17 @@ function handleNext() {
             +
           </button>
         </div>
+
+        <div v-if="!capacityValidation.isValid" class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs font-bold text-amber-900 flex items-center gap-2">
+          <AlertCircle class="w-4 h-4 text-amber-700 shrink-0 stroke-[2.5]" />
+          <span>{{ capacityValidation.message }}</span>
+        </div>
       </div>
 
-      <!-- Selección de Servicios Deseados -->
       <div class="pt-3 border-t-2 border-gray-100 space-y-3">
         <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-          <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          Servicios Deseados * (Marca al menos uno)
+          <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+          Servicios de Comida Requeridos
         </label>
 
         <div class="grid grid-cols-3 gap-2">
@@ -210,7 +222,7 @@ function handleNext() {
             :key="meal.id"
             @click="toggleMealType(meal.id)"
             :class="[
-              'py-3.5 px-2 rounded-2xl font-black text-xs transition-all touch-target border-2 flex flex-col items-center justify-center gap-1.5 relative',
+              'p-3 rounded-2xl border-2 transition-all touch-target flex flex-col items-center justify-center gap-1 text-center',
               store.selectedMealTypes.includes(meal.id)
                 ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
                 : 'bg-brand-light text-brand-dark border-brand-border hover:bg-gray-200'
@@ -235,7 +247,6 @@ function handleNext() {
         </div>
       </div>
 
-      <!-- Selector de Horarios por Servicio -->
       <div 
         v-for="mealId in store.selectedMealTypes" 
         :key="mealId"
@@ -269,7 +280,6 @@ function handleNext() {
         </div>
       </div>
 
-      <!-- Resumen en Tiempo Real -->
       <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-xs font-bold text-gray-700">
         <div>
           <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Fecha</span>
@@ -289,7 +299,6 @@ function handleNext() {
 
     </div>
 
-    <!-- Botones Flotantes Inferiores -->
     <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
       <div class="max-w-md mx-auto flex items-center gap-3">
         <BaseButton variant="outline" size="lg" @click="handleBack">

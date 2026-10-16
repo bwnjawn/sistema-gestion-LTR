@@ -9,9 +9,8 @@ import {
   EyeOff, 
   LogIn, 
   ArrowLeft, 
-  KeyRound,
-  AlertCircle
-} from 'lucide-vue-next'
+  KeyRound
+  } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/authStore'
 import BaseButton from '../../components/ui/BaseButton.vue'
 import BaseAlert from '../../components/ui/BaseAlert.vue'

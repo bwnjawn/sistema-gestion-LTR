@@ -1,48 +1,35 @@
-export interface BusinessInfo {
- phone1: string
- phone2: string
- email: string
- websiteDisplay: string
- websiteUrl: string
- instagramUser: string
- instagramUrl: string
- address: string
- mapsUrl: string
- iframeMapUrl: string
-}
+// src/types/settings.ts
+
+export type {
+  BusinessInfo,
+  BusinessParameters
+} from './domain'
 
 export interface ServiceSchedule {
- start: string
- end: string
- times?: string[]
+  start: string
+  end: string
+  times?: string[]
 }
 
 export interface RestaurantSchedules {
- desayuno: ServiceSchedule
- almuerzo: ServiceSchedule
- once: ServiceSchedule
+  desayuno: ServiceSchedule
+  almuerzo: ServiceSchedule
+  once: ServiceSchedule
 }
 
 export interface CampingScheduleItem {
- checkIn: string
- checkOut: string
- display: string
+  checkIn: string
+  checkOut: string
+  display: string
 }
 
 export interface CampingSchedules {
- diario: CampingScheduleItem
- pernoctar: CampingScheduleItem
+  diario: CampingScheduleItem
+  pernoctar: CampingScheduleItem
 }
 
 export interface CabinSchedules {
- checkIn: string
- checkOut: string
- display: string
-}
-
-export interface BusinessParameters {
- defaultDepositPercentage: number
- marginPercentage: number
- currentDate: string
- isConnected: boolean
+  checkIn: string
+  checkOut: string
+  display: string
 }

@@ -2,17 +2,13 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  Home, Inbox, Calendar, Grid, Settings, ArrowRight, 
-  Users, CheckCircle2, Clock, AlertCircle 
+  Home, Inbox, Calendar, Grid, ArrowRight, CheckCircle2, Clock
 } from 'lucide-vue-next'
-import AdminBottomNav from '../../components/admin/AdminBottomNav.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
-import { useCatalogStore } from '../../stores/catalogStore'
 import { formatCLP } from '../../lib/format'
 
 const router = useRouter()
 const requestsStore = useRequestsStore()
-const catalogStore = useCatalogStore()
 
 const pendingRequests = computed(() => requestsStore.requests.filter(r => r.status === 'pending'))
 const confirmedRequests = computed(() => requestsStore.requests.filter(r => r.status === 'confirmed'))
@@ -126,7 +122,5 @@ function navigateTo(path: string) {
       </div>
     </div>
 
-    <!-- Navegación Inferior -->
-    <AdminBottomNav />
   </div>
 </template>

@@ -7,62 +7,45 @@ import BaseButton from '../../../components/ui/BaseButton.vue'
 import CampingCard from '../../../components/catalog/CampingCard.vue'
 import CampingDetailModal from '../../../components/catalog/CampingDetailModal.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
-import { type CampingSite, useAdminStore } from '../../../stores/adminStore'
+import { useCatalogStore } from '../../../stores/catalogStore'
+import { calculateCampingPrice } from '../../../services/pricing'
+import { calculateNights, formatCLP } from '../../../lib/format'
+import type { CampingSite } from '../../../types/domain'
 
 const router = useRouter()
 const store = useReservationStore()
-const adminStore = useAdminStore()
+const catalogStore = useCatalogStore()
 
 const isModalOpen = ref(false)
 
 const isDiario = computed(() => store.campingType === 'diario')
 const guests = computed(() => store.guestsCount)
 
-const nightsCount = computed(() => {
-  if (isDiario.value || !store.checkInDate || !store.checkOutDate) return 1
-  const start = new Date(store.checkInDate)
-  const end = new Date(store.checkOutDate)
-  const diffTime = Math.abs(end.getTime() - start.getTime())
-  return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
-})
+const nightsCount = computed(() => calculateNights(store.checkInDate, store.checkOutDate))
 
 function formatDateShort(dateStr: string): string {
   if (!dateStr) return ''
   const [, month, day] = dateStr.split('-')
   if (!day || !month) return dateStr
   const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  const monthIdx = parseInt(month, 10) - 1
-  return `${parseInt(day, 10)} ${months[monthIdx] || ''}`
+  const monthIdx = parseInt(month, 10)
+  return `${parseInt(day, 10)} ${months[monthIdx - 1]}`
 }
 
 const formattedScheduleDisplay = computed(() => {
+  if (!store.checkInDate) return 'Sin fecha'
   if (isDiario.value) {
-    const checkIn = adminStore.campingSchedules.diario.checkIn
-    const checkOut = adminStore.campingSchedules.diario.checkOut
-    if (store.checkInDate) {
-      const dateFormatted = formatDateShort(store.checkInDate)
-      return `${dateFormatted} (${checkIn} hrs) - ${dateFormatted} (${checkOut} hrs)`
-    }
-    return `Día de ingreso (${checkIn} hrs) - Día de ingreso (${checkOut} hrs)`
-  } else {
-    const checkIn = adminStore.campingSchedules.pernoctar.checkIn
-    const checkOut = adminStore.campingSchedules.pernoctar.checkOut
-    if (store.checkInDate && store.checkOutDate) {
-      const inDate = formatDateShort(store.checkInDate)
-      const outDate = formatDateShort(store.checkOutDate)
-      return `${inDate} (${checkIn} hrs) - ${outDate} (${checkOut} hrs)`
-    }
-    return `Día de ingreso (${checkIn} hrs) - Día de salida (${checkOut} hrs)`
+    return `${formatDateShort(store.checkInDate)} (Día de campo)`
   }
+  return `${formatDateShort(store.checkInDate)} al ${formatDateShort(store.checkOutDate)} (${nightsCount.value} noc.)`
 })
 
-// CORREGIDO: Retorna estrictamente un objeto CampingSite
-const selectedCampingOption = computed((): CampingSite => {
-  if (guests.value >= 10) {
-    return adminStore.campingSites.find(s => s.isSpecial) || adminStore.campingSites[0]
-  } else {
-    return adminStore.campingSites.find(s => !s.isSpecial) || adminStore.campingSites[0]
-  }
+// Asignación dinámica evaluando minCapacity y maxCapacity en el catálogo
+const selectedCampingOption = computed<CampingSite | undefined>(() => {
+  const matched = catalogStore.campingSites.find(
+    s => guests.value >= s.minCapacity && guests.value <= s.maxCapacity
+  )
+  return matched || catalogStore.campingSites[0]
 })
 
 onMounted(() => {
@@ -71,10 +54,15 @@ onMounted(() => {
   }
 })
 
-const subtotal = computed(() => {
-  if (!selectedCampingOption.value) return 0
-  const nights = isDiario.value ? 1 : nightsCount.value
-  return selectedCampingOption.value.pricePerPerson * guests.value * nights
+const priceBreakdown = computed(() => {
+  if (!selectedCampingOption.value) return { subtotal: 0, ivaAmount: 0, totalWithIva: 0, depositAmount: 0, nights: 1 }
+  return calculateCampingPrice(
+    selectedCampingOption.value,
+    store.checkInDate,
+    store.checkOutDate,
+    guests.value,
+    store.campingType
+  )
 })
 
 function handleNext() {
@@ -110,7 +98,7 @@ function handleBack() {
       <div class="flex items-center justify-between">
         <span class="inline-flex items-center gap-1 bg-brand-light text-brand-dark px-3 py-1 rounded-full text-xs font-black border border-brand-border">
           <Sparkles class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-          {{ guests >= 10 ? 'Espacio para Grupos Grandes (≥10 pers)' : 'Camping Estándar (<10 pers)' }}
+          {{ selectedCampingOption?.isSpecial ? 'Espacio para Grupos Grandes' : 'Camping Estándar' }}
         </span>
         <span class="text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-200">
           <CheckCircle2 class="w-3.5 h-3.5 stroke-[2.5]" /> Asignado
@@ -134,7 +122,7 @@ function handleBack() {
         <span class="text-xs font-bold text-gray-300">{{ selectedCampingOption?.name }}</span>
       </div>
       <span class="text-xl font-black text-white">
-        \${{ subtotal.toLocaleString('es-CL') }}
+        {{ formatCLP(priceBreakdown.subtotal) }}
       </span>
     </div>
 

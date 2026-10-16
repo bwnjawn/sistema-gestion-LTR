@@ -78,7 +78,7 @@ const nightsCount = computed(() => {
 
 function formatDateShort(dateStr: string): string {
   if (!dateStr) return '-'
-  const [y, m, d] = dateStr.split('-').map(Number)
+  const [m, d] = dateStr.split('-').map(Number)
   const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
   return `${d} ${months[m - 1]}`
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Info, ShieldCheck, CreditCard } from 'lucide-vue-next'
+import { ShieldCheck, CreditCard } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { formatCLP } from '../../lib/format'
 

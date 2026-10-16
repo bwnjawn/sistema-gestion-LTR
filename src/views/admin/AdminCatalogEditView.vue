@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { 
   Clock, Home, Tent, Utensils, Plus, Sparkles, Trash2, AlertTriangle, Phone 
 } from 'lucide-vue-next'
-import AdminBottomNav from '../../components/admin/AdminBottomNav.vue'
 import CabinCard from '../../components/catalog/CabinCard.vue'
 import CampingCard from '../../components/catalog/CampingCard.vue'
 import DishCard from '../../components/catalog/DishCard.vue'
@@ -317,8 +316,5 @@ function executeDelete() {
         </div>
       </div>
     </div>
-
-    <!-- NAVEGACIÓN INFERIOR DE ADMINISTRACIÓN -->
-    <AdminBottomNav />
   </div>
 </template>

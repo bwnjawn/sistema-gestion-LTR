@@ -5,11 +5,13 @@ import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 interface Props {
   startDate?: Date | null
   endDate?: Date | null
+  isDateDisabledFn?: (dateStr: string) => boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   startDate: null,
-  endDate: null
+  endDate: null,
+  isDateDisabledFn: undefined
 })
 
 const emit = defineEmits<{
@@ -18,9 +20,10 @@ const emit = defineEmits<{
   (e: 'change', payload: { start: Date | null; end: Date | null }): void
 }>()
 
-// Año y Mes (Predeterminado Octubre 2026)
-const currentYear = ref(2026)
-const currentMonth = ref(9)
+const today = new Date()
+
+const currentYear = ref(today.getFullYear())
+const currentMonth = ref(today.getMonth())
 
 const monthNames = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -28,6 +31,13 @@ const monthNames = [
 ]
 
 const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+const todayFormatted = computed(() => {
+  const dayName = today.toLocaleDateString('es-CL', { weekday: 'short' })
+  const monthName = today.toLocaleDateString('es-CL', { month: 'short' })
+  const formattedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1)
+  return `Hoy: ${formattedDay} ${today.getDate()} ${monthName}`
+})
 
 const daysInMonth = computed(() => {
   return new Date(currentYear.value, currentMonth.value + 1, 0).getDate()
@@ -57,11 +67,36 @@ function nextMonth() {
 }
 
 function goToToday() {
-  currentYear.value = 2026
-  currentMonth.value = 9
+  const now = new Date()
+  currentYear.value = now.getFullYear()
+  currentMonth.value = now.getMonth()
+}
+
+function formatDateISO(dayNum: number): string {
+  const y = currentYear.value
+  const m = String(currentMonth.value + 1).padStart(2, '0')
+  const d = String(dayNum).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function isDisabled(dayNum: number): boolean {
+  const iso = formatDateISO(dayNum)
+  
+  // Bloquear días pasados por defecto
+  const cellDate = new Date(currentYear.value, currentMonth.value, dayNum)
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  if (cellDate < now) return true
+
+  if (props.isDateDisabledFn) {
+    return props.isDateDisabledFn(iso)
+  }
+  return false
 }
 
 function handleDateClick(dayNum: number) {
+  if (isDisabled(dayNum)) return
+
   const clickedDate = new Date(currentYear.value, currentMonth.value, dayNum)
   clickedDate.setHours(0, 0, 0, 0)
 
@@ -73,7 +108,6 @@ function handleDateClick(dayNum: number) {
     newEnd = null
   } else if (newStart && !newEnd) {
     if (clickedDate < newStart) {
-      // Inversión: Si la fecha seleccionada es anterior a la llegada, pasa a ser la nueva llegada
       newStart = clickedDate
       newEnd = null
     } else if (clickedDate.getTime() === newStart.getTime()) {
@@ -107,11 +141,18 @@ function isInRange(dayNum: number) {
   const end = new Date(props.endDate).setHours(0, 0, 0, 0)
   return d.getTime() > start && d.getTime() < end
 }
+
+function isToday(dayNum: number) {
+  const d = new Date(currentYear.value, currentMonth.value, dayNum)
+  const now = new Date()
+  return d.getFullYear() === now.getFullYear() &&
+         d.getMonth() === now.getMonth() &&
+         d.getDate() === now.getDate()
+}
 </script>
 
 <template>
   <div class="space-y-4">
-    <!-- Navegación de Mes -->
     <div class="flex items-center justify-between bg-brand-light p-2.5 rounded-2xl border-2 border-brand-border">
       <button 
         type="button"
@@ -126,7 +167,7 @@ function isInRange(dayNum: number) {
         <span class="text-lg font-extrabold text-brand-dark block leading-tight">
           {{ monthNames[currentMonth] }} {{ currentYear }}
         </span>
-        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Hoy: Lun 5 oct</span>
+        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ todayFormatted }}</span>
       </div>
 
       <button 
@@ -139,7 +180,6 @@ function isInRange(dayNum: number) {
       </button>
     </div>
 
-    <!-- Botón Hoy -->
     <div class="text-center">
       <button 
         type="button"
@@ -150,14 +190,11 @@ function isInRange(dayNum: number) {
       </button>
     </div>
 
-    <!-- Grilla del Calendario Táctil e Inclusiva -->
     <div class="pt-1">
-      <!-- Días de la Semana -->
       <div class="grid grid-cols-7 text-center font-extrabold text-xs text-gray-500 mb-2 uppercase tracking-wider">
         <span v-for="d in dayNames" :key="d">{{ d }}</span>
       </div>
 
-      <!-- Celdas de los Días (Mínimo 48x48px para accesibilidad) -->
       <div class="grid grid-cols-7 gap-y-1.5 text-center font-extrabold text-base">
         <span v-for="blank in firstDayOffset" :key="'b-' + blank" class="h-12"></span>
 
@@ -166,13 +203,18 @@ function isInRange(dayNum: number) {
           v-for="day in daysInMonth" 
           :key="day"
           @click="handleDateClick(day)"
+          :disabled="isDisabled(day)"
           :class="[
             'h-12 w-full flex items-center justify-center rounded-full transition-all touch-target focus:outline-none focus:ring-2 focus:ring-brand-accent',
-            isSelectedStart(day) || isSelectedEnd(day)
-              ? 'bg-brand-dark text-white shadow-md z-10 font-black scale-105'
-              : isInRange(day)
-                ? 'bg-emerald-100 text-brand-dark rounded-none font-black'
-                : 'hover:bg-brand-light text-brand-dark'
+            isDisabled(day)
+              ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through'
+              : isSelectedStart(day) || isSelectedEnd(day)
+                ? 'bg-brand-dark text-white shadow-md z-10 font-black scale-105'
+                : isInRange(day)
+                  ? 'bg-emerald-100 text-brand-dark rounded-none font-black'
+                  : isToday(day)
+                    ? 'border-2 border-brand-dark text-brand-dark font-black'
+                    : 'hover:bg-brand-light text-brand-dark'
           ]"
         >
           {{ day }}
@@ -180,7 +222,6 @@ function isInRange(dayNum: number) {
       </div>
     </div>
 
-    <!-- Leyenda de Colores -->
     <div class="flex items-center justify-center gap-4 text-xs font-extrabold pt-3 border-t border-gray-200">
       <span class="flex items-center gap-1.5">
         <span class="w-3.5 h-3.5 bg-brand-dark rounded-full inline-block"></span> Elegido
