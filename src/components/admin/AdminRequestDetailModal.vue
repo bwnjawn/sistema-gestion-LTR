@@ -62,13 +62,16 @@ watch(() => props.requestId, () => {
 })
 
 function approve() {
-  if (request.value) requestsStore.confirmRequest(request.value.id)
+  if (!request.value) return
+  requestsStore.confirmRequest(request.value.id)
+  emit('close')
 }
 
 function reject() {
   if (!request.value) return
   requestsStore.rejectRequest(request.value.id)
   confirmingReject.value = false
+  emit('close')
 }
 
 function fillPendingDeposit() {

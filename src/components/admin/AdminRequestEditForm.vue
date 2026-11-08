@@ -43,7 +43,35 @@ function onCalendarChange(range: { start: Date | null; end: Date | null }) {
   form.value.endDate = range.end ? dateToISO(range.end) : ''
 }
 
+// Fechas originales, para avisar y pedir confirmación si el admin las cambia.
+const originalStart = form.value.startDate
+const originalEnd = form.value.endDate
+const confirmingDates = ref(false)
+
+const datesChanged = computed(() =>
+  form.value.startDate !== originalStart || form.value.endDate !== originalEnd
+)
+
+function describeRange(start: string, end: string): string {
+  if (!start) return 'sin fecha'
+  if (isSingleDay.value || !end) return formatDateLong(start)
+  return `${formatDateLong(start)} – ${formatDateLong(end)}`
+}
+
+const datesChangeMessage = computed(() =>
+  `¿Cambiar la reserva de ${describeRange(originalStart, originalEnd)} a ${describeRange(form.value.startDate, form.value.endDate)}?`
+)
+
+function requestSave() {
+  if (datesChanged.value) {
+    confirmingDates.value = true
+    return
+  }
+  save()
+}
+
 function save() {
+  confirmingDates.value = false
   const result = requestsStore.updateRequestDetails(props.request.id, {
     ...form.value,
     guestsCount: Number(form.value.guestsCount)
@@ -58,7 +86,7 @@ function save() {
 </script>
 
 <template>
-  <form @submit.prevent="save" class="border-2 border-brand-dark rounded-2xl p-3 space-y-3">
+  <form @submit.prevent="requestSave" class="border-2 border-brand-dark rounded-2xl p-3 space-y-3">
     <h3 class="text-lg font-black text-brand-dark">Modificar la solicitud</h3>
 
     <label class="space-y-1 text-sm font-black text-gray-800 block">
@@ -111,7 +139,15 @@ function save() {
 
     <p v-if="error" class="text-sm font-black text-rose-950 bg-rose-50 border-2 border-status-danger rounded-xl p-2" role="alert">{{ error }}</p>
 
-    <div class="grid grid-cols-2 gap-2">
+    <div v-if="confirmingDates" class="border-2 border-amber-500 bg-amber-50 rounded-2xl p-3 space-y-2" role="alertdialog">
+      <p class="text-base font-black text-amber-950">{{ datesChangeMessage }}</p>
+      <div class="grid grid-cols-2 gap-2">
+        <BaseButton type="button" variant="primary" @click="save">Sí, cambiar</BaseButton>
+        <BaseButton type="button" variant="outline" @click="confirmingDates = false">No, volver</BaseButton>
+      </div>
+    </div>
+
+    <div v-else class="grid grid-cols-2 gap-2">
       <BaseButton type="submit" variant="primary">
         <Save class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Guardar cambios
       </BaseButton>
