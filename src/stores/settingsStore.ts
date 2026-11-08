@@ -2,7 +2,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import type { BusinessInfo } from '../types/domain'
+import type { BusinessInfo, TransferInfo } from '../types/domain'
 import type { RestaurantSchedules, CampingSchedules, CabinSchedules } from '../types/settings'
 import { settingsRepository } from '../lib/repositories/settingsRepository'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
@@ -33,6 +33,16 @@ const DEFAULT_CONTACT: BusinessInfo = {
   address: 'Sector Repil s/n, Comuna de Fresia, Región de Los Lagos, Chile',
   mapsUrl: 'https://maps.google.com/?q=-41.1500,-73.4167',
   iframeMapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30000!2d73.4167!3d41.1500!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDHCsDA5JzAwLjAiUyA3M8KwMjUnMDAuMCJX!5e0!3m2!1ses!2scl!4v1600000000000'
+}
+
+// Datos de ejemplo hasta que el cliente entregue los reales (D3); el admin los edita en Ajustes.
+const DEFAULT_TRANSFER: TransferInfo = {
+  bank: 'Banco Estado',
+  accountType: 'Cuenta Vista / Cuenta RUT',
+  accountNumber: '12345678',
+  holderName: 'Los Troncos de Repil',
+  holderRut: '12.345.678-9',
+  email: 'lostroncosderepil@gmail.com'
 }
 
 const DEFAULT_RESTAURANT_SCHEDULES: RestaurantSchedules = {
@@ -67,6 +77,7 @@ const DEFAULT_PARAMS: BusinessParametersExtended = {
 
 export const useSettingsStore = defineStore('settings', () => {
   const contactInfo = ref<BusinessInfo>(getStorageItem('contact_info', DEFAULT_CONTACT))
+  const transferInfo = ref<TransferInfo>({ ...DEFAULT_TRANSFER, ...getStorageItem('transfer_info', DEFAULT_TRANSFER) })
   const restaurantSchedules = ref<RestaurantSchedules>(getStorageItem('restaurant_schedules', DEFAULT_RESTAURANT_SCHEDULES))
   const campingSchedules = ref<CampingSchedules>(getStorageItem('camping_schedules', DEFAULT_CAMPING_SCHEDULES))
   const cabinSchedules = ref<CabinSchedules>(getStorageItem('cabin_schedules', DEFAULT_CABIN_SCHEDULES))
@@ -95,6 +106,11 @@ export const useSettingsStore = defineStore('settings', () => {
   watch(contactInfo, async (val) => {
     setStorageItem('contact_info', val)
     await settingsRepository.saveContactInfo(val)
+  }, { deep: true })
+
+  watch(transferInfo, async (val) => {
+    setStorageItem('transfer_info', val)
+    await settingsRepository.saveTransferInfo(val)
   }, { deep: true })
 
   watch(restaurantSchedules, async (val) => {
@@ -132,6 +148,10 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  async function updateTransferInfo(info: Partial<TransferInfo>): Promise<void> {
+    transferInfo.value = { ...transferInfo.value, ...info }
+  }
+
   async function updateParameters(params: Partial<BusinessParametersExtended>): Promise<void> {
     isLoading.value = true
     error.value = null
@@ -161,6 +181,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
   return {
     contactInfo,
+    transferInfo,
     restaurantSchedules,
     campingSchedules,
     cabinSchedules,
@@ -176,6 +197,7 @@ export const useSettingsStore = defineStore('settings', () => {
     phone1Clean,
     phone2Clean,
     updateContactInfo,
+    updateTransferInfo,
     updateParameters,
     updateCapacityRules
   }

@@ -10,12 +10,14 @@ import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
+import { useSettingsStore } from '../../../stores/settingsStore'
 import { formatCLP } from '../../../lib/format'
 import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
 const catalogStore = useCatalogStore()
+const settingsStore = useSettingsStore()
 
 const isSubmitted = ref(false)
 const reservationCode = ref('')
@@ -95,6 +97,9 @@ async function handleSendRequest() {
           </div>
           <p class="text-sm font-black text-brand-dark">
             {{ formattedScheduleRange }} ({{ nightsCount }} noche/s)
+          </p>
+          <p class="text-xs font-bold text-gray-600">
+            Ingreso {{ settingsStore.cabinSchedules.checkIn }} hrs · Salida {{ settingsStore.cabinSchedules.checkOut }} hrs
           </p>
         </div>
 

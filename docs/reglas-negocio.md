@@ -67,7 +67,7 @@ Los enlaces (mapa, Instagram, web) se generan en `lib/contactLinks.ts` a partir 
 |---|---|---|---|
 | D1 | Horarios de ingreso y salida de pernoctar | Cliente | **Resuelta provisoriamente (8/11):** se usan los valores por defecto, editables por el admin y visibles para el cliente. Confirmar los reales con el cliente |
 | D2 | Check-in y check-out de cabañas: ¿fijos o flexibles? | Cliente | **Resuelta provisoriamente (8/11):** se muestran como horario fijo editable (15:00 y 11:00). Confirmar con el cliente |
-| D3 | Datos reales de transferencia para el paso 4 (SCRUM-233) | Cliente | **Resuelta provisoriamente (8/11):** datos de ejemplo, editables por el admin desde Configuración y visibles para el cliente. Cargar los reales cuando el cliente los entregue |
+| D3 | Datos reales de transferencia para el paso 4 (SCRUM-233) | Cliente | **Resuelta provisoriamente (8/11):** datos de ejemplo, editables por el admin desde Configuración y visibles para el cliente. Cargar los reales cuando el cliente los entregue. Implementado en SCRUM-233: `settingsStore.transferInfo`, editable en Ajustes → Datos de transferencia y mostrado en `DepositInfoCard` (paso 4) |
 | D4 | ¿Los precios incluyen IVA? | Cliente | No incluyen iva |
 | D5 | Precio del espacio grande de camping | Cliente | No se sabe pero tambien debe ser editable |
 | D6 | ¿Qué hace "evento especial" en una reserva del admin? (SCRUM-56 y HU-4.2) | Cliente | Es un evento grande o especial como boda o cumpleaños. Donde el cliente debe contactar con el administrador especificamente para ver detalles, pero la app debe permitir marcar el dia para saber el cupo.|

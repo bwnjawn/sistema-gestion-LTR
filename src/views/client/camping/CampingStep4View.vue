@@ -10,12 +10,14 @@ import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
+import { useSettingsStore } from '../../../stores/settingsStore'
 import { formatCLP } from '../../../lib/format'
 import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
 const catalogStore = useCatalogStore()
+const settingsStore = useSettingsStore()
 
 const isSubmitted = ref(false)
 const reservationCode = ref('')
@@ -39,6 +41,11 @@ const formattedScheduleDisplay = computed(() => {
     return `${formatDateShort(store.checkInDate)} (Día de campo)`
   }
   return `${formatDateShort(store.checkInDate)} al ${formatDateShort(store.checkOutDate)} (${nightsCount.value} noc.)`
+})
+
+const horarioCamping = computed(() => {
+  const h = settingsStore.campingSchedules[isDiario.value ? 'diario' : 'pernoctar']
+  return `Ingreso ${h.checkIn} hrs · Salida ${h.checkOut} hrs`
 })
 
 const isSubmitting = ref(false)
@@ -100,6 +107,7 @@ function handleGoHome() {
           <p class="text-sm font-black text-brand-dark">
             {{ formattedScheduleDisplay }}
           </p>
+          <p class="text-xs font-bold text-gray-600">{{ horarioCamping }}</p>
         </div>
 
         <div class="space-y-2">

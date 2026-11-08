@@ -154,6 +154,16 @@ export interface BusinessInfo {
   iframeMapUrl: string
 }
 
+/** Datos bancarios que ve el cliente en el paso 4 para transferir el abono. */
+export interface TransferInfo {
+  bank: string
+  accountType: string
+  accountNumber: string
+  holderName: string
+  holderRut: string
+  email: string
+}
+
 export interface BusinessParameters {
   defaultDepositPercentage: number
   marginPercentage: number

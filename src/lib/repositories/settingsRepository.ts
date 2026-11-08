@@ -1,12 +1,14 @@
  // src/lib/repositories/settingsRepository.ts
 
-import type { BusinessInfo, BusinessParameters } from '../../types/domain'
+import type { BusinessInfo, BusinessParameters, TransferInfo } from '../../types/domain'
 import type { RestaurantSchedules, CampingSchedules, CabinSchedules } from '../../types/settings'
 import { getStorageItem, setStorageItem } from '../persistence'
 
 export interface SettingsRepository {
   getContactInfo(fallback: BusinessInfo): Promise<BusinessInfo>
   saveContactInfo(info: BusinessInfo): Promise<void>
+  getTransferInfo(fallback: TransferInfo): Promise<TransferInfo>
+  saveTransferInfo(info: TransferInfo): Promise<void>
   getParameters(fallback: BusinessParameters): Promise<BusinessParameters>
   saveParameters(params: BusinessParameters): Promise<void>
   getRestaurantSchedules(fallback: RestaurantSchedules): Promise<RestaurantSchedules>
@@ -24,6 +26,14 @@ export class LocalSettingsRepository implements SettingsRepository {
 
   async saveContactInfo(info: BusinessInfo): Promise<void> {
     setStorageItem('contact_info', info)
+  }
+
+  async getTransferInfo(fallback: TransferInfo): Promise<TransferInfo> {
+    return getStorageItem('transfer_info', fallback)
+  }
+
+  async saveTransferInfo(info: TransferInfo): Promise<void> {
+    setStorageItem('transfer_info', info)
   }
 
   async getParameters(fallback: BusinessParameters): Promise<BusinessParameters> {

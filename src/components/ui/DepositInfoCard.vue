@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ShieldCheck, CreditCard } from 'lucide-vue-next'
+import { ShieldCheck, CreditCard, Info, Landmark } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { formatCLP } from '../../lib/format'
 
@@ -11,6 +11,8 @@ const props = defineProps<{
 }>()
 
 const settingsStore = useSettingsStore()
+
+const transfer = computed(() => settingsStore.transferInfo)
 
 const depositPercentage = computed(() => settingsStore.defaultDepositPercentage)
 
@@ -23,6 +25,14 @@ const formattedTotal = computed(() => formatCLP(props.totalAmount || 0))
     <div class="flex items-center gap-2 text-brand-dark">
       <ShieldCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" />
       <h3 class="text-xs font-black">Política de Abono y Garantía</h3>
+    </div>
+
+    <div class="flex items-start gap-2 p-3 bg-white rounded-2xl border-2 border-brand-border text-xs font-bold text-brand-dark">
+      <Info class="w-4 h-4 text-brand-accent shrink-0 mt-0.5 stroke-[2.5]" />
+      <span>
+        Esto es solo una solicitud: tu reserva queda confirmada cuando transfieras el abono
+        y te lo confirmemos.
+      </span>
     </div>
 
     <p class="text-xs font-bold text-gray-700 leading-relaxed">
@@ -41,6 +51,17 @@ const formattedTotal = computed(() => formatCLP(props.totalAmount || 0))
         <span>Abono a Transferir ({{ depositPercentage }}%):</span>
         <span class="text-sm font-black text-brand-accent">{{ formattedDeposit }}</span>
       </div>
+    </div>
+
+    <div class="p-3 bg-white rounded-2xl border border-brand-border space-y-1 text-xs font-bold text-gray-700">
+      <div class="flex items-center gap-1.5 text-brand-dark font-black">
+        <Landmark class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
+        <span>Datos para transferir</span>
+      </div>
+      <p>{{ transfer.bank }} · {{ transfer.accountType }}</p>
+      <p>Cuenta N° <span class="font-black text-brand-dark select-all">{{ transfer.accountNumber }}</span></p>
+      <p>{{ transfer.holderName }} · RUT {{ transfer.holderRut }}</p>
+      <p v-if="transfer.email" class="text-gray-600">Envía el comprobante a {{ transfer.email }}</p>
     </div>
 
     <div class="flex items-start gap-2 pt-1 text-[11px] font-bold text-gray-600">
