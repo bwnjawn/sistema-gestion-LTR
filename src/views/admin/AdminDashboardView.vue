@@ -44,7 +44,7 @@ function navigateTo(path: string) {
           <Clock class="w-4 h-4 text-amber-600 stroke-[2.5]" />
         </div>
         <span class="text-3xl font-black text-brand-dark block">{{ pendingRequests.length }}</span>
-        <span class="text-xs font-bold text-gray-500">Solicitudes por revisar</span>
+        <span class="text-xs font-bold text-gray-700">Solicitudes por revisar</span>
       </div>
 
       <div
@@ -58,7 +58,7 @@ function navigateTo(path: string) {
           <CheckCircle2 class="w-4 h-4 text-emerald-600 stroke-[2.5]" />
         </div>
         <span class="text-3xl font-black text-brand-dark block">{{ confirmedRequests.length }}</span>
-        <span class="text-xs font-bold text-gray-500">Reservas activas</span>
+        <span class="text-xs font-bold text-gray-700">Reservas activas</span>
       </div>
     </div>
 
@@ -75,7 +75,7 @@ function navigateTo(path: string) {
 
     <!-- Accesos Rápidos Directos -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
-      <h2 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Gestión Rápida</h2>
+      <h2 class="text-xs font-extrabold text-gray-700 uppercase tracking-wider">Gestión Rápida</h2>
 
       <div class="space-y-2">
         <button

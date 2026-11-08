@@ -5,6 +5,7 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, X, User, Phone, 
   Layers, Home, Tent, Utensils 
 } from 'lucide-vue-next'
+import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import AdminCalendarGrid from '../../components/ui/AdminCalendarGrid.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
@@ -140,8 +141,8 @@ const weekDays = computed(() => {
 })
 
 function getStatusBgClass(status: string) {
-  if (status === 'disponible') return 'bg-emerald-500'
-  if (status === 'ocupado') return 'bg-red-500'
+  if (status === 'disponible') return 'bg-status-success'
+  if (status === 'ocupado') return 'bg-status-danger'
   return 'bg-amber-500'
 }
 
@@ -155,6 +156,12 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
 
 <template>
   <div class="space-y-4 pb-6">
+    <AdminPageTitle
+      title="Calendario"
+      subtitle="Mira qué días están libres y cuáles tienen reservas."
+      :icon="CalendarDays"
+    />
+
     <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center justify-center gap-2 flex-wrap">
         <button
@@ -179,7 +186,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
             'p-2.5 rounded-2xl border transition-all active:scale-95 flex items-center justify-center touch-target shadow-2xs',
             activeFilters.includes('cabana')
               ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-black'
-              : 'bg-white text-gray-400 border-gray-200'
+              : 'bg-white text-gray-700 border-gray-400'
           ]"
         >
           <Home class="w-4 h-4 stroke-[2.5]" />
@@ -193,7 +200,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
             'p-2.5 rounded-2xl border transition-all active:scale-95 flex items-center justify-center touch-target shadow-2xs',
             activeFilters.includes('camping')
               ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-black'
-              : 'bg-white text-gray-400 border-gray-200'
+              : 'bg-white text-gray-700 border-gray-400'
           ]"
         >
           <Tent class="w-4 h-4 stroke-[2.5]" />
@@ -207,7 +214,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
             'p-2.5 rounded-2xl border transition-all active:scale-95 flex items-center justify-center touch-target shadow-2xs',
             activeFilters.includes('restaurante')
               ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-black'
-              : 'bg-white text-gray-400 border-gray-200'
+              : 'bg-white text-gray-700 border-gray-400'
           ]"
         >
           <Utensils class="w-4 h-4 stroke-[2.5]" />
@@ -216,11 +223,11 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
 
       <div class="pt-2.5 border-t-2 border-brand-border/40 flex items-center justify-center gap-6 text-xs font-black">
         <div class="flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-status-success"></span>
           <span class="text-gray-700">Disponible</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-status-danger"></span>
           <span class="text-gray-700">Ocupado</span>
         </div>
         <div class="flex items-center gap-1.5">
@@ -252,7 +259,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
               'py-2 text-xs font-black rounded-xl transition-all active:scale-95 touch-target flex items-center justify-center text-center',
               currentViewMode === mode.id
                 ? 'bg-[#c5d7be] text-brand-dark shadow-2xs border border-brand-border'
-                : 'text-gray-500 hover:text-brand-dark'
+                : 'text-gray-700 hover:text-brand-dark'
             ]"
           >
             {{ mode.label }}
@@ -286,7 +293,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
                   : 'bg-brand-light border-brand-border/60 text-gray-600'
               ]"
             >
-              <span class="text-xs uppercase font-bold text-gray-500">{{ day.dayName }}</span>
+              <span class="text-xs uppercase font-bold text-gray-700">{{ day.dayName }}</span>
               <span class="font-black text-sm">{{ day.dayNum }}</span>
               <span 
                 class="w-full h-1 rounded-full"
@@ -338,7 +345,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
               </div>
             </div>
 
-            <div v-if="filteredRequestsForDay.length === 0" class="text-center py-6 text-gray-500 text-xs font-bold bg-brand-light rounded-2xl border border-brand-border">
+            <div v-if="filteredRequestsForDay.length === 0" class="text-center py-6 text-gray-700 text-xs font-bold bg-brand-light rounded-2xl border border-brand-border">
               No hay reservas registradas para este día.
             </div>
           </div>
@@ -380,7 +387,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
             <div class="flex justify-between items-start">
               <div>
                 <span class="font-black text-brand-dark block text-sm">{{ req.clientName }}</span>
-                <span class="text-xs text-gray-500 font-extrabold">{{ req.resourceName }} - {{ req.requestCode }}</span>
+                <span class="text-xs text-gray-700 font-extrabold">{{ req.resourceName }} - {{ req.requestCode }}</span>
               </div>
               <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-white border border-brand-border">
                 {{ formatStatusText(req.status) }}
@@ -394,7 +401,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
             </div>
           </div>
 
-          <div v-if="filteredRequestsForDay.length === 0" class="text-center py-6 text-gray-500 text-xs font-bold">
+          <div v-if="filteredRequestsForDay.length === 0" class="text-center py-6 text-gray-700 text-xs font-bold">
             Sin reservas para este día.
           </div>
         </div>

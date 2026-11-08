@@ -61,7 +61,7 @@ function handleBackToHome() {
         <h1 class="text-2xl font-black text-brand-dark tracking-tight pt-1">
           Los Troncos de Repil
         </h1>
-        <p class="text-xs font-semibold text-gray-500">
+        <p class="text-xs font-semibold text-gray-700">
           Inicia sesión para gestionar reservas y servicios
         </p>
       </div>
@@ -110,7 +110,7 @@ function handleBackToHome() {
             <button
               type="button"
               @click="togglePasswordVisibility"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-dark p-1 rounded-lg touch-target flex items-center justify-center"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-brand-dark p-1 rounded-lg touch-target flex items-center justify-center"
               title="Mostrar/Ocultar contraseña"
             >
               <EyeOff v-if="showPassword" class="w-5 h-5 stroke-[2.5]" />

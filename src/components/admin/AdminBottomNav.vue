@@ -37,10 +37,10 @@ function navigate(path: string) {
           'flex flex-col items-center justify-center py-2 px-0.5 rounded-2xl transition-all touch-target',
           isActive(item.path)
             ? 'bg-brand-dark text-white font-black shadow-xs'
-            : 'text-gray-600 hover:bg-brand-light font-bold'
+            : 'text-gray-800 hover:bg-brand-light font-bold'
         ]"
       >
-        <component :is="item.icon" :class="['w-5 h-5 stroke-[2.5]', isActive(item.path) ? 'text-emerald-300' : 'text-gray-500']" />
+        <component :is="item.icon" :class="['w-5 h-5 stroke-[2.5]', isActive(item.path) ? 'text-emerald-300' : 'text-gray-700']" />
         <span class="text-xs mt-1 tracking-tight truncate w-full text-center">{{ item.name }}</span>
       </button>
     </div>

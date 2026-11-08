@@ -2,8 +2,9 @@
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { 
-  Home, Tent, Utensils, Plus, Sparkles, Trash2, AlertTriangle, Pencil 
+  Home, Tent, Utensils, Grid, Plus, Sparkles, Trash2, AlertTriangle, Pencil 
 } from 'lucide-vue-next'
+import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import DropdownMenu from '../../components/ui/DropdownMenu.vue'
 import CabinCard from '../../components/catalog/CabinCard.vue'
 import CampingCard from '../../components/catalog/CampingCard.vue'
@@ -166,14 +167,19 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
     
-    <!-- ENCABEZADO Y CONFIGURACIONES RÁPIDAS -->
+    <AdminPageTitle
+      title="Catálogo"
+      subtitle="Cabañas, camping y menú que ve el cliente."
+      :icon="Grid"
+    />
+
     <!-- PESTAÑAS PRINCIPALES -->
     <div class="bg-white p-2 rounded-3xl border-2 border-brand-border shadow-2xs">
       <div class="grid grid-cols-3 gap-1.5 p-1 bg-brand-light rounded-2xl border border-brand-border">
         <button 
           type="button" 
           @click="activeCategory = 'cabana'" 
-          :class="['py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all', activeCategory === 'cabana' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-500']"
+          :class="['py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all', activeCategory === 'cabana' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-700']"
         >
           <Home class="w-4 h-4 stroke-[2.5]" /> <span>Cabañas</span>
         </button>
@@ -181,7 +187,7 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
         <button 
           type="button" 
           @click="activeCategory = 'camping'" 
-          :class="['py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all', activeCategory === 'camping' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-500']"
+          :class="['py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all', activeCategory === 'camping' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-700']"
         >
           <Tent class="w-4 h-4 stroke-[2.5]" /> <span>Camping</span>
         </button>
@@ -189,7 +195,7 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
         <button 
           type="button" 
           @click="activeCategory = 'restaurante'" 
-          :class="['py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all', activeCategory === 'restaurante' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-500']"
+          :class="['py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all', activeCategory === 'restaurante' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-700']"
         >
           <Utensils class="w-4 h-4 stroke-[2.5]" /> <span>Menú</span>
         </button>

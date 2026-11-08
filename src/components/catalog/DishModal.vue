@@ -183,21 +183,21 @@ useBloqueoScroll(computed(() => props.isOpen))
             <button
               type="button"
               @click="form.sideMode = 'choice'"
-              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'choice' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-500']"
+              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'choice' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-700']"
             >
               A Elección
             </button>
             <button
               type="button"
               @click="form.sideMode = 'fixed'"
-              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'fixed' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-500']"
+              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'fixed' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-700']"
             >
               Fijo
             </button>
             <button
               type="button"
               @click="form.sideMode = 'none'"
-              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'none' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-500']"
+              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'none' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-700']"
             >
               Sin Acompañamiento
             </button>

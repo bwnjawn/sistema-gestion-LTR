@@ -204,7 +204,7 @@ useBloqueoScroll(computed(() => props.isOpen))
           </div>
 
           <div v-if="cabin.description" class="space-y-1">
-            <h4 class="text-xs font-black text-gray-400 uppercase tracking-wider">Descripción</h4>
+            <h4 class="text-xs font-black text-gray-700 uppercase tracking-wider">Descripción</h4>
             <p class="text-xs font-medium text-gray-700 leading-relaxed bg-brand-light p-3 rounded-2xl border border-brand-border">
               {{ cabin.description }}
             </p>
@@ -212,7 +212,7 @@ useBloqueoScroll(computed(() => props.isOpen))
 
           <!-- Equipamientos -->
           <div v-if="cabin.features && cabin.features.length > 0" class="space-y-2">
-            <h4 class="text-xs font-black text-gray-400 uppercase tracking-wider">Servicios y Equipamiento</h4>
+            <h4 class="text-xs font-black text-gray-700 uppercase tracking-wider">Servicios y Equipamiento</h4>
             <div class="flex flex-wrap gap-1.5">
               <span 
                 v-for="(feature, fIdx) in cabin.features" 
@@ -228,7 +228,7 @@ useBloqueoScroll(computed(() => props.isOpen))
           <!-- Presupuesto Estimado -->
           <div class="bg-brand-light p-4 rounded-2xl border-2 border-brand-border flex items-center justify-between">
             <div>
-              <span class="text-xs font-black text-gray-500 block uppercase">Tarifa por noche</span>
+              <span class="text-xs font-black text-gray-700 block uppercase">Tarifa por noche</span>
               <span class="text-xs font-black text-gray-800">{{ formatCLP(cabin.pricePerNight) }}</span>
             </div>
             <div class="text-right">

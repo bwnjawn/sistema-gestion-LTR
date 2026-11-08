@@ -41,7 +41,7 @@ useBloqueoScroll(computed(() => props.isOpen))
           <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Horarios de Camping
         </h3>
-        <button aria-label="Cerrar" type="button" @click="emit('close')" class="p-1 text-gray-500 hover:bg-gray-100 rounded-full">
+        <button aria-label="Cerrar" type="button" @click="emit('close')" class="p-1 text-gray-700 hover:bg-gray-100 rounded-full">
           <X class="w-5 h-5 stroke-[2.5]" />
         </button>
       </div>
@@ -51,11 +51,11 @@ useBloqueoScroll(computed(() => props.isOpen))
           <span class="block font-black text-brand-dark uppercase text-xs">Camping Día</span>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs text-gray-500">Ingreso</label>
+              <label class="block text-xs text-gray-700">Ingreso</label>
               <input v-model="campingDiario.checkIn" type="text" class="w-full p-2 rounded-xl border border-brand-border bg-white font-bold" />
             </div>
             <div>
-              <label class="block text-xs text-gray-500">Salida</label>
+              <label class="block text-xs text-gray-700">Salida</label>
               <input v-model="campingDiario.checkOut" type="text" class="w-full p-2 rounded-xl border border-brand-border bg-white font-bold" />
             </div>
           </div>
@@ -65,11 +65,11 @@ useBloqueoScroll(computed(() => props.isOpen))
           <span class="block font-black text-brand-dark uppercase text-xs">Camping Pernoctar</span>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs text-gray-500">Ingreso</label>
+              <label class="block text-xs text-gray-700">Ingreso</label>
               <input v-model="campingPernoctar.checkIn" type="text" class="w-full p-2 rounded-xl border border-brand-border bg-white font-bold" />
             </div>
             <div>
-              <label class="block text-xs text-gray-500">Salida</label>
+              <label class="block text-xs text-gray-700">Salida</label>
               <input v-model="campingPernoctar.checkOut" type="text" class="w-full p-2 rounded-xl border border-brand-border bg-white font-bold" />
             </div>
           </div>

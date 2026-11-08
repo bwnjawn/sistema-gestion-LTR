@@ -93,8 +93,8 @@ const handleDayClick = (date: Date) => {
 }
 
 const getStatusBgClass = (status: BookingStatus) => {
-  if (status === 'disponible') return 'bg-emerald-500'
-  if (status === 'ocupado') return 'bg-red-500'
+  if (status === 'disponible') return 'bg-status-success'
+  if (status === 'ocupado') return 'bg-status-danger'
   return 'bg-amber-500'
 }
 </script>
@@ -115,7 +115,7 @@ const getStatusBgClass = (status: BookingStatus) => {
         <h3 class="text-sm font-black text-brand-dark capitalize leading-tight">
           {{ currentMonthName }}
         </h3>
-        <p class="text-xs font-extrabold text-gray-500">
+        <p class="text-xs font-extrabold text-gray-700">
           {{ currentYear }}
         </p>
       </div>
@@ -134,7 +134,7 @@ const getStatusBgClass = (status: BookingStatus) => {
       <span 
         v-for="dayName in weekDayNames" 
         :key="dayName"
-        class="text-xs font-black text-gray-400 uppercase tracking-wider"
+        class="text-xs font-black text-gray-700 uppercase tracking-wider"
       >
         {{ dayName }}
       </span>

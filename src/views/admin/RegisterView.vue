@@ -87,7 +87,7 @@ function handleBackToPanel() {
         <h1 class="text-xl font-black text-brand-dark tracking-tight pt-1">
           Crear cuenta de acceso
         </h1>
-        <p class="text-xs font-semibold text-gray-500">
+        <p class="text-xs font-semibold text-gray-700">
           La persona podrá entrar al panel con este correo y esta contraseña
         </p>
       </div>
@@ -155,7 +155,7 @@ function handleBackToPanel() {
             <button aria-label="Mostrar u ocultar la contraseña"
               type="button"
               @click="showPassword = !showPassword"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-dark p-1"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-brand-dark p-1"
             >
               <EyeOff v-if="showPassword" class="w-4 h-4 stroke-[2.5]" />
               <Eye v-else class="w-4 h-4 stroke-[2.5]" />
@@ -190,7 +190,7 @@ function handleBackToPanel() {
             <button aria-label="Mostrar u ocultar la confirmación de la contraseña"
               type="button"
               @click="showConfirmPassword = !showConfirmPassword"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-dark p-1"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-brand-dark p-1"
             >
               <EyeOff v-if="showConfirmPassword" class="w-4 h-4 stroke-[2.5]" />
               <Eye v-else class="w-4 h-4 stroke-[2.5]" />

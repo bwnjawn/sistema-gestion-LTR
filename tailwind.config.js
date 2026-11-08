@@ -13,7 +13,7 @@ export default {
           accent: '#25636B',    // Verde Azulado
           light: '#F9F9F6',     // Blanco Hueso
           text: '#1A1D20',      // Gris Oscuro
-          border: '#D1D5DB',
+          border: '#8E959E',
         },
         status: {
           success: '#2E7D32',
@@ -27,8 +27,8 @@ export default {
       },
       // Utilidades que el código usa con nombres de Tailwind v4; aquí se definen para la v3.
       boxShadow: {
-        xs: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-        '2xs': '0 1px rgb(0 0 0 / 0.05)',
+        xs: '0 2px 6px 0 rgb(0 0 0 / 0.14)',
+        '2xs': '0 1px 3px 0 rgb(0 0 0 / 0.14)',
       },
       backdropBlur: {
         xs: '4px',

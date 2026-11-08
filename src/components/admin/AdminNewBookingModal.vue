@@ -179,7 +179,7 @@ useBloqueoScroll(computed(() => props.isOpen))
         </div>
 
         <div class="pt-2 border-t border-gray-100 space-y-2">
-          <span class="text-xs font-black text-gray-400 uppercase block">Datos del Cliente</span>
+          <span class="text-xs font-black text-gray-700 uppercase block">Datos del Cliente</span>
           <div>
             <input type="text" v-model="clientName" placeholder="Nombre completo *" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" required />
           </div>
