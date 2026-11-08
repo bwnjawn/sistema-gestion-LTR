@@ -54,13 +54,14 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | Acompañamientos | Modo `none`, `fixed` (acompañamiento fijo, ej. asado de cordero) o `choice` (el cliente elige) | SCRUM-35, 62, 229 | ✅ en el cliente. ❌ falta el CRUD de administración (SCRUM-229) |
 | Cupo por horario | 8 grupos por bloque | — | ⚠️ `capacityRules.maxRestaurantGroupsPerSlot`, **no se aplica**. `getDayOccupancy` usa un `> 8` fijo que mezcla los tres servicios |
 | Precio | Suma de platos × cantidad (+ IVA) | — | ✅ `calculateRestaurantPrice` |
+| Espacios y capacidad | Comedor principal 120 personas, carpa 50, comedor secundario 30 (total 200) | SCRUM-244 (reunión con el cliente) | ❌ Hoy el código usa un tope fijo de 200 sin separar espacios. ❓ Falta decidir si el aforo se cuenta por comida o por hora y cómo se asigna el espacio a un grupo |
 
 ## 5. Contacto del negocio
 
 Los datos de `ContactView` salen de `settingsStore.contactInfo` y se editan desde `AdminContactEditModal` (SCRUM-231).
 Los enlaces (mapa, Instagram, web) se generan en `lib/contactLinks.ts` a partir de lo que escribe el admin.
 
-- Teléfonos por defecto: +56 9 8502 5056 y +56 9 9588 3385 (el segundo coincide con el que pide SCRUM-49).
+- Teléfonos por defecto: +56 9 8502 5056 y +56 9 5883 3853 (el segundo se corrigió el 8/11 según la reunión con el cliente; antes decía +56 9 9588 3385). `settingsStore.ts` reemplaza solo el número antiguo si el navegador lo tenía guardado.
 - Ubicación del mapa (corregida el 8/11): "Turismo Los Troncos de Repil", coordenadas -41.0616375, -73.647016. Los valores anteriores tenían el signo positivo y apuntaban a otro lugar; `settingsStore.ts` los reemplaza solos si el navegador los tenía guardados.
 - Sitio web por defecto: `fresianatural.cl` (abre `https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html`).
 

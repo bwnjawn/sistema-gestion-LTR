@@ -24,7 +24,7 @@ export interface BusinessParametersExtended {
 
 const DEFAULT_CONTACT: BusinessInfo = {
   phone1: '+56 9 8502 5056',
-  phone2: '+56 9 9588 3385',
+  phone2: '+56 9 5883 3853',
   email: 'lostroncosderepil@gmail.com',
   websiteDisplay: 'fresianatural.cl',
   websiteUrl: 'https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html',
@@ -81,7 +81,8 @@ const DEFAULT_PARAMS: BusinessParametersExtended = {
 const CONTACTO_ANTIGUO: Partial<BusinessInfo> = {
   mapsUrl: 'https://maps.google.com/?q=-41.1500,-73.4167',
   iframeMapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30000!2d73.4167!3d41.1500',
-  websiteUrl: 'https://www.lostroncosderepil.cl'
+  websiteUrl: 'https://www.lostroncosderepil.cl',
+  phone2: '+56 9 9588 3385'
 }
 
 function migrarContacto(guardado: BusinessInfo): BusinessInfo {
@@ -92,6 +93,7 @@ function migrarContacto(guardado: BusinessInfo): BusinessInfo {
     migrado.websiteUrl = DEFAULT_CONTACT.websiteUrl
     migrado.websiteDisplay = DEFAULT_CONTACT.websiteDisplay
   }
+  if (migrado.phone2 === CONTACTO_ANTIGUO.phone2) migrado.phone2 = DEFAULT_CONTACT.phone2
   return migrado
 }
 
