@@ -9,8 +9,9 @@ import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import AdminCalendarGrid from '../../components/ui/AdminCalendarGrid.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
-import { getDayOccupancy } from '../../services/availability'
-import type { ReservationRequest } from '../../types/domain'
+import { getDayOccupancy, getRequestsForDay, getWeekDates } from '../../services/availability'
+import { isoToDate } from '../../lib/dates'
+import type { ReservationRequest, ServiceType } from '../../types/domain'
 
 type ViewMode = 'mensual' | 'semanal' | 'diario'
 const currentViewMode = ref<ViewMode>('mensual')
@@ -24,14 +25,14 @@ const viewModes: { id: ViewMode; label: string }[] = [
 const requestsStore = useRequestsStore()
 
 // Filtros Activos por Área
-const activeFilters = ref<string[]>(['cabana', 'camping', 'restaurante'])
+const activeFilters = ref<ServiceType[]>(['cabana', 'camping', 'restaurante'])
 const isAllSelected = computed(() => activeFilters.value.length === 3)
 
 const selectAllFilters = () => {
   activeFilters.value = ['cabana', 'camping', 'restaurante']
 }
 
-const toggleFilter = (serviceKey: string) => {
+const toggleFilter = (serviceKey: ServiceType) => {
   if (activeFilters.value.includes(serviceKey)) {
     if (activeFilters.value.length > 1) {
       activeFilters.value = activeFilters.value.filter(id => id !== serviceKey)
@@ -64,11 +65,11 @@ const selectedDateFullFormatted = computed(() => {
 })
 
 const weekRangeFormatted = computed(() => {
-  const start = new Date(selectedDate.value)
-  start.setDate(start.getDate() - start.getDay() + 1)
-  const end = new Date(start)
-  end.setDate(end.getDate() + 6)
-  return `${start.getDate()} - ${end.getDate()} ${end.toLocaleDateString('es-CL', { month: 'short' })}`
+  const fechas = getWeekDates(selectedDateISO.value)
+  if (fechas.length === 0) return ''
+  const inicio = isoToDate(fechas[0]) as Date
+  const fin = isoToDate(fechas[6]) as Date
+  return `${inicio.getDate()} - ${fin.getDate()} ${fin.toLocaleDateString('es-CL', { month: 'short' })}`
 })
 
 const goToday = () => {
@@ -102,43 +103,23 @@ const isSelectedDay = (date: Date) => {
 }
 
 // Solicitudes Reales Filtradas para el Día Seleccionado
-const filteredRequestsForDay = computed(() => {
-  const iso = selectedDateISO.value
-  return requestsStore.requests.filter(req => {
-    const rawType = req.type as string
-    const normType = rawType === 'cabaña' ? 'cabana' : rawType
-    if (!activeFilters.value.includes(normType)) return false
+// La regla de qué solicitudes ocupan un día vive en services/availability.ts.
+const filteredRequestsForDay = computed(() =>
+  getRequestsForDay(selectedDateISO.value, requestsStore.requests, activeFilters.value)
+)
 
-    const reqStart = req.details?.startDate || req.date
-    const reqEnd = req.details?.endDate || req.timeOrDuration
-    
-    if (reqStart === iso) return true
-    if (reqStart && reqEnd && iso >= reqStart && iso <= reqEnd) return true
-    return false
-  })
-})
-
-const weekDays = computed(() => {
-  const days = []
-  const start = new Date(selectedDate.value)
-  start.setDate(start.getDate() - start.getDay() + 1)
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(start)
-    d.setDate(d.getDate() + i)
-    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const occ = getDayOccupancy(iso, requestsStore.requests)
-
-    days.push({
+const weekDays = computed(() =>
+  getWeekDates(selectedDateISO.value).map(iso => {
+    const d = isoToDate(iso) as Date
+    return {
       date: d,
       dateStr: iso,
       dayName: d.toLocaleDateString('es-CL', { weekday: 'narrow' }),
       dayNum: d.getDate(),
-      status: occ.status
-    })
-  }
-  return days
-})
+      status: getDayOccupancy(iso, requestsStore.requests, activeFilters.value).status
+    }
+  })
+)
 
 function getStatusBgClass(status: string) {
   if (status === 'disponible') return 'bg-status-success'
@@ -270,7 +251,8 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
       <div class="p-4">
         <div v-if="currentViewMode === 'mensual'">
           <AdminCalendarGrid 
-            v-model="selectedDate" 
+            v-model="selectedDate"
+            :services="activeFilters"
             @select-day="onDateSelect"
           />
         </div>

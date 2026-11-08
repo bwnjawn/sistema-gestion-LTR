@@ -3,11 +3,14 @@ import { ref, computed, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { getDayOccupancy } from '../../services/availability'
+import type { ServiceType } from '../../types/domain'
 
-type BookingStatus = 'disponible' | 'ocupado' | 'sobrecupo'
+type EstadoOcupacion = 'disponible' | 'ocupado' | 'sobrecupo'
 
 const props = withDefaults(defineProps<{
   modelValue?: Date
+  /** Servicios que se cuentan en la ocupación; todos si no se indica. */
+  services?: ServiceType[]
 }>(), {
   modelValue: () => new Date()
 })
@@ -57,13 +60,13 @@ const monthDays = computed(() => {
     const dd = String(i).padStart(2, '0')
     const dateStr = `${yyyy}-${mm}-${dd}`
 
-    const occupancy = getDayOccupancy(dateStr, requestsStore.requests)
+    const occupancy = getDayOccupancy(dateStr, requestsStore.requests, props.services)
 
     days.push({
       date: d,
       dateStr,
       dayNum: i,
-      status: occupancy.status as BookingStatus
+      status: occupancy.status as EstadoOcupacion
     })
   }
   return days
@@ -92,7 +95,7 @@ const handleDayClick = (date: Date) => {
   emit('select-day', date)
 }
 
-const getStatusBgClass = (status: BookingStatus) => {
+const getStatusBgClass = (status: EstadoOcupacion) => {
   if (status === 'disponible') return 'bg-status-success'
   if (status === 'ocupado') return 'bg-status-danger'
   return 'bg-amber-500'

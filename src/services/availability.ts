@@ -1,7 +1,7 @@
 // src/services/availability.ts
 
 import type { ReservationRequest, ServiceType } from '../types/domain'
-import { addDays, isPastDate } from '../lib/dates'
+import { addDays, isoToDate, isPastDate } from '../lib/dates'
 
 /**
  * Evalúa si dos rangos de fechas se solapan en intervalo semiabierto [start, end).
@@ -115,32 +115,82 @@ export function generateTimeSlots(startHour: string, endHour: string, stepMinute
   return slots
 }
 
+const FORMATO_FECHA = /^\d{4}-\d{2}-\d{2}$/
+
+/** Acepta los valores antiguos ('cabaña') que aún pueden estar guardados en el navegador. */
+function normalizarServicio(tipo: string): ServiceType {
+  return (tipo === 'cabaña' ? 'cabana' : tipo) as ServiceType
+}
+
+/** Una solicitud ocupa el calendario solo si está pendiente o confirmada (no rechazada ni cancelada). */
+export function isRequestActive(req: Pick<ReservationRequest, 'status'>): boolean {
+  const estado = req.status as string
+  return estado === 'pending' || estado === 'confirmed' || estado === 'pendiente' || estado === 'confirmada'
+}
+
 /**
- * Calcula el estado de ocupación diaria global para el calendario administrativo.
+ * Rango de fechas que ocupa una solicitud: `end` es null cuando ocupa un solo día
+ * (restaurante, camping por el día o sin fecha de salida).
+ */
+export function getRequestDateRange(req: ReservationRequest): { start: string; end: string | null } {
+  const start = req.details?.startDate || req.date || ''
+  const candidato = req.details?.endDate || req.timeOrDuration || ''
+  // timeOrDuration del restaurante es una hora ('13:00'), no una fecha.
+  const end = FORMATO_FECHA.test(candidato) && candidato > start ? candidato : null
+  return { start, end }
+}
+
+/**
+ * Indica si la solicitud ocupa el día indicado. Usa el intervalo [entrada, salida):
+ * el día de salida queda libre.
+ */
+export function requestOccupiesDay(req: ReservationRequest, dateStr: string): boolean {
+  const { start, end } = getRequestDateRange(req)
+  if (!start) return false
+  if (!end) return start === dateStr
+  return dateStr >= start && dateStr < end
+}
+
+/** Solicitudes activas que ocupan un día, limitadas a los servicios elegidos (todos si no se indica). */
+export function getRequestsForDay(
+  dateStr: string,
+  existingRequests: ReservationRequest[],
+  services?: ServiceType[]
+): ReservationRequest[] {
+  return existingRequests.filter(r =>
+    isRequestActive(r) &&
+    (!services || services.includes(normalizarServicio(r.type))) &&
+    requestOccupiesDay(r, dateStr)
+  )
+}
+
+/** Lunes de la semana que contiene la fecha (la semana va de lunes a domingo). */
+export function getWeekStart(dateStr: string): string {
+  const fecha = isoToDate(dateStr)
+  if (!fecha) return ''
+  const diasDesdeLunes = (fecha.getDay() + 6) % 7
+  return addDays(dateStr, -diasDesdeLunes)
+}
+
+/** Las siete fechas (lunes a domingo) de la semana que contiene la fecha. */
+export function getWeekDates(dateStr: string): string[] {
+  const lunes = getWeekStart(dateStr)
+  if (!lunes) return []
+  return Array.from({ length: 7 }, (_, i) => addDays(lunes, i))
+}
+
+/**
+ * Calcula el estado de ocupación diaria para el calendario administrativo.
+ * Solo cuenta solicitudes activas y respeta los servicios elegidos.
  */
 export function getDayOccupancy(
   dateStr: string,
-  existingRequests: ReservationRequest[]
+  existingRequests: ReservationRequest[],
+  services?: ServiceType[]
 ): { confirmedCount: number; pendingCount: number; status: 'disponible' | 'ocupado' | 'sobrecupo' } {
-  const dayRequests = existingRequests.filter(r => {
-    const start = r.details?.startDate || r.date
-    const end = r.details?.endDate || r.timeOrDuration || ''
-    if (start === dateStr) return true
-    if (r.details?.startDate && r.details?.endDate) {
-      return isDateRangeOverlapping(dateStr, dateStr, start, end)
-    }
-    return false
-  })
-
-  const confirmedCount = dayRequests.filter(r => {
-    const s = r.status as string
-    return s === 'confirmed' || s === 'confirmada'
-  }).length
-
-  const pendingCount = dayRequests.filter(r => {
-    const s = r.status as string
-    return s === 'pending' || s === 'pendiente'
-  }).length
+  const dayRequests = getRequestsForDay(dateStr, existingRequests, services)
+  const confirmedCount = dayRequests.filter(r => (r.status as string) === 'confirmed' || (r.status as string) === 'confirmada').length
+  const pendingCount = dayRequests.length - confirmedCount
 
   let status: 'disponible' | 'ocupado' | 'sobrecupo' = 'disponible'
   if (confirmedCount + pendingCount > 8) {
