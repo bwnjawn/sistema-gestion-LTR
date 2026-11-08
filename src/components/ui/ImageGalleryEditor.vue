@@ -70,7 +70,7 @@ function setAsMain(imgUrl: string) {
   <div class="space-y-2">
     <div class="flex items-center justify-between">
       <label class="block text-xs font-bold text-gray-700">{{ label }} (máx. {{ maxImages }})</label>
-      <span class="text-[10px] font-black text-gray-400">{{ images.length }} / {{ maxImages }}</span>
+      <span class="text-xs font-black text-gray-400">{{ images.length }} / {{ maxImages }}</span>
     </div>
 
     <!-- Grid de imágenes -->
@@ -96,7 +96,7 @@ function setAsMain(imgUrl: string) {
         </button>
 
         <!-- Botón Eliminar -->
-        <button
+        <button aria-label="Quitar imagen"
           type="button"
           @click="removeImage(idx)"
           class="absolute top-1 right-1 p-1 rounded-lg bg-rose-600/90 text-white hover:bg-rose-700 transition-all"
@@ -111,7 +111,7 @@ function setAsMain(imgUrl: string) {
         class="aspect-square rounded-xl border-2 border-dashed border-brand-border bg-brand-light hover:bg-gray-100 flex flex-col items-center justify-center cursor-pointer p-2 text-center transition-all"
       >
         <Upload class="w-5 h-5 text-brand-accent stroke-[2.5] mb-1" />
-        <span class="text-[10px] font-black text-brand-dark">
+        <span class="text-xs font-black text-brand-dark">
           {{ isUploading ? 'Procesando...' : 'Subir Foto' }}
         </span>
         <input

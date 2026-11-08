@@ -7,10 +7,14 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,png,svg,woff2}']
+      },
       manifest: {
         name: 'Los Troncos de Repil',
         short_name: 'LosTroncos',
+        lang: 'es',
         description: 'Sistema de reservas y agendas',
         theme_color: '#1E4620',
         background_color: '#F1F2EE',
@@ -24,7 +28,8 @@ export default defineConfig({
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }

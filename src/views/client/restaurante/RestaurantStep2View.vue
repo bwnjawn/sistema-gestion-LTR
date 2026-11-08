@@ -275,7 +275,7 @@ function proceedToStep3() {
               <span>{{ mealLabels[mId] }}:</span>
               <span 
                 :class="[
-                  'font-black px-2 py-0.5 rounded-md text-[11px]',
+                  'font-black px-2 py-0.5 rounded-md text-xs',
                   getMealSelectedCount(mId) === totalGuests
                     ? 'bg-emerald-100 text-emerald-800'
                     : 'bg-amber-200 text-amber-900'
@@ -286,7 +286,7 @@ function proceedToStep3() {
             </div>
           </div>
 
-          <p class="text-[11px] font-semibold text-gray-500">
+          <p class="text-xs font-semibold text-gray-500">
             ¿Deseas continuar de todos modos o prefieres ajustar las cantidades antes de avanzar?
           </p>
         </div>
@@ -324,7 +324,7 @@ function proceedToStep3() {
           Para grupos de más de 30 personas, se permite un <strong>máximo de 3 variedades de menú en {{ mealLabels[currentMealType] }}</strong>.
         </span>
       </div>
-      <button 
+      <button aria-label="Cerrar" 
         type="button" 
         @click="showVarietyLimitWarning = false"
         class="p-1 hover:bg-amber-600 rounded-lg transition-colors shrink-0"
@@ -360,7 +360,7 @@ function proceedToStep3() {
         <span>{{ mealLabels[mId] }}</span>
         <span 
           :class="[
-            'text-[10px] px-1.5 py-0.5 rounded-full font-extrabold',
+            'text-xs px-1.5 py-0.5 rounded-full font-extrabold',
             isMealValid(mId) && getMealSelectedCount(mId) > 0
               ? 'bg-emerald-400 text-brand-dark'
               : 'bg-gray-200 text-gray-700'
@@ -406,7 +406,7 @@ function proceedToStep3() {
 
           <!-- Contador de Platos -->
           <div class="flex items-center gap-1.5 bg-brand-light p-1.5 rounded-2xl border-2 border-brand-border shrink-0">
-            <button
+            <button aria-label="Disminuir cantidad"
               type="button"
               @click="updateDishCount(dish.id, -1)"
               class="w-8 h-8 rounded-xl bg-white border border-brand-border font-black text-lg flex items-center justify-center active:scale-95 touch-target"
@@ -423,7 +423,7 @@ function proceedToStep3() {
               class="w-12 text-center font-black text-base text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none focus:border-brand-dark p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
 
-            <button
+            <button aria-label="Aumentar cantidad"
               type="button"
               @click="updateDishCount(dish.id, 1)"
               class="w-8 h-8 rounded-xl bg-white border border-brand-border font-black text-lg flex items-center justify-center active:scale-95 touch-target"
@@ -485,7 +485,7 @@ function proceedToStep3() {
             >
               <span>{{ side }}</span>
               <div class="flex items-center gap-2">
-                <button
+                <button aria-label="Disminuir cantidad"
                   type="button"
                   @click="updateSideCount(dish.id, side, -1)"
                   class="w-7 h-7 rounded-lg bg-white border border-brand-border font-extrabold flex items-center justify-center active:scale-95 touch-target"

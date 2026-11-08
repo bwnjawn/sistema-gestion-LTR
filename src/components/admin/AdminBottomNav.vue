@@ -41,7 +41,7 @@ function navigate(path: string) {
         ]"
       >
         <component :is="item.icon" :class="['w-5 h-5 stroke-[2.5]', isActive(item.path) ? 'text-emerald-300' : 'text-gray-500']" />
-        <span class="text-[9px] mt-1 tracking-tight truncate w-full text-center">{{ item.name }}</span>
+        <span class="text-xs mt-1 tracking-tight truncate w-full text-center">{{ item.name }}</span>
       </button>
     </div>
   </nav>

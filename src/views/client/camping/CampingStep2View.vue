@@ -77,7 +77,7 @@ function handleBack() {
       <div class="flex items-center gap-2">
         <Clock class="w-4 h-4 text-brand-accent shrink-0 stroke-[2.5]" />
         <div>
-          <span class="block text-[10px] uppercase font-black text-gray-500">Horario de Servicio ({{ isDiario ? 'Día' : 'Noche' }}):</span>
+          <span class="block text-xs uppercase font-black text-gray-500">Horario de Servicio ({{ isDiario ? 'Día' : 'Noche' }}):</span>
           <span class="text-brand-dark font-black">
             {{ formattedScheduleDisplay }}
           </span>
@@ -107,7 +107,7 @@ function handleBack() {
 
     <div v-if="selectedCampingOption" class="bg-brand-dark text-white p-4 rounded-2xl border-2 border-brand-border shadow-xs flex items-center justify-between">
       <div>
-        <span class="text-[10px] font-extrabold text-emerald-300 uppercase tracking-wider block">
+        <span class="text-xs font-extrabold text-emerald-300 uppercase tracking-wider block">
           Subtotal Neto ({{ guests }} pers. {{ !isDiario ? 'x ' + nightsCount + ' noc.' : '' }})
         </span>
         <span class="text-xs font-bold text-gray-300">{{ selectedCampingOption?.name }}</span>

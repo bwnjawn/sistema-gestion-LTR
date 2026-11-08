@@ -45,7 +45,7 @@ const isFixedSide = computed(() => {
       <!-- Imagen -->
       <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-brand-border bg-gray-100">
         <img :src="displayImage" :alt="dish.name" class="w-full h-full object-cover" />
-        <span class="absolute bottom-1 left-1 bg-brand-dark/90 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase">
+        <span class="absolute bottom-1 left-1 bg-brand-dark/90 text-white text-xs font-black px-1.5 py-0.5 rounded-md uppercase">
           {{ categoryLabel }}
         </span>
       </div>
@@ -57,17 +57,17 @@ const isFixedSide = computed(() => {
           <span class="text-xs font-black text-brand-accent shrink-0">{{ formattedPrice }}</span>
         </div>
 
-        <p v-if="dish.description" class="text-[11px] font-medium text-gray-600 line-clamp-2 leading-relaxed">
+        <p v-if="dish.description" class="text-xs font-medium text-gray-600 line-clamp-2 leading-relaxed">
           {{ dish.description }}
         </p>
 
         <!-- Acompañamientos -->
         <div class="pt-1">
-          <span v-if="isChoiceSide" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+          <span v-if="isChoiceSide" class="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
             <CheckCircle2 class="w-3 h-3 stroke-[2.5]" />
             Acompañamiento a elección
           </span>
-          <span v-else-if="isFixedSide" class="inline-flex items-center gap-1 text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
+          <span v-else-if="isFixedSide" class="inline-flex items-center gap-1 text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
             <Utensils class="w-3 h-3 stroke-[2.5]" />
             {{ dish.fixedSide }}
           </span>

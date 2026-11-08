@@ -29,7 +29,7 @@ const displayImage = computed(() => {
       <div class="absolute top-3 right-3 bg-brand-dark/90 text-white px-3 py-1 rounded-full font-black text-xs">
         {{ formattedPrice }} por persona
       </div>
-      <div v-if="site.isSpecial" class="absolute top-3 left-3 bg-amber-400 text-slate-900 font-black text-[10px] px-2.5 py-1 rounded-full uppercase">
+      <div v-if="site.isSpecial" class="absolute top-3 left-3 bg-amber-400 text-slate-900 font-black text-xs px-2.5 py-1 rounded-full uppercase">
         Grupos y eventos
       </div>
     </div>
@@ -60,7 +60,7 @@ const displayImage = computed(() => {
           <span
             v-for="(feat, idx) in site.features"
             :key="idx"
-            class="text-[11px] font-extrabold text-brand-dark bg-gray-100 px-2.5 py-0.5 rounded-lg border border-gray-200 flex items-center gap-1"
+            class="text-xs font-extrabold text-brand-dark bg-gray-100 px-2.5 py-0.5 rounded-lg border border-gray-200 flex items-center gap-1"
           >
             <Check class="w-3 h-3 text-brand-accent stroke-[2.5]" />
             {{ feat }}

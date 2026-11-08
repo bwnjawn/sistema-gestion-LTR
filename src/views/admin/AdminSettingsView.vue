@@ -53,7 +53,7 @@ async function saveParameters() {
         </div>
         <span 
           :class="[
-            'px-2.5 py-1 rounded-full text-[10px] font-black flex items-center gap-1 border',
+            'px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 border',
             settingsStore.isConnected 
               ? 'bg-emerald-50 text-emerald-700 border-emerald-300' 
               : 'bg-amber-50 text-amber-800 border-amber-300'
@@ -148,7 +148,7 @@ async function saveParameters() {
         <p>{{ settingsStore.transferInfo.holderName }} · {{ settingsStore.transferInfo.holderRut }}</p>
         <p class="text-gray-500">{{ settingsStore.transferInfo.email }}</p>
       </div>
-      <p class="text-[11px] font-semibold text-gray-500">El cliente ve estos datos en el paso 4 de su solicitud.</p>
+      <p class="text-xs font-semibold text-gray-500">El cliente ve estos datos en el paso 4 de su solicitud.</p>
     </div>
 
     <div class="bg-white p-4 sm:p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
@@ -164,15 +164,15 @@ async function saveParameters() {
 
       <div class="grid grid-cols-3 gap-2 text-xs font-bold">
         <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-[9px] text-gray-500 uppercase block">Abono exigido</span>
+          <span class="text-xs text-gray-500 uppercase block">Abono exigido</span>
           <span class="text-sm font-black text-brand-dark">{{ settingsStore.defaultDepositPercentage }}%</span>
         </div>
         <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-[9px] text-gray-500 uppercase block">IVA</span>
+          <span class="text-xs text-gray-500 uppercase block">IVA</span>
           <span class="text-sm font-black text-brand-dark">{{ settingsStore.ivaPercentage }}%</span>
         </div>
         <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-[9px] text-gray-500 uppercase block">Margen de cupos</span>
+          <span class="text-xs text-gray-500 uppercase block">Margen de cupos</span>
           <span class="text-sm font-black text-brand-dark">{{ settingsStore.marginPercentage }}%</span>
         </div>
       </div>

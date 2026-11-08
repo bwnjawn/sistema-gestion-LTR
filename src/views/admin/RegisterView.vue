@@ -78,7 +78,7 @@ function handleBackToHome() {
       </div>
 
       <div>
-        <span class="inline-flex items-center gap-1.5 bg-brand-dark text-white text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs">
+        <span class="inline-flex items-center gap-1.5 bg-brand-dark text-white text-xs font-black uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs">
           <ShieldCheck class="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
           Registro Administrador
         </span>
@@ -146,7 +146,7 @@ function handleBackToHome() {
               placeholder="••••••••"
               class="w-full p-3 pr-10 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-sm focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
             />
-            <button
+            <button aria-label="Mostrar u ocultar la contraseña"
               type="button"
               @click="showPassword = !showPassword"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-dark p-1"
@@ -164,7 +164,7 @@ function handleBackToHome() {
               <Lock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
               Confirmar Contraseña *
             </span>
-            <span v-if="password && isPasswordMatch" class="text-emerald-600 font-bold text-[10px] flex items-center gap-1">
+            <span v-if="password && isPasswordMatch" class="text-emerald-600 font-bold text-xs flex items-center gap-1">
               <CheckCircle2 class="w-3 h-3 stroke-[2.5]" />
               Coinciden
             </span>
@@ -181,7 +181,7 @@ function handleBackToHome() {
                 confirmPassword && !isPasswordMatch ? 'border-rose-500 bg-rose-50' : 'border-brand-border focus:border-brand-dark'
               ]"
             />
-            <button
+            <button aria-label="Mostrar u ocultar la confirmación de la contraseña"
               type="button"
               @click="showConfirmPassword = !showConfirmPassword"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-dark p-1"
@@ -191,7 +191,7 @@ function handleBackToHome() {
             </button>
           </div>
 
-          <p v-if="confirmPassword && !isPasswordMatch" class="text-[11px] font-bold text-rose-600 pt-0.5">
+          <p v-if="confirmPassword && !isPasswordMatch" class="text-xs font-bold text-rose-600 pt-0.5">
             Las contraseñas no coinciden.
           </p>
         </div>

@@ -136,7 +136,7 @@ function handleNext() {
               max="20"
               class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
-            <span class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
+            <span class="text-xs font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
               {{ reservationStore.guestsCount === 1 ? 'Persona' : 'Personas' }}
             </span>
           </div>
@@ -154,18 +154,18 @@ function handleNext() {
       <!-- Resumen de Estadía -->
       <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-xs font-bold text-gray-700">
         <div>
-          <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Llegada</span>
+          <span class="text-gray-400 text-xs uppercase font-extrabold block">Llegada</span>
           <span class="text-brand-dark font-black">{{ formatDateShort(reservationStore.checkInDate) }}</span>
         </div>
         <div class="text-center border-x border-gray-200 px-3">
-          <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Noches</span>
+          <span class="text-gray-400 text-xs uppercase font-extrabold block">Noches</span>
           <span class="text-brand-dark font-black flex items-center justify-center gap-1">
             <Moon class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
             {{ nightsCount }} {{ nightsCount === 1 ? 'Noche' : 'Noches' }}
           </span>
         </div>
         <div class="text-right">
-          <span class="text-gray-400 text-[10px] uppercase font-extrabold block">Salida</span>
+          <span class="text-gray-400 text-xs uppercase font-extrabold block">Salida</span>
           <span class="text-brand-dark font-black">{{ formatDateShort(reservationStore.checkOutDate) }}</span>
         </div>
       </div>

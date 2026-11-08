@@ -152,7 +152,7 @@ function close() {
           />
           
           <!-- Botón Cerrar -->
-          <button 
+          <button aria-label="Cerrar" 
             type="button"
             @click="close"
             class="absolute top-3 right-3 bg-black/60 hover:bg-black text-white p-2 rounded-full backdrop-blur-xs touch-target flex items-center justify-center z-10 active:scale-95"
@@ -180,7 +180,7 @@ function close() {
           </button>
 
           <!-- Contador N/M -->
-          <div v-if="cabinImages.length > 0" class="absolute bottom-3 right-3 bg-black/70 text-white text-[11px] font-black px-3 py-1 rounded-full backdrop-blur-xs">
+          <div v-if="cabinImages.length > 0" class="absolute bottom-3 right-3 bg-black/70 text-white text-xs font-black px-3 py-1 rounded-full backdrop-blur-xs">
             {{ currentImageIndex + 1 }} / {{ cabinImages.length }}
           </div>
         </div>
@@ -202,7 +202,7 @@ function close() {
           </div>
 
           <div v-if="cabin.description" class="space-y-1">
-            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Descripción</h4>
+            <h4 class="text-xs font-black text-gray-400 uppercase tracking-wider">Descripción</h4>
             <p class="text-xs font-medium text-gray-700 leading-relaxed bg-brand-light p-3 rounded-2xl border border-brand-border">
               {{ cabin.description }}
             </p>
@@ -210,7 +210,7 @@ function close() {
 
           <!-- Equipamientos -->
           <div v-if="cabin.features && cabin.features.length > 0" class="space-y-2">
-            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Servicios y Equipamiento</h4>
+            <h4 class="text-xs font-black text-gray-400 uppercase tracking-wider">Servicios y Equipamiento</h4>
             <div class="flex flex-wrap gap-1.5">
               <span 
                 v-for="(feature, fIdx) in cabin.features" 
@@ -226,11 +226,11 @@ function close() {
           <!-- Presupuesto Estimado -->
           <div class="bg-brand-light p-4 rounded-2xl border-2 border-brand-border flex items-center justify-between">
             <div>
-              <span class="text-[10px] font-black text-gray-500 block uppercase">Tarifa por noche</span>
+              <span class="text-xs font-black text-gray-500 block uppercase">Tarifa por noche</span>
               <span class="text-xs font-black text-gray-800">{{ formatCLP(cabin.pricePerNight) }}</span>
             </div>
             <div class="text-right">
-              <span class="text-[10px] font-black text-brand-accent block uppercase">Total por {{ nightsCount }} Noches</span>
+              <span class="text-xs font-black text-brand-accent block uppercase">Total por {{ nightsCount }} Noches</span>
               <span class="text-lg font-black text-brand-dark">
                 {{ formatCLP(cabin.pricePerNight * nightsCount) }}
               </span>
@@ -258,14 +258,14 @@ function close() {
         <!-- Header -->
         <div class="p-4 sm:p-5 border-b-2 border-brand-border bg-brand-light flex items-center justify-between">
           <div>
-            <span class="text-[10px] font-black text-brand-accent uppercase tracking-wider block">
+            <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">
               Catálogo de Cabañas
             </span>
             <h3 class="text-lg font-black text-brand-dark leading-tight">
               {{ isEditing ? 'Editar ' + form.name : 'Nueva Cabaña' }}
             </h3>
           </div>
-          <button type="button" @click="close" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark hover:bg-gray-100">
+          <button aria-label="Cerrar" type="button" @click="close" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark hover:bg-gray-100">
             <X class="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
@@ -319,7 +319,7 @@ function close() {
             <div v-if="form.features && form.features.length > 0" class="flex flex-wrap gap-1.5 pt-1">
               <span v-for="(feat, idx) in (form.features as string[])" :key="idx" class="px-2.5 py-1 bg-brand-light border border-brand-border rounded-lg text-xs font-bold flex items-center gap-1 text-brand-dark">
                 {{ feat }}
-                <button type="button" @click="removeFeature(idx)" class="text-rose-600 hover:text-rose-800 ml-1">
+                <button aria-label="Quitar característica" type="button" @click="removeFeature(idx)" class="text-rose-600 hover:text-rose-800 ml-1">
                   <Trash2 class="w-3 h-3 stroke-[2.5]" />
                 </button>
               </span>

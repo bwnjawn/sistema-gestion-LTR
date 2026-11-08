@@ -126,14 +126,14 @@ function close() {
       <!-- Header -->
       <div class="p-4 sm:p-5 border-b-2 border-brand-border bg-brand-light flex items-center justify-between">
         <div>
-          <span class="text-[10px] font-black text-brand-accent uppercase tracking-wider block">
+          <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">
             Menú de Restaurante
           </span>
           <h3 class="text-lg font-black text-brand-dark leading-tight">
             {{ isEditing ? 'Editar ' + form.name : 'Nuevo Plato' }}
           </h3>
         </div>
-        <button type="button" @click="close" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark hover:bg-gray-100">
+        <button aria-label="Cerrar" type="button" @click="close" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark hover:bg-gray-100">
           <X class="w-5 h-5 stroke-[2.5]" />
         </button>
       </div>
@@ -181,21 +181,21 @@ function close() {
             <button
               type="button"
               @click="form.sideMode = 'choice'"
-              :class="['py-2 px-1 text-[11px] font-black rounded-lg', form.sideMode === 'choice' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-500']"
+              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'choice' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-500']"
             >
               A Elección
             </button>
             <button
               type="button"
               @click="form.sideMode = 'fixed'"
-              :class="['py-2 px-1 text-[11px] font-black rounded-lg', form.sideMode === 'fixed' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-500']"
+              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'fixed' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-500']"
             >
               Fijo
             </button>
             <button
               type="button"
               @click="form.sideMode = 'none'"
-              :class="['py-2 px-1 text-[11px] font-black rounded-lg', form.sideMode === 'none' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-500']"
+              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'none' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-500']"
             >
               Sin Acompañamiento
             </button>
@@ -208,7 +208,7 @@ function close() {
 
           <!-- Caso Acompañamiento a Elección -->
           <div v-else-if="form.sideMode === 'choice'" class="space-y-2 pt-1">
-            <span class="text-[11px] text-gray-600 block">Selecciona las opciones disponibles para este plato:</span>
+            <span class="text-xs text-gray-600 block">Selecciona las opciones disponibles para este plato:</span>
             <div class="flex flex-wrap gap-1.5">
               <button
                 v-for="side in globalSideDishes"

@@ -65,7 +65,7 @@ const normalizedFeatures = computed(() => {
           <span
             v-for="(feat, idx) in normalizedFeatures"
             :key="idx"
-            class="text-[11px] font-extrabold text-brand-dark bg-gray-100 px-2.5 py-0.5 rounded-lg border border-gray-200 flex items-center gap-1"
+            class="text-xs font-extrabold text-brand-dark bg-gray-100 px-2.5 py-0.5 rounded-lg border border-gray-200 flex items-center gap-1"
           >
             <Check class="w-3 h-3 text-brand-accent stroke-[2.5]" />
             {{ feat.text }}

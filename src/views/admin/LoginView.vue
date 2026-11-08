@@ -65,7 +65,7 @@ function handleGoToRegister() {
       </div>
 
       <div>
-        <span class="inline-flex items-center gap-1.5 bg-brand-dark text-white text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs">
+        <span class="inline-flex items-center gap-1.5 bg-brand-dark text-white text-xs font-black uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs">
           <ShieldCheck class="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
           Acceso Administrativo
         </span>
@@ -148,21 +148,21 @@ function handleGoToRegister() {
 
       <!-- BOTONES RÁPIDOS DE PRUEBA (SOLO PARA DESARROLLO / FACILIDAD DE ACCESO) -->
       <div class="bg-brand-light/80 p-3.5 rounded-2xl border border-brand-border space-y-2">
-        <span class="text-[10px] font-black text-gray-500 uppercase tracking-wider block text-center">
+        <span class="text-xs font-black text-gray-500 uppercase tracking-wider block text-center">
           Credenciales Rápidas de Prueba
         </span>
         <div class="grid grid-cols-2 gap-2">
           <button
             type="button"
             @click="fillDemoCredentials('dueno1@troncosderepil.cl')"
-            class="py-2 px-2 rounded-xl bg-white border border-brand-border text-[11px] font-black text-brand-dark hover:bg-gray-100 touch-target active:scale-95 transition-transform truncate"
+            class="py-2 px-2 rounded-xl bg-white border border-brand-border text-xs font-black text-brand-dark hover:bg-gray-100 touch-target active:scale-95 transition-transform truncate"
           >
             Dueño 1
           </button>
           <button
             type="button"
             @click="fillDemoCredentials('dueno2@troncosderepil.cl')"
-            class="py-2 px-2 rounded-xl bg-white border border-brand-border text-[11px] font-black text-brand-dark hover:bg-gray-100 touch-target active:scale-95 transition-transform truncate"
+            class="py-2 px-2 rounded-xl bg-white border border-brand-border text-xs font-black text-brand-dark hover:bg-gray-100 touch-target active:scale-95 transition-transform truncate"
           >
             Dueño 2
           </button>

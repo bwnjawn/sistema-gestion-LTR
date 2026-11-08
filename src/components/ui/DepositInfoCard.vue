@@ -64,7 +64,7 @@ const formattedTotal = computed(() => formatCLP(props.totalAmount || 0))
       <p v-if="transfer.email" class="text-gray-600">Envía el comprobante a {{ transfer.email }}</p>
     </div>
 
-    <div class="flex items-start gap-2 pt-1 text-[11px] font-bold text-gray-600">
+    <div class="flex items-start gap-2 pt-1 text-xs font-bold text-gray-600">
       <CreditCard class="w-3.5 h-3.5 text-brand-accent shrink-0 mt-0.5" />
       <span>El saldo restante se cancela directamente al momento de tu llegada al centro turístico.</span>
     </div>

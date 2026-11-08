@@ -115,7 +115,7 @@ const getStatusBgClass = (status: BookingStatus) => {
         <h3 class="text-sm font-black text-brand-dark capitalize leading-tight">
           {{ currentMonthName }}
         </h3>
-        <p class="text-[10px] font-extrabold text-gray-500">
+        <p class="text-xs font-extrabold text-gray-500">
           {{ currentYear }}
         </p>
       </div>
@@ -134,7 +134,7 @@ const getStatusBgClass = (status: BookingStatus) => {
       <span 
         v-for="dayName in weekDayNames" 
         :key="dayName"
-        class="text-[10px] font-black text-gray-400 uppercase tracking-wider"
+        class="text-xs font-black text-gray-400 uppercase tracking-wider"
       >
         {{ dayName }}
       </span>

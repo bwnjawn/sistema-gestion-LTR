@@ -97,10 +97,10 @@ async function handleSubmit() {
     <div class="bg-white w-full max-w-md rounded-3xl border-2 border-brand-border p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex items-center justify-between border-b-2 border-brand-border/60 pb-3">
         <div>
-          <span class="text-[10px] font-black text-brand-accent uppercase tracking-wider block">Panel de Control</span>
+          <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">Panel de Control</span>
           <h3 class="text-base font-black text-brand-dark">Nueva Reserva Directa</h3>
         </div>
-        <button 
+        <button aria-label="Cerrar" 
           type="button" 
           @click="emit('close')"
           class="w-8 h-8 rounded-full bg-brand-light border border-brand-border text-brand-dark flex items-center justify-center"
@@ -177,7 +177,7 @@ async function handleSubmit() {
         </div>
 
         <div class="pt-2 border-t border-gray-100 space-y-2">
-          <span class="text-[10px] font-black text-gray-400 uppercase block">Datos del Cliente</span>
+          <span class="text-xs font-black text-gray-400 uppercase block">Datos del Cliente</span>
           <div>
             <input type="text" v-model="clientName" placeholder="Nombre completo *" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" required />
           </div>

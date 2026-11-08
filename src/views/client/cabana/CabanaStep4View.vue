@@ -137,7 +137,7 @@ async function handleSendRequest() {
         </div>
 
         <div v-if="store.comments" class="space-y-1 bg-amber-50 p-3 rounded-2xl border border-amber-200">
-          <span class="text-[10px] font-black text-amber-900 uppercase tracking-wider block">Comentarios Adicionales:</span>
+          <span class="text-xs font-black text-amber-900 uppercase tracking-wider block">Comentarios Adicionales:</span>
           <p class="text-xs font-semibold text-amber-950 italic">"{{ store.comments }}"</p>
         </div>
 

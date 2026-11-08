@@ -28,12 +28,12 @@ const imagesList = computed(() => {
       <!-- Encabezado -->
       <div class="p-4 sm:p-5 border-b-2 border-brand-border bg-brand-light flex items-center justify-between">
         <div>
-          <span class="text-[10px] font-black text-brand-accent uppercase tracking-wider block">
+          <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">
             Detalle del Espacio
           </span>
           <h3 class="text-lg font-black text-brand-dark leading-tight">{{ site.name }}</h3>
         </div>
-        <button type="button" @click="emit('close')" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark">
+        <button aria-label="Cerrar" type="button" @click="emit('close')" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark">
           <X class="w-5 h-5 stroke-[2.5]" />
         </button>
       </div>

@@ -273,7 +273,7 @@ function executeDelete() {
               <Sparkles class="w-4 h-4 text-brand-accent stroke-[2.5]" />
               <span class="text-sm font-black text-brand-dark">{{ side }}</span>
             </div>
-            <button type="button" @click="deleteSideDish(side)" class="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 active:scale-95 touch-target">
+            <button aria-label="Eliminar acompañamiento" type="button" @click="deleteSideDish(side)" class="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 active:scale-95 touch-target">
               <Trash2 class="w-3.5 h-3.5 stroke-[2.5]" />
             </button>
           </div>

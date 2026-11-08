@@ -131,7 +131,7 @@ function handleNext() {
         <span v-if="phoneIncomplete" class="text-xs font-black text-rose-800 block" role="alert">
           El número está incompleto: son +56 9 y 8 dígitos más.
         </span>
-        <span class="text-[11px] font-semibold text-gray-500 block">
+        <span class="text-xs font-semibold text-gray-500 block">
           Te contactaremos a este número para confirmar los detalles.
         </span>
       </div>

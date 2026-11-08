@@ -212,7 +212,7 @@ function formatStatusText(status: string): string {
         </button>
       </div>
 
-      <div class="pt-2.5 border-t-2 border-brand-border/40 flex items-center justify-center gap-6 text-[10px] font-black">
+      <div class="pt-2.5 border-t-2 border-brand-border/40 flex items-center justify-center gap-6 text-xs font-black">
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
           <span class="text-gray-700">Disponible</span>
@@ -284,7 +284,7 @@ function formatStatusText(status: string): string {
                   : 'bg-brand-light border-brand-border/60 text-gray-600'
               ]"
             >
-              <span class="text-[10px] uppercase font-bold text-gray-500">{{ day.dayName }}</span>
+              <span class="text-xs uppercase font-bold text-gray-500">{{ day.dayName }}</span>
               <span class="font-black text-sm">{{ day.dayNum }}</span>
               <span 
                 class="w-full h-1 rounded-full"
@@ -296,7 +296,7 @@ function formatStatusText(status: string): string {
 
         <div v-else class="space-y-4">
           <div class="flex items-center justify-between bg-brand-light p-2 rounded-2xl border border-brand-border">
-            <button 
+            <button aria-label="Día anterior" 
               type="button" 
               @click="changeDay(-1)" 
               class="w-10 h-10 rounded-xl bg-white border border-brand-border text-brand-dark active:scale-95 touch-target flex items-center justify-center shrink-0"
@@ -308,7 +308,7 @@ function formatStatusText(status: string): string {
               {{ selectedDateFullFormatted }}
             </span>
 
-            <button 
+            <button aria-label="Día siguiente" 
               type="button" 
               @click="changeDay(1)" 
               class="w-10 h-10 rounded-xl bg-white border border-brand-border text-brand-dark active:scale-95 touch-target flex items-center justify-center shrink-0"
@@ -326,11 +326,11 @@ function formatStatusText(status: string): string {
             >
               <div class="flex justify-between items-center">
                 <span class="font-black text-brand-dark">{{ req.clientName }}</span>
-                <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-light border border-brand-border">
+                <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-brand-light border border-brand-border">
                   {{ formatStatusText(req.status) }}
                 </span>
               </div>
-              <div class="flex justify-between text-gray-600 text-[11px]">
+              <div class="flex justify-between text-gray-600 text-xs">
                 <span>{{ req.resourceName }} ({{ req.guestsCount }} pers)</span>
                 <span class="font-black text-brand-dark">{{ formatCLP(req.totalAmount) }}</span>
               </div>
@@ -352,7 +352,7 @@ function formatStatusText(status: string): string {
       <div class="bg-white w-full max-w-md rounded-3xl border-2 border-brand-border p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
         <div class="flex items-center justify-between border-b-2 border-brand-border/60 pb-3">
           <div>
-            <span class="text-[10px] font-black text-brand-accent uppercase tracking-wider block">
+            <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">
               Resumen de Reservas
             </span>
             <h3 class="text-base font-black text-brand-dark capitalize leading-tight">
@@ -360,7 +360,7 @@ function formatStatusText(status: string): string {
             </h3>
           </div>
 
-          <button 
+          <button aria-label="Cerrar" 
             type="button" 
             @click="closeDayDetail"
             class="w-9 h-9 rounded-full bg-brand-light border-2 border-brand-border text-brand-dark hover:bg-gray-200 active:scale-95 transition-transform touch-target flex items-center justify-center shrink-0"
@@ -378,14 +378,14 @@ function formatStatusText(status: string): string {
             <div class="flex justify-between items-start">
               <div>
                 <span class="font-black text-brand-dark block text-sm">{{ req.clientName }}</span>
-                <span class="text-[11px] text-gray-500 font-extrabold">{{ req.resourceName }} - {{ req.requestCode }}</span>
+                <span class="text-xs text-gray-500 font-extrabold">{{ req.resourceName }} - {{ req.requestCode }}</span>
               </div>
-              <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white border border-brand-border">
+              <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-white border border-brand-border">
                 {{ formatStatusText(req.status) }}
               </span>
             </div>
 
-            <div class="flex items-center gap-3 text-[11px] text-gray-600 border-t border-gray-200/60 pt-1.5">
+            <div class="flex items-center gap-3 text-xs text-gray-600 border-t border-gray-200/60 pt-1.5">
               <span class="flex items-center gap-1"><User class="w-3.5 h-3.5 text-brand-accent" /> {{ req.guestsCount }} pers.</span>
               <span class="flex items-center gap-1"><Phone class="w-3.5 h-3.5 text-brand-accent" /> {{ req.clientPhone }}</span>
               <span class="font-black text-brand-dark ml-auto">{{ formatCLP(req.totalAmount) }}</span>

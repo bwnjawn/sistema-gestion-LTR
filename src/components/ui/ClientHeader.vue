@@ -15,14 +15,14 @@ const settingsStore = useSettingsStore()
         </div>
         <div>
           <h1 class="text-xs font-black text-brand-dark leading-tight">Los Troncos de Repil</h1>
-          <span class="text-[10px] font-bold text-gray-500 block leading-none">Reservas Online</span>
+          <span class="text-xs font-bold text-gray-500 block leading-none">Reservas Online</span>
         </div>
       </div>
 
       <!-- Acciones de Cabecera -->
       <div class="flex items-center gap-2">
         <!-- Indicador Offline -->
-        <span v-if="!settingsStore.isConnected" class="flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-100 px-2 py-1 rounded-lg border border-amber-300">
+        <span v-if="!settingsStore.isConnected" class="flex items-center gap-1 text-xs font-black text-amber-800 bg-amber-100 px-2 py-1 rounded-lg border border-amber-300">
           <WifiOff class="w-3 h-3" /> Offline
         </span>
 

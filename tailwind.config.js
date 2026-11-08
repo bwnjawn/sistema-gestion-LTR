@@ -22,7 +22,19 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'], // Tipografía moderna e intuitiva
+        // Atkinson Hyperlegible, autoalojada (ver src/main.ts)
+        sans: ['Atkinson Hyperlegible', 'system-ui', 'sans-serif'],
+      },
+      // Utilidades que el código usa con nombres de Tailwind v4; aquí se definen para la v3.
+      boxShadow: {
+        xs: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        '2xs': '0 1px rgb(0 0 0 / 0.05)',
+      },
+      backdropBlur: {
+        xs: '4px',
+      },
+      scale: {
+        98: '0.98',
       }
     },
   },

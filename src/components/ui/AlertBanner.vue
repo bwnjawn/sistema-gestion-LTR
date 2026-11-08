@@ -70,7 +70,7 @@ const config = computed(() => {
       <h4 v-if="title" :class="['font-bold text-lg mb-0.5', config.text]">{{ title }}</h4>
       <p class="text-brand-text text-base leading-relaxed font-medium">{{ message }}</p>
     </div>
-    <button
+    <button aria-label="Cerrar"
       v-if="dismissible"
       type="button"
       class="text-gray-500 hover:text-gray-800 p-1 rounded-lg touch-target"

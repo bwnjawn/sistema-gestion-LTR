@@ -35,13 +35,13 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
         </div>
 
         <div class="space-y-0.5">
-          <span class="text-[10px] font-extrabold text-emerald-300 uppercase tracking-widest block leading-none">
+          <span class="text-xs font-extrabold text-emerald-300 uppercase tracking-widest block leading-none">
             Centro Turístico
           </span>
           <h1 class="text-xl font-black text-white tracking-tight leading-tight">
             Los Troncos de Repil
           </h1>
-          <span class="text-[11px] font-bold text-gray-300 block leading-none">
+          <span class="text-xs font-bold text-gray-300 block leading-none">
             Fresia, Los Lagos
           </span>
         </div>

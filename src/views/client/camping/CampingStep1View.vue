@@ -140,11 +140,11 @@ function handleNext() {
           >
             <div class="flex items-center justify-between mb-2">
               <Moon class="w-5 h-5 text-brand-accent stroke-[2.5]" />
-              <span v-if="campingType === 'pernoctar'" class="text-[10px] font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
+              <span v-if="campingType === 'pernoctar'" class="text-xs font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
             </div>
             <div>
               <span class="text-xs font-black block">Pernoctar</span>
-              <span class="text-[10px] font-semibold text-gray-300 block">Con carpa (por noche)</span>
+              <span class="text-xs font-semibold text-gray-300 block">Con carpa (por noche)</span>
             </div>
           </button>
 
@@ -160,11 +160,11 @@ function handleNext() {
           >
             <div class="flex items-center justify-between mb-2">
               <Sun class="w-5 h-5 text-amber-500 stroke-[2.5]" />
-              <span v-if="campingType === 'diario'" class="text-[10px] font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
+              <span v-if="campingType === 'diario'" class="text-xs font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
             </div>
             <div>
               <span class="text-xs font-black block">Paseo por el Día</span>
-              <span class="text-[10px] font-semibold text-gray-300 block">Uso diario sin carpa</span>
+              <span class="text-xs font-semibold text-gray-300 block">Uso diario sin carpa</span>
             </div>
           </button>
         </div>
@@ -205,7 +205,7 @@ function handleNext() {
               max="150"
               class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
-            <span class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
+            <span class="text-xs font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
               {{ store.guestsCount === 1 ? 'Persona' : 'Personas' }}
             </span>
           </div>

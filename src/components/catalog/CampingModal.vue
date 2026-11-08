@@ -100,14 +100,14 @@ function close() {
       <!-- Header -->
       <div class="p-4 sm:p-5 border-b-2 border-brand-border bg-brand-light flex items-center justify-between">
         <div>
-          <span class="text-[10px] font-black text-brand-accent uppercase tracking-wider block">
+          <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">
             Catálogo de Camping
           </span>
           <h3 class="text-lg font-black text-brand-dark leading-tight">
             {{ isEditing ? 'Editar ' + form.name : 'Nuevo Espacio Camping' }}
           </h3>
         </div>
-        <button type="button" @click="close" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark hover:bg-gray-100">
+        <button aria-label="Cerrar" type="button" @click="close" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark hover:bg-gray-100">
           <X class="w-5 h-5 stroke-[2.5]" />
         </button>
       </div>
@@ -179,7 +179,7 @@ function close() {
           <div v-if="form.features && form.features.length > 0" class="flex flex-wrap gap-1.5 pt-1">
             <span v-for="(feat, idx) in form.features" :key="idx" class="px-2.5 py-1 bg-brand-light border border-brand-border rounded-lg text-xs font-bold flex items-center gap-1 text-brand-dark">
               {{ feat }}
-              <button type="button" @click="removeFeature(idx)" class="text-rose-600 hover:text-rose-800 ml-1">
+              <button aria-label="Quitar característica" type="button" @click="removeFeature(idx)" class="text-rose-600 hover:text-rose-800 ml-1">
                 <Trash2 class="w-3 h-3 stroke-[2.5]" />
               </button>
             </span>

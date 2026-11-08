@@ -38,13 +38,13 @@ function navigateTo(path: string) {
         class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs cursor-pointer hover:border-brand-dark transition-all"
       >
         <div class="flex items-center justify-between mb-2">
-          <span class="text-[10px] font-black text-amber-800 uppercase bg-amber-100 px-2 py-0.5 rounded-full">
+          <span class="text-xs font-black text-amber-800 uppercase bg-amber-100 px-2 py-0.5 rounded-full">
             Pendientes
           </span>
           <Clock class="w-4 h-4 text-amber-600 stroke-[2.5]" />
         </div>
         <span class="text-3xl font-black text-brand-dark block">{{ pendingRequests.length }}</span>
-        <span class="text-[11px] font-bold text-gray-500">Solicitudes por revisar</span>
+        <span class="text-xs font-bold text-gray-500">Solicitudes por revisar</span>
       </div>
 
       <div 
@@ -52,20 +52,20 @@ function navigateTo(path: string) {
         class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs cursor-pointer hover:border-brand-dark transition-all"
       >
         <div class="flex items-center justify-between mb-2">
-          <span class="text-[10px] font-black text-emerald-800 uppercase bg-emerald-100 px-2 py-0.5 rounded-full">
+          <span class="text-xs font-black text-emerald-800 uppercase bg-emerald-100 px-2 py-0.5 rounded-full">
             Confirmadas
           </span>
           <CheckCircle2 class="w-4 h-4 text-emerald-600 stroke-[2.5]" />
         </div>
         <span class="text-3xl font-black text-brand-dark block">{{ confirmedRequests.length }}</span>
-        <span class="text-[11px] font-bold text-gray-500">Reservas activas</span>
+        <span class="text-xs font-bold text-gray-500">Reservas activas</span>
       </div>
     </div>
 
     <!-- Tarjeta de Ingresos Estimados -->
     <div class="bg-emerald-900 text-white p-4 rounded-3xl border-2 border-emerald-950 shadow-xs flex items-center justify-between">
       <div>
-        <span class="text-[10px] font-black text-emerald-300 uppercase block">Total Proyectado</span>
+        <span class="text-xs font-black text-emerald-300 uppercase block">Total Proyectado</span>
         <span class="text-xl font-black text-white">{{ formatCLP(totalRevenue) }}</span>
       </div>
       <span class="text-xs font-bold bg-white/10 px-3 py-1 rounded-full border border-white/20">

@@ -70,7 +70,7 @@ function handleSave() {
           <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Datos de contacto
         </h3>
-        <button type="button" @click="emit('close')" class="p-1 text-gray-500 hover:bg-gray-100 rounded-full">
+        <button aria-label="Cerrar" type="button" @click="emit('close')" class="p-1 text-gray-500 hover:bg-gray-100 rounded-full">
           <X class="w-5 h-5 stroke-[2.5]" />
         </button>
       </div>

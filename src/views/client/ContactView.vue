@@ -9,7 +9,7 @@ const settingsStore = useSettingsStore()
   <div class="space-y-4 max-w-md mx-auto w-full pb-20">
     <!-- Encabezado -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-1 text-center">
-      <span class="text-[10px] font-black text-brand-accent uppercase tracking-wider block">
+      <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">
         Centro Turístico
       </span>
       <h1 class="text-xl font-black text-brand-dark">Los Troncos de Repil</h1>
@@ -34,7 +34,7 @@ const settingsStore = useSettingsStore()
             <Phone class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <span class="text-[10px] text-gray-500 block leading-none">Llamar o escribir por WhatsApp</span>
+            <span class="text-xs text-gray-500 block leading-none">Llamar o escribir por WhatsApp</span>
             <span class="text-xs font-black">{{ settingsStore.contactInfo.phone1 }}</span>
           </div>
         </a>
@@ -48,7 +48,7 @@ const settingsStore = useSettingsStore()
             <Phone class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <span class="text-[10px] text-gray-500 block leading-none">Teléfono Secundario</span>
+            <span class="text-xs text-gray-500 block leading-none">Teléfono Secundario</span>
             <span class="text-xs font-black">{{ settingsStore.contactInfo.phone2 }}</span>
           </div>
         </a>
@@ -62,7 +62,7 @@ const settingsStore = useSettingsStore()
             <Mail class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div class="min-w-0 flex-1">
-            <span class="text-[10px] text-gray-500 block leading-none">Correo Electrónico</span>
+            <span class="text-xs text-gray-500 block leading-none">Correo Electrónico</span>
             <span class="text-xs font-black truncate block">{{ settingsStore.contactInfo.email }}</span>
           </div>
         </a>
@@ -79,7 +79,7 @@ const settingsStore = useSettingsStore()
             <Globe class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <span class="text-[10px] text-gray-500 block leading-none">Sitio Web Oficial</span>
+            <span class="text-xs text-gray-500 block leading-none">Sitio Web Oficial</span>
             <span class="text-xs font-black">{{ settingsStore.contactInfo.websiteDisplay }}</span>
           </div>
         </a>
@@ -96,7 +96,7 @@ const settingsStore = useSettingsStore()
             <Instagram class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <span class="text-[10px] text-gray-500 block leading-none">Síguenos en Instagram</span>
+            <span class="text-xs text-gray-500 block leading-none">Síguenos en Instagram</span>
             <span class="text-xs font-black">{{ settingsStore.contactInfo.instagramUser }}</span>
           </div>
         </a>
