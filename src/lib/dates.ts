@@ -26,6 +26,17 @@ function aTexto(anio: number, mes: number, dia: number): string {
   return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
 }
 
+/** Convierte un Date local a 'YYYY-MM-DD'. */
+export function dateToISO(fecha: Date): string {
+  return aTexto(fecha.getFullYear(), fecha.getMonth() + 1, fecha.getDate())
+}
+
+/** Convierte 'YYYY-MM-DD' a un Date local a medianoche. Devuelve null si no es válida. */
+export function isoToDate(fecha: string): Date | null {
+  const partes = parsearFecha(fecha)
+  return partes ? new Date(partes.anio, partes.mes - 1, partes.dia) : null
+}
+
 /** Fecha de hoy en hora local, como 'YYYY-MM-DD'. */
 export function todayISO(): string {
   const ahora = new Date()

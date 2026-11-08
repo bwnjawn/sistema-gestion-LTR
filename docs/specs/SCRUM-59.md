@@ -1,6 +1,6 @@
 # SCRUM-59 — Resumen de solicitud para el administrador
 
-Estado: borrador
+Estado: en curso (falta verificación manual en celular)
 Fase: prototipo (hasta el 13/11), con "cambiar fecha" en la Fase 2
 
 ## Contexto
@@ -54,6 +54,13 @@ Problemas encontrados que conviene corregir en la misma historia:
 **Vista**
 - `AdminRequestsView.vue` usa solo los métodos del store.
 - `AdminRequestDetailModal.vue` recibe la solicitud y emite `confirm`, `reject`, `update` y `close`.
+
+## Implementado el 8/11
+- **Modificar** abre `AdminRequestEditForm.vue` dentro del detalle: nombre, teléfono, correo, personas, comentarios y fechas con `BaseCalendar`. Disponible en solicitudes pendientes y confirmadas.
+- Las reglas viven en `services/requests.ts` (`applyRequestEdit`) y el store solo persiste (`updateRequestDetails`).
+- Si cambian fechas o personas en cabaña o camping, se recalculan total y abono con los porcentajes **guardados en la solicitud**; los pagos registrados se conservan. En restaurante el precio depende de los platos y no se recalcula.
+- `isCabinAvailable` acepta `excludeRequestId`, así la reserva no choca consigo misma.
+- Pendiente: el calendario no marca visualmente los días ocupados; el choque se avisa al guardar.
 
 ## Casos borde
 - Teléfono sin prefijo o con espacios: el enlace de WhatsApp debe seguir funcionando.

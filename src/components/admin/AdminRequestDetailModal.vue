@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import {
-  AlertTriangle, Calendar, Check, CreditCard, FileText, Mail, MessageCircle, Phone, Receipt, User, Utensils, X
+  AlertTriangle, Calendar, Check, CreditCard, FileText, Mail, MessageCircle, Pencil, Phone, Receipt, User, Utensils, X
 } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
+import AdminRequestEditForm from './AdminRequestEditForm.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { buildMailtoUrl, buildTelUrl, buildWhatsappUrl, hasUsablePhone } from '../../lib/contactLinks'
 import { formatDateShort, formatDateTime, todayISO } from '../../lib/dates'
 import { formatCLP } from '../../lib/format'
 import { PAYMENT_METHOD_LABELS, getPaymentSummary } from '../../services/payments'
-import { describeRequest } from '../../services/requests'
+import { canEditRequest, describeRequest } from '../../services/requests'
 import type { PaymentMethod } from '../../types/domain'
 
 const props = defineProps<{
@@ -41,6 +42,8 @@ const whatsappMessage = computed(() => {
 
 // Estado de los formularios internos
 const confirmingReject = ref(false)
+const isEditing = ref(false)
+const canEdit = computed(() => !!request.value && canEditRequest(request.value))
 const paymentAmount = ref<number | null>(null)
 const paymentMethod = ref<PaymentMethod>('transferencia')
 const paymentDate = ref(todayISO())
@@ -49,6 +52,7 @@ const paymentError = ref('')
 
 watch(() => props.requestId, () => {
   confirmingReject.value = false
+  isEditing.value = false
   paymentAmount.value = null
   paymentMethod.value = 'transferencia'
   paymentDate.value = todayISO()
@@ -141,6 +145,14 @@ const depositMessageClass = computed(() => {
       </div>
 
       <div class="overflow-y-auto p-4 space-y-5">
+        <AdminRequestEditForm
+          v-if="isEditing"
+          :request="request"
+          @saved="isEditing = false"
+          @cancel="isEditing = false"
+        />
+
+        <template v-else>
         <div>
           <span :class="['inline-block px-4 py-1.5 rounded-full text-base font-black', statusClass]">{{ view.statusLabel }}</span>
         </div>
@@ -346,10 +358,14 @@ const depositMessageClass = computed(() => {
             </BaseButton>
           </form>
         </section>
+        </template>
       </div>
 
       <!-- Acciones -->
-      <div class="p-4 border-t-2 border-gray-300 space-y-2 bg-white rounded-b-3xl">
+      <div v-if="!isEditing" class="p-4 border-t-2 border-gray-300 space-y-2 bg-white rounded-b-3xl">
+        <BaseButton v-if="canEdit && !confirmingReject" variant="outline" fullWidth @click="isEditing = true">
+          <Pencil class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Modificar solicitud
+        </BaseButton>
         <template v-if="isPending">
           <div v-if="!confirmingReject" class="grid grid-cols-2 gap-2">
             <BaseButton variant="success" @click="approve">

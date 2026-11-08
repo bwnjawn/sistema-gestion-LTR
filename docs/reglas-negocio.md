@@ -19,6 +19,7 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | Teléfono del cliente | Prefijo `+569` precargado y editable; teclado numérico | SCRUM-25 | Formularios de los pasos | por verificar |
 | Categoría de cliente | Solo se pide en restaurante, no en cabañas ni en camping | SCRUM-25, 232 | Pasos de restaurante | por verificar |
 | Comentarios | El cliente pide un sitio específico por comentario y no ve selector de ubicación | SCRUM-29 | Paso de camping | por verificar |
+| Modificar una solicitud | El admin puede cambiar datos, personas y fechas de solicitudes pendientes o confirmadas. El total y el abono se recalculan con los porcentajes guardados en la solicitud; los pagos se conservan | SCRUM-59 | ✅ `applyRequestEdit` |
 | Borrador del wizard | Se guarda en `sessionStorage` con la clave `ltr_wizard_draft` | — | `stores/reservationStore.ts` | ✅ |
 
 ## 2. Cabañas

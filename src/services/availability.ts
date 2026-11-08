@@ -27,9 +27,12 @@ export function isCabinAvailable(
   cabinId: string,
   checkInDate: string,
   checkOutDate: string,
-  existingRequests: ReservationRequest[]
+  existingRequests: ReservationRequest[],
+  /** Solicitud que se está modificando: no cuenta como conflicto consigo misma. */
+  excludeRequestId?: string
 ): boolean {
   const activeBookings = existingRequests.filter(r => {
+    if (excludeRequestId && r.id === excludeRequestId) return false
     const rawType = r.type as string
     const rawStatus = r.status as string
     const isCabina = rawType === 'cabana' || rawType === 'cabaña'

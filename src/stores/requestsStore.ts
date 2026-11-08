@@ -6,7 +6,9 @@ import type { ReservationRequest, BookingStatus } from '../types/domain'
 import { generateUUID } from '../lib/id'
 import { requestsRepository } from '../lib/repositories/requestsRepository'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
-import { normalizeRequest } from '../services/requests'
+import { applyRequestEdit, normalizeRequest, type RequestEdit } from '../services/requests'
+import { useCatalogStore } from './catalogStore'
+import { useSettingsStore } from './settingsStore'
 import { buildPayment, validatePayment, type PaymentInput } from '../services/payments'
 
 export type { ReservationRequest }
@@ -88,6 +90,28 @@ export const useRequestsStore = defineStore('requests', () => {
     found.payments = found.payments.filter(p => p.id !== paymentId)
   }
 
+  /** Modifica una solicitud viva. Valida, recalcula el precio y persiste; no cambia el estado. */
+  function updateRequestDetails(id: string, edit: RequestEdit): { ok: boolean; message?: string } {
+    const index = requests.value.findIndex(r => r.id === id)
+    if (index === -1) return { ok: false, message: 'No se encontró la solicitud.' }
+
+    const catalogStore = useCatalogStore()
+    const settingsStore = useSettingsStore()
+    const result = applyRequestEdit(requests.value[index], edit, {
+      requests: requests.value,
+      cabins: catalogStore.cabins,
+      campingSites: catalogStore.campingSites,
+      currentRates: {
+        depositPercentage: settingsStore.defaultDepositPercentage,
+        ivaPercentage: settingsStore.ivaPercentage
+      }
+    })
+    if (!result.ok) return { ok: false, message: result.message }
+
+    requests.value[index] = result.request
+    return { ok: true }
+  }
+
   async function confirmRequest(id: string): Promise<void> {
     await updateRequestStatus(id, 'confirmed')
   }
@@ -102,6 +126,7 @@ export const useRequestsStore = defineStore('requests', () => {
     error,
     addRequest,
     updateRequestStatus,
+    updateRequestDetails,
     registerPayment,
     removePayment,
     confirmRequest,

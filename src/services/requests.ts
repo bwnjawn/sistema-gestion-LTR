@@ -3,12 +3,17 @@
 
 import type {
   BookingStatus,
+  Cabin,
+  CampingSite,
   Payment,
   ReservationRequest,
   SelectedMealPayload,
   ServiceType
 } from '../types/domain'
-import { formatDateLong, nightsBetween } from '../lib/dates'
+import { formatDateLong, isPastDate, nightsBetween } from '../lib/dates'
+import { hasUsablePhone } from '../lib/contactLinks'
+import { isCabinAvailable, validateGuestCapacity } from './availability'
+import { calculateBookingPrice, type PriceRates } from './pricing'
 import { formatCLP } from '../lib/format'
 import { generateUUID } from '../lib/id'
 
@@ -269,4 +274,179 @@ export function isStalePending(req: Pick<ReservationRequest, 'status' | 'created
   const created = new Date(req.createdAt).getTime()
   if (isNaN(created)) return false
   return (now - created) / (1000 * 3600) >= 24
+}
+
+// ---------------------------------------------------------------------------
+// Modificación de una solicitud por el administrador (SCRUM-59)
+// ---------------------------------------------------------------------------
+
+export interface RequestEdit {
+  clientName: string
+  clientPhone: string
+  clientEmail: string
+  guestsCount: number
+  comments: string
+  startDate: string
+  /** Vacía en las visitas de un solo día (restaurante y camping de día). */
+  endDate: string
+}
+
+export interface RequestEditContext {
+  requests: ReservationRequest[]
+  cabins: Cabin[]
+  campingSites: CampingSite[]
+  /** Porcentajes vigentes; solo se usan si la solicitud no guardó los suyos. */
+  currentRates: PriceRates
+}
+
+export type RequestEditResult =
+  | { ok: true; request: ReservationRequest }
+  | { ok: false; message: string }
+
+/** Solo se pueden modificar solicitudes vivas: pendientes o confirmadas. */
+export function canEditRequest(req: Pick<ReservationRequest, 'status'>): boolean {
+  return req.status === 'pending' || req.status === 'confirmed'
+}
+
+/** True si la solicitud es de un solo día (restaurante o camping sin pernoctar). */
+export function isSingleDayRequest(req: Pick<ReservationRequest, 'type' | 'details'>): boolean {
+  return req.type === 'restaurante' || (req.type === 'camping' && req.details?.campingType === 'diario')
+}
+
+/** Los datos que hoy tiene la solicitud, listos para precargar el formulario de edición. */
+export function toRequestEdit(req: ReservationRequest): RequestEdit {
+  return {
+    clientName: req.clientName,
+    clientPhone: req.clientPhone,
+    clientEmail: req.clientEmail || '',
+    guestsCount: req.guestsCount,
+    comments: req.details?.comments || '',
+    startDate: req.details?.startDate || req.date,
+    endDate: isSingleDayRequest(req) ? '' : req.details?.endDate || ''
+  }
+}
+
+/**
+ * Valida los cambios y devuelve la solicitud ya modificada (sin tocar la original).
+ * - Cambiar fechas o personas recalcula el total y el abono exigido con los porcentajes
+ *   guardados en la solicitud, no con los actuales. Los pagos registrados se conservan.
+ * - Una cabaña no puede quedar sobre otra reserva activa; la solicitud no choca consigo misma.
+ * - Una fecha pasada solo se rechaza si el administrador la cambió.
+ */
+export function applyRequestEdit(
+  req: ReservationRequest,
+  edit: RequestEdit,
+  ctx: RequestEditContext
+): RequestEditResult {
+  if (!canEditRequest(req)) {
+    return { ok: false, message: 'Solo se pueden modificar solicitudes pendientes o confirmadas.' }
+  }
+
+  const original = toRequestEdit(req)
+  const name = edit.clientName.trim()
+  const email = edit.clientEmail.trim()
+  const single = isSingleDayRequest(req)
+
+  if (!name) return { ok: false, message: 'Escribe el nombre del cliente.' }
+  if (!hasUsablePhone(edit.clientPhone)) return { ok: false, message: 'El teléfono está incompleto.' }
+  if (email && !/^\S+@\S+\.\S+$/.test(email)) return { ok: false, message: 'El correo no es válido.' }
+  if (!Number.isInteger(edit.guestsCount) || edit.guestsCount < 1) {
+    return { ok: false, message: 'La cantidad de personas debe ser al menos 1.' }
+  }
+
+  const datesChanged = edit.startDate !== original.startDate || edit.endDate !== original.endDate
+  const guestsChanged = edit.guestsCount !== original.guestsCount
+
+  if (!edit.startDate) return { ok: false, message: 'Elige la fecha en el calendario.' }
+  if (!single) {
+    if (!edit.endDate) return { ok: false, message: 'Elige también la fecha de salida en el calendario.' }
+    if (nightsBetween(edit.startDate, edit.endDate) < 1) {
+      return { ok: false, message: 'La salida debe ser posterior a la llegada.' }
+    }
+  }
+  if (datesChanged && isPastDate(edit.startDate)) {
+    return { ok: false, message: 'No se puede mover la reserva a una fecha pasada.' }
+  }
+
+  const resourceId = req.details?.resourceId
+  const cabin = req.type === 'cabana' ? ctx.cabins.find(c => c.id === resourceId) : undefined
+  const site = req.type === 'camping' ? ctx.campingSites.find(s => s.id === resourceId) : undefined
+
+  if (guestsChanged) {
+    if (cabin) {
+      const check = validateGuestCapacity(edit.guestsCount, 1, cabin.capacity)
+      if (!check.isValid) return { ok: false, message: check.message! }
+    }
+    if (site) {
+      const check = validateGuestCapacity(edit.guestsCount, site.minCapacity, site.maxCapacity)
+      if (!check.isValid) return { ok: false, message: check.message! }
+    }
+  }
+
+  if (datesChanged && req.type === 'cabana' && resourceId) {
+    if (!isCabinAvailable(resourceId, edit.startDate, edit.endDate, ctx.requests, req.id)) {
+      return { ok: false, message: 'Esa cabaña ya está reservada en esas fechas. Elige otras fechas.' }
+    }
+  }
+
+  let totalAmount = req.totalAmount
+  let depositRequired = req.depositRequired
+  let pricing = req.details?.pricing
+
+  // El restaurante cobra por platos, no por personas ni por fechas: su precio no se recalcula.
+  const needsNewPrice = req.type !== 'restaurante' && (datesChanged || guestsChanged)
+  if (needsNewPrice) {
+    if (!cabin && !site) {
+      return { ok: false, message: 'No se encontró la cabaña o el espacio original para recalcular el precio.' }
+    }
+    const rates: PriceRates = {
+      ivaPercentage: pricing?.ivaPercentage ?? ctx.currentRates.ivaPercentage,
+      depositPercentage: pricing?.depositPercentage ?? ctx.currentRates.depositPercentage
+    }
+    const price = calculateBookingPrice({
+      ...rates,
+      service: req.type,
+      cabin,
+      campingSite: site,
+      checkInDate: edit.startDate,
+      checkOutDate: edit.endDate,
+      guestsCount: edit.guestsCount,
+      campingType: req.details?.campingType ?? 'pernoctar',
+      meals: []
+    })
+    if (!price || price.totalWithIva <= 0) {
+      return { ok: false, message: 'No se pudo calcular el nuevo precio con esos datos.' }
+    }
+    totalAmount = price.totalWithIva
+    depositRequired = price.depositAmount
+    pricing = {
+      subtotal: price.subtotal,
+      ivaAmount: price.ivaAmount,
+      ivaPercentage: rates.ivaPercentage,
+      depositPercentage: rates.depositPercentage,
+      nights: price.nights
+    }
+  }
+
+  return {
+    ok: true,
+    request: {
+      ...req,
+      clientName: name,
+      clientPhone: edit.clientPhone.trim(),
+      clientEmail: email,
+      guestsCount: edit.guestsCount,
+      date: edit.startDate,
+      timeOrDuration: single ? req.timeOrDuration : edit.endDate,
+      totalAmount,
+      depositRequired,
+      details: {
+        ...req.details,
+        comments: edit.comments.trim(),
+        startDate: edit.startDate,
+        endDate: edit.endDate,
+        pricing
+      }
+    }
+  }
 }
