@@ -8,7 +8,6 @@ import CampingCard from '../../../components/catalog/CampingCard.vue'
 import CampingDetailModal from '../../../components/catalog/CampingDetailModal.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
-import { calculateCampingPrice } from '../../../services/pricing'
 import { formatCLP } from '../../../lib/format'
 import type { CampingSite } from '../../../types/domain'
 import { formatDateShort, nightsBetween } from '../../../lib/dates'
@@ -46,16 +45,7 @@ onMounted(() => {
   }
 })
 
-const priceBreakdown = computed(() => {
-  if (!selectedCampingOption.value) return { subtotal: 0, ivaAmount: 0, totalWithIva: 0, depositAmount: 0, nights: 1 }
-  return calculateCampingPrice(
-    selectedCampingOption.value,
-    store.checkInDate,
-    store.checkOutDate,
-    guests.value,
-    store.campingType
-  )
-})
+const subtotalNeto = computed(() => store.priceBreakdown?.subtotal ?? 0)
 
 function handleNext() {
   if (store.selectedCampingId) {
@@ -114,7 +104,7 @@ function handleBack() {
         <span class="text-xs font-bold text-gray-300">{{ selectedCampingOption?.name }}</span>
       </div>
       <span class="text-xl font-black text-white">
-        {{ formatCLP(priceBreakdown.subtotal) }}
+        {{ formatCLP(subtotalNeto) }}
       </span>
     </div>
 

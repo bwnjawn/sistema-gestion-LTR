@@ -1,11 +1,12 @@
 // src/stores/reservationStore.ts
 
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRequestsStore } from './requestsStore'
 import { useSettingsStore } from './settingsStore'
 import { useCatalogStore } from './catalogStore'
-import { nightsBetween, todayISO } from '../lib/dates'
+import { todayISO } from '../lib/dates'
+import { calculateBookingPrice, type PriceBreakdown } from '../services/pricing'
 import type { ServiceType, SelectedMealPayload } from '../types/domain'
 
 export type { SelectedMealPayload }
@@ -134,6 +135,25 @@ export const useReservationStore = defineStore('reservation', () => {
     { deep: true }
   )
 
+  // Precio del borrador. Es la única fuente: lo que ve el cliente en el paso 4
+  // es exactamente lo que se guarda al enviar la solicitud.
+  const priceBreakdown = computed<PriceBreakdown | null>(() => {
+    const settingsStore = useSettingsStore()
+    const catalogStore = useCatalogStore()
+    return calculateBookingPrice({
+      service: selectedService.value,
+      cabin: catalogStore.cabins.find(c => c.id === selectedCabinId.value),
+      campingSite: catalogStore.campingSites.find(s => s.id === selectedCampingId.value),
+      checkInDate: checkInDate.value,
+      checkOutDate: checkOutDate.value,
+      guestsCount: guestsCount.value,
+      campingType: campingType.value,
+      meals: selectedMeals.value,
+      depositPercentage: settingsStore.defaultDepositPercentage,
+      ivaPercentage: settingsStore.ivaPercentage
+    })
+  })
+
   function setService(service: ServiceType | 'cabaña' | 'restaurant') {
     const normalized: ServiceType = service === 'restaurant' ? 'restaurante' : service === 'cabaña' ? 'cabana' : service
     selectedService.value = normalized
@@ -187,35 +207,24 @@ export const useReservationStore = defineStore('reservation', () => {
   // Envío a la Persistencia de Administración (requestsStore)
   async function submitReservationRequest(): Promise<string> {
     const requestsStore = useRequestsStore()
-    const settingsStore = useSettingsStore()
     const catalogStore = useCatalogStore()
 
-    const code = `SOL-${Math.floor(100 + Math.random() * 900)}`
-    let resourceName = ''
-    let resourceId = ''
-    let netTotal = 0
-
-    if (selectedService.value === 'cabana') {
-      const cabin = catalogStore.cabins.find(c => c.id === selectedCabinId.value)
-      resourceName = cabin ? cabin.name : 'Cabaña'
-      resourceId = selectedCabinId.value
-      const nights = nightsBetween(checkInDate.value, checkOutDate.value)
-      netTotal = (cabin?.pricePerNight || 65000) * nights
-    } else if (selectedService.value === 'camping') {
-      const site = catalogStore.campingSites.find(s => s.id === selectedCampingId.value)
-      resourceName = site ? site.name : 'Camping'
-      resourceId = selectedCampingId.value
-      const nights = campingType.value === 'pernoctar'
-        ? nightsBetween(checkInDate.value, checkOutDate.value)
-        : 1
-      netTotal = (site?.pricePerPerson || 10000) * guestsCount.value * nights
-    } else {
-      resourceName = 'Restaurante'
-      netTotal = selectedMeals.value.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+    const price = priceBreakdown.value
+    if (!price) {
+      throw new Error('No se pudo calcular el precio: falta seleccionar la cabaña o el espacio de camping.')
     }
 
-    const totalWithIva = Math.round(netTotal * (1 + (settingsStore.ivaPercentage || 19) / 100))
-    const depositAmount = Math.round((totalWithIva * settingsStore.defaultDepositPercentage) / 100)
+    const code = `SOL-${Math.floor(100 + Math.random() * 900)}`
+    let resourceName = 'Restaurante'
+    let resourceId = ''
+
+    if (selectedService.value === 'cabana') {
+      resourceName = catalogStore.cabins.find(c => c.id === selectedCabinId.value)?.name ?? 'Cabaña'
+      resourceId = selectedCabinId.value
+    } else if (selectedService.value === 'camping') {
+      resourceName = catalogStore.campingSites.find(s => s.id === selectedCampingId.value)?.name ?? 'Camping'
+      resourceId = selectedCampingId.value
+    }
 
     await requestsStore.addRequest({
       requestCode: code,
@@ -227,8 +236,8 @@ export const useReservationStore = defineStore('reservation', () => {
       date: checkInDate.value || todayISO(),
       timeOrDuration: checkOutDate.value || '1 día',
       guestsCount: guestsCount.value,
-      totalAmount: totalWithIva,
-      depositAmount,
+      totalAmount: price.totalWithIva,
+      depositAmount: price.depositAmount,
       details: {
         comments: comments.value,
         selectedMeals: selectedMeals.value,
@@ -267,6 +276,7 @@ export const useReservationStore = defineStore('reservation', () => {
     setService,
     nextStep,
     prevStep,
+    priceBreakdown,
     prepareCrossServiceBooking,
     resetStore,
     submitReservationRequest

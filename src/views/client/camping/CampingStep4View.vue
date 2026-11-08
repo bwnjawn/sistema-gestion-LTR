@@ -28,18 +28,10 @@ const isDiario = computed(() => store.campingType === 'diario')
 
 const nightsCount = computed(() => (isDiario.value ? 1 : nightsBetween(store.checkInDate, store.checkOutDate)))
 
-const subtotal = computed(() => {
-  const price = selectedCampingSite.value?.pricePerPerson || 10000
-  return price * store.guestsCount * (isDiario.value ? 1 : nightsCount.value)
-})
-
-const ivaAmount = computed(() => {
-  return Math.round(subtotal.value * 0.19)
-})
-
-const totalWithIva = computed(() => {
-  return subtotal.value + ivaAmount.value
-})
+const subtotal = computed(() => store.priceBreakdown?.subtotal ?? 0)
+const ivaAmount = computed(() => store.priceBreakdown?.ivaAmount ?? 0)
+const totalWithIva = computed(() => store.priceBreakdown?.totalWithIva ?? 0)
+const depositAmount = computed(() => store.priceBreakdown?.depositAmount ?? 0)
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate) return 'Sin fecha'
@@ -172,7 +164,7 @@ function handleGoHome() {
         </div>
       </div>
 
-      <DepositInfoCard :total-amount="totalWithIva" />
+      <DepositInfoCard :total-amount="totalWithIva" :deposit-amount="depositAmount" />
 
       <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
         <div class="max-w-md mx-auto flex items-center gap-3">

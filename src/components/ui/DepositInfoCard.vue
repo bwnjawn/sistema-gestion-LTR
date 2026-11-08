@@ -4,20 +4,17 @@ import { ShieldCheck, CreditCard } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { formatCLP } from '../../lib/format'
 
+// El abono lo calcula services/pricing y llega ya resuelto: esta tarjeta solo lo muestra.
 const props = defineProps<{
   totalAmount?: number
+  depositAmount?: number
 }>()
 
 const settingsStore = useSettingsStore()
 
 const depositPercentage = computed(() => settingsStore.defaultDepositPercentage)
 
-const calculatedDeposit = computed(() => {
-  if (!props.totalAmount) return 0
-  return Math.round((props.totalAmount * depositPercentage.value) / 100)
-})
-
-const formattedDeposit = computed(() => formatCLP(calculatedDeposit.value))
+const formattedDeposit = computed(() => formatCLP(props.depositAmount || 0))
 const formattedTotal = computed(() => formatCLP(props.totalAmount || 0))
 </script>
 

@@ -26,17 +26,10 @@ const selectedCabin = computed(() => {
 
 const nightsCount = computed(() => nightsBetween(store.checkInDate, store.checkOutDate))
 
-const subtotal = computed(() => {
-  return (selectedCabin.value?.pricePerNight || 65000) * nightsCount.value
-})
-
-const ivaAmount = computed(() => {
-  return Math.round(subtotal.value * 0.19)
-})
-
-const totalWithIva = computed(() => {
-  return subtotal.value + ivaAmount.value
-})
+const subtotal = computed(() => store.priceBreakdown?.subtotal ?? 0)
+const ivaAmount = computed(() => store.priceBreakdown?.ivaAmount ?? 0)
+const totalWithIva = computed(() => store.priceBreakdown?.totalWithIva ?? 0)
+const depositAmount = computed(() => store.priceBreakdown?.depositAmount ?? 0)
 
 const formattedScheduleRange = computed(() => {
   if (!store.checkInDate || !store.checkOutDate) return 'No definido'
@@ -167,7 +160,7 @@ async function handleSendRequest() {
         </div>
       </div>
 
-      <DepositInfoCard :total-amount="totalWithIva" />
+      <DepositInfoCard :total-amount="totalWithIva" :deposit-amount="depositAmount" />
 
       <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
         <div class="max-w-md mx-auto flex items-center gap-3">
