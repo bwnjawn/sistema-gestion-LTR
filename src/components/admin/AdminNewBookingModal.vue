@@ -4,6 +4,7 @@ import { X, Home, Tent, Utensils, Check } from 'lucide-vue-next'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { useCatalogStore } from '../../stores/catalogStore'
 import { todayISO } from '../../lib/dates'
+import { buildPayment } from '../../services/payments'
 import type { ServiceType } from '../../types/domain'
 
 const props = defineProps<{
@@ -68,7 +69,11 @@ async function handleSubmit() {
       timeOrDuration: endDate.value || '1 día',
       guestsCount: guestsCount.value,
       totalAmount: totalAmount.value,
-      depositAmount: depositPaid.value,
+      depositRequired: depositPaid.value,
+      // Esta pantalla se reemplaza en SCRUM-56: el abono ingresado se registra como pago recibido.
+      payments: depositPaid.value > 0
+        ? [buildPayment({ amount: depositPaid.value, method: 'efectivo' })]
+        : [],
       details: {
         comments: comments.value ? `[Reserva Admin] ${comments.value}` : '[Reserva Admin]',
         resourceId: selectedResourceId.value,

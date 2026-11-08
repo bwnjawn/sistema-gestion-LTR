@@ -69,3 +69,20 @@ export function isPastDate(fecha: string): boolean {
   if (!partes) return false
   return aTexto(partes.anio, partes.mes, partes.dia) < todayISO()
 }
+
+const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+/** Muestra una fecha 'YYYY-MM-DD' como 'Sáb 18 Oct 2026'. Devuelve '-' si no es válida. */
+export function formatDateLong(fecha: string): string {
+  const partes = parsearFecha(fecha)
+  if (!partes) return '-'
+  const diaSemana = DIAS_CORTOS[new Date(partes.anio, partes.mes - 1, partes.dia).getDay()]
+  return `${diaSemana} ${partes.dia} ${MESES_CORTOS[partes.mes - 1]} ${partes.anio}`
+}
+
+/** Muestra un instante ISO (por ejemplo createdAt) como '8 nov, 14:07' en hora local. */
+export function formatDateTime(instante: string): string {
+  const fecha = new Date(instante)
+  if (isNaN(fecha.getTime())) return '-'
+  return fecha.toLocaleString('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}

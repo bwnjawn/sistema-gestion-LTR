@@ -38,7 +38,7 @@ export function isCabinAvailable(
   })
   for (const booking of activeBookings) {
     const bStart = booking.details?.startDate || booking.date
-    const bEnd = booking.details?.endDate || booking.timeOrDuration
+    const bEnd = booking.details?.endDate || booking.timeOrDuration || ''
     if (isDateRangeOverlapping(checkInDate, checkOutDate, bStart, bEnd)) {
       return false
     }
@@ -121,7 +121,7 @@ export function getDayOccupancy(
 ): { confirmedCount: number; pendingCount: number; status: 'disponible' | 'ocupado' | 'sobrecupo' } {
   const dayRequests = existingRequests.filter(r => {
     const start = r.details?.startDate || r.date
-    const end = r.details?.endDate || r.timeOrDuration
+    const end = r.details?.endDate || r.timeOrDuration || ''
     if (start === dateStr) return true
     if (r.details?.startDate && r.details?.endDate) {
       return isDateRangeOverlapping(dateStr, dateStr, start, end)

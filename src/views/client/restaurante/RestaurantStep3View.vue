@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
   ArrowLeft, ArrowRight, User, Phone, Mail, FileText, 
@@ -10,12 +10,16 @@ import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { formatDateShort } from '../../../lib/dates'
+import type { ClientType } from '../../../types/domain'
 
 const router = useRouter()
 const store = useReservationStore()
 
-const clientTypes = ['Particular', 'Empresa', 'Colegio', 'Institución']
-const selectedClientType = ref('Particular')
+const clientTypes: ClientType[] = ['Particular', 'Empresa', 'Colegio', 'Institución']
+const selectedClientType = computed({
+  get: () => store.clientType,
+  set: (value: ClientType) => { store.clientType = value }
+})
 
 const mealLabels: Record<string, string> = {
   desayuno: 'Desayuno',

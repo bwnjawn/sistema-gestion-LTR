@@ -6,12 +6,14 @@ import type { ReservationRequest, BookingStatus } from '../types/domain'
 import { generateUUID } from '../lib/id'
 import { requestsRepository } from '../lib/repositories/requestsRepository'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
+import { normalizeRequest } from '../services/requests'
+import { buildPayment, validatePayment, type PaymentInput } from '../services/payments'
 
 export type { ReservationRequest }
 
 export const useRequestsStore = defineStore('requests', () => {
   const requests = ref<ReservationRequest[]>(
-    getStorageItem('requests', [])
+    getStorageItem<ReservationRequest[]>('requests', []).map(normalizeRequest)
   )
 
   const isLoading = ref(false)
@@ -65,6 +67,27 @@ export const useRequestsStore = defineStore('requests', () => {
     }
   }
 
+  /**
+   * Registra un pago recibido sobre una solicitud.
+   * Devuelve { ok: false, message } si el monto no es válido.
+   */
+  function registerPayment(id: string, input: PaymentInput): { ok: boolean; message?: string } {
+    const found = requests.value.find(r => r.id === id)
+    if (!found) return { ok: false, message: 'No se encontró la solicitud.' }
+
+    const validation = validatePayment(found, input)
+    if (!validation.isValid) return { ok: false, message: validation.message }
+
+    found.payments.push(buildPayment(input))
+    return { ok: true }
+  }
+
+  function removePayment(id: string, paymentId: string): void {
+    const found = requests.value.find(r => r.id === id)
+    if (!found) return
+    found.payments = found.payments.filter(p => p.id !== paymentId)
+  }
+
   async function confirmRequest(id: string): Promise<void> {
     await updateRequestStatus(id, 'confirmed')
   }
@@ -79,6 +102,8 @@ export const useRequestsStore = defineStore('requests', () => {
     error,
     addRequest,
     updateRequestStatus,
+    registerPayment,
+    removePayment,
     confirmRequest,
     rejectRequest
   }

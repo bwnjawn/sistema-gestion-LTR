@@ -7,7 +7,7 @@ import { useSettingsStore } from './settingsStore'
 import { useCatalogStore } from './catalogStore'
 import { todayISO } from '../lib/dates'
 import { calculateBookingPrice, type PriceBreakdown } from '../services/pricing'
-import type { ServiceType, SelectedMealPayload } from '../types/domain'
+import type { ClientType, RequestSchedule, ServiceType, SelectedMealPayload } from '../types/domain'
 
 export type { SelectedMealPayload }
 
@@ -27,6 +27,7 @@ interface WizardDraftState {
   mealTimes: Record<string, string>
   selectedMenus: Record<string, any>
   selectedMeals: SelectedMealPayload[]
+  clientType: ClientType
   clientName: string
   clientPhone: string
   clientEmail: string
@@ -85,6 +86,7 @@ export const useReservationStore = defineStore('reservation', () => {
   const selectedMeals = ref<SelectedMealPayload[]>(initialDraft?.selectedMeals ?? [])
 
   // Datos Cliente
+  const clientType = ref<ClientType>(initialDraft?.clientType ?? 'Particular')
   const clientName = ref<string>(initialDraft?.clientName ?? '')
   const clientPhone = ref<string>(initialDraft?.clientPhone ?? '+56 9 ')
   const clientEmail = ref<string>(initialDraft?.clientEmail ?? '')
@@ -106,6 +108,7 @@ export const useReservationStore = defineStore('reservation', () => {
       mealTimes,
       selectedMenus,
       selectedMeals,
+      clientType,
       clientName,
       clientPhone,
       clientEmail,
@@ -126,6 +129,7 @@ export const useReservationStore = defineStore('reservation', () => {
         mealTimes: mealTimes.value,
         selectedMenus: selectedMenus.value,
         selectedMeals: selectedMeals.value,
+        clientType: clientType.value,
         clientName: clientName.value,
         clientPhone: clientPhone.value,
         clientEmail: clientEmail.value,
@@ -134,6 +138,20 @@ export const useReservationStore = defineStore('reservation', () => {
     },
     { deep: true }
   )
+
+  // Horario de ingreso y salida vigente (cabaña y camping). El restaurante usa mealTimes.
+  const scheduleSnapshot = computed<RequestSchedule | undefined>(() => {
+    const settingsStore = useSettingsStore()
+    if (selectedService.value === 'cabana') {
+      const { checkIn, checkOut } = settingsStore.cabinSchedules
+      return { checkIn, checkOut }
+    }
+    if (selectedService.value === 'camping') {
+      const { checkIn, checkOut } = settingsStore.campingSchedules[campingType.value]
+      return { checkIn, checkOut }
+    }
+    return undefined
+  })
 
   // Precio del borrador. Es la única fuente: lo que ve el cliente en el paso 4
   // es exactamente lo que se guarda al enviar la solicitud.
@@ -197,6 +215,7 @@ export const useReservationStore = defineStore('reservation', () => {
     mealTimes.value = {}
     selectedMenus.value = {}
     selectedMeals.value = []
+    clientType.value = 'Particular'
     clientName.value = ''
     clientPhone.value = '+56 9 '
     clientEmail.value = ''
@@ -207,6 +226,7 @@ export const useReservationStore = defineStore('reservation', () => {
   // Envío a la Persistencia de Administración (requestsStore)
   async function submitReservationRequest(): Promise<string> {
     const requestsStore = useRequestsStore()
+    const settingsStore = useSettingsStore()
     const catalogStore = useCatalogStore()
 
     const price = priceBreakdown.value
@@ -237,7 +257,8 @@ export const useReservationStore = defineStore('reservation', () => {
       timeOrDuration: checkOutDate.value || '1 día',
       guestsCount: guestsCount.value,
       totalAmount: price.totalWithIva,
-      depositAmount: price.depositAmount,
+      depositRequired: price.depositAmount,
+      payments: [],
       details: {
         comments: comments.value,
         selectedMeals: selectedMeals.value,
@@ -245,8 +266,18 @@ export const useReservationStore = defineStore('reservation', () => {
         startDate: checkInDate.value,
         endDate: checkOutDate.value,
         campingType: campingType.value,
+        selectedMealTypes: selectedMealTypes.value,
         mealTimes: mealTimes.value,
-        restaurantTime: restaurantTime.value
+        restaurantTime: restaurantTime.value,
+        clientType: selectedService.value === 'restaurante' ? clientType.value : undefined,
+        schedule: scheduleSnapshot.value,
+        pricing: {
+          subtotal: price.subtotal,
+          ivaAmount: price.ivaAmount,
+          ivaPercentage: settingsStore.ivaPercentage,
+          depositPercentage: settingsStore.defaultDepositPercentage,
+          nights: price.nights
+        }
       }
     })
 
@@ -269,6 +300,7 @@ export const useReservationStore = defineStore('reservation', () => {
     mealTimes,
     selectedMenus,
     selectedMeals,
+    clientType,
     clientName,
     clientPhone,
     clientEmail,

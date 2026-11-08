@@ -5,6 +5,8 @@ export type ServiceType = 'cabana' | 'camping' | 'restaurante'
 export type BookingStatus = 'pending' | 'confirmed' | 'rejected' | 'cancelled'
 export type CampingModality = 'diario' | 'pernoctar'
 export type SideDishMode = 'none' | 'fixed' | 'choice'
+export type ClientType = 'Particular' | 'Empresa' | 'Colegio' | 'Institución'
+export type PaymentMethod = 'transferencia' | 'efectivo' | 'debito'
 
 // 2. Cabañas
 export interface CabinFeatureObj {
@@ -69,7 +71,39 @@ export interface SelectedMealPayload {
   name: string
   price: number
   quantity: number
+  /** Comida a la que pertenece el plato (desayuno, almuerzo, once). */
+  mealType?: string
+  /** Acompañamiento fijo del plato, si tiene. */
+  fixedSide?: string
+  /** Cantidad elegida por acompañamiento. */
+  sides?: Record<string, number>
   sideSelection?: string
+}
+
+/** Pago registrado por el administrador sobre una solicitud. */
+export interface Payment {
+  id: string
+  amount: number
+  method: PaymentMethod
+  /** Fecha en que se recibió el pago (YYYY-MM-DD). */
+  paidOn: string
+  notes?: string
+  createdAt: string
+}
+
+/** Desglose de precio guardado al enviar la solicitud. */
+export interface RequestPricing {
+  subtotal: number
+  ivaAmount: number
+  ivaPercentage: number
+  depositPercentage: number
+  nights: number
+}
+
+/** Horario vigente al momento de la solicitud. */
+export interface RequestSchedule {
+  checkIn: string
+  checkOut: string
 }
 
 export interface ReservationRequest {
@@ -84,12 +118,24 @@ export interface ReservationRequest {
   timeOrDuration?: string
   guestsCount: number
   totalAmount: number
-  depositAmount: number
+  /** Abono que el cliente debe transferir para asegurar la reserva. */
+  depositRequired: number
+  /** Pagos efectivamente recibidos. El abono pagado se calcula desde aquí. */
+  payments: Payment[]
   status: BookingStatus
   createdAt: string
   details?: {
     comments?: string
     selectedMeals?: SelectedMealPayload[]
+    clientType?: ClientType
+    resourceId?: string
+    startDate?: string
+    endDate?: string
+    campingType?: CampingModality
+    selectedMealTypes?: string[]
+    mealTimes?: Record<string, string>
+    pricing?: RequestPricing
+    schedule?: RequestSchedule
     [key: string]: any
   }
 }

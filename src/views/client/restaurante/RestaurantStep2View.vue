@@ -194,6 +194,7 @@ function syncToStore() {
         name: dish.name,
         price: dish.price,
         quantity: sel.count,
+        mealType: (dish.mealCategory || '').toLowerCase(),
         count: sel.count,
         fixedSide: dish.fixedSide,
         sides: sel.sides,
