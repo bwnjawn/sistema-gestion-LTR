@@ -41,7 +41,7 @@ const DEFAULT_CAMPING: CampingSite[] = [
     minCapacity: 1,
     maxCapacity: 9,
     isSpecial: false,
-    modality: 'pernoctar',
+    modality: 'ambos',
     image: 'https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80',
     images: ['https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80'],
     features: ['Agua caliente', 'Piscinas', 'Acceso al río', 'Sombra nativa']
@@ -54,7 +54,7 @@ const DEFAULT_CAMPING: CampingSite[] = [
     minCapacity: 10,
     maxCapacity: 150,
     isSpecial: true,
-    modality: 'diario',
+    modality: 'ambos',
     image: 'https://images.unsplash.com/photo-1537225228614-56cc3556d7ed?auto=format&fit=crop&w=800&q=80',
     images: ['https://images.unsplash.com/photo-1537225228614-56cc3556d7ed?auto=format&fit=crop&w=800&q=80'],
     features: ['Terraza privada', 'Zona exclusiva', 'Cancha multiuso', 'Parrillas grupales']

@@ -130,6 +130,7 @@ function close() {
             <select v-model="form.modality" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-xs">
               <option value="pernoctar">Con noche (pernoctar)</option>
               <option value="diario">Por el día (sin pernoctar)</option>
+              <option value="ambos">Ambas (día y noche)</option>
             </select>
           </div>
         </div>

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { Check, Calendar, Bed, Utensils, UserCheck } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { Check, Calendar, Bed, Tent, Utensils, User, UserCheck } from 'lucide-vue-next'
+import { useReservationStore } from '../../stores/reservationStore'
+import { WIZARD_STEPS, type StepIcon } from '../../services/wizard'
 
 interface Props {
   currentStep: number
@@ -9,12 +12,20 @@ const props = withDefaults(defineProps<Props>(), {
   currentStep: 1
 })
 
-const steps = [
-  { id: 1, label: 'Fechas', icon: Calendar },
-  { id: 2, label: 'Servicio', icon: Bed },
-  { id: 3, label: 'Menú', icon: Utensils },
-  { id: 4, label: 'Confirmar', icon: UserCheck },
-]
+const ICONOS: Record<StepIcon, any> = {
+  calendar: Calendar,
+  bed: Bed,
+  tent: Tent,
+  utensils: Utensils,
+  user: User,
+  check: UserCheck
+}
+
+// Los pasos son los del flujo que el cliente está haciendo (cabaña, camping o restaurante).
+const reservationStore = useReservationStore()
+const steps = computed(() =>
+  WIZARD_STEPS[reservationStore.selectedService].map(step => ({ ...step, icon: ICONOS[step.icon] }))
+)
 </script>
 
 <template>

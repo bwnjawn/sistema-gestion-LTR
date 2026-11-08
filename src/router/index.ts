@@ -3,6 +3,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useReservationStore } from '../stores/reservationStore'
+import { isClientContactValid } from '../services/wizard'
 
 const routes = [
   // ==========================================
@@ -83,7 +84,7 @@ router.beforeEach((to, _from, next) => {
   if (to.name === 'cabana-step3' && !reservationStore.selectedCabinId) {
     return next({ name: 'cabana-step1' })
   }
-  if (to.name === 'cabana-step4' && (!reservationStore.clientName || !reservationStore.clientPhone)) {
+  if (to.name === 'cabana-step4' && !isClientContactValid(reservationStore.clientName, reservationStore.clientPhone)) {
     return next({ name: 'cabana-step1' })
   }
 
@@ -94,7 +95,7 @@ router.beforeEach((to, _from, next) => {
   if (to.name === 'camping-step3' && !reservationStore.selectedCampingId) {
     return next({ name: 'camping-step1' })
   }
-  if (to.name === 'camping-step4' && (!reservationStore.clientName || !reservationStore.clientPhone)) {
+  if (to.name === 'camping-step4' && !isClientContactValid(reservationStore.clientName, reservationStore.clientPhone)) {
     return next({ name: 'camping-step1' })
   }
 
@@ -105,7 +106,7 @@ router.beforeEach((to, _from, next) => {
   if (to.name === 'restaurant-step3' && reservationStore.selectedMeals.length === 0) {
     return next({ name: 'restaurant-step1' })
   }
-  if (to.name === 'restaurant-step4' && (!reservationStore.clientName || !reservationStore.clientPhone)) {
+  if (to.name === 'restaurant-step4' && !isClientContactValid(reservationStore.clientName, reservationStore.clientPhone)) {
     return next({ name: 'restaurant-step1' })
   }
 

@@ -16,7 +16,7 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | IVA | 19 % se suma al subtotal | — | `services/pricing.ts` | ❓ ¿Los precios publicados ya incluyen IVA? Ninguna historia lo define |
 | Estados de solicitud | `pending` → `confirmed` o `rejected`, además de `cancelled` | SCRUM-59 | `types/domain.ts` | ⚠️ las vistas aún aceptan valores antiguos (`pendiente`, `confirmada`, `rechazada`) |
 | Alerta de pendiente antiguo | Una solicitud pendiente por más de 24 h se resalta | — | `AdminRequestsView.vue` (`isOldPending`) | ⚠️ está en la vista |
-| Teléfono del cliente | Prefijo `+569` precargado y editable; teclado numérico | SCRUM-25 | Formularios de los pasos | por verificar |
+| Teléfono del cliente | Prefijo `+569` precargado y editable; teclado numérico. Solo el prefijo no pasa: se exigen 9 dígitos | SCRUM-25, 240 | `isClientPhoneValid` en `services/wizard.ts` y guards del router | ✅ |
 | Categoría de cliente | Solo se pide en restaurante, no en cabañas ni en camping | SCRUM-25, 232 | Pasos de restaurante | por verificar |
 | Comentarios | El cliente pide un sitio específico por comentario y no ve selector de ubicación | SCRUM-29 | Paso de camping | por verificar |
 | Modificar una solicitud | El admin puede cambiar datos, personas y fechas de solicitudes pendientes o confirmadas. El total y el abono se recalculan con los porcentajes guardados en la solicitud; los pagos se conservan | SCRUM-59 | ✅ `applyRequestEdit` |
@@ -41,6 +41,7 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | Espacio grande (isla, terraza) | De 10 a 150 personas; con menos de 10 no se asigna ni se puede pedir | SCRUM-30 | ✅ por catálogo (`minCapacity: 10`) |
 | Precio | Por persona × noches (el día cuenta como 1) | SCRUM-30 | ⚠️ Ambos espacios tienen hoy el mismo precio por defecto ($10.000), pero SCRUM-30 dice que los grandes tienen otro precio |
 | Características del espacio | Baño propio, fogón techado, piso de cemento | SCRUM-30 | por verificar que se muestren |
+| Asignación del espacio | Se asigna el espacio que cubre la cantidad de personas **y** admite la modalidad elegida (`diario`, `pernoctar` o `ambos`). Si hay varios, el de menor capacidad. Si no hay ninguno, se avisa al cliente y no se avanza | SCRUM-240 | ✅ `findCampingSite` en `services/wizard.ts`. Los datos de ejemplo usan `ambos` en los dos espacios; si el admin deja un espacio solo en "diario", los grupos que quieran pernoctar en él no tendrán espacio |
 | Mensaje de abono | El mismo mensaje amarillo que en cabañas | SCRUM-32 | ✅ `DepositInfoCard` |
 | Capacidad total | 150 personas | — | ⚠️ `capacityRules.maxCampingPeopleCapacity`, sin uso verificado |
 

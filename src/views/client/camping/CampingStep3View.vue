@@ -6,6 +6,7 @@ import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
+import { isClientContactValid, isClientPhoneIncomplete } from '../../../services/wizard'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
@@ -29,11 +30,8 @@ const formattedScheduleDisplay = computed(() => {
   return `${formatDateShort(store.checkInDate)} al ${formatDateShort(store.checkOutDate)} (${nightsCount.value} noc.)`
 })
 
-const isFormValid = computed(() => {
-  const nameOk = !!store.clientName.trim()
-  const phoneOk = !!store.clientPhone.trim() && store.clientPhone.trim() !== '+56 9'
-  return nameOk && phoneOk
-})
+const isFormValid = computed(() => isClientContactValid(store.clientName, store.clientPhone))
+const phoneIncomplete = computed(() => isClientPhoneIncomplete(store.clientPhone))
 
 function handleBack() {
   store.prevStep()
@@ -90,6 +88,9 @@ function handleNext() {
           placeholder="+56 9 1234 5678"
           class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
+        <span v-if="phoneIncomplete" class="text-xs font-black text-rose-800 block" role="alert">
+          El número está incompleto: son +56 9 y 8 dígitos más.
+        </span>
         <span class="text-[11px] font-semibold text-gray-500 block">
           Te contactaremos a este número para confirmar los detalles.
         </span>
