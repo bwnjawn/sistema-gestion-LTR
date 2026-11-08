@@ -10,6 +10,7 @@ import AdminNewBookingModal from '../../components/admin/AdminNewBookingModal.vu
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
 import type { ReservationRequest } from '../../types/domain'
+import { formatDateShort } from '../../lib/dates'
 
 const requestsStore = useRequestsStore()
 
@@ -166,14 +167,6 @@ function formatStatusText(status: string): string {
   return 'Pendiente'
 }
 
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return '-'
-  const parts = dateStr.split('-')
-  if (parts.length < 3) return dateStr
-  const [, m, d] = parts.map(Number)
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  return `${d} ${months[m - 1]}`
-}
 </script>
 
 <template>

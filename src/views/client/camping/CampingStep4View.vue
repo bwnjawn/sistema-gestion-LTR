@@ -11,6 +11,7 @@ import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { formatCLP } from '../../../lib/format'
+import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -25,12 +26,7 @@ const selectedCampingSite = computed(() => {
 
 const isDiario = computed(() => store.campingType === 'diario')
 
-const nightsCount = computed(() => {
-  if (isDiario.value || !store.checkInDate || !store.checkOutDate) return 1
-  const diff = new Date(store.checkOutDate).getTime() - new Date(store.checkInDate).getTime()
-  const days = Math.ceil(diff / (1000 * 3600 * 24))
-  return days > 0 ? days : 1
-})
+const nightsCount = computed(() => (isDiario.value ? 1 : nightsBetween(store.checkInDate, store.checkOutDate)))
 
 const subtotal = computed(() => {
   const price = selectedCampingSite.value?.pricePerPerson || 10000
@@ -44,13 +40,6 @@ const ivaAmount = computed(() => {
 const totalWithIva = computed(() => {
   return subtotal.value + ivaAmount.value
 })
-
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return '-'
-  const [ m, d] = dateStr.split('-').map(Number)
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  return `${d} ${months[m - 1]}`
-}
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate) return 'Sin fecha'

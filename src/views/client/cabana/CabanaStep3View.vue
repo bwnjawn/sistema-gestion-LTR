@@ -10,6 +10,7 @@ import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
+import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -19,19 +20,7 @@ const selectedCabin = computed(() => {
   return catalogStore.cabins.find(c => c.id === store.selectedCabinId)
 })
 
-const nightsCount = computed(() => {
-  if (!store.checkInDate || !store.checkOutDate) return 1
-  const diff = new Date(store.checkOutDate).getTime() - new Date(store.checkInDate).getTime()
-  const days = Math.ceil(diff / (1000 * 3600 * 24))
-  return days > 0 ? days : 1
-})
-
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return '-'
-  const [m, d] = dateStr.split('-').map(Number)
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  return `${d} ${months[m - 1]}`
-}
+const nightsCount = computed(() => nightsBetween(store.checkInDate, store.checkOutDate))
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate || !store.checkOutDate) return 'Fechas no seleccionadas'

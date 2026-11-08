@@ -9,8 +9,9 @@ import CampingDetailModal from '../../../components/catalog/CampingDetailModal.v
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { calculateCampingPrice } from '../../../services/pricing'
-import { calculateNights, formatCLP } from '../../../lib/format'
+import { formatCLP } from '../../../lib/format'
 import type { CampingSite } from '../../../types/domain'
+import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -21,16 +22,7 @@ const isModalOpen = ref(false)
 const isDiario = computed(() => store.campingType === 'diario')
 const guests = computed(() => store.guestsCount)
 
-const nightsCount = computed(() => calculateNights(store.checkInDate, store.checkOutDate))
-
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return ''
-  const [, month, day] = dateStr.split('-')
-  if (!day || !month) return dateStr
-  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
-  const monthIdx = parseInt(month, 10)
-  return `${parseInt(day, 10)} ${months[monthIdx - 1]}`
-}
+const nightsCount = computed(() => nightsBetween(store.checkInDate, store.checkOutDate))
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate) return 'Sin fecha'

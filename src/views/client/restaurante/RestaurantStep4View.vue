@@ -11,6 +11,7 @@ import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { formatCLP } from '../../../lib/format'
+import { formatDateShort } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -29,13 +30,6 @@ const ivaAmount = computed(() => {
 const totalWithIva = computed(() => {
   return subtotal.value + ivaAmount.value
 })
-
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return '-'
-  const [, m, d] = dateStr.split('-').map(Number)
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  return `${d} ${months[m - 1]}`
-}
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate) return 'Sin fecha'

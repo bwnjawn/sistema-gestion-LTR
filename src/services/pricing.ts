@@ -1,7 +1,7 @@
 // src/services/pricing.ts
 
 import type { Cabin, CampingSite } from '../types/domain'
-import { calculateNights } from '../lib/format'
+import { nightsBetween } from '../lib/dates'
 
 export interface PriceBreakdown {
   subtotal: number
@@ -32,7 +32,7 @@ export function calculateCabinPrice(
   if (!cabin) {
     throw new Error('[PricingService] No se encontró la cabaña solicitada para calcular la tarifa.')
   }
-  const nights = calculateNights(checkInDate, checkOutDate)
+  const nights = nightsBetween(checkInDate, checkOutDate)
   const subtotal = (cabin.pricePerNight || 0) * nights
   const ivaAmount = Math.round((subtotal * ivaPercentage) / 100)
   const totalWithIva = subtotal + ivaAmount
@@ -56,7 +56,7 @@ export function calculateCampingPrice(
     throw new Error('[PricingService] No se encontró el sitio de camping solicitado para calcular la tarifa.')
   }
   const isDiario = campingType === 'diario'
-  const nights = isDiario ? 1 : calculateNights(checkInDate, checkOutDate)
+  const nights = isDiario ? 1 : nightsBetween(checkInDate, checkOutDate)
   const subtotal = (site.pricePerPerson || 0) * Math.max(1, guestsCount) * nights
   const ivaAmount = Math.round((subtotal * ivaPercentage) / 100)
   const totalWithIva = subtotal + ivaAmount

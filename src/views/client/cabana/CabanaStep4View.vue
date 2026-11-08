@@ -11,6 +11,7 @@ import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { formatCLP } from '../../../lib/format'
+import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -23,12 +24,7 @@ const selectedCabin = computed(() => {
   return catalogStore.cabins.find(c => c.id === store.selectedCabinId)
 })
 
-const nightsCount = computed(() => {
-  if (!store.checkInDate || !store.checkOutDate) return 1
-  const diff = new Date(store.checkOutDate).getTime() - new Date(store.checkInDate).getTime()
-  const days = Math.ceil(diff / (1000 * 3600 * 24))
-  return days > 0 ? days : 1
-})
+const nightsCount = computed(() => nightsBetween(store.checkInDate, store.checkOutDate))
 
 const subtotal = computed(() => {
   return (selectedCabin.value?.pricePerNight || 65000) * nightsCount.value
@@ -41,13 +37,6 @@ const ivaAmount = computed(() => {
 const totalWithIva = computed(() => {
   return subtotal.value + ivaAmount.value
 })
-
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return '-'
-  const [ m, d] = dateStr.split('-').map(Number)
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  return `${d} ${months[m - 1]}`
-}
 
 const formattedScheduleRange = computed(() => {
   if (!store.checkInDate || !store.checkOutDate) return 'No definido'

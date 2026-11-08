@@ -5,6 +5,7 @@ import { ref, watch } from 'vue'
 import { useRequestsStore } from './requestsStore'
 import { useSettingsStore } from './settingsStore'
 import { useCatalogStore } from './catalogStore'
+import { nightsBetween, todayISO } from '../lib/dates'
 import type { ServiceType, SelectedMealPayload } from '../types/domain'
 
 export type { SelectedMealPayload }
@@ -198,23 +199,15 @@ export const useReservationStore = defineStore('reservation', () => {
       const cabin = catalogStore.cabins.find(c => c.id === selectedCabinId.value)
       resourceName = cabin ? cabin.name : 'Cabaña'
       resourceId = selectedCabinId.value
-      let nights = 1
-      if (checkInDate.value && checkOutDate.value) {
-        const diff = new Date(checkOutDate.value).getTime() - new Date(checkInDate.value).getTime()
-        const days = Math.ceil(diff / (1000 * 3600 * 24))
-        if (days > 0) nights = days
-      }
+      const nights = nightsBetween(checkInDate.value, checkOutDate.value)
       netTotal = (cabin?.pricePerNight || 65000) * nights
     } else if (selectedService.value === 'camping') {
       const site = catalogStore.campingSites.find(s => s.id === selectedCampingId.value)
       resourceName = site ? site.name : 'Camping'
       resourceId = selectedCampingId.value
-      let nights = 1
-      if (campingType.value === 'pernoctar' && checkInDate.value && checkOutDate.value) {
-        const diff = new Date(checkOutDate.value).getTime() - new Date(checkInDate.value).getTime()
-        const days = Math.ceil(diff / (1000 * 3600 * 24))
-        if (days > 0) nights = days
-      }
+      const nights = campingType.value === 'pernoctar'
+        ? nightsBetween(checkInDate.value, checkOutDate.value)
+        : 1
       netTotal = (site?.pricePerPerson || 10000) * guestsCount.value * nights
     } else {
       resourceName = 'Restaurante'
@@ -231,7 +224,7 @@ export const useReservationStore = defineStore('reservation', () => {
       clientEmail: clientEmail.value || '',
       type: selectedService.value,
       resourceName,
-      date: checkInDate.value || new Date().toISOString().split('T')[0],
+      date: checkInDate.value || todayISO(),
       timeOrDuration: checkOutDate.value || '1 día',
       guestsCount: guestsCount.value,
       totalAmount: totalWithIva,

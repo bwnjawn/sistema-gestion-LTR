@@ -1,6 +1,7 @@
 // src/services/availability.ts
 
 import type { ReservationRequest, ServiceType } from '../types/domain'
+import { addDays, isPastDate } from '../lib/dates'
 
 /**
  * Evalúa si dos rangos de fechas se solapan en intervalo semiabierto [start, end).
@@ -48,14 +49,7 @@ export function isCabinAvailable(
 /**
  * Valida si la fecha solicitada es pasada respecto a hoy.
  */
-export function isPastDate(dateStr: string): boolean {
-  if (!dateStr) return false
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const target = new Date(y, m - 1, d)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return target < today
-}
+export { isPastDate }
 
 /**
  * Evalúa si un día específico debe estar deshabilitado para un recurso o servicio.
@@ -70,9 +64,7 @@ export function isDateDisabled(
   const rawServiceType = serviceType as string
   if ((rawServiceType === 'cabana' || rawServiceType === 'cabaña') && resourceId) {
     // Si la cabaña tiene una reserva activa para esa noche
-    const checkOut = new Date(dateStr)
-    checkOut.setDate(checkOut.getDate() + 1)
-    const checkOutStr = checkOut.toISOString().split('T')[0]
+    const checkOutStr = addDays(dateStr, 1)
     return !isCabinAvailable(resourceId, dateStr, checkOutStr, existingRequests)
   }
   return false

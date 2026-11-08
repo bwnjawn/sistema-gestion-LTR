@@ -4,6 +4,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { AdminUser } from '../types/domain'
 import { generateUUID } from '../lib/id'
+import { todayISO } from '../lib/dates'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
 
 export type { AdminUser }
@@ -107,7 +108,7 @@ export const useAuthStore = defineStore('auth', () => {
         return false
       }
 
-      const todayDate: string = new Date().toISOString().substring(0, 10)
+      const todayDate: string = todayISO()
       const newAdmin: AdminUserWithPassword = {
         id: generateUUID(),
         name: name.trim(),

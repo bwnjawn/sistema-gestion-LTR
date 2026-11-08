@@ -9,6 +9,7 @@ import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
+import { formatDateShort } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -33,13 +34,6 @@ const activeMealNames = computed(() => {
 const totalDishesCount = computed(() => {
   return (store.selectedMeals as any[]).reduce((sum, item) => sum + (item.quantity || item.count || 0), 0)
 })
-
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return '-'
-  const [, m, d] = dateStr.split('-').map(Number)
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  return `${d} ${months[m - 1]}`
-}
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate) return 'Sin fecha'

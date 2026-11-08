@@ -9,6 +9,7 @@ import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
 import { validateGuestCapacity } from '../../../services/availability'
+import { nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -92,7 +93,7 @@ const capacityValidation = computed(() => {
 
 const isValid = computed(() => {
   if (!store.checkInDate) return false
-  if (store.campingType === 'pernoctar' && !store.checkOutDate) return false
+  if (store.campingType === 'pernoctar' && nightsBetween(store.checkInDate, store.checkOutDate) < 1) return false
   return capacityValidation.value.isValid
 })
 

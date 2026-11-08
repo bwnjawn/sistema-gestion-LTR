@@ -7,6 +7,7 @@ import BaseCalendar from '../../../components/ui/BaseCalendar.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
+import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const reservationStore = useReservationStore()
@@ -69,26 +70,14 @@ function handleGuestsInput(event: Event) {
 }
 
 // Cálculo de noches
-const nightsCount = computed(() => {
-  if (!reservationStore.checkInDate || !reservationStore.checkOutDate) return 1
-  const diff = new Date(reservationStore.checkOutDate).getTime() - new Date(reservationStore.checkInDate).getTime()
-  const days = Math.ceil(diff / (1000 * 3600 * 24))
-  return days > 0 ? days : 1
-})
-
-function formatDateShort(dateStr: string): string {
-  if (!dateStr) return '-'
-  const [m, d] = dateStr.split('-').map(Number)
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  return `${d} ${months[m - 1]}`
-}
+const nightsCount = computed(() => nightsBetween(reservationStore.checkInDate, reservationStore.checkOutDate))
 
 function handleBack() {
   router.push('/')
 }
 
 function handleNext() {
-  if (reservationStore.checkInDate && reservationStore.checkOutDate) {
+  if (nightsCount.value >= 1) {
     reservationStore.nextStep()
     router.push('/cabana/paso2')
   }
@@ -195,7 +184,7 @@ function handleNext() {
           variant="primary" 
           size="lg" 
           fullWidth 
-          :disabled="!reservationStore.checkInDate || !reservationStore.checkOutDate"
+          :disabled="nightsCount < 1"
           @click="handleNext"
         >
           Ver Cabañas

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { X, Home, Tent, Utensils, Check } from 'lucide-vue-next'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { useCatalogStore } from '../../stores/catalogStore'
+import { todayISO } from '../../lib/dates'
 import type { ServiceType } from '../../types/domain'
 
 const props = defineProps<{
@@ -21,7 +22,7 @@ const serviceType = ref<ServiceType>('cabana')
 const clientName = ref('')
 const clientPhone = ref('+56 9 ')
 const clientEmail = ref('')
-const startDate = ref(new Date().toISOString().split('T')[0])
+const startDate = ref(todayISO())
 const endDate = ref('')
 const guestsCount = ref(2)
 const selectedResourceId = ref('')
