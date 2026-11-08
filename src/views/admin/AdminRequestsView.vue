@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Inbox, Search, Plus } from 'lucide-vue-next'
+import BaseButton from '../../components/ui/BaseButton.vue'
+import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import AdminNewBookingModal from '../../components/admin/AdminNewBookingModal.vue'
 import AdminRequestCard from '../../components/admin/AdminRequestCard.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
@@ -33,34 +35,30 @@ function countByStatus(status: BookingStatus): number {
 }
 
 const statusFilters: { id: BookingStatus; label: string; activeClass: string }[] = [
-  { id: 'pending', label: 'Pendientes', activeClass: 'bg-amber-400 text-amber-950 border-amber-500' },
-  { id: 'confirmed', label: 'Confirmadas', activeClass: 'bg-emerald-600 text-white border-emerald-700' },
-  { id: 'rejected', label: 'Rechazadas', activeClass: 'bg-rose-600 text-white border-rose-700' }
+  { id: 'pending', label: 'Pendientes', activeClass: 'bg-amber-200 text-amber-950 border-amber-600' },
+  { id: 'confirmed', label: 'Confirmadas', activeClass: 'bg-status-success text-white border-status-success' },
+  { id: 'rejected', label: 'Rechazadas', activeClass: 'bg-status-danger text-white border-status-danger' }
 ]
 
 const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
   { id: 'all', label: 'Todos' },
   { id: 'cabana', label: 'Cabaña' },
   { id: 'camping', label: 'Camping' },
-  { id: 'restaurante', label: 'Restorán' }
+  { id: 'restaurante', label: 'Restaurante' }
 ]
 </script>
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
-    <div class="bg-brand-dark text-white p-5 rounded-3xl border-2 border-brand-border shadow-sm flex items-center justify-between">
-      <div>
-        <span class="text-xs font-black text-emerald-300 uppercase tracking-wider block">Administración Los Troncos de Repil</span>
-        <h1 class="text-xl font-black tracking-tight">Gestión de Solicitudes</h1>
-      </div>
-      <button
-        type="button"
-        @click="isNewBookingModalOpen = true"
-        class="py-2.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-sm flex items-center gap-1 shadow-md active:scale-95 transition-transform touch-target"
-      >
-        <Plus class="w-4 h-4 stroke-[2.5]" /> Nueva
-      </button>
-    </div>
+    <AdminPageTitle
+      title="Solicitudes"
+      subtitle="Revisa, aprueba y registra los pagos de cada solicitud."
+      :icon="Inbox"
+    />
+
+    <BaseButton variant="primary" size="md" fullWidth @click="isNewBookingModalOpen = true">
+      <Plus class="w-5 h-5 mr-1.5 stroke-[3]" aria-hidden="true" /> Nueva reserva directa
+    </BaseButton>
 
     <div class="grid grid-cols-3 gap-2">
       <button
@@ -69,34 +67,34 @@ const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
         type="button"
         @click="filterStatus = f.id"
         :class="[
-          'p-3 rounded-2xl border-2 text-center transition-all touch-target',
-          filterStatus === f.id ? f.activeClass : 'bg-white text-gray-700 border-brand-border hover:bg-gray-50'
+          'p-3 rounded-2xl border-2 text-center transition-all touch-target shadow-sm',
+          filterStatus === f.id ? f.activeClass : 'bg-white text-gray-800 border-gray-500 hover:bg-gray-50'
         ]"
       >
         <span class="block text-2xl font-black">{{ countByStatus(f.id) }}</span>
-        <span class="text-xs font-extrabold uppercase tracking-tight block">{{ f.label }}</span>
+        <span class="text-sm font-black block">{{ f.label }}</span>
       </button>
     </div>
 
-    <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-sm space-y-3">
+    <div class="bg-white p-4 rounded-2xl border border-gray-500 shadow-md space-y-3">
       <div class="relative">
-        <Search class="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 stroke-[2.5]" />
+        <Search class="w-4 h-4 text-gray-700 absolute left-3.5 top-1/2 -translate-y-1/2 stroke-[2.5]" />
         <input
           type="text"
           v-model="searchQuery"
           placeholder="Buscar por código, cliente o teléfono"
           aria-label="Buscar solicitudes"
-          class="w-full pl-10 pr-3.5 py-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-sm focus:bg-white focus:border-brand-dark focus:outline-none"
+          class="w-full pl-10 pr-3.5 py-3 rounded-xl border-2 border-gray-500 bg-white font-bold text-base focus:border-brand-dark focus:outline-none"
         />
       </div>
 
-      <div class="grid grid-cols-4 gap-1.5 p-1 bg-brand-light rounded-xl border border-brand-border text-xs font-black">
+      <div class="grid grid-cols-2 gap-1.5 p-1 bg-gray-100 rounded-xl border border-gray-400 text-sm font-black">
         <button
           v-for="t in typeFilters"
           :key="t.id"
           type="button"
           @click="filterType = t.id"
-          :class="['py-2 rounded-lg transition-all', filterType === t.id ? 'bg-white text-brand-dark shadow-sm' : 'text-gray-600']"
+          :class="['py-2.5 rounded-lg transition-all border-2', filterType === t.id ? 'bg-brand-dark text-white border-brand-dark' : 'bg-white text-gray-800 border-transparent']"
         >
           {{ t.label }}
         </button>
@@ -113,9 +111,9 @@ const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
         @reject="openedRequestId = $event"
       />
 
-      <div v-if="filteredRequests.length === 0" class="bg-white p-8 rounded-3xl border-2 border-brand-border text-center space-y-2">
-        <Inbox class="w-8 h-8 text-gray-400 mx-auto stroke-[2]" />
-        <p class="text-sm font-extrabold text-gray-600">No se encontraron solicitudes con los filtros aplicados.</p>
+      <div v-if="filteredRequests.length === 0" class="bg-white p-8 rounded-2xl border border-gray-500 shadow-md text-center space-y-2">
+        <Inbox class="w-8 h-8 text-gray-600 mx-auto stroke-[2]" />
+        <p class="text-base font-black text-gray-800">No se encontraron solicitudes con los filtros aplicados.</p>
       </div>
     </div>
 

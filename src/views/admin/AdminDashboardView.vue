@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { 
   Home, Inbox, Calendar, Grid, ArrowRight, CheckCircle2, Clock
 } from 'lucide-vue-next'
+import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
 
@@ -24,18 +25,11 @@ function navigateTo(path: string) {
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
-    <!-- Encabezado Inicio -->
-    <div class="bg-brand-dark text-white p-5 rounded-3xl border-2 border-brand-border shadow-sm flex items-center justify-between">
-      <div>
-        <span class="text-[10px] font-black text-emerald-300 uppercase tracking-wider block">
-          Panel Principal
-        </span>
-        <h1 class="text-xl font-black tracking-tight">Los Troncos de Repil</h1>
-      </div>
-      <div class="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20">
-        <Home class="w-5 h-5 text-emerald-300 stroke-[2.5]" />
-      </div>
-    </div>
+    <AdminPageTitle
+      title="Inicio"
+      subtitle="Resumen de las solicitudes y los ingresos confirmados."
+      :icon="Home"
+    />
 
     <!-- Métricas Generales -->
     <div class="grid grid-cols-2 gap-3">

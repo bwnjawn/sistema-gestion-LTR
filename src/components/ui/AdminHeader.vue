@@ -1,86 +1,51 @@
 <template>
-  <header class="p-4 pt-6 bg-transparent flex items-center justify-between max-w-md mx-auto w-full">
-    <!-- Marca Principal (Logo + Título + Subtítulo Admin) -->
-    <div class="flex items-center gap-3 cursor-pointer" @click="goDashboard">
-      <div class="w-16 h-16 rounded-full bg-white border-2 border-brand-border shadow-xs flex items-center justify-center p-1 shrink-0 overflow-hidden">
-        <img 
-          src="/images/logo.png" 
-          alt="Logo Los Troncos de Repil" 
-          class="w-full h-full object-cover rounded-full scale-150"
-          @error="onImgError"
-        />
-      </div>
-      <div>
-        <h1 class="text-lg font-black text-brand-dark leading-tight tracking-tight">
-          Los Troncos de Repil
-        </h1>
-        <p class="text-xs font-extrabold text-brand-accent">
-          Panel de Administración
-        </p>
-      </div>
-    </div>
-
-    <!-- Indicador de Conectividad Estilizado -->
-    <div class="flex items-center gap-2 shrink-0">
-      <div 
-        class="text-[11px] font-black text-brand-dark bg-white/90 border border-brand-border px-2.5 py-1 rounded-full shadow-2xs flex items-center gap-1.5 touch-target shrink-0"
-        :title="isOnline ? 'Sistema conectado a internet' : 'Modo fuera de línea activo'"
-      >
-        <span 
-          class="w-2.5 h-2.5 rounded-full"
-          :class="isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"
-        ></span>
-        <span>{{ isOnline ? 'Conectado' : 'Sin señal' }}</span>
-      </div>
+  <header class="bg-white border-b-2 border-gray-300 shadow-sm">
+    <div class="max-w-md mx-auto w-full px-4 py-3 flex items-center justify-between gap-3">
+      <button type="button" class="text-left min-w-0" @click="goDashboard" aria-label="Ir al inicio del panel">
+        <span class="block text-lg font-black text-brand-dark leading-tight truncate">Los Troncos de Repil</span>
+        <span class="block text-sm font-bold text-gray-700 leading-tight">Administración</span>
+      </button>
 
       <button
         type="button"
         @click="handleLogout"
-        aria-label="Cerrar sesión"
-        title="Cerrar sesión"
-        class="p-2 rounded-full bg-white/90 border border-brand-border text-brand-dark hover:bg-gray-100 active:scale-95 transition-transform touch-target shrink-0"
+        class="shrink-0 inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl border-2 border-brand-dark text-brand-dark text-sm font-black hover:bg-brand-light active:scale-95 transition-transform touch-target"
       >
-        <LogOut class="w-4 h-4 stroke-[2.5]" />
+        <LogOut class="w-4 h-4 stroke-[2.5]" aria-hidden="true" />
+        Salir
       </button>
+    </div>
+
+    <!-- Solo aparece cuando no hay internet -->
+    <div
+      v-if="!settingsStore.isConnected"
+      role="status"
+      class="bg-amber-100 border-t-2 border-amber-500 text-amber-950"
+    >
+      <p class="max-w-md mx-auto px-4 py-2 flex items-center gap-2 text-sm font-black">
+        <WifiOff class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
+        Sin conexión a internet. Los cambios se guardan solo en este dispositivo.
+      </p>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { LogOut } from 'lucide-vue-next'
+import { LogOut, WifiOff } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/authStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
-
-const handleLogout = async () => {
-  await authStore.logout()
-  router.push({ name: 'admin-login' })
-}
-const isOnline = ref(navigator.onLine)
-
-const updateOnlineStatus = () => {
-  isOnline.value = navigator.onLine
-}
-
-onMounted(() => {
-  window.addEventListener('online', updateOnlineStatus)
-  window.addEventListener('offline', updateOnlineStatus)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('online', updateOnlineStatus)
-  window.removeEventListener('offline', updateOnlineStatus)
-})
+const settingsStore = useSettingsStore()
 
 const goDashboard = () => {
   router.push({ name: 'admin-dashboard' })
 }
 
-const onImgError = (e: Event) => {
-  const target = e.target as HTMLImageElement
-  target.src = 'https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=200&q=80'
+const handleLogout = async () => {
+  await authStore.logout()
+  router.push({ name: 'admin-login' })
 }
 </script>

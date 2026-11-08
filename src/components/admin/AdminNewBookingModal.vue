@@ -132,7 +132,7 @@ async function handleSubmit() {
               @click="serviceType = 'restaurante'; selectedResourceId = ''"
               :class="['p-2 rounded-xl border flex items-center justify-center gap-1 font-black', serviceType === 'restaurante' ? 'bg-brand-dark text-white border-brand-dark' : 'bg-gray-50 text-gray-700']"
             >
-              <Utensils class="w-3.5 h-3.5" /> Restorán
+              <Utensils class="w-3.5 h-3.5" /> Restaurante
             </button>
           </div>
         </div>

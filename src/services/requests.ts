@@ -126,12 +126,14 @@ export interface MealGroupView {
 export interface RequestView {
   serviceLabel: string
   statusLabel: string
-  /** Frase principal: "Desde el Sáb 18 Oct 2026 hasta el Mar 21 Oct 2026 (3 noches)". */
-  stayHeadline: string
+  /** Título de la sección de fechas: "Fechas" o "Fecha de la visita". */
+  stayTitle: string
   /** "4 personas" o "12 comensales". */
   guestsLabel: string
-  /** Filas del recuadro "Estadía" o "Visita". */
-  stayRows: InfoRow[]
+  /** Fechas principales: Llegada y Salida (estadía) o Fecha (visita de un día). */
+  stayDates: InfoRow[]
+  /** Dato que resume las fechas, fuera de las cajas: Noches (estadía) u Horario (camping de día). */
+  staySummary?: InfoRow
   /** Filas con el detalle del servicio (cabaña, espacio o mesa). */
   serviceRows: InfoRow[]
   meals: MealGroupView[]
@@ -186,29 +188,28 @@ export function describeRequest(req: ReservationRequest): RequestView {
   const nights = nightsBetween(start, end)
   const isDayVisit = req.type === 'restaurante' || (req.type === 'camping' && details.campingType === 'diario')
 
-  const stayRows: InfoRow[] = []
-  let stayHeadline = ''
+  const stayDates: InfoRow[] = []
+  let staySummary: InfoRow | undefined
+  let stayTitle = 'Fechas'
 
   if (isDayVisit) {
-    stayHeadline = `El ${formatDateLong(start)}`
-    stayRows.push({ label: 'Fecha', value: formatDateLong(start) })
+    stayTitle = 'Fecha de la visita'
+    stayDates.push({ label: 'Fecha', value: formatDateLong(start) })
     if (req.type === 'camping' && details.schedule) {
-      stayRows.push({ label: 'Horario', value: `${details.schedule.checkIn} a ${details.schedule.checkOut} hrs` })
+      staySummary = { label: 'Horario', value: `${details.schedule.checkIn} a ${details.schedule.checkOut} hrs` }
     }
   } else {
-    const nightsText = nights > 0 ? ` (${nights} ${nights === 1 ? 'noche' : 'noches'})` : ''
-    stayHeadline = `Desde el ${formatDateLong(start)} hasta el ${formatDateLong(end)}${nightsText}`
-    stayRows.push({
+    stayDates.push({
       label: 'Llegada',
       value: formatDateLong(start),
       hint: details.schedule ? `Desde las ${details.schedule.checkIn} hrs` : undefined
     })
-    stayRows.push({
+    stayDates.push({
       label: 'Salida',
       value: formatDateLong(end),
       hint: details.schedule ? `Hasta las ${details.schedule.checkOut} hrs` : undefined
     })
-    stayRows.push({ label: 'Noches', value: nights > 0 ? String(nights) : '-' })
+    staySummary = { label: 'Noches', value: nights > 0 ? String(nights) : '-' }
   }
 
   const serviceRows: InfoRow[] = [
@@ -252,9 +253,10 @@ export function describeRequest(req: ReservationRequest): RequestView {
   return {
     serviceLabel: SERVICE_LABELS[req.type],
     statusLabel: STATUS_LABELS[req.status],
-    stayHeadline,
+    stayTitle,
     guestsLabel: guestsText(req.guestsCount, req.type),
-    stayRows,
+    stayDates,
+    staySummary,
     serviceRows,
     meals: buildMealGroups(req),
     priceRows
