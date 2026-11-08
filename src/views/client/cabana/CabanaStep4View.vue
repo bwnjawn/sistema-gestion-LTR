@@ -8,6 +8,7 @@ import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
+import HorarioCard from '../../../components/ui/HorarioCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
@@ -87,49 +88,47 @@ async function handleSendRequest() {
         
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
               Fechas y Horarios
             </h3>
-            <button type="button" @click="router.push('/cabana/paso1')" class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1">
+            <button type="button" @click="router.push('/cabana/paso1')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
               <Pencil class="w-3.5 h-3.5" /> Editar
             </button>
           </div>
           <p class="text-sm font-black text-brand-dark">
             {{ formattedScheduleRange }} ({{ nightsCount }} noche/s)
           </p>
-          <p class="text-xs font-bold text-gray-600">
-            Ingreso {{ settingsStore.cabinSchedules.checkIn }} hrs · Salida {{ settingsStore.cabinSchedules.checkOut }} hrs
-          </p>
+          <HorarioCard :ingreso="settingsStore.cabinSchedules.checkIn" :salida="settingsStore.cabinSchedules.checkOut" />
         </div>
 
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
               Alojamiento Seleccionado
             </h3>
-            <button type="button" @click="router.push('/cabana/paso2')" class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1">
+            <button type="button" @click="router.push('/cabana/paso2')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
               <Pencil class="w-3.5 h-3.5" /> Editar
             </button>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-sm font-black text-brand-dark">{{ selectedCabin?.name }}</span>
-            <span class="text-xs font-extrabold text-gray-600">{{ store.guestsCount }} personas</span>
+            <span class="text-sm font-extrabold text-gray-600">{{ store.guestsCount }} personas</span>
           </div>
         </div>
 
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
               Datos del Titular
             </h3>
-            <button type="button" @click="router.push('/cabana/paso3')" class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1">
+            <button type="button" @click="router.push('/cabana/paso3')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
               <Pencil class="w-3.5 h-3.5" /> Editar
             </button>
           </div>
-          <div class="text-xs font-bold text-gray-700 space-y-1">
+          <div class="text-sm font-bold text-gray-700 space-y-1">
             <p class="text-sm font-black text-brand-dark">{{ store.clientName }}</p>
             <p class="flex items-center gap-1"><Phone class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" /> {{ store.clientPhone }}</p>
             <p v-if="store.clientEmail" class="text-gray-500">{{ store.clientEmail }}</p>
@@ -137,8 +136,8 @@ async function handleSendRequest() {
         </div>
 
         <div v-if="store.comments" class="space-y-1 bg-amber-50 p-3 rounded-2xl border border-amber-200">
-          <span class="text-xs font-black text-amber-900 uppercase tracking-wider block">Comentarios Adicionales:</span>
-          <p class="text-xs font-semibold text-amber-950 italic">"{{ store.comments }}"</p>
+          <span class="text-sm font-black text-amber-900 uppercase tracking-wider block">Comentarios Adicionales:</span>
+          <p class="text-sm font-semibold text-amber-950 italic">"{{ store.comments }}"</p>
         </div>
 
       </div>
@@ -146,10 +145,10 @@ async function handleSendRequest() {
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-3">
         <div class="flex items-center gap-1.5 border-b border-gray-100 pb-2">
           <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Desglose de Tarifas</h3>
+          <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider">Desglose de Tarifas</h3>
         </div>
 
-        <div class="space-y-2 text-xs font-bold text-gray-600">
+        <div class="space-y-2 text-sm font-bold text-gray-600">
           <div class="flex justify-between">
             <span>Valor Noche x {{ nightsCount }}:</span>
             <span>{{ formatCLP(subtotal) }}</span>
@@ -194,7 +193,7 @@ async function handleSendRequest() {
       </div>
 
       <div class="space-y-2.5">
-        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-xs font-black text-brand-dark shadow-2xs">
+        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-black text-brand-dark shadow-2xs">
           <FileCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           <span>Código: {{ reservationCode }}</span>
         </div>
@@ -203,12 +202,12 @@ async function handleSendRequest() {
           ¡Solicitud de Cabaña Registrada!
         </h2>
 
-        <p class="text-xs sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
+        <p class="text-sm sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
           Registramos tu solicitud para <strong class="text-brand-dark font-black">{{ selectedCabin?.name }}</strong> ({{ nightsCount }} noche/s). Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
         </p>
       </div>
 
-      <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-xs font-bold text-gray-700">
+      <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm font-bold text-gray-700">
         <div class="flex justify-between items-center">
           <span class="text-gray-500">Servicio:</span>
           <span class="text-brand-dark font-black">{{ selectedCabin?.name }}</span>
@@ -229,7 +228,7 @@ async function handleSendRequest() {
           <span>¿Quieres agregar comida o espacio de camping?</span>
         </div>
 
-        <p class="text-xs font-semibold text-amber-900 leading-relaxed">
+        <p class="text-sm font-semibold text-amber-900 leading-relaxed">
           Conservamos las fechas y tu grupo de <strong class="text-amber-950 font-black">{{ store.guestsCount }} personas</strong> para que selecciones tus servicios adicionales sin volver a llenar datos.
         </p>
 
@@ -237,7 +236,7 @@ async function handleSendRequest() {
           <button
             type="button"
             @click="handleGoToRestaurant"
-            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
+            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
           >
             <Utensils class="w-4 h-4 stroke-[2.5]" />
             <span>Restaurante</span>
@@ -246,7 +245,7 @@ async function handleSendRequest() {
           <button
             type="button"
             @click="handleGoToCamping"
-            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
+            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
           >
             <Tent class="w-4 h-4 stroke-[2.5]" />
             <span>Camping</span>

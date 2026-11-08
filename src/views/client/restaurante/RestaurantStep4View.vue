@@ -83,11 +83,11 @@ function handleGoHome() {
         
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
               Fecha y Horario
             </h3>
-            <button type="button" @click="router.push('/restaurante/paso1')" class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1">
+            <button type="button" @click="router.push('/restaurante/paso1')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
               <Pencil class="w-3.5 h-3.5" /> Editar
             </button>
           </div>
@@ -98,11 +98,11 @@ function handleGoHome() {
 
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
               Menú Seleccionado ({{ store.guestsCount }} personas)
             </h3>
-            <button type="button" @click="router.push('/restaurante/paso2')" class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1">
+            <button type="button" @click="router.push('/restaurante/paso2')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
               <Pencil class="w-3.5 h-3.5" /> Editar
             </button>
           </div>
@@ -111,13 +111,13 @@ function handleGoHome() {
             <div 
               v-for="item in store.selectedMeals" 
               :key="item.id"
-              class="bg-brand-light p-3 rounded-2xl border border-brand-border text-xs font-bold text-gray-700 space-y-1"
+              class="bg-brand-light p-3 rounded-2xl border border-brand-border text-sm font-bold text-gray-700 space-y-1"
             >
               <div class="flex justify-between items-start">
                 <span class="text-brand-dark font-black text-sm">{{ item.name }} x {{ item.quantity }}</span>
                 <span class="text-brand-dark font-black">{{ formatCLP(item.price * item.quantity) }}</span>
               </div>
-              <p v-if="item.sideSelection" class="text-xs text-gray-500">
+              <p v-if="item.sideSelection" class="text-sm text-gray-500">
                 Acompañamientos: {{ item.sideSelection }}
               </p>
             </div>
@@ -126,15 +126,15 @@ function handleGoHome() {
 
         <div class="space-y-2">
           <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
               Datos del Titular
             </h3>
-            <button type="button" @click="router.push('/restaurante/paso3')" class="text-xs font-black text-brand-accent hover:underline flex items-center gap-1">
+            <button type="button" @click="router.push('/restaurante/paso3')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
               <Pencil class="w-3.5 h-3.5" /> Editar
             </button>
           </div>
-          <div class="text-xs font-bold text-gray-700 space-y-1">
+          <div class="text-sm font-bold text-gray-700 space-y-1">
             <p class="text-sm font-black text-brand-dark">{{ store.clientName }}</p>
             <p class="flex items-center gap-1"><Phone class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" /> {{ store.clientPhone }}</p>
             <p v-if="store.clientEmail" class="text-gray-500">{{ store.clientEmail }}</p>
@@ -142,8 +142,8 @@ function handleGoHome() {
         </div>
 
         <div v-if="store.comments" class="space-y-1 bg-amber-50 p-3 rounded-2xl border border-amber-200">
-          <span class="text-xs font-black text-amber-900 uppercase tracking-wider block">Comentarios Adicionales:</span>
-          <p class="text-xs font-semibold text-amber-950 italic">"{{ store.comments }}"</p>
+          <span class="text-sm font-black text-amber-900 uppercase tracking-wider block">Comentarios Adicionales:</span>
+          <p class="text-sm font-semibold text-amber-950 italic">"{{ store.comments }}"</p>
         </div>
 
       </div>
@@ -151,10 +151,10 @@ function handleGoHome() {
       <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-3">
         <div class="flex items-center gap-1.5 border-b border-gray-100 pb-2">
           <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <h3 class="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Desglose de Tarifas</h3>
+          <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider">Desglose de Tarifas</h3>
         </div>
 
-        <div class="space-y-2 text-xs font-bold text-gray-600">
+        <div class="space-y-2 text-sm font-bold text-gray-600">
           <div class="flex justify-between">
             <span>Subtotal Platos:</span>
             <span>{{ formatCLP(subtotal) }}</span>
@@ -199,7 +199,7 @@ function handleGoHome() {
       </div>
 
       <div class="space-y-2.5">
-        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-xs font-black text-brand-dark shadow-2xs">
+        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-black text-brand-dark shadow-2xs">
           <FileCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           <span>Código: {{ reservationCode }}</span>
         </div>
@@ -208,12 +208,12 @@ function handleGoHome() {
           ¡Solicitud de Restaurante Registrada!
         </h2>
 
-        <p class="text-xs sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
+        <p class="text-sm sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
           Registramos tu solicitud de restaurante para tu grupo de <strong class="text-brand-dark font-black">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
         </p>
       </div>
 
-      <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-xs font-bold text-gray-700">
+      <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm font-bold text-gray-700">
         <div class="flex justify-between items-center">
           <span class="text-gray-500">Servicio:</span>
           <span class="text-brand-dark font-black">{{ activeMealNames }}</span>
@@ -234,7 +234,7 @@ function handleGoHome() {
           <span>¿Quieres agregar alojamiento o espacio de camping?</span>
         </div>
 
-        <p class="text-xs font-semibold text-amber-900 leading-relaxed">
+        <p class="text-sm font-semibold text-amber-900 leading-relaxed">
           Conservamos la fecha y tu grupo de <strong class="text-amber-950 font-black">{{ store.guestsCount }} personas</strong> para que selecciones tus alojamientos sin volver a llenar datos.
         </p>
 
@@ -242,7 +242,7 @@ function handleGoHome() {
           <button
             type="button"
             @click="handleGoToCabana"
-            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
+            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
           >
             <Home class="w-4 h-4 stroke-[2.5]" />
             <span>Cabaña</span>
@@ -251,7 +251,7 @@ function handleGoHome() {
           <button
             type="button"
             @click="handleGoToCamping"
-            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
+            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
           >
             <Tent class="w-4 h-4 stroke-[2.5]" />
             <span>Camping</span>

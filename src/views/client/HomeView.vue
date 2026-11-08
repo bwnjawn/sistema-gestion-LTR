@@ -35,13 +35,13 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
         </div>
 
         <div class="space-y-0.5">
-          <span class="text-xs font-extrabold text-brand-accent uppercase tracking-widest block leading-none">
+          <span class="text-sm font-extrabold text-brand-accent uppercase tracking-widest block leading-none">
             Centro Turístico
           </span>
           <h1 class="text-xl font-black text-brand-dark tracking-tight leading-tight">
             Los Troncos de Repil
           </h1>
-          <span class="text-xs font-bold text-gray-600 block leading-none">
+          <span class="text-sm font-bold text-gray-600 block leading-none">
             Fresia, Región de los Lagos
           </span>
         </div>
@@ -73,7 +73,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
               <h3 class="text-2xl font-black leading-tight drop-shadow-sm">
                 Cabaña
               </h3>
-              <p class="text-xs font-bold text-gray-200 mt-0.5">
+              <p class="text-sm font-bold text-gray-200 mt-0.5">
                 Desde $65.000 la noche
               </p>
             </div>
@@ -100,7 +100,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
               <h3 class="text-2xl font-black leading-tight drop-shadow-sm">
                 Camping
               </h3>
-              <p class="text-xs font-bold text-gray-200 mt-0.5">
+              <p class="text-sm font-bold text-gray-200 mt-0.5">
                 $10.000 por persona la noche
               </p>
             </div>
@@ -127,7 +127,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
               <h3 class="text-2xl font-black leading-tight drop-shadow-sm">
                 Restaurante
               </h3>
-              <p class="text-xs font-bold text-gray-200 mt-0.5">
+              <p class="text-sm font-bold text-gray-200 mt-0.5">
                 Desayuno, almuerzo y once
               </p>
             </div>

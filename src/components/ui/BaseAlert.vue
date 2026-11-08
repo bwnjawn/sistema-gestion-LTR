@@ -50,12 +50,12 @@ const icon = computed(() => {
 
     <div class="space-y-0.5">
       <!-- Título destacado en negrita -->
-      <h4 v-if="title" class="font-extrabold text-xs uppercase tracking-wider">
+      <h4 v-if="title" class="font-extrabold text-sm uppercase tracking-wider">
         {{ title }}
       </h4>
 
       <!-- Mensaje secundario en texto normal sin negrita -->
-      <div class="text-xs font-normal leading-relaxed opacity-90">
+      <div class="text-sm font-normal leading-relaxed opacity-90">
         <slot />
       </div>
     </div>

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles, Clock } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles, Clock, Eye } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import CampingCard from '../../../components/catalog/CampingCard.vue'
+import HorarioCard from '../../../components/ui/HorarioCard.vue'
+import { useSettingsStore } from '../../../stores/settingsStore'
 import CampingDetailModal from '../../../components/catalog/CampingDetailModal.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
@@ -24,6 +26,9 @@ const isDiario = computed(() => store.campingType === 'diario')
 const guests = computed(() => store.guestsCount)
 
 const nightsCount = computed(() => nightsBetween(store.checkInDate, store.checkOutDate))
+
+const settingsStore = useSettingsStore()
+const horario = computed(() => settingsStore.campingSchedules[isDiario.value ? 'diario' : 'pernoctar'])
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate) return 'Sin fecha'
@@ -73,11 +78,11 @@ function handleBack() {
       Para tu grupo de <strong>{{ guests }} personas</strong> ({{ isDiario ? 'Paseo por el día' : nightsCount + ' noche(s)' }}), se ha asignado automáticamente la opción correspondiente.
     </BaseAlert>
 
-    <div class="bg-brand-light border-2 border-brand-border p-4 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-800">
+    <div class="bg-brand-light border-2 border-brand-border p-4 rounded-2xl flex items-center justify-between text-sm font-bold text-gray-800">
       <div class="flex items-center gap-2">
         <Clock class="w-4 h-4 text-brand-accent shrink-0 stroke-[2.5]" />
         <div>
-          <span class="block text-xs uppercase font-black text-gray-500">Horario de Servicio ({{ isDiario ? 'Día' : 'Noche' }}):</span>
+          <span class="block text-sm uppercase font-black text-gray-500">Horario de Servicio ({{ isDiario ? 'Día' : 'Noche' }}):</span>
           <span class="text-brand-dark font-black">
             {{ formattedScheduleDisplay }}
           </span>
@@ -85,13 +90,14 @@ function handleBack() {
       </div>
     </div>
 
+    <HorarioCard :titulo="isDiario ? 'Horario del día de campo' : 'Horario de pernoctar'" :ingreso="horario.checkIn" :salida="horario.checkOut" :salida-mismo-dia="isDiario" />
     <div v-if="selectedCampingOption" class="bg-white rounded-3xl border-2 border-brand-border p-5 shadow-sm space-y-4">
       <div class="flex items-center justify-between">
-        <span class="inline-flex items-center gap-1 bg-brand-light text-brand-dark px-3 py-1 rounded-full text-xs font-black border border-brand-border">
+        <span class="inline-flex items-center gap-1 bg-brand-light text-brand-dark px-3 py-1 rounded-full text-sm font-black border border-brand-border">
           <Sparkles class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
           {{ selectedCampingOption?.isSpecial ? 'Espacio para Grupos Grandes' : 'Camping Estándar' }}
         </span>
-        <span class="text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-200">
+        <span class="text-sm font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-200">
           <CheckCircle2 class="w-3.5 h-3.5 stroke-[2.5]" /> Asignado
         </span>
       </div>
@@ -101,16 +107,27 @@ function handleBack() {
         :site="selectedCampingOption"
         :selected-option-id="store.selectedCampingId"
         :is-diario="isDiario"
-        @click="isModalOpen = true"
-      />
+        compacta
+      >
+        <template #actions>
+          <button
+            type="button"
+            @click.stop="isModalOpen = true"
+            class="w-full py-3 px-4 rounded-xl bg-brand-light border-2 border-brand-dark text-brand-dark font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          >
+            <Eye class="w-4 h-4 stroke-[2.5]" />
+            Ver detalle
+          </button>
+        </template>
+      </CampingCard>
     </div>
 
     <div v-if="selectedCampingOption" class="bg-brand-dark text-white p-4 rounded-2xl border-2 border-brand-border shadow-xs flex items-center justify-between">
       <div>
-        <span class="text-xs font-extrabold text-emerald-300 uppercase tracking-wider block">
+        <span class="text-sm font-extrabold text-emerald-300 uppercase tracking-wider block">
           Subtotal Neto ({{ guests }} pers. {{ !isDiario ? 'x ' + nightsCount + ' noc.' : '' }})
         </span>
-        <span class="text-xs font-bold text-gray-300">{{ selectedCampingOption?.name }}</span>
+        <span class="text-sm font-bold text-gray-300">{{ selectedCampingOption?.name }}</span>
       </div>
       <span class="text-xl font-black text-white">
         {{ formatCLP(subtotalNeto) }}

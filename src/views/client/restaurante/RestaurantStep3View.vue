@@ -79,7 +79,7 @@ function handleNext() {
       
       <!-- Selector Exclusivo: Tipo de Cliente -->
       <div class="space-y-2">
-        <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <Building2 class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Tipo de Cliente *
         </label>
@@ -90,7 +90,7 @@ function handleNext() {
             type="button"
             @click="selectedClientType = type"
             :class="[
-              'py-2.5 px-3 rounded-xl font-black text-xs transition-all border-2 text-center touch-target active:scale-95',
+              'py-2.5 px-3 rounded-xl font-black text-sm transition-all border-2 text-center touch-target active:scale-95',
               selectedClientType === type
                 ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
                 : 'bg-brand-light text-brand-dark border-brand-border hover:bg-gray-100'
@@ -103,7 +103,7 @@ function handleNext() {
 
       <!-- Campo: Nombre / Razón Social -->
       <div class="space-y-1.5">
-        <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           {{ selectedClientType === 'Particular' ? 'Nombre Completo *' : 'Nombre de la empresa o institución *' }}
         </label>
@@ -117,7 +117,7 @@ function handleNext() {
 
       <!-- Campo: Teléfono de Contacto -->
       <div class="space-y-1.5">
-        <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Teléfono / WhatsApp *
         </label>
@@ -128,17 +128,17 @@ function handleNext() {
           placeholder="+56 9 1234 5678"
           class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
-        <span v-if="phoneIncomplete" class="text-xs font-black text-rose-800 block" role="alert">
+        <span v-if="phoneIncomplete" class="text-sm font-black text-rose-800 block" role="alert">
           El número está incompleto: son +56 9 y 8 dígitos más.
         </span>
-        <span class="text-xs font-semibold text-gray-500 block">
+        <span class="text-sm font-semibold text-gray-500 block">
           Te contactaremos a este número para confirmar los detalles.
         </span>
       </div>
 
       <!-- Campo: Correo Electrónico (Opcional) -->
       <div class="space-y-1.5">
-        <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <Mail class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Correo Electrónico (Opcional)
         </label>
@@ -152,7 +152,7 @@ function handleNext() {
 
       <!-- Campo: Comentarios u Observaciones -->
       <div class="space-y-1.5">
-        <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Comentarios u Observaciones (Opcional)
         </label>
@@ -165,7 +165,7 @@ function handleNext() {
       </div>
 
       <!-- Resumen Fijo Unificado -->
-      <div class="bg-brand-light p-3.5 rounded-xl border border-brand-border space-y-1 text-xs font-bold text-gray-700">
+      <div class="bg-brand-light p-3.5 rounded-xl border border-brand-border space-y-1 text-sm font-bold text-gray-700">
         <div class="flex justify-between">
           <span>Servicio:</span>
           <span class="text-brand-dark font-extrabold flex items-center gap-1">

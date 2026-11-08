@@ -153,7 +153,7 @@ function handleNext() {
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       
       <div class="space-y-2">
-        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Utensils class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Fecha de Visita
         </label>
@@ -165,7 +165,7 @@ function handleNext() {
       </div>
 
       <div class="pt-3 border-t-2 border-gray-100 space-y-2">
-        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Cantidad de Comensales
         </label>
@@ -190,7 +190,7 @@ function handleNext() {
               max="200"
               class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
-            <span class="text-xs font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
+            <span class="text-sm font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
               {{ store.guestsCount === 1 ? 'Persona' : 'Personas' }}
             </span>
           </div>
@@ -204,14 +204,14 @@ function handleNext() {
           </button>
         </div>
 
-        <div v-if="!capacityValidation.isValid" class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs font-bold text-amber-900 flex items-center gap-2">
+        <div v-if="!capacityValidation.isValid" class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-sm font-bold text-amber-900 flex items-center gap-2">
           <AlertCircle class="w-4 h-4 text-amber-700 shrink-0 stroke-[2.5]" />
           <span>{{ capacityValidation.message }}</span>
         </div>
       </div>
 
       <div class="pt-3 border-t-2 border-gray-100 space-y-3">
-        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Servicios de Comida Requeridos
         </label>
@@ -229,10 +229,10 @@ function handleNext() {
                 : 'bg-brand-light text-brand-dark border-brand-border hover:bg-gray-200'
             ]"
           >
-            <span class="text-xs font-black">{{ meal.label }}</span>
+            <span class="text-sm font-black">{{ meal.label }}</span>
             <span 
               v-if="store.selectedMealTypes.includes(meal.id)"
-              class="w-4 h-4 bg-emerald-400 text-brand-dark rounded-full flex items-center justify-center text-xs font-black"
+              class="w-4 h-4 bg-emerald-400 text-brand-dark rounded-full flex items-center justify-center text-sm font-black"
             >
               <Check class="w-3 h-3 stroke-[2.5]" />
             </span>
@@ -241,7 +241,7 @@ function handleNext() {
 
         <div 
           v-if="store.selectedMealTypes.length === 0" 
-          class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs font-bold text-amber-900 flex items-center gap-2"
+          class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-sm font-bold text-amber-900 flex items-center gap-2"
         >
           <AlertCircle class="w-4 h-4 text-amber-700 shrink-0 stroke-[2.5]" />
           <span>Haz clic en Desayuno, Almuerzo o Once para seleccionar los horarios permitidos.</span>
@@ -254,11 +254,11 @@ function handleNext() {
         class="bg-brand-light p-4 rounded-2xl border-2 border-brand-border space-y-2.5"
       >
         <div class="flex items-center justify-between">
-          <span class="text-xs font-extrabold text-brand-dark uppercase tracking-wider flex items-center gap-1.5">
+          <span class="text-sm font-extrabold text-brand-dark uppercase tracking-wider flex items-center gap-1.5">
             <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
             Horario para {{ mealOptions.find(m => m.id === mealId)?.label }}
           </span>
-          <span class="text-xs font-extrabold text-gray-500">
+          <span class="text-sm font-extrabold text-gray-500">
             ({{ mealOptions.find(m => m.id === mealId)?.rangeText }})
           </span>
         </div>
@@ -270,7 +270,7 @@ function handleNext() {
             :key="timeSlot"
             @click="selectMealTime(mealId, timeSlot)"
             :class="[
-              'py-2.5 px-3 rounded-xl font-black text-xs transition-all touch-target border-2',
+              'py-2.5 px-3 rounded-xl font-black text-sm transition-all touch-target border-2',
               store.mealTimes[mealId] === timeSlot
                 ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
                 : 'bg-white text-brand-dark border-brand-border hover:bg-gray-100'
@@ -281,17 +281,17 @@ function handleNext() {
         </div>
       </div>
 
-      <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-xs font-bold text-gray-700">
+      <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-sm font-bold text-gray-700">
         <div>
-          <span class="text-gray-400 text-xs uppercase font-extrabold block">Fecha</span>
+          <span class="text-gray-400 text-sm uppercase font-extrabold block">Fecha</span>
           <span class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }}</span>
         </div>
         <div class="text-center border-x border-gray-200 px-3">
-          <span class="text-gray-400 text-xs uppercase font-extrabold block">Comensales</span>
+          <span class="text-gray-400 text-sm uppercase font-extrabold block">Comensales</span>
           <span class="text-brand-dark font-black">{{ store.guestsCount }} pers.</span>
         </div>
         <div class="text-right">
-          <span class="text-gray-400 text-xs uppercase font-extrabold block">Servicios</span>
+          <span class="text-gray-400 text-sm uppercase font-extrabold block">Servicios</span>
           <span class="text-brand-dark font-black">
             {{ store.selectedMealTypes.length > 0 ? store.selectedMealTypes.length + ' activo(s)' : 'Ninguno' }}
           </span>

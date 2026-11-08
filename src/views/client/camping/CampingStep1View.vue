@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft, ArrowRight, Tent, Sun, Moon, Users, AlertCircle } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseCalendar from '../../../components/ui/BaseCalendar.vue'
+import HorarioCard from '../../../components/ui/HorarioCard.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
@@ -127,7 +128,7 @@ function handleNext() {
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       
       <div class="space-y-2">
-        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Tent class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Tipo de Visita
         </label>
@@ -145,11 +146,11 @@ function handleNext() {
           >
             <div class="flex items-center justify-between mb-2">
               <Moon class="w-5 h-5 text-brand-accent stroke-[2.5]" />
-              <span v-if="campingType === 'pernoctar'" class="text-xs font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
+              <span v-if="campingType === 'pernoctar'" class="text-sm font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
             </div>
             <div>
-              <span class="text-xs font-black block">Pernoctar</span>
-              <span class="text-xs font-semibold text-gray-300 block">Con carpa (por noche)</span>
+              <span class="text-sm font-black block">Pernoctar</span>
+              <span class="text-sm font-semibold text-gray-300 block">Con carpa (por noche)</span>
             </div>
           </button>
 
@@ -165,18 +166,18 @@ function handleNext() {
           >
             <div class="flex items-center justify-between mb-2">
               <Sun class="w-5 h-5 text-amber-500 stroke-[2.5]" />
-              <span v-if="campingType === 'diario'" class="text-xs font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
+              <span v-if="campingType === 'diario'" class="text-sm font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
             </div>
             <div>
-              <span class="text-xs font-black block">Paseo por el Día</span>
-              <span class="text-xs font-semibold text-gray-300 block">Uso diario sin carpa</span>
+              <span class="text-sm font-black block">Paseo por el Día</span>
+              <span class="text-sm font-semibold text-gray-300 block">Uso diario sin carpa</span>
             </div>
           </button>
         </div>
       </div>
 
       <div class="space-y-2 pt-2 border-t-2 border-gray-100">
-        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider">
+        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider">
           Selecciona Fecha ({{ campingType === 'diario' ? 'Día de visita' : 'Llegada - Salida' }})
         </label>
         <BaseCalendar 
@@ -184,10 +185,16 @@ function handleNext() {
           :end-date="calendarEndDate"
           @change="handleCalendarChange"
         />
+        <HorarioCard
+          :titulo="campingType === 'diario' ? 'Horario del día de campo' : 'Horario de pernoctar'"
+          :ingreso="settingsStore.campingSchedules[campingType === 'diario' ? 'diario' : 'pernoctar'].checkIn"
+          :salida="settingsStore.campingSchedules[campingType === 'diario' ? 'diario' : 'pernoctar'].checkOut"
+          :salida-mismo-dia="campingType === 'diario'"
+        />
       </div>
 
       <div class="pt-3 border-t-2 border-gray-100 space-y-2">
-        <label class="block text-xs font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
           <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Cantidad de Visitantes
         </label>
@@ -212,7 +219,7 @@ function handleNext() {
               max="150"
               class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
-            <span class="text-xs font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
+            <span class="text-sm font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
               {{ store.guestsCount === 1 ? 'Persona' : 'Personas' }}
             </span>
           </div>
@@ -226,7 +233,7 @@ function handleNext() {
           </button>
         </div>
 
-        <div v-if="!capacityValidation.isValid" class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs font-bold text-amber-900 flex items-center gap-2">
+        <div v-if="!capacityValidation.isValid" class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-sm font-bold text-amber-900 flex items-center gap-2">
           <AlertCircle class="w-4 h-4 text-amber-700 shrink-0 stroke-[2.5]" />
           <span>{{ capacityValidation.message }}</span>
         </div>
