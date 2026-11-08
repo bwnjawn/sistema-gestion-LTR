@@ -5,6 +5,21 @@ export type {
   BusinessParameters
 } from './domain'
 
+/** Espacio del restaurante con su capacidad en personas (ej. comedor principal, carpa). */
+export interface EspacioRestaurante {
+  id: string
+  nombre: string
+  capacidad: number
+}
+
+/** Topes de personas que usa el calendario para marcar "sobrecupo". */
+export interface LimitesAforo {
+  /** Personas que caben a la vez en el restaurante (suma de sus espacios). */
+  restaurantePersonas: number
+  /** Personas que admite el camping en un mismo día. */
+  campingPersonas: number
+}
+
 export interface ServiceSchedule {
   start: string
   end: string

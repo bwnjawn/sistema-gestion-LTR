@@ -10,6 +10,7 @@ import AdminCalendarGrid from '../../components/ui/AdminCalendarGrid.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
 import { getDayOccupancy, getRequestsForDay, getWeekDates } from '../../services/availability'
+import { useSettingsStore } from '../../stores/settingsStore'
 import { isoToDate } from '../../lib/dates'
 import type { ReservationRequest, ServiceType } from '../../types/domain'
 
@@ -23,6 +24,7 @@ const viewModes: { id: ViewMode; label: string }[] = [
 ]
 
 const requestsStore = useRequestsStore()
+const settingsStore = useSettingsStore()
 
 // Filtros Activos por Área
 const activeFilters = ref<ServiceType[]>(['cabana', 'camping', 'restaurante'])
@@ -116,7 +118,7 @@ const weekDays = computed(() =>
       dateStr: iso,
       dayName: d.toLocaleDateString('es-CL', { weekday: 'narrow' }),
       dayNum: d.getDate(),
-      status: getDayOccupancy(iso, requestsStore.requests, activeFilters.value).status
+      status: getDayOccupancy(iso, requestsStore.requests, activeFilters.value, settingsStore.limitesAforo).status
     }
   })
 )

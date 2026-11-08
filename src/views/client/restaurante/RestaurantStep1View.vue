@@ -58,13 +58,12 @@ function handleGuestsInput(event: Event) {
     // Campo vacío mientras se escribe: no se fuerza el valor hasta salir del campo
     return
   }
-  store.guestsCount = Math.min(200, val)
+  store.guestsCount = Math.min(settingsStore.restaurantCapacity, val)
 }
 
 // Validación estricta de aforo según reglas del negocio
 const capacityValidation = computed(() => {
-  const maxCap = 200
-  return validateGuestCapacity(store.guestsCount, 1, maxCap)
+  return validateGuestCapacity(store.guestsCount, 1, settingsStore.restaurantCapacity)
 })
 
 const mealOptions = computed(() => {
@@ -187,7 +186,7 @@ function handleNext() {
               @input="handleGuestsInput"
               @blur="handleGuestsBlur"
               min="1"
-              max="200"
+              :max="settingsStore.restaurantCapacity"
               class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
             <span class="text-sm font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">

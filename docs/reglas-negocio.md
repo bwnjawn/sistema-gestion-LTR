@@ -52,9 +52,10 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | Horarios | Desayuno 08:30–11:00, almuerzo 12:30–14:00, once 17:00–19:30 (bloques de 30 min) | — | ✅ `generateTimeSlots` y `settingsStore` |
 | Grupos de más de 30 personas | Máximo 3 menús distintos y mensaje explicativo al llegar al límite | SCRUM-36 | ⚠️ **vive en `RestaurantStep2View.vue`**; moverla a `services/` |
 | Acompañamientos | Modo `none`, `fixed` (acompañamiento fijo, ej. asado de cordero) o `choice` (el cliente elige) | SCRUM-35, 62, 229 | ✅ en el cliente. ❌ falta el CRUD de administración (SCRUM-229) |
-| Cupo por horario | 8 grupos por bloque | — | ⚠️ `capacityRules.maxRestaurantGroupsPerSlot`, **no se aplica**. `getDayOccupancy` usa un `> 8` fijo que mezcla los tres servicios |
+| Cupo por horario | Reemplazado por el aforo en personas de los espacios (ver más abajo) | SCRUM-244 | `maxRestaurantGroupsPerSlot` quedó sin uso y ya no se muestra en Ajustes |
 | Precio | Suma de platos × cantidad (+ IVA) | — | ✅ `calculateRestaurantPrice` |
-| Espacios y capacidad | Comedor principal 120 personas, carpa 50, comedor secundario 30 (total 200) | SCRUM-244 (reunión con el cliente) | ❌ Hoy el código usa un tope fijo de 200 sin separar espacios. ❓ Falta decidir si el aforo se cuenta por comida o por hora y cómo se asigna el espacio a un grupo |
+| Espacios y capacidad | Comedor principal 120 personas, carpa 50, comedor secundario 30 (total 200) | SCRUM-244 (reunión con el cliente) | ✅ Capacidades editables en Ajustes (`capacityRules.restaurantSpaces`); el total (200) limita las personas en el paso 1. ❓ Falta decidir si el aforo se cuenta por comida o por hora y cómo se asigna el espacio a un grupo |
+| Sobrecupo en el calendario | Restaurante: personas de una misma comida > capacidad total. Camping: personas del día > capacidad del camping. Cabañas: no aplica (un solapamiento se rechaza, SCRUM-60) | SCRUM-244 | ✅ `getDayOccupancy` (provisorio hasta confirmar con el cliente si se mide por comida u hora) |
 
 ## 5. Contacto del negocio
 

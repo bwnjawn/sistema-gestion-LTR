@@ -3,12 +3,16 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import type { BusinessInfo, TransferInfo } from '../types/domain'
-import type { RestaurantSchedules, CampingSchedules, CabinSchedules } from '../types/settings'
+import type { RestaurantSchedules, CampingSchedules, CabinSchedules, EspacioRestaurante, LimitesAforo } from '../types/settings'
+import { getRestaurantCapacity } from '../services/availability'
 import { settingsRepository } from '../lib/repositories/settingsRepository'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
 
 export interface CapacityRules {
+  /** Sin uso desde SCRUM-244: el aforo del restaurante ahora sale de `restaurantSpaces`. */
   maxRestaurantGroupsPerSlot: number
+  /** Espacios del restaurante y su capacidad; la suma es el aforo total. */
+  restaurantSpaces: EspacioRestaurante[]
   maxCampingPeopleCapacity: number
   marginPercentage: number
 }
@@ -71,6 +75,11 @@ const DEFAULT_PARAMS: BusinessParametersExtended = {
   isConnected: true,
   capacityRules: {
     maxRestaurantGroupsPerSlot: 8,
+    restaurantSpaces: [
+      { id: 'comedor-principal', nombre: 'Comedor principal', capacidad: 120 },
+      { id: 'carpa', nombre: 'Carpa', capacidad: 50 },
+      { id: 'comedor-secundario', nombre: 'Comedor secundario', capacidad: 30 }
+    ],
     maxCampingPeopleCapacity: 150,
     marginPercentage: 10
   }
@@ -155,6 +164,13 @@ export const useSettingsStore = defineStore('settings', () => {
     await settingsRepository.saveParameters(val)
   }, { deep: true })
 
+  const capacityRulesActuales = computed<CapacityRules>(() => ({ ...DEFAULT_PARAMS.capacityRules, ...parameters.value.capacityRules }))
+  const restaurantCapacity = computed(() => getRestaurantCapacity(capacityRulesActuales.value.restaurantSpaces))
+  const limitesAforo = computed<LimitesAforo>(() => ({
+    restaurantePersonas: restaurantCapacity.value,
+    campingPersonas: capacityRulesActuales.value.maxCampingPeopleCapacity
+  }))
+
   const phone1Clean = computed(() => contactInfo.value.phone1.replace(/\s+/g, ''))
   const phone2Clean = computed(() => contactInfo.value.phone2.replace(/\s+/g, ''))
 
@@ -213,7 +229,10 @@ export const useSettingsStore = defineStore('settings', () => {
     defaultDepositPercentage: computed(() => parameters.value.defaultDepositPercentage ?? 30),
     ivaPercentage: computed(() => parameters.value.ivaPercentage ?? 19),
     marginPercentage: computed(() => parameters.value.marginPercentage ?? 10),
-    capacityRules: computed(() => parameters.value.capacityRules ?? DEFAULT_PARAMS.capacityRules),
+    // Se completa con los valores de fábrica: los parámetros guardados antes de SCRUM-244 no traían los espacios.
+    capacityRules: capacityRulesActuales,
+    restaurantCapacity,
+    limitesAforo,
     currentDate: currentDateDynamic,
     isConnected: isOnline,
     phone1Clean,

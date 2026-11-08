@@ -1,6 +1,7 @@
 // src/services/availability.ts
 
 import type { ReservationRequest, ServiceType } from '../types/domain'
+import type { EspacioRestaurante, LimitesAforo } from '../types/settings'
 import { addDays, isoToDate, isPastDate } from '../lib/dates'
 
 /**
@@ -179,23 +180,52 @@ export function getWeekDates(dateStr: string): string[] {
   return Array.from({ length: 7 }, (_, i) => addDays(lunes, i))
 }
 
+/** Capacidad total del restaurante: suma de la capacidad de sus espacios. */
+export function getRestaurantCapacity(espacios: EspacioRestaurante[]): number {
+  return espacios.reduce((total, e) => total + Math.max(0, e.capacidad || 0), 0)
+}
+
+/** Topes por defecto si no se entregan (200 en el restaurante, 150 en el camping). */
+export const LIMITES_AFORO_POR_DEFECTO: LimitesAforo = { restaurantePersonas: 200, campingPersonas: 150 }
+
+/** Personas del restaurante en cada comida del día; una solicitud sin comida definida cuenta aparte. */
+function personasRestaurantePorComida(solicitudes: ReservationRequest[]): number {
+  const porComida: Record<string, number> = {}
+  for (const r of solicitudes) {
+    const comidas = r.details?.selectedMealTypes?.length ? r.details.selectedMealTypes : ['sin-comida']
+    for (const comida of comidas) {
+      porComida[comida] = (porComida[comida] || 0) + r.guestsCount
+    }
+  }
+  return Math.max(0, ...Object.values(porComida))
+}
+
 /**
  * Calcula el estado de ocupación diaria para el calendario administrativo.
  * Solo cuenta solicitudes activas y respeta los servicios elegidos.
+ * "Sobrecupo" significa superar el aforo permitido: personas por comida en el restaurante
+ * (provisorio hasta definir con el cliente si se mide por comida u hora) y personas por día en el camping.
  */
 export function getDayOccupancy(
   dateStr: string,
   existingRequests: ReservationRequest[],
-  services?: ServiceType[]
+  services?: ServiceType[],
+  limites: LimitesAforo = LIMITES_AFORO_POR_DEFECTO
 ): { confirmedCount: number; pendingCount: number; status: 'disponible' | 'ocupado' | 'sobrecupo' } {
   const dayRequests = getRequestsForDay(dateStr, existingRequests, services)
   const confirmedCount = dayRequests.filter(r => (r.status as string) === 'confirmed' || (r.status as string) === 'confirmada').length
   const pendingCount = dayRequests.length - confirmedCount
 
+  const restaurante = dayRequests.filter(r => normalizarServicio(r.type) === 'restaurante')
+  const camping = dayRequests.filter(r => normalizarServicio(r.type) === 'camping')
+  const superaAforo =
+    personasRestaurantePorComida(restaurante) > limites.restaurantePersonas ||
+    camping.reduce((total, r) => total + r.guestsCount, 0) > limites.campingPersonas
+
   let status: 'disponible' | 'ocupado' | 'sobrecupo' = 'disponible'
-  if (confirmedCount + pendingCount > 8) {
+  if (superaAforo) {
     status = 'sobrecupo'
-  } else if (confirmedCount + pendingCount > 0) {
+  } else if (dayRequests.length > 0) {
     status = 'ocupado'
   }
 

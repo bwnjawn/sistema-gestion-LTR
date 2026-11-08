@@ -22,14 +22,14 @@ const isEditingParameters = ref(false)
 const editDeposit = ref(settingsStore.defaultDepositPercentage)
 const editIva = ref(settingsStore.ivaPercentage)
 const editMargin = ref(settingsStore.marginPercentage)
-const editMaxGroups = ref(settingsStore.capacityRules.maxRestaurantGroupsPerSlot)
+const editSpaces = ref(settingsStore.capacityRules.restaurantSpaces.map(e => ({ ...e })))
 const editMaxCamping = ref(settingsStore.capacityRules.maxCampingPeopleCapacity)
 
 function openParametersEdit() {
   editDeposit.value = settingsStore.defaultDepositPercentage
   editIva.value = settingsStore.ivaPercentage
   editMargin.value = settingsStore.marginPercentage
-  editMaxGroups.value = settingsStore.capacityRules.maxRestaurantGroupsPerSlot
+  editSpaces.value = settingsStore.capacityRules.restaurantSpaces.map(e => ({ ...e }))
   editMaxCamping.value = settingsStore.capacityRules.maxCampingPeopleCapacity
   isEditingParameters.value = true
 }
@@ -41,7 +41,7 @@ async function saveParameters() {
     marginPercentage: editMargin.value
   })
   await settingsStore.updateCapacityRules({
-    maxRestaurantGroupsPerSlot: editMaxGroups.value,
+    restaurantSpaces: editSpaces.value.map(e => ({ ...e, capacidad: Math.max(0, Number(e.capacidad) || 0) })),
     maxCampingPeopleCapacity: editMaxCamping.value,
     marginPercentage: editMargin.value
   })
@@ -168,8 +168,12 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
 
       <div class="space-y-2 text-xs font-bold text-gray-700 bg-gray-50 p-3 rounded-2xl border border-gray-200">
         <div class="flex items-center justify-between">
-          <span class="flex items-center gap-1 text-brand-dark"><Utensils class="w-3.5 h-3.5 text-brand-accent" /> Máximo de grupos por turno en el restaurante:</span>
-          <span class="font-black text-brand-dark">{{ settingsStore.capacityRules.maxRestaurantGroupsPerSlot }} grupos</span>
+          <span class="flex items-center gap-1 text-brand-dark"><Utensils class="w-3.5 h-3.5 text-brand-accent" /> Capacidad total del restaurante:</span>
+          <span class="font-black text-brand-dark">{{ settingsStore.restaurantCapacity }} personas</span>
+        </div>
+        <div v-for="espacio in settingsStore.capacityRules.restaurantSpaces" :key="espacio.id" class="flex items-center justify-between pl-5">
+          <span>{{ espacio.nombre }}:</span>
+          <span class="font-black text-brand-dark">{{ espacio.capacidad }} personas</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="flex items-center gap-1 text-brand-dark"><Users class="w-3.5 h-3.5 text-brand-accent" /> Capacidad máxima del camping:</span>
@@ -214,9 +218,9 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
             <label class="block text-gray-600 mb-1">Margen de cupos (%):</label>
             <input type="number" v-model.number="editMargin" min="0" max="100" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
-          <div>
-            <label class="block text-gray-600 mb-1">Máximo de grupos por turno en el restaurante:</label>
-            <input type="number" v-model.number="editMaxGroups" min="1" max="50" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
+          <div v-for="espacio in editSpaces" :key="espacio.id">
+            <label class="block text-gray-600 mb-1">{{ espacio.nombre }} del restaurante (personas):</label>
+            <input type="number" inputmode="numeric" v-model.number="espacio.capacidad" min="0" max="1000" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
           <div>
             <label class="block text-gray-600 mb-1">Capacidad máxima del camping (personas):</label>
