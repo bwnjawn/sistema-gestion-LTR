@@ -12,7 +12,7 @@ import {
   ArrowLeft,
   CheckCircle2
 } from 'lucide-vue-next'
-import { useAuthStore } from '../../stores/authStore'
+import { MIN_CONTRASENA, useAuthStore } from '../../stores/authStore'
 import BaseButton from '../../components/ui/BaseButton.vue'
 import BaseAlert from '../../components/ui/BaseAlert.vue'
 
@@ -24,6 +24,7 @@ const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 
+const creada = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
@@ -35,7 +36,7 @@ const isFormValid = computed(() => {
   return (
     name.value.trim().length >= 3 &&
     email.value.trim().length >= 5 &&
-    password.value.length >= 6 &&
+    password.value.length >= MIN_CONTRASENA &&
     isPasswordMatch.value
   )
 })
@@ -50,16 +51,17 @@ async function handleRegister() {
   )
 
   if (success) {
-    router.push({ name: 'admin-dashboard' })
+    // La sesión sigue siendo la de quien creó la cuenta: se confirma y se limpia el formulario.
+    creada.value = name.value.trim()
+    name.value = ''
+    email.value = ''
+    password.value = ''
+    confirmPassword.value = ''
   }
 }
 
-function handleGoToLogin() {
-  router.push({ name: 'admin-login' })
-}
-
-function handleBackToHome() {
-  router.push({ name: 'home' })
+function handleBackToPanel() {
+  router.push({ name: 'admin-settings' })
 }
 </script>
 
@@ -80,13 +82,13 @@ function handleBackToHome() {
       <div>
         <span class="inline-flex items-center gap-1.5 bg-brand-dark text-white text-xs font-black uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs">
           <ShieldCheck class="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
-          Registro Administrador
+          Nuevo administrador
         </span>
         <h1 class="text-xl font-black text-brand-dark tracking-tight pt-1">
-          Crear Cuenta de Acceso
+          Crear cuenta de acceso
         </h1>
         <p class="text-xs font-semibold text-gray-500">
-          Ingresa tus datos para registrarte como administrador del sistema
+          La persona podrá entrar al panel con este correo y esta contraseña
         </p>
       </div>
     </header>
@@ -94,6 +96,10 @@ function handleBackToHome() {
     <!-- FORMULARIO DE REGISTRO (Nombre, Correo, Contraseña) -->
     <main class="grow flex flex-col justify-center space-y-4 my-2">
       
+      <BaseAlert v-if="creada" variant="success" title="Cuenta creada">
+        {{ creada }} ya puede iniciar sesión con su correo y su contraseña.
+      </BaseAlert>
+
       <!-- Alerta de Error de Registro -->
       <BaseAlert v-if="authStore.authError" variant="danger" title="Error de Registro">
         {{ authStore.authError }}
@@ -135,14 +141,14 @@ function handleBackToHome() {
         <div class="space-y-1">
           <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
             <Lock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-            Contraseña (Mín. 6 caracteres) *
+            Contraseña (mín. 8 caracteres) *
           </label>
           <div class="relative">
             <input 
               :type="showPassword ? 'text' : 'password'"
               v-model="password"
               required
-              minlength="6"
+              :minlength="MIN_CONTRASENA"
               placeholder="••••••••"
               class="w-full p-3 pr-10 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-sm focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
             />
@@ -216,18 +222,9 @@ function handleBackToHome() {
 
     <!-- ENLACES DE RETORNO -->
     <footer class="space-y-2 pt-2">
-      <button 
-        type="button"
-        @click="handleGoToLogin"
-        class="w-full text-center text-xs font-black text-brand-accent hover:underline p-2 flex items-center justify-center gap-1"
-      >
-        <ShieldCheck class="w-4 h-4 stroke-[2.5]" />
-        <span>¿Ya tienes cuenta? Iniciar Sesión</span>
-      </button>
-
-      <BaseButton variant="outline" size="lg" fullWidth @click="handleBackToHome">
+      <BaseButton variant="outline" size="lg" fullWidth @click="handleBackToPanel">
         <ArrowLeft class="w-5 h-5 mr-1.5 stroke-[2.5]" />
-        Volver al Menú Público
+        Volver a Ajustes
       </BaseButton>
     </footer>
 

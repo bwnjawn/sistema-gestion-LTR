@@ -10,16 +10,23 @@ import { getStorageItem, setStorageItem } from '../lib/persistence'
 
 export type { AdminUser }
 
+export const MIN_CONTRASENA = 8
+
 export interface AdminUserWithPassword extends AdminUser {
   passwordHash: string
 }
+
+// AUTENTICACIÓN DE PROTOTIPO: las contraseñas se guardan en texto plano en el navegador y
+// viajan dentro del código. Sirve para una demo cerrada; la autenticación real llega con
+// Supabase Auth (SCRUM-248). No reutilices aquí una contraseña que uses en otro sitio.
+const CONTRASENA_ANTIGUA = 'admin123'
 
 const DEFAULT_ADMINS: AdminUserWithPassword[] = [
   {
     id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380c11',
     name: 'Dueño 1 (Principal)',
     email: 'dueno1@troncosderepil.cl',
-    passwordHash: 'admin123',
+    passwordHash: 'UucfZdqLKjRD',
     role: 'owner',
     createdAt: '2026-01-01'
   },
@@ -27,15 +34,25 @@ const DEFAULT_ADMINS: AdminUserWithPassword[] = [
     id: 'f2eebc99-9c0b-4ef8-bb6d-6bb9bd380c22',
     name: 'Dueño 2 (Administración)',
     email: 'dueno2@troncosderepil.cl',
-    passwordHash: 'admin123',
+    passwordHash: 'i64CA7dk9MaM',
     role: 'owner',
     createdAt: '2026-01-01'
   }
 ]
 
+/**
+ * Los administradores guardados con la contraseña antigua de ejemplo se descartan y se
+ * reponen los de fábrica, para que ningún navegador conserve el acceso con 'admin123'.
+ */
+function sinContrasenaAntigua(lista: AdminUserWithPassword[]): AdminUserWithPassword[] {
+  const vigentes = lista.filter(a => a.passwordHash !== CONTRASENA_ANTIGUA)
+  const faltantes = DEFAULT_ADMINS.filter(d => !vigentes.some(a => a.id === d.id))
+  return [...faltantes, ...vigentes]
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const adminsList = ref<AdminUserWithPassword[]>(
-    getStorageItem('admin_list', DEFAULT_ADMINS)
+    sinContrasenaAntigua(getStorageItem('admin_list', DEFAULT_ADMINS))
   )
 
   const currentUser = ref<AdminUser | null>(
@@ -48,6 +65,15 @@ export const useAuthStore = defineStore('auth', () => {
 
   function saveAdminsToStorage(): void {
     setStorageItem('admin_list', adminsList.value)
+  }
+
+  // Deja guardada la lista ya depurada (sin la contraseña antigua).
+  saveAdminsToStorage()
+
+  // La sesión de un administrador que ya no existe se cierra.
+  if (currentUser.value && !adminsList.value.some(a => a.id === currentUser.value!.id)) {
+    currentUser.value = null
+    void authRepository.clearSession()
   }
 
   /**
@@ -88,7 +114,8 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Registro de nuevo usuario administrador
+   * Alta de un nuevo administrador. Solo la puede hacer quien ya inició sesión, y no cambia
+   * la sesión actual: quien la crea sigue siendo el mismo usuario.
    */
   async function register(
     name: string,
@@ -97,6 +124,18 @@ export const useAuthStore = defineStore('auth', () => {
   ): Promise<boolean> {
     isLoading.value = true
     authError.value = null
+
+    if (!currentUser.value) {
+      authError.value = 'Solo un administrador con sesión iniciada puede crear otras cuentas.'
+      isLoading.value = false
+      return false
+    }
+    if (passwordHash.length < MIN_CONTRASENA) {
+      authError.value = `La contraseña debe tener al menos ${MIN_CONTRASENA} caracteres.`
+      isLoading.value = false
+      return false
+    }
+
     await new Promise(resolve => setTimeout(resolve, 400))
 
     try {
@@ -121,16 +160,6 @@ export const useAuthStore = defineStore('auth', () => {
 
       adminsList.value.push(newAdmin)
       saveAdminsToStorage()
-
-      const sessionUser: AdminUser = {
-        id: newAdmin.id,
-        name: newAdmin.name,
-        email: newAdmin.email,
-        role: newAdmin.role,
-        createdAt: newAdmin.createdAt
-      }
-      currentUser.value = sessionUser
-      await authRepository.saveCurrentSessionUser(sessionUser)
       isLoading.value = false
       return true
     } catch (e) {

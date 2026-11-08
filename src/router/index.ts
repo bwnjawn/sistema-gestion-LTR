@@ -34,7 +34,8 @@ const routes = [
   // RUTAS DE AUTENTICACIÓN
   // ==========================================
   { path: '/admin/login', name: 'admin-login', component: () => import('../views/admin/LoginView.vue') },
-  { path: '/admin/registro', name: 'admin-register', component: () => import('../views/admin/RegisterView.vue') },
+  // Crear administradores exige una sesión de administrador (ver SCRUM-242).
+  { path: '/admin/registro', name: 'admin-register', component: () => import('../views/admin/RegisterView.vue'), meta: { requiresAuth: true } },
 
   // ==========================================
   // RUTAS DE ADMINISTRACIÓN PROTEGIDAS
@@ -73,7 +74,7 @@ router.beforeEach((to, _from, next) => {
     return next({ name: 'admin-login' })
   }
 
-  if ((to.name === 'admin-login' || to.name === 'admin-register') && authStore.isAuthenticated) {
+  if (to.name === 'admin-login' && authStore.isAuthenticated) {
     return next({ name: 'admin-dashboard' })
   }
 

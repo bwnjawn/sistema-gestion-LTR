@@ -8,8 +8,7 @@ import {
   Eye, 
   EyeOff, 
   LogIn, 
-  ArrowLeft, 
-  KeyRound
+  ArrowLeft,
   } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/authStore'
 import BaseButton from '../../components/ui/BaseButton.vue'
@@ -26,12 +25,6 @@ function togglePasswordVisibility() {
   showPassword.value = !showPassword.value
 }
 
-// Rellena los datos de prueba rápidamente con un toque
-function fillDemoCredentials(demoEmail: string) {
-  email.value = demoEmail
-  password.value = 'admin123'
-}
-
 async function handleLogin() {
   if (!email.value || !password.value) return
 
@@ -43,10 +36,6 @@ async function handleLogin() {
 
 function handleBackToHome() {
   router.push({ name: 'home' })
-}
-
-function handleGoToRegister() {
-  router.push({ name: 'admin-register' })
 }
 </script>
 
@@ -146,42 +135,10 @@ function handleGoToRegister() {
 
       </form>
 
-      <!-- BOTONES RÁPIDOS DE PRUEBA (SOLO PARA DESARROLLO / FACILIDAD DE ACCESO) -->
-      <div class="bg-brand-light/80 p-3.5 rounded-2xl border border-brand-border space-y-2">
-        <span class="text-xs font-black text-gray-500 uppercase tracking-wider block text-center">
-          Credenciales Rápidas de Prueba
-        </span>
-        <div class="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            @click="fillDemoCredentials('dueno1@troncosderepil.cl')"
-            class="py-2 px-2 rounded-xl bg-white border border-brand-border text-xs font-black text-brand-dark hover:bg-gray-100 touch-target active:scale-95 transition-transform truncate"
-          >
-            Dueño 1
-          </button>
-          <button
-            type="button"
-            @click="fillDemoCredentials('dueno2@troncosderepil.cl')"
-            class="py-2 px-2 rounded-xl bg-white border border-brand-border text-xs font-black text-brand-dark hover:bg-gray-100 touch-target active:scale-95 transition-transform truncate"
-          >
-            Dueño 2
-          </button>
-        </div>
-      </div>
-
     </main>
 
     <!-- PIE Y ENLACES DE NAVEGACIÓN -->
     <footer class="space-y-2 pt-2">
-      <button 
-        type="button"
-        @click="handleGoToRegister"
-        class="w-full text-center text-xs font-black text-brand-accent hover:underline p-2 flex items-center justify-center gap-1"
-      >
-        <KeyRound class="w-4 h-4 stroke-[2.5]" />
-        <span>¿Nuevo administrador? Crear cuenta</span>
-      </button>
-
       <BaseButton variant="outline" size="lg" fullWidth @click="handleBackToHome">
         <ArrowLeft class="w-5 h-5 mr-1.5 stroke-[2.5]" />
         Volver al Menú Público

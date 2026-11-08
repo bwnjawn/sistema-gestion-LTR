@@ -19,7 +19,7 @@ Origen: una revisión externa anterior. Cada punto se comprobó en el código ac
 | 10 | Camping asigna `campingSites[0]` por defecto e ignora la modalidad | `CampingStep2View.vue:48` | SCRUM-240 |
 | 11 | Guards débiles (teléfono `'+56 9 '`), `nextStep()` ausente en Camping 2, `StepIndicator` con etiquetas fijas | `reservationStore.ts:87`, `StepIndicator.vue:13-16` | SCRUM-240 |
 | 12 | Configuración incompleta: no hay edición de horarios de cabaña ni de restaurante; datos de transferencia inexistentes | `CategorySchedulesModal.vue` solo camping | SCRUM-233 y SCRUM-231 |
-| 13 | Contraseñas `admin123` en texto plano, registro público, botones de prueba | `authStore.ts:15-28`, `router/index.ts:36` | SCRUM-242 (parche) y SCRUM-248 (Auth real) |
+| 13 | **Parcheado (SCRUM-242):** botones de prueba y registro público quitados, contraseñas nuevas. Sigue en texto plano hasta SCRUM-248. Original: contraseñas `admin123` en texto plano, registro público, botones de prueba | `authStore.ts:15-28`, `router/index.ts:36` | SCRUM-242 (parche) y SCRUM-248 (Auth real) |
 | 14 | Mutación directa del store en la vista | `AdminRequestsView.vue` (`status`, `details`) | SCRUM-59 (spec) |
 | 16 | Tailwind v4 en un proyecto v3 (`shadow-xs` ×65, `shadow-2xs` ×36, `backdrop-blur-xs` ×19, `active:scale-98` ×5); 9 clases `dark:`; Inter en lugar de Atkinson; `/vite.svg` y los íconos PWA no existen en `public/`; mapa con coordenadas positivas | `tailwind.config.js`, `index.html`, `settingsStore.ts:35` | SCRUM-241 |
 
