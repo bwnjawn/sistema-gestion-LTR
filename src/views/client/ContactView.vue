@@ -34,7 +34,7 @@ const settingsStore = useSettingsStore()
             <Phone class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <span class="text-[10px] text-gray-500 block leading-none">Llamar / WhatsApp</span>
+            <span class="text-[10px] text-gray-500 block leading-none">Llamar o escribir por WhatsApp</span>
             <span class="text-xs font-black">{{ settingsStore.contactInfo.phone1 }}</span>
           </div>
         </a>
@@ -112,16 +112,16 @@ const settingsStore = useSettingsStore()
 
       <div class="space-y-2 text-xs font-bold text-gray-700 bg-brand-light p-3.5 rounded-2xl border border-brand-border">
         <div class="flex justify-between items-center">
-          <span class="text-gray-500">Cabañas (Check-in / Out):</span>
-          <span class="text-brand-dark">{{ settingsStore.cabinSchedules.checkIn }} - {{ settingsStore.cabinSchedules.checkOut }} hrs</span>
+          <span class="text-gray-500">Cabañas (entrada y salida):</span>
+          <span class="text-brand-dark">{{ settingsStore.cabinSchedules.checkIn }} - {{ settingsStore.cabinSchedules.checkOut }} horas</span>
         </div>
         <div class="flex justify-between items-center">
           <span class="text-gray-500">Camping (Día de campo):</span>
-          <span class="text-brand-dark">{{ settingsStore.campingSchedules.diario.checkIn }} - {{ settingsStore.campingSchedules.diario.checkOut }} hrs</span>
+          <span class="text-brand-dark">{{ settingsStore.campingSchedules.diario.checkIn }} - {{ settingsStore.campingSchedules.diario.checkOut }} horas</span>
         </div>
         <div class="flex justify-between items-center">
           <span class="text-gray-500">Restaurante (Almuerzo):</span>
-          <span class="text-brand-dark">{{ settingsStore.restaurantSchedules.almuerzo.start }} - {{ settingsStore.restaurantSchedules.almuerzo.end }} hrs</span>
+          <span class="text-brand-dark">{{ settingsStore.restaurantSchedules.almuerzo.start }} - {{ settingsStore.restaurantSchedules.almuerzo.end }} horas</span>
         </div>
       </div>
     </div>

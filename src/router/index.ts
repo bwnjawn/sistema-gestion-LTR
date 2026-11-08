@@ -47,9 +47,11 @@ const routes = [
       { path: 'dashboard', name: 'admin-dashboard', component: () => import('../views/admin/AdminDashboardView.vue') },
       { path: 'solicitudes', name: 'admin-solicitudes', component: () => import('../views/admin/AdminRequestsView.vue') },
       { path: 'calendario', name: 'admin-calendar', component: () => import('../views/admin/AdminCalendarView.vue') },
-      { path: 'editar', name: 'admin-edit', component: () => import('../views/admin/AdminCatalogEditView.vue') },
       { path: 'catalogo', name: 'admin-catalog', component: () => import('../views/admin/AdminCatalogEditView.vue') },
-      { path: 'mas', name: 'admin-more', component: () => import('../views/admin/AdminSettingsView.vue') }
+      { path: 'ajustes', name: 'admin-settings', component: () => import('../views/admin/AdminSettingsView.vue') },
+      // Rutas antiguas
+      { path: 'editar', redirect: { name: 'admin-catalog' } },
+      { path: 'mas', redirect: { name: 'admin-settings' } }
     ]
   },
 

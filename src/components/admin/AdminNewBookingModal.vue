@@ -132,7 +132,7 @@ async function handleSubmit() {
         </div>
 
         <div>
-          <label class="block text-gray-600 mb-1">Recurso / Espacio:</label>
+          <label class="block text-gray-600 mb-1">Cabaña o espacio:</label>
           <select 
             v-model="selectedResourceId" 
             @change="onResourceChange"
@@ -156,7 +156,7 @@ async function handleSubmit() {
 
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-gray-600 mb-1">Comensales / Personas:</label>
+            <label class="block text-gray-600 mb-1">Cantidad de personas:</label>
             <input type="number" v-model.number="guestsCount" min="1" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
           <div>
@@ -166,7 +166,7 @@ async function handleSubmit() {
         </div>
 
         <div>
-          <label class="block text-gray-600 mb-1">Monto Abonado / Pagado (\$):</label>
+          <label class="block text-gray-600 mb-1">Monto abonado (en pesos):</label>
           <input type="number" v-model.number="depositPaid" min="0" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
         </div>
 

@@ -35,7 +35,7 @@ const normalizedFeatures = computed(() => {
     <div class="relative h-44 sm:h-48 w-full bg-gray-100 overflow-hidden">
       <img :src="displayImage" :alt="cabin.name" class="w-full h-full object-cover" />
       <div class="absolute top-3 right-3 bg-brand-dark/90 text-white px-3 py-1 rounded-full font-black text-xs">
-        {{ formattedPrice }} / noche
+        {{ formattedPrice }} la noche
       </div>
     </div>
 

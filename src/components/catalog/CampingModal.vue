@@ -128,8 +128,8 @@ function close() {
           <div>
             <label class="block text-gray-700 mb-1">Modalidad *</label>
             <select v-model="form.modality" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-xs">
-              <option value="pernoctar">Pernoctar (Noche)</option>
-              <option value="diario">Diario (Día de campo)</option>
+              <option value="pernoctar">Con noche (pernoctar)</option>
+              <option value="diario">Por el día (sin pernoctar)</option>
             </select>
           </div>
         </div>
@@ -148,7 +148,7 @@ function close() {
         <div class="flex items-center gap-2 p-3 bg-brand-light rounded-xl border border-brand-border">
           <input v-model="form.isSpecial" type="checkbox" id="isSpecial" class="w-4 h-4 rounded text-brand-dark" />
           <label for="isSpecial" class="text-xs font-black text-brand-dark cursor-pointer">
-            Espacio Especial / Grupos Grandes
+            Espacio especial para grupos grandes
           </label>
         </div>
 

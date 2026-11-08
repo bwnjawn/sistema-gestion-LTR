@@ -43,7 +43,7 @@ function formatDateShort(dateStr: string): string {
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate) return 'Sin fecha'
-  const timeStr = store.restaurantTime ? ` (${store.restaurantTime} hrs)` : ''
+  const timeStr = store.restaurantTime ? ` (${store.restaurantTime} horas)` : ''
   return `${formatDateShort(store.checkInDate)}${timeStr}`
 })
 
@@ -109,12 +109,12 @@ function handleNext() {
       <div class="space-y-1.5">
         <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          {{ selectedClientType === 'Particular' ? 'Nombre Completo *' : 'Nombre de Empresa / Institución *' }}
+          {{ selectedClientType === 'Particular' ? 'Nombre Completo *' : 'Nombre de la empresa o institución *' }}
         </label>
         <input 
           type="text"
           v-model="store.clientName"
-          :placeholder="selectedClientType === 'Particular' ? 'Ej: Juan Pérez' : 'Ej: Colegio San Martín / Empresa XYZ'"
+          :placeholder="selectedClientType === 'Particular' ? 'Ej: Juan Pérez' : 'Ej: Colegio San Martín'"
           class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
       </div>

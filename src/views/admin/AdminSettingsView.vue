@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Phone, Settings, MapPin, Mail, Globe, Instagram,Utensils, Wifi, WifiOff, Users, Percent } from 'lucide-vue-next'
+import { Phone, Settings, MapPin, Mail, Globe, Instagram, Utensils, Wifi, WifiOff, Users, Percent, Clock } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 import AdminContactEditModal from '../../components/admin/AdminContactEditModal.vue'
 import CategorySchedulesModal from '../../components/admin/CategorySchedulesModal.vue'
@@ -47,7 +47,7 @@ async function saveParameters() {
       <div class="flex items-center justify-between text-brand-accent">
         <div class="flex items-center gap-2">
           <Settings class="w-5 h-5 stroke-[2.5]" />
-          <span class="text-xs font-black uppercase tracking-wider">Configuración General</span>
+          <span class="text-xs font-black uppercase tracking-wider">Ajustes</span>
         </div>
         <span 
           :class="[
@@ -58,12 +58,12 @@ async function saveParameters() {
           ]"
         >
           <component :is="settingsStore.isConnected ? Wifi : WifiOff" class="w-3.5 h-3.5 stroke-[2.5]" />
-          {{ settingsStore.isConnected ? 'En Línea' : 'Sin Conexión (Offline)' }}
+          {{ settingsStore.isConnected ? 'Con conexión' : 'Sin conexión' }}
         </span>
       </div>
-      <h2 class="text-lg font-black text-brand-dark">Parámetros del Centro Turístico</h2>
+      <h2 class="text-lg font-black text-brand-dark">Ajustes del negocio</h2>
       <p class="text-xs font-medium text-gray-600">
-        Gestiona los datos de contacto público, regla de IVA, aforos y horarios operacionales.
+        Aquí puedes cambiar los datos de contacto, los horarios, el abono y los cupos.
       </p>
     </div>
 
@@ -71,7 +71,7 @@ async function saveParameters() {
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <h3 class="text-sm font-black text-brand-dark">Datos de Contacto</h3>
+          <h3 class="text-sm font-black text-brand-dark">Datos de contacto</h3>
         </div>
         <button type="button" @click="showContactModal = true" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-100">
           Editar
@@ -81,7 +81,7 @@ async function saveParameters() {
       <div class="space-y-2 text-xs font-bold text-gray-700 bg-brand-light p-3 rounded-2xl border border-brand-border">
         <div class="flex items-center gap-2">
           <Phone class="w-3.5 h-3.5 text-gray-500" />
-          <span>{{ settingsStore.contactInfo.phone1 }} / {{ settingsStore.contactInfo.phone2 }}</span>
+          <span>{{ settingsStore.contactInfo.phone1 }}<template v-if="settingsStore.contactInfo.phone2"> y {{ settingsStore.contactInfo.phone2 }}</template></span>
         </div>
         <div class="flex items-center gap-2">
           <Mail class="w-3.5 h-3.5 text-gray-500" />
@@ -105,8 +105,35 @@ async function saveParameters() {
     <div class="bg-white p-4 sm:p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
+          <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
+          <h3 class="text-sm font-black text-brand-dark">Horarios</h3>
+        </div>
+        <button type="button" @click="showSchedulesModal = true" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-100">
+          Editar
+        </button>
+      </div>
+
+      <div class="space-y-2 text-xs font-bold text-gray-700 bg-brand-light p-3 rounded-2xl border border-brand-border">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-500">Cabañas (entrada y salida):</span>
+          <span class="text-brand-dark">{{ settingsStore.cabinSchedules.checkIn }} a {{ settingsStore.cabinSchedules.checkOut }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-500">Camping por el día:</span>
+          <span class="text-brand-dark">{{ settingsStore.campingSchedules.diario.checkIn }} a {{ settingsStore.campingSchedules.diario.checkOut }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-500">Restaurante (almuerzo):</span>
+          <span class="text-brand-dark">{{ settingsStore.restaurantSchedules.almuerzo.start }} a {{ settingsStore.restaurantSchedules.almuerzo.end }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 sm:p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
           <Percent class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <h3 class="text-sm font-black text-brand-dark">Reglas Financieras y Aforos</h3>
+          <h3 class="text-sm font-black text-brand-dark">Abonos, IVA y cupos</h3>
         </div>
         <button type="button" @click="openParametersEdit" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-100">
           Editar
@@ -115,26 +142,26 @@ async function saveParameters() {
 
       <div class="grid grid-cols-3 gap-2 text-xs font-bold">
         <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-[9px] text-gray-500 uppercase block">Abono Exigido</span>
+          <span class="text-[9px] text-gray-500 uppercase block">Abono exigido</span>
           <span class="text-sm font-black text-brand-dark">{{ settingsStore.defaultDepositPercentage }}%</span>
         </div>
         <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-[9px] text-gray-500 uppercase block">Tasa IVA</span>
+          <span class="text-[9px] text-gray-500 uppercase block">IVA</span>
           <span class="text-sm font-black text-brand-dark">{{ settingsStore.ivaPercentage }}%</span>
         </div>
         <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-[9px] text-gray-500 uppercase block">Margen Aforo</span>
+          <span class="text-[9px] text-gray-500 uppercase block">Margen de cupos</span>
           <span class="text-sm font-black text-brand-dark">{{ settingsStore.marginPercentage }}%</span>
         </div>
       </div>
 
       <div class="space-y-2 text-xs font-bold text-gray-700 bg-gray-50 p-3 rounded-2xl border border-gray-200">
         <div class="flex items-center justify-between">
-          <span class="flex items-center gap-1 text-brand-dark"><Utensils class="w-3.5 h-3.5 text-brand-accent" /> Máx. Grupos / Turno Restorán:</span>
+          <span class="flex items-center gap-1 text-brand-dark"><Utensils class="w-3.5 h-3.5 text-brand-accent" /> Máximo de grupos por turno en el restaurante:</span>
           <span class="font-black text-brand-dark">{{ settingsStore.capacityRules.maxRestaurantGroupsPerSlot }} grupos</span>
         </div>
         <div class="flex items-center justify-between">
-          <span class="flex items-center gap-1 text-brand-dark"><Users class="w-3.5 h-3.5 text-brand-accent" /> Capacidad Máx. Camping:</span>
+          <span class="flex items-center gap-1 text-brand-dark"><Users class="w-3.5 h-3.5 text-brand-accent" /> Capacidad máxima del camping:</span>
           <span class="font-black text-brand-dark">{{ settingsStore.capacityRules.maxCampingPeopleCapacity }} personas</span>
         </div>
       </div>
@@ -143,27 +170,27 @@ async function saveParameters() {
     <!-- Modal de Edición de Parámetros -->
     <div v-if="isEditingParameters" class="fixed inset-0 z-50 bg-brand-dark/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div class="bg-white rounded-3xl p-5 max-w-sm w-full border-2 border-brand-border shadow-2xl space-y-4">
-        <h3 class="text-base font-black text-brand-dark border-b border-gray-100 pb-2">Editar Reglas y Parámetros</h3>
+        <h3 class="text-base font-black text-brand-dark border-b border-gray-100 pb-2">Abonos, IVA y cupos</h3>
         
         <div class="space-y-3 text-xs font-bold">
           <div>
-            <label class="block text-gray-600 mb-1">% Abono Requerido:</label>
+            <label class="block text-gray-600 mb-1">Abono requerido (%):</label>
             <input type="number" v-model.number="editDeposit" min="0" max="100" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
           <div>
-            <label class="block text-gray-600 mb-1">% Tasa de IVA:</label>
+            <label class="block text-gray-600 mb-1">IVA (%):</label>
             <input type="number" v-model.number="editIva" min="0" max="100" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
           <div>
-            <label class="block text-gray-600 mb-1">% Margen de Aforo:</label>
+            <label class="block text-gray-600 mb-1">Margen de cupos (%):</label>
             <input type="number" v-model.number="editMargin" min="0" max="100" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
           <div>
-            <label class="block text-gray-600 mb-1">Máx. Grupos por Turno Restaurante:</label>
+            <label class="block text-gray-600 mb-1">Máximo de grupos por turno en el restaurante:</label>
             <input type="number" v-model.number="editMaxGroups" min="1" max="50" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
           <div>
-            <label class="block text-gray-600 mb-1">Capacidad Máxima Camping (Personas):</label>
+            <label class="block text-gray-600 mb-1">Capacidad máxima del camping (personas):</label>
             <input type="number" v-model.number="editMaxCamping" min="1" max="1000" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
         </div>

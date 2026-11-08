@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { X, Save, Plus } from 'lucide-vue-next'
+import { X, Save, Plus, Check } from 'lucide-vue-next'
 import type { Dish, SideDishMode } from '../../types/catalog'
 import ImageGalleryEditor from '../ui/ImageGalleryEditor.vue'
 
@@ -222,7 +222,10 @@ function close() {
                     : 'bg-white text-gray-600 border-brand-border'
                 ]"
               >
-                {{ form.availableSides.includes(side) ? '✓ ' : '+ ' }}{{ side }}
+                <span class="inline-flex items-center gap-1">
+                  <Check v-if="form.availableSides.includes(side)" class="w-3 h-3 stroke-[3]" />
+                  {{ side }}
+                </span>
               </button>
             </div>
 

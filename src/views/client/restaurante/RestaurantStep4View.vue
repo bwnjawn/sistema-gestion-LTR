@@ -39,7 +39,7 @@ function formatDateShort(dateStr: string): string {
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate) return 'Sin fecha'
-  const timeStr = store.restaurantTime ? ` (${store.restaurantTime} hrs)` : ''
+  const timeStr = store.restaurantTime ? ` (${store.restaurantTime} horas)` : ''
   return `${formatDateShort(store.checkInDate)}${timeStr}`
 })
 

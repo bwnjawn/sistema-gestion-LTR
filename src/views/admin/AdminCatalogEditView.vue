@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { 
-  Clock, Home, Tent, Utensils, Plus, Sparkles, Trash2, AlertTriangle, Phone 
+  Home, Tent, Utensils, Plus, Sparkles, Trash2, AlertTriangle, Pencil 
 } from 'lucide-vue-next'
+import DropdownMenu from '../../components/ui/DropdownMenu.vue'
 import CabinCard from '../../components/catalog/CabinCard.vue'
 import CampingCard from '../../components/catalog/CampingCard.vue'
 import DishCard from '../../components/catalog/DishCard.vue'
 import CabinModal from '../../components/catalog/CabinModal.vue'
 import CampingModal from '../../components/catalog/CampingModal.vue'
 import DishModal from '../../components/catalog/DishModal.vue'
-import AdminContactEditModal from '../../components/admin/AdminContactEditModal.vue'
-import CategorySchedulesModal from '../../components/admin/CategorySchedulesModal.vue'
 import { useCatalogStore } from '../../stores/catalogStore'
 import type { Cabin, CampingSite, Dish } from '../../types/catalog'
 
@@ -33,10 +32,6 @@ const filteredMenuDishes = computed(() => {
   )
 })
 
-// Modales de Configuración
-const showContactModal = ref(false)
-const showSchedulesModal = ref(false)
-
 // Modales de Edición
 const showCabinModal = ref(false)
 const selectedCabin = ref<Cabin | null>(null)
@@ -46,6 +41,22 @@ const selectedCamping = ref<CampingSite | null>(null)
 
 const showDishModal = ref(false)
 const selectedDish = ref<Dish | null>(null)
+
+// Menús desplegables
+const cardMenuItems = [
+  { key: 'edit', label: 'Editar', icon: Pencil },
+  { key: 'delete', label: 'Eliminar', icon: Trash2, danger: true }
+]
+
+function handleCardAction(key: string, kind: 'cabin' | 'camping' | 'dish', item: any) {
+  if (key === 'edit') {
+    if (kind === 'cabin') openEditCabinModal(item)
+    else if (kind === 'camping') openEditCampingModal(item)
+    else openEditDishModal(item)
+  } else if (key === 'delete') {
+    confirmDelete(kind, item.id, item.name)
+  }
+}
 
 // Acompañamiento Global Entrada Directa
 const newSideInput = ref('')
@@ -154,26 +165,6 @@ function executeDelete() {
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
     
     <!-- ENCABEZADO Y CONFIGURACIONES RÁPIDAS -->
-    <div class="grid grid-cols-2 gap-2">
-      <button 
-        type="button" 
-        @click="showContactModal = true" 
-        class="py-2.5 px-3 rounded-2xl bg-brand-light hover:bg-gray-100 border border-brand-border text-brand-dark font-black text-xs flex items-center justify-center gap-1.5 touch-target active:scale-95 transition-all"
-      >
-        <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-        <span>Editar Contacto</span>
-      </button>
-
-      <button 
-        type="button" 
-        @click="showSchedulesModal = true" 
-        class="py-2.5 px-3 rounded-2xl bg-brand-light hover:bg-gray-100 border border-brand-border text-brand-dark font-black text-xs flex items-center justify-center gap-1.5 touch-target active:scale-95 transition-all"
-      >
-        <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-        <span>Horarios y Reglas</span>
-      </button>
-    </div>
-
     <!-- PESTAÑAS PRINCIPALES -->
     <div class="bg-white p-2 rounded-3xl border-2 border-brand-border shadow-2xs">
       <div class="grid grid-cols-3 gap-1.5 p-1 bg-brand-light rounded-2xl border border-brand-border">
@@ -222,9 +213,8 @@ function executeDelete() {
         :cabin="cabin"
       >
         <template #actions="{ cabin: item }">
-          <div class="flex items-center justify-end gap-1.5">
-            <button type="button" @click.stop="openEditCabinModal(item)" class="py-2 px-3.5 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-200 active:scale-95">Editar</button>
-            <button type="button" @click.stop="confirmDelete('cabin', item.id, item.name)" class="py-2 px-3.5 bg-rose-50 border border-rose-200 text-rose-700 font-black text-xs rounded-xl hover:bg-rose-100 active:scale-95">Eliminar</button>
+          <div class="flex items-center justify-end">
+            <DropdownMenu :items="cardMenuItems" :aria-label="`Opciones de ${item.name}`" @select="key => handleCardAction(key, 'cabin', item)" />
           </div>
         </template>
       </CabinCard>
@@ -234,9 +224,8 @@ function executeDelete() {
     <div v-else-if="activeCategory === 'camping'" class="space-y-4">
       <CampingCard v-for="site in catalogStore.campingSites" :key="site.id" :site="site">
         <template #actions="{ site: item }">
-          <div class="flex items-center justify-end gap-1.5 pt-2 border-t border-gray-100">
-            <button type="button" @click.stop="openEditCampingModal(item)" class="py-2 px-3.5 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-200 active:scale-95">Editar</button>
-            <button type="button" @click.stop="confirmDelete('camping', item.id, item.name)" class="py-2 px-3.5 bg-rose-50 border border-rose-200 text-rose-700 font-black text-xs rounded-xl hover:bg-rose-100 active:scale-95">Eliminar</button>
+          <div class="flex items-center justify-end pt-2 border-t border-gray-100">
+            <DropdownMenu :items="cardMenuItems" :aria-label="`Opciones de ${item.name}`" @select="key => handleCardAction(key, 'camping', item)" />
           </div>
         </template>
       </CampingCard>
@@ -246,7 +235,7 @@ function executeDelete() {
     <div v-else class="space-y-4">
       <div class="flex bg-white p-1 rounded-2xl border-2 border-brand-border">
         <button type="button" @click="restaurantTab = 'dishes'" :class="['flex-1 py-2 text-xs font-black rounded-xl transition-all', restaurantTab === 'dishes' ? 'bg-[#c5d7be] text-brand-dark shadow-2xs' : 'text-gray-500']">Platos Principales</button>
-        <button type="button" @click="restaurantTab = 'sides'" :class="['flex-1 py-2 text-xs font-black rounded-xl transition-all', restaurantTab === 'sides' ? 'bg-[#c5d7be] text-brand-dark shadow-2xs' : 'text-gray-500']">Acompañamientos Glob.</button>
+        <button type="button" @click="restaurantTab = 'sides'" :class="['flex-1 py-2 text-xs font-black rounded-xl transition-all', restaurantTab === 'sides' ? 'bg-[#c5d7be] text-brand-dark shadow-2xs' : 'text-gray-500']">Acompañamientos generales</button>
       </div>
 
       <div v-if="restaurantTab === 'dishes'" class="space-y-3">
@@ -262,19 +251,18 @@ function executeDelete() {
           :dish="dish"
         >
           <template #actions="{ dish: item }">
-            <div class="flex items-center justify-end gap-1.5 pt-2 border-t border-gray-100">
-              <button type="button" @click.stop="openEditDishModal(item)" class="py-2 px-3.5 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-200 active:scale-95">Editar</button>
-              <button type="button" @click.stop="confirmDelete('dish', item.id, item.name)" class="py-2 px-3.5 bg-rose-50 border border-rose-200 text-rose-700 font-black text-xs rounded-xl hover:bg-rose-100 active:scale-95">Eliminar</button>
-            </div>
+            <div class="flex items-center justify-end pt-2 border-t border-gray-100">
+            <DropdownMenu :items="cardMenuItems" :aria-label="`Opciones de ${item.name}`" @select="key => handleCardAction(key, 'dish', item)" />
+          </div>
           </template>
         </DishCard>
       </div>
 
       <div v-else class="space-y-3">
         <div class="bg-white p-4 rounded-3xl border-2 border-brand-border space-y-2">
-          <span class="text-xs font-black text-brand-dark block">+ Crear Nuevo Acompañamiento Global:</span>
+          <span class="text-xs font-black text-brand-dark block">Agregar acompañamiento general:</span>
           <div class="flex gap-2">
-            <input v-model="newSideInput" type="text" placeholder="Ej: Ens. Chilena / Papas Mayo" class="flex-1 p-3 rounded-xl border-2 border-brand-border bg-brand-light text-xs font-bold" @keyup.enter.prevent="addSideDirectly" />
+            <input v-model="newSideInput" type="text" placeholder="Ej: Ensalada chilena" class="flex-1 p-3 rounded-xl border-2 border-brand-border bg-brand-light text-xs font-bold" @keyup.enter.prevent="addSideDirectly" />
             <button type="button" @click="addSideDirectly" class="px-5 bg-brand-dark text-white rounded-xl font-black text-xs active:scale-95 shadow-2xs">Guardar</button>
           </div>
         </div>
@@ -294,8 +282,6 @@ function executeDelete() {
     </div>
 
     <!-- MODALES DE CONFIGURACIÓN Y EDICIÓN -->
-    <AdminContactEditModal :is-open="showContactModal" @close="showContactModal = false" />
-    <CategorySchedulesModal :is-open="showSchedulesModal" @close="showSchedulesModal = false" />
     <CabinModal :is-open="showCabinModal" :cabin="selectedCabin" :is-editable="true" @close="showCabinModal = false" @save="saveCabin" />
     <CampingModal :is-open="showCampingModal" :site="selectedCamping" :is-editable="true" @close="showCampingModal = false" @save="saveCamping" />
     <DishModal :is-open="showDishModal" :dish="selectedDish" :is-editable="true" :global-side-dishes="catalogStore.sideDishes" @close="showDishModal = false" @save="saveDish" @add-global-side="handleGlobalSideAdded" />

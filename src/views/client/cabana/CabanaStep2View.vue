@@ -102,7 +102,7 @@ function nextStep() {
                     : 'bg-brand-dark text-white hover:bg-brand-dark/90'
                 ]"
               >
-                {{ reservationStore.selectedCabinId === cabin.id ? '✓ Seleccionada' : 'Elegir Cabaña' }}
+                {{ reservationStore.selectedCabinId === cabin.id ? 'Seleccionada' : 'Elegir Cabaña' }}
               </button>
             </div>
           </template>

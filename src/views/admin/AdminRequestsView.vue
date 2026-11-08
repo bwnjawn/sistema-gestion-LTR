@@ -333,7 +333,7 @@ function formatDateShort(dateStr: string): string {
             @click="openDetailModal(req)"
             class="flex-1 py-2 bg-brand-light border border-brand-border text-brand-dark rounded-xl font-black text-xs hover:bg-gray-100 active:scale-95 transition-transform"
           >
-            Ver Detalle &amp; Pagos
+            Ver detalle y pagos
           </button>
           
           <button
@@ -442,7 +442,7 @@ function formatDateShort(dateStr: string): string {
 
           <!-- Registrar Abono/Pago Adicional -->
           <div v-if="calculatePaymentState(selectedRequest).balance > 0" class="pt-2 border-t border-gray-100 space-y-2">
-            <span class="text-[10px] font-black text-gray-500 uppercase block">Registrar Nuevo Abono / Pago</span>
+            <span class="text-[10px] font-black text-gray-500 uppercase block">Registrar nuevo abono</span>
             <div class="flex gap-2">
               <input 
                 type="number" 

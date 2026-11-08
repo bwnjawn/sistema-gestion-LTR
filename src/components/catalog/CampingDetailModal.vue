@@ -47,7 +47,7 @@ const imagesList = computed(() => {
 
         <div class="flex items-center justify-between p-3 bg-brand-light rounded-2xl border border-brand-border">
           <span class="text-xs font-black text-brand-dark">Tarifa:</span>
-          <span class="text-base font-black text-brand-accent">{{ formattedPrice }} / persona</span>
+          <span class="text-base font-black text-brand-accent">{{ formattedPrice }} por persona</span>
         </div>
 
         <div class="grid grid-cols-2 gap-2 text-xs font-bold text-gray-700">

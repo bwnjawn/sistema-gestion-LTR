@@ -81,7 +81,7 @@ function handleNext() {
         <input 
           type="text"
           v-model="store.clientName"
-          placeholder="Ej: Juan Pérez / Colegio San Martín"
+          placeholder="Ej: Juan Pérez"
           class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
       </div>

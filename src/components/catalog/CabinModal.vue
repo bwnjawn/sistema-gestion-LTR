@@ -273,7 +273,7 @@ function close() {
         <!-- Formulario -->
         <form @submit.prevent="handleSave" class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs font-bold grow">
           <div>
-            <label class="block text-gray-700 mb-1">Nombre / Identificación *</label>
+            <label class="block text-gray-700 mb-1">Nombre de la cabaña *</label>
             <input v-model="form.name" required type="text" placeholder="Ej: Cabaña 6" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-sm" />
           </div>
 
@@ -308,7 +308,7 @@ function close() {
 
           <!-- Equipamientos / Servicios -->
           <div class="space-y-2 pt-1">
-            <label class="block text-gray-700">Servicios / Equipamientos:</label>
+            <label class="block text-gray-700">Servicios incluidos:</label>
             <div class="flex gap-2">
               <input v-model="newFeatureInput" type="text" placeholder="Ej: Estufa a leña" class="flex-1 p-2.5 rounded-xl border-2 border-brand-border bg-brand-light text-xs font-bold" @keyup.enter.prevent="addFeature" />
               <button type="button" @click="addFeature" class="px-3.5 bg-brand-dark text-white rounded-xl font-black text-xs flex items-center gap-1">

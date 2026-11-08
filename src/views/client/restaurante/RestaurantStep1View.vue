@@ -275,7 +275,7 @@ function handleNext() {
                 : 'bg-white text-brand-dark border-brand-border hover:bg-gray-100'
             ]"
           >
-            {{ timeSlot }} hrs
+            {{ timeSlot }} horas
           </button>
         </div>
       </div>

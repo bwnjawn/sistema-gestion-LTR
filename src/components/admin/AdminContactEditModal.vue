@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { X, Save, Phone, Mail, MapPin, Globe } from 'lucide-vue-next'
+import { X, Save, Phone, Mail, MapPin, Globe, Instagram } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 import BaseButton from '../ui/BaseButton.vue'
+import { buildWebsiteUrl, buildInstagramUrl, cleanInstagramUser, buildMapsUrl, buildMapEmbedUrl } from '../../lib/contactLinks'
 
 const props = defineProps<{
   isOpen: boolean
@@ -37,13 +38,23 @@ watch(() => props.isOpen, (newVal) => {
 })
 
 function handleSave() {
+  const current = settingsStore.contactInfo
+  const addressChanged = form.value.address.trim() !== (current.address || '').trim()
+  const instagramUser = cleanInstagramUser(form.value.instagramUser)
+
   settingsStore.updateContactInfo({
     phone1: form.value.phone1,
     phone2: form.value.phone2,
     email: form.value.email,
     address: form.value.address,
     websiteDisplay: form.value.websiteDisplay,
-    instagramUser: form.value.instagramUser
+    websiteUrl: buildWebsiteUrl(form.value.websiteDisplay),
+    instagramUser: instagramUser ? `@${instagramUser}` : '',
+    instagramUrl: buildInstagramUrl(form.value.instagramUser),
+    // El mapa solo se recalcula si cambió la dirección; si no, se conserva el punto exacto actual.
+    ...(addressChanged
+      ? { mapsUrl: buildMapsUrl(form.value.address), iframeMapUrl: buildMapEmbedUrl(form.value.address) }
+      : {})
   })
   emit('close')
 }
@@ -57,7 +68,7 @@ function handleSave() {
       <div class="flex items-center justify-between border-b border-gray-100 pb-2">
         <h3 class="text-sm font-black text-brand-dark uppercase tracking-wider flex items-center gap-1.5">
           <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          Editar Información de Contacto
+          Datos de contacto
         </h3>
         <button type="button" @click="emit('close')" class="p-1 text-gray-500 hover:bg-gray-100 rounded-full">
           <X class="w-5 h-5 stroke-[2.5]" />
@@ -69,7 +80,7 @@ function handleSave() {
         <div>
           <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
             <Phone class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Teléfono Principal (Teléfono 1)
+            Teléfono principal
           </label>
           <input 
             v-model="form.phone1" 
@@ -81,7 +92,7 @@ function handleSave() {
         <div>
           <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
             <Phone class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Teléfono Secundario (Teléfono 2)
+            Teléfono secundario (opcional)
           </label>
           <input 
             v-model="form.phone2" 
@@ -93,7 +104,7 @@ function handleSave() {
         <div>
           <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
             <Mail class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Correo Electrónico
+            Correo electrónico
           </label>
           <input 
             v-model="form.email" 
@@ -105,7 +116,7 @@ function handleSave() {
         <div>
           <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
             <MapPin class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Dirección Completa
+            Dirección
           </label>
           <input 
             v-model="form.address" 
@@ -117,7 +128,7 @@ function handleSave() {
         <div>
           <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
             <Globe class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Sitio Web
+            Sitio web
           </label>
           <input 
             v-model="form.websiteDisplay" 
@@ -128,8 +139,8 @@ function handleSave() {
 
         <div>
           <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
-            <Globe class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Usuario Instagram
+            <Instagram class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
+            Usuario de Instagram
           </label>
           <input 
             v-model="form.instagramUser" 
