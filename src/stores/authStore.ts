@@ -5,6 +5,7 @@ import { ref, computed } from 'vue'
 import type { AdminUser } from '../types/domain'
 import { generateUUID } from '../lib/id'
 import { todayISO } from '../lib/dates'
+import { authRepository } from '../lib/repositories/authRepository'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
 
 export type { AdminUser }
@@ -71,7 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
           createdAt: foundUser.createdAt
         }
         currentUser.value = sessionUser
-        setStorageItem('admin_user', sessionUser)
+        await authRepository.saveCurrentSessionUser(sessionUser)
         isLoading.value = false
         return true
       } else {
@@ -129,7 +130,7 @@ export const useAuthStore = defineStore('auth', () => {
         createdAt: newAdmin.createdAt
       }
       currentUser.value = sessionUser
-      setStorageItem('admin_user', sessionUser)
+      await authRepository.saveCurrentSessionUser(sessionUser)
       isLoading.value = false
       return true
     } catch (e) {
@@ -144,7 +145,7 @@ export const useAuthStore = defineStore('auth', () => {
    */
   async function logout(): Promise<void> {
     currentUser.value = null
-    localStorage.removeItem('ltr_admin_user')
+    await authRepository.clearSession()
   }
 
   return {

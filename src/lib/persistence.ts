@@ -13,6 +13,14 @@ export function getStorageItem<T>(key: string, defaultValue: T): T {
   }
 }
 
+export function removeStorageItem(key: string): void {
+  try {
+    localStorage.removeItem(PREFIX + key)
+  } catch (error) {
+    console.warn(`[Persistence] Error eliminando ${key}:`, error)
+  }
+}
+
 export function setStorageItem<T>(key: string, value: T): boolean {
   try {
     localStorage.setItem(PREFIX + key, JSON.stringify(value))

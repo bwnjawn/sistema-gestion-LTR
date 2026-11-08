@@ -1,7 +1,7 @@
 // src/lib/repositories/authRepository.ts
 
 import type { AdminUser } from '../../types/domain'
-import { getStorageItem, setStorageItem } from '../persistence'
+import { getStorageItem, removeStorageItem, setStorageItem } from '../persistence'
 
 export interface AuthRepository {
   getAdminList<T>(fallback: T): Promise<T>
@@ -29,7 +29,7 @@ export class LocalAuthRepository implements AuthRepository {
   }
 
   async clearSession(): Promise<void> {
-    localStorage.removeItem('ltr_reserva_admin_user')
+    removeStorageItem('admin_user')
   }
 }
 

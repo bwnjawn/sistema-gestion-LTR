@@ -32,6 +32,16 @@
         ></span>
         <span>{{ isOnline ? 'Conectado' : 'Sin señal' }}</span>
       </div>
+
+      <button
+        type="button"
+        @click="handleLogout"
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+        class="p-2 rounded-full bg-white/90 border border-brand-border text-brand-dark hover:bg-gray-100 active:scale-95 transition-transform touch-target shrink-0"
+      >
+        <LogOut class="w-4 h-4 stroke-[2.5]" />
+      </button>
     </div>
   </header>
 </template>
@@ -39,8 +49,16 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { LogOut } from 'lucide-vue-next'
+import { useAuthStore } from '../../stores/authStore'
 
 const router = useRouter()
+const authStore = useAuthStore()
+
+const handleLogout = async () => {
+  await authStore.logout()
+  router.push({ name: 'admin-login' })
+}
 const isOnline = ref(navigator.onLine)
 
 const updateOnlineStatus = () => {
