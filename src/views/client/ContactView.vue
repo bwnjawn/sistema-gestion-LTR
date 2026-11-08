@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Phone, Mail, Globe, Instagram, MapPin, Clock } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
+import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
 
 const settingsStore = useSettingsStore()
 </script>
@@ -160,5 +161,8 @@ const settingsStore = useSettingsStore()
         <span>Abrir en Google Maps GPS</span>
       </a>
     </div>
+
+    <!-- Navegación Inferior -->
+    <ClientBottomNav />
   </div>
 </template>

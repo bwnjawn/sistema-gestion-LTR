@@ -61,7 +61,8 @@ Los datos de `ContactView` salen de `settingsStore.contactInfo` y se editan desd
 Los enlaces (mapa, Instagram, web) se generan en `lib/contactLinks.ts` a partir de lo que escribe el admin.
 
 - Teléfonos por defecto: +56 9 8502 5056 y +56 9 9588 3385 (el segundo coincide con el que pide SCRUM-49).
-- **Verificar:** el valor por defecto `iframeMapUrl` tiene las coordenadas con signo positivo (`2d73.4167`, `3d41.1500`). En el hemisferio sur y oeste deberían ser negativas. Comprobar que el mapa que ve el cliente apunte a Repil y no a otro lugar.
+- Ubicación del mapa (corregida el 8/11): "Turismo Los Troncos de Repil", coordenadas -41.0616375, -73.647016. Los valores anteriores tenían el signo positivo y apuntaban a otro lugar; `settingsStore.ts` los reemplaza solos si el navegador los tenía guardados.
+- Sitio web por defecto: `fresianatural.cl` (abre `https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html`).
 
 ## 6. Decisiones abiertas que bloquean la entrega
 

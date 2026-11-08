@@ -62,6 +62,10 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  // Cada vista nueva empieza arriba; al volver atrás se conserva la posición
+  scrollBehavior(_to, _from, savedPosition) {
+    return savedPosition ?? { top: 0 }
+  },
   routes
 })
 

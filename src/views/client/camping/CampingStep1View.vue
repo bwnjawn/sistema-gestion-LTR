@@ -75,14 +75,19 @@ function decrementGuests() {
   }
 }
 
+function handleGuestsBlur(event: Event) {
+  // Al salir del campo se muestra el valor válido guardado
+  (event.target as HTMLInputElement).value = String(store.guestsCount)
+}
+
 function handleGuestsInput(event: Event) {
   const target = event.target as HTMLInputElement
   const val = parseInt(target.value, 10)
   if (isNaN(val) || val < 1) {
-    store.guestsCount = 1
-  } else {
-    store.guestsCount = Math.min(150, val)
+    // Campo vacío mientras se escribe: no se fuerza el valor hasta salir del campo
+    return
   }
+  store.guestsCount = Math.min(150, val)
 }
 
 // Validación estricta de aforo según reglas de configuración
@@ -200,7 +205,9 @@ function handleNext() {
             <input 
               type="number"
               :value="store.guestsCount"
+              inputmode="numeric"
               @input="handleGuestsInput"
+              @blur="handleGuestsBlur"
               min="1"
               max="150"
               class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"

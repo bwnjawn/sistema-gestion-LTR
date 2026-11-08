@@ -24,8 +24,8 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
     <main class="p-4 space-y-4 grow max-w-md mx-auto w-full pb-24">
       
       <!-- Encabezado con Logo y Título Institucional Reincorporado -->
-      <div class="bg-brand-dark text-white p-4 rounded-3xl border-2 border-brand-border shadow-md flex items-center gap-3.5">
-        <div class="w-16 h-16 bg-white rounded-2xl p-2 shrink-0 flex items-center justify-center shadow-xs border border-emerald-100">
+      <div class="flex items-center gap-3.5 px-1 pt-2">
+        <div class="w-16 h-16 bg-white rounded-2xl p-2 shrink-0 flex items-center justify-center shadow-xs border border-brand-border">
           <img 
             src="/images/logo.png" 
             alt="Logo Los Troncos de Repil" 
@@ -35,14 +35,14 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
         </div>
 
         <div class="space-y-0.5">
-          <span class="text-xs font-extrabold text-emerald-300 uppercase tracking-widest block leading-none">
+          <span class="text-xs font-extrabold text-brand-accent uppercase tracking-widest block leading-none">
             Centro Turístico
           </span>
-          <h1 class="text-xl font-black text-white tracking-tight leading-tight">
+          <h1 class="text-xl font-black text-brand-dark tracking-tight leading-tight">
             Los Troncos de Repil
           </h1>
-          <span class="text-xs font-bold text-gray-300 block leading-none">
-            Fresia, Los Lagos
+          <span class="text-xs font-bold text-gray-600 block leading-none">
+            Fresia, Región de los Lagos
           </span>
         </div>
       </div>
@@ -63,7 +63,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
         >
           <img 
             src="https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=800&q=80" 
-            alt="Dormir en cabaña" 
+            alt="Cabaña" 
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
@@ -71,7 +71,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
               <h3 class="text-2xl font-black leading-tight drop-shadow-sm">
-                Dormir en cabaña
+                Cabaña
               </h3>
               <p class="text-xs font-bold text-gray-200 mt-0.5">
                 Desde $65.000 la noche
@@ -98,7 +98,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
               <h3 class="text-2xl font-black leading-tight drop-shadow-sm">
-                Acampar
+                Camping
               </h3>
               <p class="text-xs font-bold text-gray-200 mt-0.5">
                 $10.000 por persona la noche
@@ -125,7 +125,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
               <h3 class="text-2xl font-black leading-tight drop-shadow-sm">
-                Comer
+                Restaurante
               </h3>
               <p class="text-xs font-bold text-gray-200 mt-0.5">
                 Desayuno, almuerzo y once

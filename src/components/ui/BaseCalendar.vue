@@ -213,7 +213,7 @@ function isToday(dayNum: number) {
                 : isInRange(day)
                   ? 'bg-emerald-100 text-brand-dark rounded-none font-black'
                   : isToday(day)
-                    ? 'border-2 border-brand-dark text-brand-dark font-black'
+                    ? 'border-2 border-brand-dark bg-emerald-50 text-brand-dark font-black'
                     : 'hover:bg-brand-light text-brand-dark'
           ]"
         >
