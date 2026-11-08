@@ -33,8 +33,8 @@ function navigateTo(path: string) {
 
     <!-- Métricas Generales -->
     <div class="grid grid-cols-2 gap-3">
-      <div 
-        @click="navigateTo('/admin/solicitudes')"
+      <div
+        @click="navigateTo('/admin/solicitudes?estado=pending')"
         class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs cursor-pointer hover:border-brand-dark transition-all"
       >
         <div class="flex items-center justify-between mb-2">
@@ -47,8 +47,8 @@ function navigateTo(path: string) {
         <span class="text-xs font-bold text-gray-500">Solicitudes por revisar</span>
       </div>
 
-      <div 
-        @click="navigateTo('/admin/solicitudes')"
+      <div
+        @click="navigateTo('/admin/solicitudes?estado=confirmed')"
         class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs cursor-pointer hover:border-brand-dark transition-all"
       >
         <div class="flex items-center justify-between mb-2">

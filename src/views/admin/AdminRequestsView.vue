@@ -1,44 +1,48 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Inbox, Search, Plus } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
+import { Inbox, Search, Plus, Clock, CheckCircle2, XCircle } from 'lucide-vue-next'
 import BaseButton from '../../components/ui/BaseButton.vue'
 import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import AdminNewBookingModal from '../../components/admin/AdminNewBookingModal.vue'
 import AdminRequestCard from '../../components/admin/AdminRequestCard.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
+import { STATUS_LABELS } from '../../services/requests'
+import { countByStatus, filterRequests, parseStatusFilter } from '../../services/requestFilters'
 import type { BookingStatus, ServiceType } from '../../types/domain'
 
+const route = useRoute()
 const requestsStore = useRequestsStore()
 
-// Filtros
-const filterStatus = ref<BookingStatus | 'all'>('pending')
+// Filtros. Se abre en "Pendientes", o en el estado que pida la URL (?estado=confirmed, desde Inicio).
+const filterStatus = ref<BookingStatus | null>(parseStatusFilter(route.query.estado) ?? 'pending')
 const filterType = ref<ServiceType | 'all'>('all')
 const searchQuery = ref('')
 
 const isNewBookingModalOpen = ref(false)
 const openedRequestId = ref<string | null>(null)
 
-const filteredRequests = computed(() => {
-  const q = searchQuery.value.toLowerCase().trim()
-  return requestsStore.requests.filter(req => {
-    if (filterStatus.value !== 'all' && req.status !== filterStatus.value) return false
-    if (filterType.value !== 'all' && req.type !== filterType.value) return false
-    if (!q) return true
-    return [req.requestCode, req.clientName, req.clientPhone, req.resourceName]
-      .some(field => (field || '').toLowerCase().includes(q))
+const filteredRequests = computed(() =>
+  filterRequests(requestsStore.requests, {
+    status: filterStatus.value,
+    type: filterType.value,
+    query: searchQuery.value
   })
-})
+)
 
-function countByStatus(status: BookingStatus): number {
-  return requestsStore.requests.filter(r => r.status === status).length
+const counts = computed(() => countByStatus(requestsStore.requests))
+
+// Un toque filtra; volver a tocar el filtro activo lo quita y muestra todas.
+function toggleStatus(status: BookingStatus) {
+  filterStatus.value = filterStatus.value === status ? null : status
 }
 
-const statusFilters: { id: BookingStatus; label: string; activeClass: string }[] = [
-  { id: 'pending', label: 'Pendientes', activeClass: 'bg-amber-200 text-amber-950 border-amber-600' },
-  { id: 'confirmed', label: 'Confirmadas', activeClass: 'bg-status-success text-white border-status-success' },
-  { id: 'rejected', label: 'Rechazadas', activeClass: 'bg-status-danger text-white border-status-danger' }
-]
+const statusFilters = [
+  { id: 'pending', label: 'Pendientes', icon: Clock, activeClass: 'bg-amber-200 text-amber-950 border-amber-600' },
+  { id: 'confirmed', label: 'Confirmadas', icon: CheckCircle2, activeClass: 'bg-status-success text-white border-status-success' },
+  { id: 'rejected', label: 'Rechazadas', icon: XCircle, activeClass: 'bg-status-danger text-white border-status-danger' }
+] as const
 
 const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
   { id: 'all', label: 'Todos' },
@@ -46,6 +50,15 @@ const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
   { id: 'camping', label: 'Camping' },
   { id: 'restaurante', label: 'Restaurante' }
 ]
+
+const emptyMessage = computed(() => {
+  if (requestsStore.requests.length === 0) return 'Todavía no hay solicitudes.'
+  if (filterStatus.value && !searchQuery.value.trim() && filterType.value === 'all') {
+    const nombre = statusFilters.find(f => f.id === filterStatus.value)?.label ?? STATUS_LABELS[filterStatus.value]
+    return `No hay solicitudes ${nombre.toLowerCase()}.`
+  }
+  return 'No se encontraron solicitudes con los filtros aplicados.'
+})
 </script>
 
 <template>
@@ -60,19 +73,24 @@ const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
       <Plus class="w-5 h-5 mr-1.5 stroke-[3]" aria-hidden="true" /> Nueva reserva directa
     </BaseButton>
 
-    <div class="grid grid-cols-3 gap-2">
+    <!-- Filtros por estado, en una sola línea. Tocar el activo otra vez muestra todas. -->
+    <div class="grid grid-cols-3 gap-2" role="group" aria-label="Filtrar por estado">
       <button
         v-for="f in statusFilters"
         :key="f.id"
         type="button"
-        @click="filterStatus = f.id"
+        @click="toggleStatus(f.id)"
+        :aria-pressed="filterStatus === f.id"
         :class="[
-          'p-3 rounded-2xl border-2 text-center transition-all touch-target shadow-sm',
+          'px-1.5 py-2.5 rounded-2xl border-2 text-center transition-all touch-target shadow-sm min-w-0',
           filterStatus === f.id ? f.activeClass : 'bg-white text-gray-800 border-gray-500 hover:bg-gray-50'
         ]"
       >
-        <span class="block text-2xl font-black">{{ countByStatus(f.id) }}</span>
-        <span class="text-sm font-black block">{{ f.label }}</span>
+        <span class="flex items-center justify-center gap-1.5">
+          <component :is="f.icon" class="w-5 h-5 stroke-[2.5] shrink-0" aria-hidden="true" />
+          <span class="text-2xl font-black leading-none">{{ counts[f.id] }}</span>
+        </span>
+        <span class="text-sm font-black block mt-1 whitespace-nowrap">{{ f.label }}</span>
       </button>
     </div>
 
@@ -94,6 +112,7 @@ const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
           :key="t.id"
           type="button"
           @click="filterType = t.id"
+          :aria-pressed="filterType === t.id"
           :class="['py-2.5 rounded-lg transition-all border-2', filterType === t.id ? 'bg-brand-dark text-white border-brand-dark' : 'bg-white text-gray-800 border-transparent']"
         >
           {{ t.label }}
@@ -111,9 +130,17 @@ const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
         @reject="openedRequestId = $event"
       />
 
-      <div v-if="filteredRequests.length === 0" class="bg-white p-8 rounded-2xl border border-gray-500 shadow-md text-center space-y-2">
-        <Inbox class="w-8 h-8 text-gray-600 mx-auto stroke-[2]" />
-        <p class="text-base font-black text-gray-800">No se encontraron solicitudes con los filtros aplicados.</p>
+      <div v-if="filteredRequests.length === 0" class="bg-white p-8 rounded-2xl border border-gray-500 shadow-md text-center space-y-3">
+        <Inbox class="w-8 h-8 text-gray-600 mx-auto stroke-[2]" aria-hidden="true" />
+        <p class="text-base font-black text-gray-800">{{ emptyMessage }}</p>
+        <BaseButton
+          v-if="filterStatus && requestsStore.requests.length > 0"
+          variant="outline"
+          size="md"
+          @click="filterStatus = null"
+        >
+          Ver todas las solicitudes
+        </BaseButton>
       </div>
     </div>
 
@@ -122,7 +149,7 @@ const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
     <AdminNewBookingModal
       :is-open="isNewBookingModalOpen"
       @close="isNewBookingModalOpen = false"
-      @created="filterStatus = 'all'"
+      @created="filterStatus = null"
     />
   </div>
 </template>
