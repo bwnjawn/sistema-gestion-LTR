@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { 
   CalendarDays, ChevronLeft, ChevronRight, X, User, Phone, 
@@ -149,6 +150,7 @@ function formatStatusText(status: string): string {
   if (status === 'rejected' || status === 'rechazada') return 'Rechazada'
   return 'Pendiente'
 }
+useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !== 'diario'))
 </script>
 
 <template>
@@ -349,7 +351,7 @@ function formatStatusText(status: string): string {
       v-if="showDayDetail && currentViewMode !== 'diario'" 
       class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-2 sm:p-4"
     >
-      <div class="bg-white w-full max-w-md rounded-3xl border-2 border-brand-border p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
+      <div class="bg-white w-full max-w-md rounded-3xl border-2 border-brand-border p-5 space-y-4 max-h-[85dvh] overflow-y-auto shadow-2xl">
         <div class="flex items-center justify-between border-b-2 border-brand-border/60 pb-3">
           <div>
             <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">

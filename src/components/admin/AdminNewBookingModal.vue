@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { X, Home, Tent, Utensils, Check } from 'lucide-vue-next'
 import { useRequestsStore } from '../../stores/requestsStore'
@@ -90,11 +91,12 @@ async function handleSubmit() {
     isSubmitting.value = false
   }
 }
+useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white w-full max-w-md rounded-3xl border-2 border-brand-border p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div class="bg-white w-full max-w-md rounded-3xl border-2 border-brand-border p-5 space-y-4 max-h-[90dvh] overflow-y-auto shadow-2xl">
       <div class="flex items-center justify-between border-b-2 border-brand-border/60 pb-3">
         <div>
           <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">Panel de Control</span>

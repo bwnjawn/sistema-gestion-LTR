@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Phone, Settings, MapPin, Mail, Globe, Instagram, Utensils, Wifi, WifiOff, Users, Percent, Clock, Landmark, ShieldCheck, UserPlus } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -45,6 +46,7 @@ async function saveParameters() {
   })
   isEditingParameters.value = false
 }
+useBloqueoScroll(computed(() => isEditingParameters.value))
 </script>
 
 <template>

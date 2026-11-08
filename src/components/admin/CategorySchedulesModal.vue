@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import { ref, watch, computed } from 'vue'
 import { X, Save, Clock } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 import BaseButton from '../ui/BaseButton.vue'
@@ -29,6 +30,7 @@ function handleSave() {
   settingsStore.campingSchedules.pernoctar = { ...campingPernoctar.value }
   emit('close')
 }
+useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>

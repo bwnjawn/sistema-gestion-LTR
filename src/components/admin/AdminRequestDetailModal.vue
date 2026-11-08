@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { computed, ref, watch } from 'vue'
 import {
   AlertTriangle, Calendar, Check, CreditCard, FileText, Mail, MessageCircle, Pencil, Phone, Receipt, User, Utensils, X
@@ -121,6 +122,7 @@ const depositMessageClass = computed(() => {
   if (p.state === 'pagado_total' || p.depositPending === 0) return 'bg-emerald-50 border-status-success text-emerald-950'
   return p.state === 'sin_abono' ? 'bg-rose-50 border-status-danger text-rose-950' : 'bg-amber-50 border-amber-500 text-amber-950'
 })
+useBloqueoScroll(computed(() => !!request.value))
 </script>
 
 <template>
@@ -131,7 +133,7 @@ const depositMessageClass = computed(() => {
     aria-modal="true"
     :aria-label="`Detalle de la solicitud ${request.requestCode}`"
   >
-    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full border-2 border-gray-500 shadow-2xl max-h-[92vh] flex flex-col">
+    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full border-2 border-gray-500 shadow-2xl max-h-[92dvh] flex flex-col">
       <!-- Encabezado -->
       <div class="flex items-start justify-between gap-3 p-4 border-b-2 border-gray-300">
         <div class="min-w-0">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import { ref, watch, computed } from 'vue'
 import { X, Save, Plus, Check } from 'lucide-vue-next'
 import type { Dish, SideDishMode } from '../../types/catalog'
 import ImageGalleryEditor from '../ui/ImageGalleryEditor.vue'
@@ -118,11 +119,12 @@ function handleSave() {
 function close() {
   emit('close')
 }
+useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl border-2 border-brand-border shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div class="bg-white w-full max-w-lg rounded-3xl border-2 border-brand-border shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
       <!-- Header -->
       <div class="p-4 sm:p-5 border-b-2 border-brand-border bg-brand-light flex items-center justify-between">
         <div>

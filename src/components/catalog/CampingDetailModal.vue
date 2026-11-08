@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { computed } from 'vue'
 import { X, Users, Tent, Check } from 'lucide-vue-next'
 import type { CampingSite } from '../../types/catalog'
@@ -20,11 +21,12 @@ const imagesList = computed(() => {
   if (props.site.images && props.site.images.length > 0) return props.site.images
   return props.site.image ? [props.site.image] : ['https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80']
 })
+useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>
   <div v-if="isOpen && site" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl border-2 border-brand-border shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div class="bg-white w-full max-w-lg rounded-3xl border-2 border-brand-border shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
       <!-- Encabezado -->
       <div class="p-4 sm:p-5 border-b-2 border-brand-border bg-brand-light flex items-center justify-between">
         <div>

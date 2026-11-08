@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useBloqueoScroll } from '../../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, ArrowRight, Minus, Plus, Sparkles, Check, AlertTriangle, AlertCircle, CheckCircle2, X } from 'lucide-vue-next'
@@ -245,6 +246,7 @@ function proceedToStep3() {
   store.nextStep()
   router.push('/restaurante/paso3')
 }
+useBloqueoScroll(computed(() => showIncompleteModal.value))
 </script>
 
 <template>

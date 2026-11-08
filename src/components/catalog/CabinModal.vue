@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, watch, computed } from 'vue'
 import { X, Save, Plus, Trash2, ChevronLeft, ChevronRight, Users, BedDouble, Check } from 'lucide-vue-next'
 import type { Cabin } from '../../types/catalog'
@@ -133,11 +134,12 @@ function handleSave() {
 function close() {
   emit('close')
 }
+useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl border-2 border-brand-border shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div class="bg-white w-full max-w-lg rounded-3xl border-2 border-brand-border shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
       
       <!-- =================================================== -->
       <!-- 1. MODO CLIENTE (SOLO LECTURA CON CARRUSEL)        -->

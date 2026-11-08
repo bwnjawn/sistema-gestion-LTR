@@ -14,3 +14,21 @@
   min-height: 48px;
   min-width: 48px;
 }
+/* iOS hace zoom al enfocar campos con letra menor a 16 px */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Fechas dentro del borde en iOS */
+input[type="date"],
+input[type="time"] {
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* El glifo • de Atkinson se ve demasiado grande */
+input[type="password"] {
+  font-family: system-ui, -apple-system, sans-serif;
+}

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import { ref, watch, computed } from 'vue'
 import { X, Save, Phone, Mail, MapPin, Globe, Instagram } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 import BaseButton from '../ui/BaseButton.vue'
@@ -58,11 +59,12 @@ function handleSave() {
   })
   emit('close')
 }
+useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 bg-brand-dark/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-5 max-w-sm w-full border-2 border-brand-border shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-3xl p-5 max-w-sm w-full border-2 border-brand-border shadow-2xl space-y-4 max-h-[90dvh] overflow-y-auto">
       
       <!-- Encabezado del Modal -->
       <div class="flex items-center justify-between border-b border-gray-100 pb-2">

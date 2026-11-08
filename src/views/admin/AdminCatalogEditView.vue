@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { 
   Home, Tent, Utensils, Plus, Sparkles, Trash2, AlertTriangle, Pencil 
@@ -159,6 +160,7 @@ function executeDelete() {
 
   deleteTarget.value = null
 }
+useBloqueoScroll(computed(() => !!deleteTarget.value))
 </script>
 
 <template>
