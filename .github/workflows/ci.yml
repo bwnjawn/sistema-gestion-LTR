@@ -1,12 +1,38 @@
 name: CI
 
+# Corre en cada push a cualquier rama (también al crear una rama nueva con commits)
+# y en cada pull request.
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
 
+# Si llega un push nuevo a la misma rama, se cancela la ejecución anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  pruebas:
+    name: Pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Reglas de negocio: precios, pagos, fechas, filtros y contacto (carpeta tests/).
+      - name: Ejecutar pruebas
+        run: npm test
+
   build:
+    name: Tipos y build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
