@@ -69,6 +69,16 @@ Decidido el 8/11 (SCRUM-244). Cuentan solo las solicitudes activas (`pending` o 
 
 El admin no tiene este bloqueo al editar o registrar una reserva: puede cruzar fechas y la resolución es manual (SCRUM-60).
 
+### Solapamientos entre solicitudes (SCRUM-60)
+
+El admin ve una alerta cuando dos o más solicitudes activas (`pending` o `confirmed`) no caben juntas. Las pendientes cuentan igual que las confirmadas. No se rechaza ni cancela nada solo: la resolución es manual. Función: `findConflicts` en `services/availability.ts`.
+
+| Servicio | Hay solapamiento cuando… |
+|---|---|
+| Cabañas | La misma cabaña tiene fechas que se cruzan, en intervalo `[entrada, salida)` |
+| Restaurante | Las personas de una misma comida y día superan la capacidad total del restaurante |
+| Camping | Las personas de un mismo día y modalidad superan la capacidad del camping (diario y pernoctar por separado) |
+
 ## 6. Contacto del negocio
 
 Los datos de `ContactView` salen de `settingsStore.contactInfo` y se editan desde `AdminContactEditModal` (SCRUM-231).

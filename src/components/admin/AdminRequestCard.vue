@@ -9,6 +9,8 @@ import type { ReservationRequest } from '../../types/domain'
 
 const props = defineProps<{
   request: ReservationRequest
+  /** Cantidad de solicitudes con las que se topa (SCRUM-60). */
+  conflictCount?: number
 }>()
 
 const emit = defineEmits<{
@@ -70,12 +72,18 @@ const paymentHint = computed(() => {
     :class="[
       'bg-white p-4 rounded-2xl border border-gray-500 border-l-8 shadow-md space-y-3',
       accentClass,
-      isStale ? 'ring-2 ring-amber-500' : ''
+      isStale ? 'ring-2 ring-amber-500' : '',
+      conflictCount ? 'ring-2 ring-status-danger' : ''
     ]"
   >
     <p v-if="isStale" class="bg-amber-100 border border-amber-500 text-amber-950 px-3 py-1.5 rounded-lg text-sm font-black flex items-center gap-1.5">
       <AlertTriangle class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
       Pendiente hace más de 24 horas sin gestionar
+    </p>
+
+    <p v-if="conflictCount" class="bg-rose-100 border border-status-danger text-rose-950 px-3 py-1.5 rounded-lg text-sm font-black flex items-center gap-1.5">
+      <AlertTriangle class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
+      Se cruza con {{ conflictCount }} {{ conflictCount === 1 ? 'solicitud' : 'solicitudes' }}. Revisa el detalle antes de aprobar.
     </p>
 
     <!-- Quién y qué -->

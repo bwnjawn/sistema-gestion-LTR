@@ -1,6 +1,6 @@
 # SCRUM-60 — Detectar solapamientos de reservas
 
-Estado: borrador
+Estado: en curso (código listo el 8/11; falta la verificación manual en celular)
 Fase: 2 (16 al 20/11)
 
 ## Contexto
@@ -13,16 +13,19 @@ Depende de SCRUM-59 (estado de las solicitudes) y de SCRUM-57 (calendario del ad
 - La resolución es manual.
 
 ## Situación actual en el código
-- `services/availability.ts` tiene `isDateRangeOverlapping` (intervalo `[inicio, fin)`) e `isCabinAvailable`, que solo cubre cabañas.
-- `getDayOccupancy` cuenta solicitudes por día y marca "sobrecupo" con un `> 8` fijo que mezcla cabañas, camping y restaurante. Esa cifra solo tiene sentido para restaurante (`capacityRules.maxRestaurantGroupsPerSlot`).
-- `AdminCalendarView.vue` y `AdminCalendarGrid.vue` ya pintan disponible, ocupado y sobrecupo.
+Hecho el 8/11:
+- `findConflicts(requests, limites)`, `groupConflictsByRequest` y el tipo `Conflicto` en `services/availability.ts`.
+- `requestsStore.conflicts` y `conflictsByRequestId` (computados).
+- `getDayOccupancy` ya no usa el `> 8` fijo (SCRUM-244) y marca "se topan" cuando hay dos reservas activas de la misma cabaña o se supera el aforo.
+- Tarjeta de la lista: aviso "Se cruza con N solicitudes". Detalle: sección "Se cruza con" con enlace a cada solicitud. Calendario: leyenda "Se topan", insignia "Se cruza" en las listas del día y acceso al detalle al tocar una solicitud.
+- Pruebas en `tests/conflictos.test.ts`.
 
 ## Qué es un conflicto
 | Servicio | Hay conflicto cuando… | Estado de la definición |
 |---|---|---|
 | Cabaña | Dos solicitudes activas tienen la misma cabaña y sus fechas se solapan | Definido |
-| Camping | Mismo espacio y misma fecha con una suma de personas mayor a su capacidad máxima | Propuesto, por confirmar |
-| Restaurante | En la misma fecha y bloque horario hay más grupos que el cupo (8 por defecto) | Propuesto, por confirmar |
+| Camping | En un mismo día y modalidad (diario o pernoctar, cupos separados) las personas suman más que la capacidad del camping | Definido el 8/11 (SCRUM-244) |
+| Restaurante | En un mismo día y comida las personas suman más que la capacidad del restaurante (suma de sus espacios) | Definido el 8/11 (SCRUM-244). Provisorio hasta confirmar si se mide por comida u hora |
 
 "Activa" significa `pending` o `confirmed`. Las rechazadas y canceladas no cuentan.
 
@@ -44,9 +47,12 @@ Depende de SCRUM-59 (estado de las solicitudes) y de SCRUM-57 (calendario del ad
 - Una solicitud rechazada después de resolverse el conflicto deja de aparecer en conflicto.
 - Rendimiento: con muchos registros, `findConflicts` debe ordenar por fecha y no comparar todos contra todos.
 
+## Decisiones tomadas el 8/11
+- Dos solicitudes **pendientes** que se cruzan se avisan igual que una pendiente con una confirmada (decisión del usuario).
+- La definición de conflicto en camping y restaurante reutiliza las reglas de aforo de SCRUM-244.
+
 ## Preguntas abiertas
-- Definición de conflicto en camping y restaurante (tabla de arriba).
-- ¿Dos solicitudes pendientes en conflicto se avisan igual que una pendiente con una confirmada?
+- Si el aforo del restaurante se mide por comida u hora (afecta también SCRUM-244).
 
 ## Verificación manual
 - [ ] Dos solicitudes de la misma cabaña con fechas cruzadas aparecen resaltadas.

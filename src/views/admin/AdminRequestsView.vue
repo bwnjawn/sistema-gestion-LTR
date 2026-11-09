@@ -23,6 +23,15 @@ const searchQuery = ref('')
 const isNewBookingModalOpen = ref(false)
 const openedRequestId = ref<string | null>(null)
 
+// Cuántas otras solicitudes se topan con la indicada (SCRUM-60)
+function countConflictingRequests(id: string): number {
+  const others = new Set<string>()
+  for (const conflict of requestsStore.conflictsByRequestId[id] ?? []) {
+    conflict.solicitudIds.filter(other => other !== id).forEach(other => others.add(other))
+  }
+  return others.size
+}
+
 const filteredRequests = computed(() =>
   filterRequests(requestsStore.requests, {
     status: filterStatus.value,
@@ -125,6 +134,7 @@ const emptyMessage = computed(() => {
         v-for="req in filteredRequests"
         :key="req.id"
         :request="req"
+        :conflict-count="countConflictingRequests(req.id)"
         @open="openedRequestId = $event"
         @approve="requestsStore.confirmRequest($event)"
         @reject="openedRequestId = $event"
@@ -144,7 +154,7 @@ const emptyMessage = computed(() => {
       </div>
     </div>
 
-    <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" />
+    <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" @open-request="openedRequestId = $event" />
 
     <AdminNewBookingModal
       :is-open="isNewBookingModalOpen"

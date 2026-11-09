@@ -218,7 +218,8 @@ function personasCampingDelDia(dateStr: string, modalidad: CampingModality, soli
 /**
  * Calcula el estado de ocupación diaria para el calendario administrativo.
  * Solo cuenta solicitudes activas y respeta los servicios elegidos.
- * "Sobrecupo" significa superar el aforo permitido: personas por comida en el restaurante
+ * "Sobrecupo" significa que las reservas del día se topan: una cabaña con dos reservas activas o superar
+ * el aforo permitido: personas por comida en el restaurante
  * (provisorio hasta definir con el cliente si se mide por comida u hora) y personas por día
  * en el camping, con un cupo separado para diario y para pernoctar.
  */
@@ -234,7 +235,13 @@ export function getDayOccupancy(
 
   const restaurante = dayRequests.filter(r => normalizarServicio(r.type) === 'restaurante')
   const maxRestaurante = Math.max(0, ...Object.values(personasRestaurantePorComida(restaurante)))
+  const recursosCabana = dayRequests
+    .filter(r => normalizarServicio(r.type) === 'cabana')
+    .map(r => r.details?.resourceId)
+    .filter(Boolean)
+  const cabanaCruzada = new Set(recursosCabana).size !== recursosCabana.length
   const superaAforo =
+    cabanaCruzada ||
     maxRestaurante > limites.restaurantePersonas ||
     personasCampingDelDia(dateStr, 'diario', dayRequests) > limites.campingPersonas ||
     personasCampingDelDia(dateStr, 'pernoctar', dayRequests) > limites.campingPersonas
@@ -343,4 +350,144 @@ export function isCampingStayBlocked(
     if (isCampingDayBlocked(dia, 'pernoctar', guestsCount, existingRequests, capacidadCamping)) return true
   }
   return false
+}
+
+// ---------------------------------------------------------------------------
+// Detección de solapamientos (SCRUM-60)
+// ---------------------------------------------------------------------------
+
+/** Dos o más solicitudes activas que no caben juntas. La resolución es manual. */
+export interface Conflicto {
+  servicio: ServiceType
+  /** Texto para el admin, sin datos que cambian por día (esos van en `dias`). */
+  motivo: string
+  solicitudIds: string[]
+  /** Fechas ISO en que se topan, ordenadas. */
+  dias: string[]
+}
+
+const ETIQUETA_COMIDA: Record<string, string> = {
+  desayuno: 'el desayuno',
+  almuerzo: 'el almuerzo',
+  once: 'la once'
+}
+
+/** Días [entrada, salida) que ocupa una solicitud; un solo día si no tiene salida. */
+function diasQueOcupa(r: ReservationRequest): string[] {
+  const { start, end } = getRequestDateRange(r)
+  if (!start) return []
+  if (!end) return [start]
+  const dias: string[] = []
+  for (let dia = start; dia < end && dias.length < 400; dia = addDays(dia, 1)) dias.push(dia)
+  return dias
+}
+
+/** Une los conflictos con las mismas solicitudes y el mismo motivo, acumulando los días. */
+class AcumuladorConflictos {
+  private porClave = new Map<string, Conflicto>()
+
+  agregar(servicio: ServiceType, motivo: string, solicitudIds: string[], dias: string[]): void {
+    const ids = [...solicitudIds].sort()
+    const clave = `${servicio}|${motivo}|${ids.join(',')}`
+    const existente = this.porClave.get(clave)
+    if (existente) {
+      existente.dias = Array.from(new Set([...existente.dias, ...dias])).sort()
+    } else {
+      this.porClave.set(clave, { servicio, motivo, solicitudIds: ids, dias: [...dias].sort() })
+    }
+  }
+
+  resultado(): Conflicto[] {
+    return Array.from(this.porClave.values())
+  }
+}
+
+/**
+ * Busca solicitudes activas (pendientes o confirmadas) que se topan:
+ * - Cabañas: la misma cabaña con fechas que se cruzan, en intervalo [entrada, salida).
+ * - Restaurante: las personas de una misma comida superan la capacidad del restaurante.
+ * - Camping: las personas de una misma modalidad y día superan la capacidad del camping.
+ * No cambia ni rechaza nada: solo informa.
+ */
+export function findConflicts(
+  existingRequests: ReservationRequest[],
+  limites: LimitesAforo = LIMITES_AFORO_POR_DEFECTO
+): Conflicto[] {
+  const activas = existingRequests.filter(isRequestActive)
+  const acumulador = new AcumuladorConflictos()
+
+  // Cabañas: se ordena por entrada y se compara cada reserva solo con las que empiezan antes de que ella termine
+  const porCabana = new Map<string, ReservationRequest[]>()
+  for (const r of activas) {
+    const recurso = r.details?.resourceId
+    if (normalizarServicio(r.type) !== 'cabana' || !recurso) continue
+    porCabana.set(recurso, [...(porCabana.get(recurso) || []), r])
+  }
+  for (const reservas of porCabana.values()) {
+    const ordenadas = [...reservas].sort((a, b) => getRequestDateRange(a).start.localeCompare(getRequestDateRange(b).start))
+    for (let i = 0; i < ordenadas.length; i++) {
+      const a = ordenadas[i]
+      const rangoA = getRequestDateRange(a)
+      if (!rangoA.start) continue
+      const finA = rangoA.end ?? addDays(rangoA.start, 1)
+      for (let j = i + 1; j < ordenadas.length; j++) {
+        const b = ordenadas[j]
+        const inicioB = getRequestDateRange(b).start
+        if (!inicioB || inicioB >= finA) break
+        const diasB = new Set(diasQueOcupa(b))
+        const comunes = diasQueOcupa(a).filter(d => diasB.has(d))
+        if (comunes.length > 0) {
+          acumulador.agregar('cabana', `Misma cabaña (${a.resourceName}) en fechas que se cruzan`, [a.id, b.id], comunes)
+        }
+      }
+    }
+  }
+
+  // Restaurante: personas por día y comida
+  const porComida = new Map<string, { personas: number; ids: string[] }>()
+  for (const r of activas.filter(x => normalizarServicio(x.type) === 'restaurante')) {
+    const dia = getRequestDateRange(r).start
+    if (!dia) continue
+    const comidas = r.details?.selectedMealTypes?.length ? r.details.selectedMealTypes : ['sin-comida']
+    for (const comida of comidas) {
+      const clave = `${dia}|${comida}`
+      const actual = porComida.get(clave) || { personas: 0, ids: [] }
+      porComida.set(clave, { personas: actual.personas + r.guestsCount, ids: [...actual.ids, r.id] })
+    }
+  }
+  for (const [clave, grupo] of porComida) {
+    if (grupo.personas <= limites.restaurantePersonas) continue
+    const [dia, comida] = clave.split('|')
+    const cuando = ETIQUETA_COMIDA[comida] ?? 'el día'
+    acumulador.agregar('restaurante', `Juntas superan el aforo de ${cuando} en el restaurante (${limites.restaurantePersonas} personas)`, grupo.ids, [dia])
+  }
+
+  // Camping: personas por día y modalidad (diario y pernoctar tienen cupos separados)
+  const porDiaCamping = new Map<string, { personas: number; ids: string[] }>()
+  for (const r of activas.filter(x => normalizarServicio(x.type) === 'camping')) {
+    for (const dia of diasQueOcupa(r)) {
+      const clave = `${dia}|${modalidadCamping(r)}`
+      const actual = porDiaCamping.get(clave) || { personas: 0, ids: [] }
+      porDiaCamping.set(clave, { personas: actual.personas + r.guestsCount, ids: [...actual.ids, r.id] })
+    }
+  }
+  for (const [clave, grupo] of porDiaCamping) {
+    if (grupo.personas <= limites.campingPersonas) continue
+    const [dia, modalidad] = clave.split('|')
+    const tipo = modalidad === 'diario' ? 'por el día' : 'para pernoctar'
+    acumulador.agregar('camping', `Juntas superan el cupo del camping ${tipo} (${limites.campingPersonas} personas)`, grupo.ids, [dia])
+  }
+
+  return acumulador.resultado()
+}
+
+/** Conflictos agrupados por solicitud, para marcar la lista y el detalle. */
+export function groupConflictsByRequest(conflictos: Conflicto[]): Record<string, Conflicto[]> {
+  const porSolicitud: Record<string, Conflicto[]> = {}
+  for (const conflicto of conflictos) {
+    for (const id of conflicto.solicitudIds) {
+      porSolicitud[id] = [...(porSolicitud[id] || []), conflicto]
+    }
+  }
+  return porSolicitud
 }
