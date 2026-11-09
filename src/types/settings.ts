@@ -48,3 +48,11 @@ export interface CabinSchedules {
   checkOut: string
   display: string
 }
+
+/** Límite de variedades de menú para grupos grandes (cocina). */
+export interface LimiteVariedades {
+  /** La regla se aplica cuando el grupo supera esta cantidad de personas. */
+  umbralPersonas: number
+  /** Máximo de platos distintos por comida cuando se aplica la regla. */
+  maxVariedades: number
+}

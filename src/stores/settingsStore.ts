@@ -3,7 +3,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import type { BusinessInfo, TransferInfo } from '../types/domain'
-import type { RestaurantSchedules, CampingSchedules, CabinSchedules, EspacioRestaurante, LimitesAforo } from '../types/settings'
+import type { RestaurantSchedules, CampingSchedules, CabinSchedules, EspacioRestaurante, LimitesAforo, LimiteVariedades } from '../types/settings'
 import { getRestaurantCapacity } from '../services/availability'
 import { settingsRepository } from '../lib/repositories/settingsRepository'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
@@ -13,6 +13,10 @@ export interface CapacityRules {
   maxRestaurantGroupsPerSlot: number
   /** Espacios del restaurante y su capacidad; la suma es el aforo total. */
   restaurantSpaces: EspacioRestaurante[]
+  /** Grupos de más de estas personas tienen un máximo de platos distintos por comida (SCRUM-36). */
+  menuLargeGroupThreshold: number
+  /** Máximo de platos distintos por comida para grupos grandes. */
+  maxMenuVarietiesLargeGroup: number
   maxCampingPeopleCapacity: number
   marginPercentage: number
 }
@@ -80,6 +84,8 @@ const DEFAULT_PARAMS: BusinessParametersExtended = {
       { id: 'carpa', nombre: 'Carpa', capacidad: 50 },
       { id: 'comedor-secundario', nombre: 'Comedor secundario', capacidad: 30 }
     ],
+    menuLargeGroupThreshold: 30,
+    maxMenuVarietiesLargeGroup: 3,
     maxCampingPeopleCapacity: 150,
     marginPercentage: 10
   }
@@ -171,6 +177,11 @@ export const useSettingsStore = defineStore('settings', () => {
     campingPersonas: capacityRulesActuales.value.maxCampingPeopleCapacity
   }))
 
+  const limiteVariedades = computed<LimiteVariedades>(() => ({
+    umbralPersonas: capacityRulesActuales.value.menuLargeGroupThreshold,
+    maxVariedades: capacityRulesActuales.value.maxMenuVarietiesLargeGroup
+  }))
+
   const phone1Clean = computed(() => contactInfo.value.phone1.replace(/\s+/g, ''))
   const phone2Clean = computed(() => contactInfo.value.phone2.replace(/\s+/g, ''))
 
@@ -233,6 +244,7 @@ export const useSettingsStore = defineStore('settings', () => {
     capacityRules: capacityRulesActuales,
     restaurantCapacity,
     limitesAforo,
+    limiteVariedades,
     currentDate: currentDateDynamic,
     isConnected: isOnline,
     phone1Clean,

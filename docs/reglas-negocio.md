@@ -50,7 +50,7 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | Regla | Valor | Historia | Estado |
 |---|---|---|---|
 | Horarios | Desayuno 08:30–11:00, almuerzo 12:30–14:00, once 17:00–19:30 (bloques de 30 min) | — | ✅ `generateTimeSlots` y `settingsStore` |
-| Grupos de más de 30 personas | Máximo 3 menús distintos y mensaje explicativo al llegar al límite | SCRUM-36 | ⚠️ **vive en `RestaurantStep2View.vue`**; moverla a `services/` |
+| Grupos de más de 30 personas | Máximo 3 menús distintos **por comida** (desayuno, almuerzo y once se cuentan por separado), con mensaje explicativo al llegar al límite. Si el grupo crece después de elegir platos y queda sobre el límite, se avisa y no se puede avanzar. El 30 y el 3 son editables en Ajustes | SCRUM-36, 244 | ✅ `services/menus.ts` y `capacityRules.menuLargeGroupThreshold` / `maxMenuVarietiesLargeGroup` |
 | Acompañamientos | Modo `none`, `fixed` (acompañamiento fijo, ej. asado de cordero) o `choice` (el cliente elige) | SCRUM-35, 62, 229 | ✅ en el cliente. ❌ falta el CRUD de administración (SCRUM-229) |
 | Cupo por horario | Reemplazado por el aforo en personas de los espacios (ver más abajo) | SCRUM-244 | `maxRestaurantGroupsPerSlot` quedó sin uso y ya no se muestra en Ajustes |
 | Precio | Suma de platos × cantidad (+ IVA) | — | ✅ `calculateRestaurantPrice` |

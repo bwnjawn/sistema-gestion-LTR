@@ -8,12 +8,15 @@ import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
+import { useSettingsStore } from '../../../stores/settingsStore'
+import { puedeAgregarVariedad, superaLimiteVariedades } from '../../../services/menus'
 import { formatCLP } from '../../../lib/format'
 import type { Dish } from '../../../types/catalog'
 
 const router = useRouter()
 const store = useReservationStore()
 const catalogStore = useCatalogStore()
+const settingsStore = useSettingsStore()
 
 const activeMealIndex = ref(0)
 const showIncompleteModal = ref(false)
@@ -72,17 +75,19 @@ function getSideDishes(dish: Dish): string[] {
   return []
 }
 
+// Platos distintos con al menos una unidad elegida
+function countVarieties(dishes: Dish[]): number {
+  return dishes.filter(d => (selections.value[d.id]?.count || 0) > 0).length
+}
+
 function updateDishCount(dishId: string, delta: number) {
   const sel = getDishSelection(dishId)
   const currentCount = sel.count
   const newCount = Math.max(0, currentCount + delta)
 
-  if (newCount > currentCount && totalGuests.value > 30) {
-    const chosenVarieties = currentMealDishes.value.filter(d => (selections.value[d.id]?.count || 0) > 0)
-    if (currentCount === 0 && chosenVarieties.length >= 3) {
-      showVarietyLimitWarning.value = true
-      return
-    }
+  if (newCount > currentCount && currentCount === 0 && !puedeAgregarVariedad(totalGuests.value, countVarieties(currentMealDishes.value), settingsStore.limiteVariedades)) {
+    showVarietyLimitWarning.value = true
+    return
   }
 
   sel.count = newCount
@@ -99,13 +104,10 @@ function handleDishCountInput(dishId: string, event: Event) {
   if (isNaN(val) || val < 0) val = 0
 
   const sel = getDishSelection(dishId)
-  if (val > 0 && sel.count === 0 && totalGuests.value > 30) {
-    const chosenVarieties = currentMealDishes.value.filter(d => (selections.value[d.id]?.count || 0) > 0)
-    if (chosenVarieties.length >= 3) {
-      showVarietyLimitWarning.value = true
-      target.value = String(sel.count)
-      return
-    }
+  if (val > 0 && sel.count === 0 && !puedeAgregarVariedad(totalGuests.value, countVarieties(currentMealDishes.value), settingsStore.limiteVariedades)) {
+    showVarietyLimitWarning.value = true
+    target.value = String(sel.count)
+    return
   }
 
   sel.count = Math.min(totalGuests.value, val)
@@ -210,7 +212,19 @@ function selectMealTab(idx: number) {
   activeMealIndex.value = idx
 }
 
+// Comidas que quedaron con más variedades de las permitidas (por ejemplo, si el grupo creció en el paso 1)
+const mealsOverVarietyLimit = computed(() =>
+  activeMealTypes.value.filter(mId => {
+    const dishes = catalogStore.dishes.filter(d => {
+      const cat = (d.mealCategory || '').toLowerCase()
+      return cat === mId.toLowerCase() || (d.mealCategory || '') === mealLabels[mId]
+    })
+    return superaLimiteVariedades(totalGuests.value, countVarieties(dishes), settingsStore.limiteVariedades)
+  })
+)
+
 const isFormValid = computed(() => {
+  if (mealsOverVarietyLimit.value.length > 0) return false
   const hasAnyDish = activeMealTypes.value.some(mId => getMealSelectedCount(mId) > 0)
   if (!hasAnyDish) return false
 
@@ -323,7 +337,7 @@ useBloqueoScroll(computed(() => showIncompleteModal.value))
       <div class="flex items-center gap-2">
         <AlertTriangle class="w-5 h-5 text-white shrink-0 stroke-[2.5]" />
         <span>
-          Para grupos de más de 30 personas, se permite un <strong>máximo de 3 variedades de menú en {{ mealLabels[currentMealType] }}</strong>.
+          Para grupos de más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas, se permite un <strong>máximo de {{ settingsStore.limiteVariedades.maxVariedades }} variedades de menú en {{ mealLabels[currentMealType] }}</strong>.
         </span>
       </div>
       <button aria-label="Cerrar" 
@@ -339,6 +353,10 @@ useBloqueoScroll(computed(() => showIncompleteModal.value))
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="2" />
     </div>
+
+    <BaseAlert v-if="mealsOverVarietyLimit.length > 0" variant="warning" title="Demasiados menús distintos">
+      Para grupos de más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas el máximo es {{ settingsStore.limiteVariedades.maxVariedades }} menús distintos por comida. Quita platos en: {{ mealsOverVarietyLimit.map(m => mealLabels[m]).join(', ') }}.
+    </BaseAlert>
 
     <!-- Alerta Guiada (Sin contador acumulado global) -->
     <BaseAlert variant="info" title="Selección de Menú por Servicio">
