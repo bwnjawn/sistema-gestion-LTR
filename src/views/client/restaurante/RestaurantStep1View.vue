@@ -8,14 +8,30 @@ import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
-import { generateTimeSlots, validateGuestCapacity } from '../../../services/availability'
+import { useRequestsStore } from '../../../stores/requestsStore'
+import { generateTimeSlots, validateGuestCapacity, getFullMeals, isRestaurantDayBlocked } from '../../../services/availability'
 import { formatDateShort } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
 const settingsStore = useSettingsStore()
+const requestsStore = useRequestsStore()
 
 store.setService('restaurant')
+
+// El día se bloquea solo si las tres comidas están llenas para el grupo (SCRUM-244)
+function isDayBlocked(dateStr: string): boolean {
+  return isRestaurantDayBlocked(dateStr, store.guestsCount, requestsStore.requests, settingsStore.restaurantCapacity)
+}
+
+// Comidas sin cupo para el grupo en la fecha elegida: se deshabilitan una a una
+const fullMeals = computed(() =>
+  store.checkInDate
+    ? getFullMeals(store.checkInDate, store.guestsCount, requestsStore.requests, settingsStore.restaurantCapacity)
+    : []
+)
+
+const selectedFullMeals = computed(() => store.selectedMealTypes.filter(id => fullMeals.value.includes(id)))
 
 const calendarDate = computed<Date | null>(() => {
   if (!store.checkInDate) return null
@@ -121,6 +137,7 @@ const isValid = computed(() => {
   if (!store.checkInDate) return false
   if (!capacityValidation.value.isValid) return false
   if (store.selectedMealTypes.length === 0) return false
+  if (selectedFullMeals.value.length > 0) return false
   for (const mId of store.selectedMealTypes) {
     if (!store.mealTimes[mId]) return false
   }
@@ -159,6 +176,7 @@ function handleNext() {
         <BaseCalendar 
           :start-date="calendarDate"
           :end-date="calendarDate"
+          :is-date-disabled-fn="isDayBlocked"
           @change="handleCalendarChange"
         />
       </div>
@@ -221,14 +239,18 @@ function handleNext() {
             v-for="meal in mealOptions"
             :key="meal.id"
             @click="toggleMealType(meal.id)"
+            :disabled="fullMeals.includes(meal.id) && !store.selectedMealTypes.includes(meal.id)"
             :class="[
               'p-3 rounded-2xl border-2 transition-all touch-target flex flex-col items-center justify-center gap-1 text-center',
-              store.selectedMealTypes.includes(meal.id)
-                ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
-                : 'bg-brand-light text-brand-dark border-brand-border hover:bg-gray-200'
+              fullMeals.includes(meal.id) && !store.selectedMealTypes.includes(meal.id)
+                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                : store.selectedMealTypes.includes(meal.id)
+                  ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
+                  : 'bg-brand-light text-brand-dark border-brand-border hover:bg-gray-200'
             ]"
           >
             <span class="text-sm font-black">{{ meal.label }}</span>
+            <span v-if="fullMeals.includes(meal.id)" class="text-xs font-extrabold">Sin cupo</span>
             <span 
               v-if="store.selectedMealTypes.includes(meal.id)"
               class="w-4 h-4 bg-emerald-400 text-brand-dark rounded-full flex items-center justify-center text-sm font-black"
@@ -237,6 +259,10 @@ function handleNext() {
             </span>
           </button>
         </div>
+
+        <BaseAlert v-if="selectedFullMeals.length > 0" variant="warning" title="Sin cupo en una comida elegida">
+          Para {{ store.guestsCount }} personas ya no queda cupo en: {{ selectedFullMeals.map(id => mealOptions.find(m => m.id === id)?.label).join(', ') }}. Quita esa comida, cambia la fecha o la cantidad de personas.
+        </BaseAlert>
 
         <div 
           v-if="store.selectedMealTypes.length === 0" 

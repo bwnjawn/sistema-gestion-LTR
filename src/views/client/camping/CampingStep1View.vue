@@ -9,14 +9,25 @@ import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
-import { validateGuestCapacity } from '../../../services/availability'
+import { useRequestsStore } from '../../../stores/requestsStore'
+import { validateGuestCapacity, isCampingDayBlocked, isCampingStayBlocked } from '../../../services/availability'
 import { nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
 const settingsStore = useSettingsStore()
+const requestsStore = useRequestsStore()
 
 store.setService('camping')
+
+// Diario y pernoctar tienen cupos separados (SCRUM-244)
+function isDayBlocked(dateStr: string): boolean {
+  return isCampingDayBlocked(dateStr, store.campingType, store.guestsCount, requestsStore.requests, settingsStore.limitesAforo.campingPersonas)
+}
+
+function isStayBlocked(inicio: string, salida: string): boolean {
+  return isCampingStayBlocked(inicio, salida, store.guestsCount, requestsStore.requests, settingsStore.limitesAforo.campingPersonas)
+}
 
 const campingType = computed(() => store.campingType)
 
@@ -97,8 +108,16 @@ const capacityValidation = computed(() => {
   return validateGuestCapacity(store.guestsCount, 1, maxCap)
 })
 
+// Si el cliente cambia las personas o la modalidad después de elegir fecha, el cupo puede no alcanzar
+const dateUnavailable = computed(() => {
+  if (!store.checkInDate) return false
+  if (store.campingType === 'diario') return isDayBlocked(store.checkInDate)
+  return nightsBetween(store.checkInDate, store.checkOutDate) >= 1 && isStayBlocked(store.checkInDate, store.checkOutDate)
+})
+
 const isValid = computed(() => {
   if (!store.checkInDate) return false
+  if (dateUnavailable.value) return false
   if (store.campingType === 'pernoctar' && nightsBetween(store.checkInDate, store.checkOutDate) < 1) return false
   return capacityValidation.value.isValid
 })
@@ -183,8 +202,13 @@ function handleNext() {
         <BaseCalendar 
           :start-date="calendarStartDate"
           :end-date="calendarEndDate"
+          :is-date-disabled-fn="isDayBlocked"
+          :is-range-blocked-fn="isStayBlocked"
           @change="handleCalendarChange"
         />
+        <BaseAlert v-if="dateUnavailable" variant="warning" title="Sin cupo en esa fecha">
+          Para {{ store.guestsCount }} personas no queda cupo de {{ campingType === 'diario' ? 'paseo por el día' : 'pernoctar' }} en la fecha elegida. Cambia la fecha o la cantidad de personas.
+        </BaseAlert>
         <HorarioCard
           :titulo="campingType === 'diario' ? 'Horario del día de campo' : 'Horario de pernoctar'"
           :ingreso="settingsStore.campingSchedules[campingType === 'diario' ? 'diario' : 'pernoctar'].checkIn"

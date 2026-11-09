@@ -9,13 +9,28 @@ import { useSettingsStore } from '../../../stores/settingsStore'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
+import { useCatalogStore } from '../../../stores/catalogStore'
+import { useRequestsStore } from '../../../stores/requestsStore'
+import { isCabinNightBlocked, isCabinStayBlocked } from '../../../services/availability'
 import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const settingsStore = useSettingsStore()
 const reservationStore = useReservationStore()
+const catalogStore = useCatalogStore()
+const requestsStore = useRequestsStore()
 
 reservationStore.setService('cabana')
+
+// Una noche se bloquea si todas las cabañas con capacidad para el grupo están ocupadas (SCRUM-244)
+function isNightBlocked(dateStr: string): boolean {
+  return isCabinNightBlocked(dateStr, reservationStore.guestsCount, catalogStore.cabins, requestsStore.requests)
+}
+
+// Una estadía se bloquea si ninguna cabaña que le sirve está libre todas las noches
+function isStayBlocked(inicio: string, salida: string): boolean {
+  return isCabinStayBlocked(inicio, salida, reservationStore.guestsCount, catalogStore.cabins, requestsStore.requests)
+}
 
 // Conversión de string (YYYY-MM-DD) a objeto Date para BaseCalendar (corrige TS2322)
 const calendarStartDate = computed<Date | null>(() => {
@@ -80,12 +95,17 @@ function handleGuestsInput(event: Event) {
 // Cálculo de noches
 const nightsCount = computed(() => nightsBetween(reservationStore.checkInDate, reservationStore.checkOutDate))
 
+// Si el cliente cambia las personas después de elegir fechas, la estadía puede quedar sin cabaña
+const stayUnavailable = computed(() =>
+  nightsCount.value >= 1 && isStayBlocked(reservationStore.checkInDate, reservationStore.checkOutDate)
+)
+
 function handleBack() {
   router.push('/')
 }
 
 function handleNext() {
-  if (nightsCount.value >= 1) {
+  if (nightsCount.value >= 1 && !stayUnavailable.value) {
     reservationStore.nextStep()
     router.push('/cabana/paso2')
   }
@@ -115,6 +135,8 @@ function handleNext() {
         <BaseCalendar 
           :start-date="calendarStartDate"
           :end-date="calendarEndDate"
+          :is-date-disabled-fn="isNightBlocked"
+          :is-range-blocked-fn="isStayBlocked"
           @change="handleCalendarChange"
         />
       </div>
@@ -161,6 +183,10 @@ function handleNext() {
         </div>
       </div>
 
+      <BaseAlert v-if="stayUnavailable" variant="warning" title="No hay cabaña libre">
+        Para {{ reservationStore.guestsCount }} personas no queda ninguna cabaña libre en esas fechas. Cambia las fechas o la cantidad de personas.
+      </BaseAlert>
+
       <!-- Resumen de Estadía -->
       <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-sm font-bold text-gray-700">
         <div>
@@ -195,7 +221,7 @@ function handleNext() {
           variant="primary" 
           size="lg" 
           fullWidth 
-          :disabled="nightsCount < 1"
+          :disabled="nightsCount < 1 || stayUnavailable"
           @click="handleNext"
         >
           Ver Cabañas

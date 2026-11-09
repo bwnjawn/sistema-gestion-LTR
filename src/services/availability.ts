@@ -1,6 +1,6 @@
 // src/services/availability.ts
 
-import type { ReservationRequest, ServiceType } from '../types/domain'
+import type { Cabin, CampingModality, ReservationRequest, ServiceType } from '../types/domain'
 import type { EspacioRestaurante, LimitesAforo } from '../types/settings'
 import { addDays, isoToDate, isPastDate } from '../lib/dates'
 
@@ -188,8 +188,11 @@ export function getRestaurantCapacity(espacios: EspacioRestaurante[]): number {
 /** Topes por defecto si no se entregan (200 en el restaurante, 150 en el camping). */
 export const LIMITES_AFORO_POR_DEFECTO: LimitesAforo = { restaurantePersonas: 200, campingPersonas: 150 }
 
-/** Personas del restaurante en cada comida del día; una solicitud sin comida definida cuenta aparte. */
-function personasRestaurantePorComida(solicitudes: ReservationRequest[]): number {
+/** Comidas que ofrece el restaurante (coinciden con `selectedMealTypes` de las solicitudes). */
+export const COMIDAS_RESTAURANTE = ['desayuno', 'almuerzo', 'once'] as const
+
+/** Personas del restaurante en cada comida; una solicitud sin comida definida cuenta aparte ('sin-comida'). */
+function personasRestaurantePorComida(solicitudes: ReservationRequest[]): Record<string, number> {
   const porComida: Record<string, number> = {}
   for (const r of solicitudes) {
     const comidas = r.details?.selectedMealTypes?.length ? r.details.selectedMealTypes : ['sin-comida']
@@ -197,14 +200,27 @@ function personasRestaurantePorComida(solicitudes: ReservationRequest[]): number
       porComida[comida] = (porComida[comida] || 0) + r.guestsCount
     }
   }
-  return Math.max(0, ...Object.values(porComida))
+  return porComida
+}
+
+/** Modalidad de una solicitud de camping; las antiguas sin modalidad se tratan como pernoctar. */
+function modalidadCamping(r: ReservationRequest): CampingModality {
+  return r.details?.campingType ?? 'pernoctar'
+}
+
+/** Personas de camping de una modalidad que ocupan un día (diario y pernoctar tienen cupos separados). */
+function personasCampingDelDia(dateStr: string, modalidad: CampingModality, solicitudes: ReservationRequest[]): number {
+  return getRequestsForDay(dateStr, solicitudes, ['camping'])
+    .filter(r => modalidadCamping(r) === modalidad)
+    .reduce((total, r) => total + r.guestsCount, 0)
 }
 
 /**
  * Calcula el estado de ocupación diaria para el calendario administrativo.
  * Solo cuenta solicitudes activas y respeta los servicios elegidos.
  * "Sobrecupo" significa superar el aforo permitido: personas por comida en el restaurante
- * (provisorio hasta definir con el cliente si se mide por comida u hora) y personas por día en el camping.
+ * (provisorio hasta definir con el cliente si se mide por comida u hora) y personas por día
+ * en el camping, con un cupo separado para diario y para pernoctar.
  */
 export function getDayOccupancy(
   dateStr: string,
@@ -217,10 +233,11 @@ export function getDayOccupancy(
   const pendingCount = dayRequests.length - confirmedCount
 
   const restaurante = dayRequests.filter(r => normalizarServicio(r.type) === 'restaurante')
-  const camping = dayRequests.filter(r => normalizarServicio(r.type) === 'camping')
+  const maxRestaurante = Math.max(0, ...Object.values(personasRestaurantePorComida(restaurante)))
   const superaAforo =
-    personasRestaurantePorComida(restaurante) > limites.restaurantePersonas ||
-    camping.reduce((total, r) => total + r.guestsCount, 0) > limites.campingPersonas
+    maxRestaurante > limites.restaurantePersonas ||
+    personasCampingDelDia(dateStr, 'diario', dayRequests) > limites.campingPersonas ||
+    personasCampingDelDia(dateStr, 'pernoctar', dayRequests) > limites.campingPersonas
 
   let status: 'disponible' | 'ocupado' | 'sobrecupo' = 'disponible'
   if (superaAforo) {
@@ -230,4 +247,100 @@ export function getDayOccupancy(
   }
 
   return { confirmedCount, pendingCount, status }
+}
+// ---------------------------------------------------------------------------
+// Bloqueo de fechas en el calendario del cliente (SCRUM-244)
+// ---------------------------------------------------------------------------
+
+/** Cabañas con capacidad para el grupo y libres todas las noches de la estadía [entrada, salida). */
+export function getAvailableCabinsForStay(
+  cabins: Cabin[],
+  guestsCount: number,
+  checkIn: string,
+  checkOut: string,
+  existingRequests: ReservationRequest[]
+): Cabin[] {
+  return cabins.filter(c =>
+    c.capacity >= guestsCount && isCabinAvailable(c.id, checkIn, checkOut, existingRequests)
+  )
+}
+
+/**
+ * Una noche se bloquea cuando todas las cabañas con capacidad suficiente para el grupo están ocupadas.
+ * Si ninguna cabaña alcanza para el grupo (más personas que la cabaña más grande) no se bloquea nada:
+ * ese caso lo resuelve el contacto directo (SCRUM-27).
+ */
+export function isCabinNightBlocked(
+  dateStr: string,
+  guestsCount: number,
+  cabins: Cabin[],
+  existingRequests: ReservationRequest[]
+): boolean {
+  if (isPastDate(dateStr)) return true
+  return isCabinStayBlocked(dateStr, addDays(dateStr, 1), guestsCount, cabins, existingRequests)
+}
+
+/**
+ * Una estadía queda bloqueada si ninguna cabaña con capacidad suficiente está libre todas las noches:
+ * hoy una solicitud lleva una sola cabaña, así que no se puede cambiar de cabaña a mitad de camino.
+ */
+export function isCabinStayBlocked(
+  checkIn: string,
+  checkOut: string,
+  guestsCount: number,
+  cabins: Cabin[],
+  existingRequests: ReservationRequest[]
+): boolean {
+  const queSirven = cabins.filter(c => c.capacity >= guestsCount)
+  if (queSirven.length === 0) return false
+  return getAvailableCabinsForStay(queSirven, guestsCount, checkIn, checkOut, existingRequests).length === 0
+}
+
+/** Comidas del restaurante que no admiten al grupo ese día (personas ya reservadas + grupo > capacidad). */
+export function getFullMeals(
+  dateStr: string,
+  guestsCount: number,
+  existingRequests: ReservationRequest[],
+  capacidadRestaurante: number
+): string[] {
+  const delDia = getRequestsForDay(dateStr, existingRequests, ['restaurante'])
+  const porComida = personasRestaurantePorComida(delDia)
+  return COMIDAS_RESTAURANTE.filter(comida => (porComida[comida] || 0) + guestsCount > capacidadRestaurante)
+}
+
+/** El día del restaurante se bloquea solo si las tres comidas están llenas para el grupo. */
+export function isRestaurantDayBlocked(
+  dateStr: string,
+  guestsCount: number,
+  existingRequests: ReservationRequest[],
+  capacidadRestaurante: number
+): boolean {
+  if (isPastDate(dateStr)) return true
+  return getFullMeals(dateStr, guestsCount, existingRequests, capacidadRestaurante).length === COMIDAS_RESTAURANTE.length
+}
+
+/** Un día (o noche, en pernoctar) de camping se bloquea si el cupo de esa modalidad no alcanza para el grupo. */
+export function isCampingDayBlocked(
+  dateStr: string,
+  modalidad: CampingModality,
+  guestsCount: number,
+  existingRequests: ReservationRequest[],
+  capacidadCamping: number
+): boolean {
+  if (isPastDate(dateStr)) return true
+  return personasCampingDelDia(dateStr, modalidad, existingRequests) + guestsCount > capacidadCamping
+}
+
+/** Una estancia de pernoctar se bloquea si alguna de sus noches [entrada, salida) no tiene cupo. */
+export function isCampingStayBlocked(
+  checkIn: string,
+  checkOut: string,
+  guestsCount: number,
+  existingRequests: ReservationRequest[],
+  capacidadCamping: number
+): boolean {
+  for (let dia = checkIn; dia < checkOut; dia = addDays(dia, 1)) {
+    if (isCampingDayBlocked(dia, 'pernoctar', guestsCount, existingRequests, capacidadCamping)) return true
+  }
+  return false
 }

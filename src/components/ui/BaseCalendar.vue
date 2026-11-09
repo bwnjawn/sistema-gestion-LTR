@@ -5,13 +5,20 @@ import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 interface Props {
   startDate?: Date | null
   endDate?: Date | null
+  /** Indica si un día (o una noche, al elegir llegada) no se puede elegir. */
   isDateDisabledFn?: (dateStr: string) => boolean
+  /**
+   * Indica si la estadía [entrada, salida) no se puede reservar aunque cada día sea elegible por separado
+   * (por ejemplo, una noche ocupada en medio). Se usa al elegir la fecha de salida.
+   */
+  isRangeBlockedFn?: (startStr: string, endStr: string) => boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   startDate: null,
   endDate: null,
-  isDateDisabledFn: undefined
+  isDateDisabledFn: undefined,
+  isRangeBlockedFn: undefined
 })
 
 const emit = defineEmits<{
@@ -79,6 +86,12 @@ function formatDateISO(dayNum: number): string {
   return `${y}-${m}-${d}`
 }
 
+function toISO(fecha: Date): string {
+  const m = String(fecha.getMonth() + 1).padStart(2, '0')
+  const d = String(fecha.getDate()).padStart(2, '0')
+  return `${fecha.getFullYear()}-${m}-${d}`
+}
+
 function isDisabled(dayNum: number): boolean {
   const iso = formatDateISO(dayNum)
   
@@ -87,6 +100,14 @@ function isDisabled(dayNum: number): boolean {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   if (cellDate < now) return true
+
+  // Con la llegada ya elegida y sin salida, los días posteriores se evalúan como salida de la estadía:
+  // el día de salida no es una noche, así que puede ser un día ocupado.
+  if (props.isRangeBlockedFn && props.startDate && !props.endDate) {
+    const inicio = new Date(props.startDate)
+    inicio.setHours(0, 0, 0, 0)
+    if (cellDate > inicio) return props.isRangeBlockedFn(toISO(inicio), iso)
+  }
 
   if (props.isDateDisabledFn) {
     return props.isDateDisabledFn(iso)
