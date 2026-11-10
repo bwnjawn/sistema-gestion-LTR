@@ -4,7 +4,7 @@ Fuente única de las reglas que hoy están repartidas en los criterios de acepta
 **Regla de oro:** toda regla de esta tabla debe vivir en `src/services/` y no en una vista (`.vue`).
 Cuando una regla cambie, se actualiza primero este archivo y después el código.
 
-Última revisión: 2026-11-08
+Última revisión: 2026-11-10 (reglas de cruces, abono y mantención)
 
 Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo en el código · ❌ no implementada · ❓ falta decisión
 
@@ -14,7 +14,10 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 |---|---|---|---|---|
 | Abono exigido | 30 % por defecto, editable por el admin | SCRUM-32, 59 | `settingsStore.parameters.defaultDepositPercentage` y `services/pricing.ts` | Las reservas del admin usan el mismo cálculo (SCRUM-56) |
 | IVA | 19 % se suma al subtotal | — | `services/pricing.ts` | ❓ ¿Los precios publicados ya incluyen IVA? Ninguna historia lo define |
-| Estados de solicitud | `pending` → `confirmed` o `rejected`, además de `cancelled` | SCRUM-59 | `types/domain.ts` | ⚠️ las vistas aún aceptan valores antiguos (`pendiente`, `confirmada`, `rechazada`) |
+| Estados de solicitud | `pending` → `confirmed` o `rejected`, además de `cancelled`. **Solo `confirmed` retiene fechas y cupos**; `pending` es una intención que puede convivir con otras (ver sección 5) | SCRUM-59, 263 | `types/domain.ts` | ⚠️ las vistas aún aceptan valores antiguos (`pendiente`, `confirmada`, `rechazada`) |
+| Plazo del abono | **48 horas** desde que el admin aprueba la reserva (provisorio y editable en Ajustes). Si vence sin el abono exigido, la reserva se marca "Abono vencido" y el admin decide liberar o esperar; **nunca se libera sola** | SCRUM-264 | — | ❌ decidido el 10/11, falta implementar. Confirmar el plazo real con el cliente |
+| Exención de abono | Los clientes de tipo **Institución** que reservan en restaurante no pagan abono (el Estado paga después). Colegio y Empresa sí pagan. **Solo aplica a restaurante**, porque es el único servicio donde se registra el tipo de cliente | SCRUM-264 | `clientType` en `details` | ❌ decidido el 10/11, falta implementar |
+| Sin conexión y conflictos al reconectar | El admin puede registrar y confirmar sin internet; queda "Sin sincronizar". Al reconectar, el servidor decide: si choca con una confirmada, la reserva queda **"En conflicto, por resolver"** (no se pisa ni se pierde) y se avisa a un admin | SCRUM-250, 248 | — | ❌ Debe estar en la entrega del 27/11. La base de datos impedirá dos confirmadas cruzadas (restricción de exclusión sobre `confirmed`) |
 | Alerta de pendiente antiguo | Una solicitud pendiente por más de 24 h se resalta | — | `AdminRequestsView.vue` (`isOldPending`) | ⚠️ está en la vista |
 | Teléfono del cliente | Prefijo `+569` precargado y editable; teclado numérico. Solo el prefijo no pasa: se exigen 9 dígitos | SCRUM-25, 240 | `isClientPhoneValid` en `services/wizard.ts` y guards del router | ✅ |
 | Categoría de cliente | Solo se pide en restaurante, no en cabañas ni en camping | SCRUM-25, 232 | Pasos de restaurante | por verificar |
@@ -29,8 +32,11 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | Capacidad | Cabañas de 6 y de 8 personas | SCRUM-27 | ❓ ¿Se permite una persona adicional? |
 | Precio | Precio por noche × noches (+ IVA) | — | ✅ `calculateCabinPrice` |
 | Horarios | Check-in 15:00 y check-out 11:00 (valores por defecto, editables) | SCRUM-26 | ❓ Falta decidir si la hora es fija o flexible (pendiente de reunión interna) |
-| Disponibilidad | Una cabaña no admite dos solicitudes activas (`pending` o `confirmed`) con fechas solapadas, en intervalo `[entrada, salida)` | SCRUM-60 | ✅ `isCabinAvailable` |
-| Varias cabañas por solicitud | Pendiente de decisión | SCRUM-27 | ❓ Ver `docs/specs/SCRUM-27.md` |
+| Disponibilidad | Una cabaña con una reserva **confirmada** en las fechas, en intervalo `[entrada, salida)`, **no se ofrece a nadie** (ni cliente ni admin). Las **pendientes** no bloquean: el cliente ve la cabaña libre y el admin la ve con un aviso dentro de su tarjeta | SCRUM-60, 260, 263 | ⚠️ `isCabinAvailable` hoy cuenta pendientes y confirmadas; cambia con SCRUM-263 |
+| Reserva del admin | Entra **confirmada** si no se cruza con nada, y **pendiente** si se cruza con pendientes. Con una confirmada en la cabaña, no se puede elegir | SCRUM-56, 260 | ❌ falta implementar (hoy entra siempre confirmada) |
+| Mantención | Una cabaña con la marca **"En mantención"** no sale para nuevas reservas, ni para el cliente ni para el admin, hasta que el admin la desactive. No tiene fechas. Las reservas existentes no cambian y se avisa si tiene reservas futuras activas | SCRUM-266 | ❌ decidido el 10/11, falta implementar. ❓ Si camping y restaurante también necesitan el check (D12, a preguntar al cliente) |
+| Varias cabañas para una familia | El **admin las enlaza al registrar**: una solicitud por cabaña unidas por `grupoId`, y se confirman todas o ninguna | SCRUM-265 | ❌ decidido el 10/11, falta implementar. ❓ Reparto de personas entre cabañas y si el total y el abono se calculan juntos o por cabaña |
+| Varias cabañas por solicitud del cliente | Pendiente de decisión | SCRUM-27 | ❓ Ver `docs/specs/SCRUM-27.md` |
 
 ## 3. Camping
 
@@ -55,11 +61,13 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | Cupo por horario | Reemplazado por el aforo en personas de los espacios (ver más abajo) | SCRUM-244 | `maxRestaurantGroupsPerSlot` quedó sin uso y ya no se muestra en Ajustes |
 | Precio | Suma de platos × cantidad (+ IVA) | — | ✅ `calculateRestaurantPrice` |
 | Espacios y capacidad | Comedor principal 120 personas, carpa 50, comedor secundario 30 (total 200) | SCRUM-244 (reunión con el cliente) | ✅ Capacidades editables en Ajustes (`capacityRules.restaurantSpaces`); el total (200) limita las personas en el paso 1. ❓ Falta decidir si el aforo se cuenta por comida o por hora y cómo se asigna el espacio a un grupo |
-| Sobrecupo en el calendario | Restaurante: personas de una misma comida > capacidad total. Camping: personas del día de una misma modalidad > capacidad del camping. Cabañas: no aplica (un solapamiento se rechaza, SCRUM-60) | SCRUM-244 | ✅ `getDayOccupancy` (provisorio hasta confirmar con el cliente si se mide por comida u hora) |
+| Sobrecupo en el calendario | Restaurante: personas de una misma comida > capacidad total. Camping: personas del día de una misma modalidad > capacidad del camping. Cabañas: no aplica por personas; se avisa el cruce de fechas de la misma cabaña (SCRUM-60) | SCRUM-244 | ✅ `getDayOccupancy` (provisorio hasta confirmar con el cliente si se mide por comida u hora) |
 
 ## 5. Bloqueo de fechas en el calendario del cliente
 
-Decidido el 8/11 (SCRUM-244). Cuentan solo las solicitudes activas (`pending` o `confirmed`). Funciones en `services/availability.ts`.
+Decidido el 8/11 (SCRUM-244) y **corregido el 10/11 (SCRUM-263)**: bloquean solo las solicitudes **confirmadas** (`confirmed`). Las pendientes no bloquean al cliente; dos clientes pueden pedir el mismo día y el admin decide cuál confirmar. Funciones en `services/availability.ts`.
+
+> Estado del código: `isCabinAvailable`, `getDayOccupancy` y los bloqueos de SCRUM-244 todavía cuentan pendientes y confirmadas juntas. Hay que separar el bloqueo (solo confirmadas) del aviso de demanda del admin (pendientes y confirmadas), en SCRUM-263.
 
 | Servicio | Una fecha se bloquea cuando… | Detalle |
 |---|---|---|
@@ -67,17 +75,37 @@ Decidido el 8/11 (SCRUM-244). Cuentan solo las solicitudes activas (`pending` o 
 | Restaurante | Las tres comidas están llenas para el grupo (personas ya reservadas + grupo > capacidad total) | Las comidas llenas se deshabilitan una a una en el paso 1. Las solicitudes antiguas sin comida definida no cuentan en ninguna comida |
 | Camping | Las personas ya reservadas de esa modalidad + el grupo superan la capacidad del camping | `diario` y `pernoctar` tienen cupos separados. En `pernoctar` se revisa cada noche de la estancia. Las solicitudes antiguas sin modalidad cuentan como `pernoctar` |
 
-El admin no tiene este bloqueo al editar o registrar una reserva: puede cruzar fechas y la resolución es manual (SCRUM-60).
+**El admin tiene el mismo bloqueo por confirmadas** (corregido el 10/11): no se le ofrece una cabaña ni un cupo ya confirmado. Sí puede registrar sobre fechas con solo pendientes; la reserva entra pendiente y con aviso.
 
-### Solapamientos entre solicitudes (SCRUM-60)
+### Solapamientos entre solicitudes (SCRUM-60, 262, 263)
 
-El admin ve una alerta cuando dos o más solicitudes activas (`pending` o `confirmed`) no caben juntas. Las pendientes cuentan igual que las confirmadas. No se rechaza ni cancela nada solo: la resolución es manual. Función: `findConflicts` en `services/availability.ts`.
+**Modelo:** una pendiente es una intención y una confirmada es un compromiso. Los cruces se avisan siempre, pero solo uno puede quedar confirmado. Nada se rechaza ni cancela solo: la decisión es del admin. Función: `findConflicts` en `services/availability.ts`.
 
 | Servicio | Hay solapamiento cuando… |
 |---|---|
 | Cabañas | La misma cabaña tiene fechas que se cruzan, en intervalo `[entrada, salida)` |
 | Restaurante | Las personas de una misma comida y día superan la capacidad total del restaurante |
 | Camping | Las personas de un mismo día y modalidad superan la capacidad del camping (diario y pernoctar por separado) |
+
+**Qué cuenta para cada cosa**
+
+| Efecto | Cuenta |
+|---|---|
+| Bloqueo al cliente y al admin al elegir | Solo confirmadas |
+| Aviso de cruce y de sobrecupo del admin | Pendientes y confirmadas (muestra la demanda) |
+| Rechazadas y canceladas | Nunca cuentan |
+
+**Combinaciones y qué pasa**
+
+| Caso | Resultado |
+|---|---|
+| Pendiente + pendiente | Conviven; ambas muestran "Se cruza" |
+| Pendiente + confirmada (la pendiente llegó antes o después) | La pendiente avisa y ofrece la misma salida de rechazo (abajo) |
+| Confirmada + confirmada | No debe ocurrir. Con Supabase lo impide la base de datos; sin conexión queda "En conflicto, por resolver" |
+
+**Resolver al confirmar (SCRUM-262).** Al aprobar una solicitud que se cruza, el admin ve siempre un diálogo con las solicitudes que chocan y sus días, precio y cercanía de la fecha, y elige cuál confirmar. Para cada una que no queda confirmada: botones rápidos de **llamar, correo y WhatsApp** con mensaje prearmado, **Modificar fecha** (SCRUM-59) o **Rechazar**. La app nunca envía mensajes sola.
+
+**Eventos especiales (SCRUM-261, bloqueada).** Se tratan como restaurante completo y confirmado. Hay decisiones de diseño pendientes (ver D6).
 
 ## 6. Contacto del negocio
 
@@ -97,5 +125,10 @@ Los enlaces (mapa, Instagram, web) se generan en `lib/contactLinks.ts` a partir 
 | D3 | Datos reales de transferencia para el paso 4 (SCRUM-233) | Cliente | **Resuelta provisoriamente (8/11):** datos de ejemplo, editables por el admin desde Configuración y visibles para el cliente. Cargar los reales cuando el cliente los entregue. Implementado en SCRUM-233: `settingsStore.transferInfo`, editable en Ajustes → Datos de transferencia y mostrado en `DepositInfoCard` (paso 4) |
 | D4 | ¿Los precios incluyen IVA? | Cliente | No incluyen iva |
 | D5 | Precio del espacio grande de camping | Cliente | No se sabe pero tambien debe ser editable |
-| D6 | ¿Qué hace "evento especial" en una reserva del admin? (SCRUM-56 y HU-4.2) | Cliente | Es un evento grande o especial como boda o cumpleaños. Donde el cliente debe contactar con el administrador especificamente para ver detalles, pero la app debe permitir marcar el dia para saber el cupo.|
+| D6 | ¿Qué hace "evento especial" en una reserva del admin? (SCRUM-56, 261 y HU-4.2) | Cliente | **Respuesta parcial (10/11):** es un evento grande (boda, cumpleaños). El cliente debe contactar al admin: en el home hay una opción "Evento especial" que muestra los contactos (llamar y WhatsApp), no abre un wizard. El admin lo registra y **bloquea todo el restaurante** (los tres espacios, 200 cupos); puede llevar extras (camping o cabaña) como reservas enlazadas (SCRUM-265). **Pendiente (SCRUM-261):** si un evento nocturno bloquea solo la noche o también la cena del día, cómo se modela un horario fuera de las tres comidas y qué pasa con la marca `isSpecialEvent` |
+| D8 | Plazo del abono | Cliente | **Resuelta provisoriamente (10/11):** 48 horas desde que el admin aprueba, editable. Confirmar el plazo real |
+| D9 | Exención de abono para instituciones | Cliente | **Resuelta (10/11):** solo "Institución" en restaurante (único servicio con tipo de cliente). Colegio y Empresa pagan |
+| D10 | Plazo real del abono (provisorio: 48 h) | Cliente, en la reunión | Preguntar |
+| D11 | Reparto de personas entre cabañas de una familia y si el total y el abono se calculan juntos o por cabaña (SCRUM-265) | Cliente, en la reunión | Preguntar |
+| D12 | ¿Camping y restaurante también necesitan la marca "En mantención"? (SCRUM-266) | Cliente, en la reunión | Preguntar |
 | D7 | Varias cabañas por solicitud o redirigir a contacto directo (SCRUM-27) | Equipo | **Aplazada (8/11):** SCRUM-27 se movió al Sprint 3 hasta confirmar los datos pendientes |
