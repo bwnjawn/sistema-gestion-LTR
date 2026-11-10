@@ -35,8 +35,13 @@ export const useRequestsStore = defineStore('requests', () => {
     { deep: true }
   )
 
+  /** Códigos ya usados, para que una solicitud nueva no repita ninguno. */
+  const requestCodes = computed(() => requests.value.map(r => r.requestCode))
+
+  // `status` solo se indica al cargar una reserva como administrador; el cliente siempre entra como pendiente.
   async function addRequest(
-    newReq: Omit<ReservationRequest, 'id' | 'status' | 'createdAt'>
+    newReq: Omit<ReservationRequest, 'id' | 'status' | 'createdAt'>,
+    status: BookingStatus = 'pending'
   ): Promise<ReservationRequest> {
     isLoading.value = true
     error.value = null
@@ -44,7 +49,7 @@ export const useRequestsStore = defineStore('requests', () => {
       const req: ReservationRequest = {
         ...newReq,
         id: generateUUID(),
-        status: 'pending',
+        status,
         createdAt: new Date().toISOString()
       }
       requests.value.unshift(req)
@@ -131,6 +136,7 @@ export const useRequestsStore = defineStore('requests', () => {
     error,
     conflicts,
     conflictsByRequestId,
+    requestCodes,
     addRequest,
     updateRequestStatus,
     updateRequestDetails,

@@ -12,7 +12,7 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 
 | Regla | Valor | Historia | Dónde está hoy | Estado |
 |---|---|---|---|---|
-| Abono exigido | 30 % por defecto, editable por el admin | SCRUM-32, 59 | `settingsStore.parameters.defaultDepositPercentage` y `services/pricing.ts` | ⚠️ `AdminNewBookingModal.vue` usa `0.3` fijo |
+| Abono exigido | 30 % por defecto, editable por el admin | SCRUM-32, 59 | `settingsStore.parameters.defaultDepositPercentage` y `services/pricing.ts` | Las reservas del admin usan el mismo cálculo (SCRUM-56) |
 | IVA | 19 % se suma al subtotal | — | `services/pricing.ts` | ❓ ¿Los precios publicados ya incluyen IVA? Ninguna historia lo define |
 | Estados de solicitud | `pending` → `confirmed` o `rejected`, además de `cancelled` | SCRUM-59 | `types/domain.ts` | ⚠️ las vistas aún aceptan valores antiguos (`pendiente`, `confirmada`, `rechazada`) |
 | Alerta de pendiente antiguo | Una solicitud pendiente por más de 24 h se resalta | — | `AdminRequestsView.vue` (`isOldPending`) | ⚠️ está en la vista |
