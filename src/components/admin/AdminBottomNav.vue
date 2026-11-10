@@ -26,7 +26,7 @@ function navigate(path: string) {
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-2 pt-2.5 pb-seguro-nav shadow-2xl">
+  <nav class="barra-fija-inferior fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-2 pt-2.5 pb-seguro-nav shadow-2xl">
     <div class="max-w-md mx-auto grid grid-cols-5 gap-1">
       <button
         v-for="item in navItems"

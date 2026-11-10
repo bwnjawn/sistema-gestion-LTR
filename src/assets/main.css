@@ -77,3 +77,16 @@ input[type="password"] {
     display: none;
   }
 }
+
+/* Barras fijas inferiores: si iOS deja un margen debajo (teclado cerrado), se rellena
+   con el mismo color de la barra para que no se vea una franja del fondo */
+.barra-fija-inferior::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 100vh;
+  background: inherit;
+  pointer-events: none;
+}

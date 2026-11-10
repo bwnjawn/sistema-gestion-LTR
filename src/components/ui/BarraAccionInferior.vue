@@ -16,7 +16,7 @@ defineEmits<{ (e: 'click', ev: MouseEvent): void }>()
 </script>
 
 <template>
-  <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-3.5 pt-3.5 pb-seguro-nav shadow-2xl">
+  <div class="barra-fija-inferior fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-3.5 pt-3.5 pb-seguro-nav shadow-2xl">
     <div class="max-w-md mx-auto">
       <BaseButton
         variant="primary"
