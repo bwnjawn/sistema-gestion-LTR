@@ -1,24 +1,17 @@
 <script setup lang="ts">
 import { Phone, Mail, Globe, Instagram, MapPin, Clock } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
+import ClientHeader from '../../components/ui/ClientHeader.vue'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
 
 const settingsStore = useSettingsStore()
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
-    <!-- Encabezado -->
-    <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-1 text-center">
-      <span class="text-sm font-black text-brand-accent uppercase tracking-wider block">
-        Centro Turístico
-      </span>
-      <h1 class="text-xl font-black text-brand-dark">Los Troncos de Repil</h1>
-      <p class="text-sm font-medium text-gray-600">
-        Naturaleza, descanso y gastronomía en la Comuna de Fresia.
-      </p>
-    </div>
+  <div class="min-h-screen bg-brand-light">
+    <ClientHeader titulo="Contacto" subtitulo="Los Troncos de Repil" />
 
+  <div class="space-y-4 max-w-md mx-auto w-full px-4 pt-4 pb-contenido-nav">
     <!-- Canales de Contacto Directo -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <h2 class="text-sm font-black text-brand-dark border-b border-gray-100 pb-2">
@@ -164,5 +157,6 @@ const settingsStore = useSettingsStore()
 
     <!-- Navegación Inferior -->
     <ClientBottomNav />
+  </div>
   </div>
 </template>

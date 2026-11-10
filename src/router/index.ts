@@ -12,23 +12,30 @@ const routes = [
   { path: '/', name: 'home', component: () => import('../views/client/HomeView.vue') },
   { path: '/contacto', name: 'contact', component: () => import('../views/client/ContactView.vue') },
 
-  // Flujo Reserva Cabaña
-  { path: '/cabana/paso1', name: 'cabana-step1', component: () => import('../views/client/cabana/CabanaStep1View.vue') },
-  { path: '/cabana/paso2', name: 'cabana-step2', component: () => import('../views/client/cabana/CabanaStep2View.vue') },
-  { path: '/cabana/paso3', name: 'cabana-step3', component: () => import('../views/client/cabana/CabanaStep3View.vue') },
-  { path: '/cabana/paso4', name: 'cabana-step4', component: () => import('../views/client/cabana/CabanaStep4View.vue') },
+  // Flujo de reserva: comparten el encabezado con atrás, título del servicio, paso y salir
+  {
+    path: '',
+    component: () => import('../layouts/ReservaLayout.vue'),
+    children: [
+    // Flujo Reserva Cabaña
+    { path: '/cabana/paso1', name: 'cabana-step1', meta: { servicio: 'cabana', paso: 1 }, component: () => import('../views/client/cabana/CabanaStep1View.vue') },
+    { path: '/cabana/paso2', name: 'cabana-step2', meta: { servicio: 'cabana', paso: 2 }, component: () => import('../views/client/cabana/CabanaStep2View.vue') },
+    { path: '/cabana/paso3', name: 'cabana-step3', meta: { servicio: 'cabana', paso: 3 }, component: () => import('../views/client/cabana/CabanaStep3View.vue') },
+    { path: '/cabana/paso4', name: 'cabana-step4', meta: { servicio: 'cabana', paso: 4 }, component: () => import('../views/client/cabana/CabanaStep4View.vue') },
 
-  // Flujo Reserva Camping
-  { path: '/camping/paso1', name: 'camping-step1', component: () => import('../views/client/camping/CampingStep1View.vue') },
-  { path: '/camping/paso2', name: 'camping-step2', component: () => import('../views/client/camping/CampingStep2View.vue') },
-  { path: '/camping/paso3', name: 'camping-step3', component: () => import('../views/client/camping/CampingStep3View.vue') },
-  { path: '/camping/paso4', name: 'camping-step4', component: () => import('../views/client/camping/CampingStep4View.vue') },
+    // Flujo Reserva Camping
+    { path: '/camping/paso1', name: 'camping-step1', meta: { servicio: 'camping', paso: 1 }, component: () => import('../views/client/camping/CampingStep1View.vue') },
+    { path: '/camping/paso2', name: 'camping-step2', meta: { servicio: 'camping', paso: 2 }, component: () => import('../views/client/camping/CampingStep2View.vue') },
+    { path: '/camping/paso3', name: 'camping-step3', meta: { servicio: 'camping', paso: 3 }, component: () => import('../views/client/camping/CampingStep3View.vue') },
+    { path: '/camping/paso4', name: 'camping-step4', meta: { servicio: 'camping', paso: 4 }, component: () => import('../views/client/camping/CampingStep4View.vue') },
 
-  // Flujo Reserva Restaurante
-  { path: '/restaurante/paso1', name: 'restaurant-step1', component: () => import('../views/client/restaurante/RestaurantStep1View.vue') },
-  { path: '/restaurante/paso2', name: 'restaurant-step2', component: () => import('../views/client/restaurante/RestaurantStep2View.vue') },
-  { path: '/restaurante/paso3', name: 'restaurant-step3', component: () => import('../views/client/restaurante/RestaurantStep3View.vue') },
-  { path: '/restaurante/paso4', name: 'restaurant-step4', component: () => import('../views/client/restaurante/RestaurantStep4View.vue') },
+    // Flujo Reserva Restaurante
+    { path: '/restaurante/paso1', name: 'restaurant-step1', meta: { servicio: 'restaurante', paso: 1 }, component: () => import('../views/client/restaurante/RestaurantStep1View.vue') },
+    { path: '/restaurante/paso2', name: 'restaurant-step2', meta: { servicio: 'restaurante', paso: 2 }, component: () => import('../views/client/restaurante/RestaurantStep2View.vue') },
+    { path: '/restaurante/paso3', name: 'restaurant-step3', meta: { servicio: 'restaurante', paso: 3 }, component: () => import('../views/client/restaurante/RestaurantStep3View.vue') },
+    { path: '/restaurante/paso4', name: 'restaurant-step4', meta: { servicio: 'restaurante', paso: 4 }, component: () => import('../views/client/restaurante/RestaurantStep4View.vue') },
+    ]
+  },
 
   // ==========================================
   // RUTAS DE AUTENTICACIÓN

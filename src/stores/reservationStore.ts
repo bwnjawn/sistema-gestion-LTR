@@ -92,6 +92,21 @@ export const useReservationStore = defineStore('reservation', () => {
   const clientEmail = ref<string>(initialDraft?.clientEmail ?? '')
   const comments = ref<string>(initialDraft?.comments ?? '')
 
+  // Se enciende al enviar la solicitud: el encabezado deja de ofrecer volver o salir
+  const solicitudEnviada = ref(false)
+
+  /** El cliente ya eligió o escribió algo que se perdería al salir. */
+  const tieneBorrador = computed(() =>
+    Boolean(
+      checkInDate.value ||
+      selectedCabinId.value ||
+      selectedCampingId.value ||
+      selectedMealTypes.value.length ||
+      selectedMeals.value.length ||
+      clientName.value.trim()
+    )
+  )
+
   // Guardar automáticamente en sessionStorage ante cualquier cambio
   watch(
     [
@@ -176,6 +191,7 @@ export const useReservationStore = defineStore('reservation', () => {
     const normalized: ServiceType = service === 'restaurant' ? 'restaurante' : service === 'cabaña' ? 'cabana' : service
     selectedService.value = normalized
     currentStep.value = 1
+    solicitudEnviada.value = false
   }
 
   function nextStep() {
@@ -192,6 +208,7 @@ export const useReservationStore = defineStore('reservation', () => {
     const normalized: ServiceType = newService === 'restaurant' ? 'restaurante' : newService === 'cabaña' ? 'cabana' : newService
     selectedService.value = normalized
     currentStep.value = 1
+    solicitudEnviada.value = false
     selectedCabinId.value = ''
     selectedCampingId.value = ''
     restaurantTime.value = ''
@@ -202,6 +219,7 @@ export const useReservationStore = defineStore('reservation', () => {
   }
 
   function resetStore() {
+    solicitudEnviada.value = false
     currentStep.value = 1
     selectedService.value = 'cabana'
     checkInDate.value = ''
@@ -283,6 +301,7 @@ export const useReservationStore = defineStore('reservation', () => {
 
     // Limpia el borrador de sessionStorage una vez enviada la solicitud
     clearDraftFromSession()
+    solicitudEnviada.value = true
     return code
   }
 
@@ -305,6 +324,8 @@ export const useReservationStore = defineStore('reservation', () => {
     clientPhone,
     clientEmail,
     comments,
+    solicitudEnviada,
+    tieneBorrador,
     setService,
     nextStep,
     prevStep,
