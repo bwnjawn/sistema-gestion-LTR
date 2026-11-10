@@ -1,6 +1,6 @@
 # Plan de entrega
 
-Hoy: 2026-11-08 · Prototipo: **viernes 13/11** · Entrega final: **viernes 27/11**
+Última revisión: 2026-11-10 · Prototipo: **viernes 13/11** · Entrega final: **viernes 27/11**
 Trabajo de una sola persona; el orden no depende del responsable que figura en Jira.
 
 ## Meta del sprint
@@ -14,6 +14,22 @@ Orden desde el 8/11 (en revisión: 236 a 242, 252, 253, 254, 58, 59, 233):
 2. Recorrido completo cliente → admin en el celular y repaso del viernes 13/11.
 3. Adelantar Fase 2 en este orden: 243 (calendario), 244 (aforo), 60 (solapamientos), 56 (nueva reserva), 229/231, 257, y 245 (modelo Supabase).
 4. Fase 3 (246 a 248) solo cuando lo anterior esté cerrado.
+
+## Cambio de criterio y de plan — 10/11
+- **Las fechas son tope, no ritmo.** Solo importan dos hitos: el **13/11** se presenta un avance y el **27/11** todo debe estar listo. Nada está limitado por la fecha: el objetivo es avanzar lo máximo posible; si todo queda listo para el 13, mejor.
+- **SCRUM-56 cerrada** (hecha y verificada a mano). El 10/11 se corrigieron sus decisiones sobre cruces y evento especial (ver `specs/SCRUM-56.md`).
+- **Reglas de cruces nuevas** (ver `reglas-negocio.md`, sección 5, y `specs/SCRUM-60.md` y `specs/SCRUM-262.md`): solo las confirmadas bloquean; el admin elige cuál confirmar y avisa al cliente por llamada, correo o WhatsApp.
+- **Modo sin conexión (SCRUM-250) pasa al Sprint 2 y a prioridad alta:** debe estar en la entrega del 27/11, porque los administradores trabajan en zona rural.
+
+**Tareas nuevas del 10/11 (todas en el Sprint 2), en el orden propuesto:**
+1. SCRUM-260: cabañas con solo pendientes se ofrecen con aviso; con confirmada no se ofrecen (rama `fix/SCRUM-260-admin-cabanas-ocupadas`, con código parcial).
+2. SCRUM-263: solo las confirmadas bloquean fechas y cupos.
+3. SCRUM-262: resolver cruces al confirmar y salidas de contacto.
+4. SCRUM-264: plazo de abono de 48 h ("Abono vencido") y exención de instituciones en restaurante.
+5. SCRUM-266: marca "En mantención" en cabañas.
+6. SCRUM-265: varias cabañas enlazadas para una familia.
+7. SCRUM-261: evento especial. **Bloqueada por decisiones de diseño: preguntar al usuario antes de implementar.**
+8. SCRUM-250, 245 y 248: sin conexión, esquema de Supabase y restricción de exclusión sobre las confirmadas.
 
 ## Registro de avance — 8/11 (cierre del día)
 
