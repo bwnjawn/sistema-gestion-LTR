@@ -6,6 +6,8 @@ import {
 } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
+import AvisoEnvio from '../../../components/ui/AvisoEnvio.vue'
+import { useEnvioSolicitud } from '../../../composables/useEnvioSolicitud'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
@@ -50,20 +52,13 @@ const horarioCamping = computed(() => {
   return h
 })
 
-const isSubmitting = ref(false)
+const { isSubmitting, errorEnvio, sinConexion, enviar } = useEnvioSolicitud()
 
-async function handleSendRequest() {
-  if (isSubmitting.value) return
-  isSubmitting.value = true
-  try {
-    const code = await store.submitReservationRequest()
-    reservationCode.value = code
+function handleSendRequest() {
+  return enviar(async () => {
+    reservationCode.value = await store.submitReservationRequest()
     isSubmitted.value = true
-  } catch (error) {
-    console.error('Error al enviar la solicitud:', error)
-  } finally {
-    isSubmitting.value = false
-  }
+  })
 }
 
 function handleGoToRestaurant() {
@@ -176,7 +171,14 @@ function handleGoHome() {
 
       <DepositInfoCard :total-amount="totalWithIva" :deposit-amount="depositAmount" />
 
-      <BarraAccionInferior enviar :disabled="isSubmitting" @click="handleSendRequest">Enviar Solicitud</BarraAccionInferior>
+      <AvisoEnvio
+        :sin-conexion="sinConexion"
+        :error="errorEnvio"
+        :enviando="isSubmitting"
+        @reintentar="handleSendRequest"
+      />
+
+      <BarraAccionInferior enviar :loading="isSubmitting || sinConexion" :disabled="sinConexion" @click="handleSendRequest">{{ sinConexion ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar Solicitud' }}</BarraAccionInferior>
     </div>
 
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">

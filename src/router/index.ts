@@ -71,7 +71,15 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   // Cada vista nueva empieza arriba; al volver atrás se conserva la posición
   scrollBehavior(_to, _from, savedPosition) {
-    return savedPosition ?? { top: 0 }
+    if (savedPosition) return savedPosition
+    // Cada pantalla nueva se ve desde el encabezado. En iPhone, el teclado abierto o el
+    // contenido que aún se pinta pueden dejar la pantalla a medio camino, así que se
+    // suelta el foco y se repite el desplazamiento un instante después.
+    ;(document.activeElement as HTMLElement | null)?.blur?.()
+    const arriba = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    requestAnimationFrame(arriba)
+    setTimeout(arriba, 120)
+    return { top: 0, left: 0 }
   },
   routes
 })

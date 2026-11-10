@@ -6,6 +6,8 @@ import BaseButton from './BaseButton.vue'
 // Volver atrás se hace desde el encabezado.
 defineProps<{
   disabled?: boolean
+  /** Trabajando: muestra el spinner y no deja tocar de nuevo. */
+  loading?: boolean
   /** Muestra el ícono de enviar en vez de la flecha (último paso). */
   enviar?: boolean
 }>()
@@ -21,11 +23,12 @@ defineEmits<{ (e: 'click', ev: MouseEvent): void }>()
         size="lg"
         full-width
         :disabled="disabled"
+        :loading="loading"
         @click="$emit('click', $event)"
       >
-        <Send v-if="enviar" class="w-5 h-5 mr-1.5 stroke-[2.5]" aria-hidden="true" />
+        <Send v-if="enviar && !loading" class="w-5 h-5 mr-1.5 stroke-[2.5]" aria-hidden="true" />
         <slot />
-        <ArrowRight v-if="!enviar" class="w-5 h-5 ml-1.5 stroke-[2.5]" aria-hidden="true" />
+        <ArrowRight v-if="!enviar && !loading" class="w-5 h-5 ml-1.5 stroke-[2.5]" aria-hidden="true" />
       </BaseButton>
     </div>
   </div>
