@@ -118,4 +118,36 @@ router.beforeEach((to, _from, next) => {
   next()
 })
 
+// Cliente y administrador se instalan como dos apps distintas: según la ruta
+// se cambia el manifest, el ícono y el nombre que iOS lee al "Agregar a inicio".
+function aplicarIdentidadDeApp(esAdmin: boolean) {
+  const poner = (selector: string, crear: () => HTMLElement, atributo: string, valor: string) => {
+    let el = document.head.querySelector<HTMLElement>(selector)
+    if (!el) {
+      el = crear()
+      document.head.appendChild(el)
+    }
+    el.setAttribute(atributo, valor)
+  }
+  const enlace = (rel: string) => () => {
+    const link = document.createElement('link')
+    link.rel = rel
+    return link
+  }
+  const meta = (nombre: string) => () => {
+    const m = document.createElement('meta')
+    m.name = nombre
+    return m
+  }
+
+  poner('link[rel="manifest"]', enlace('manifest'), 'href', esAdmin ? '/manifest-admin.webmanifest' : '/manifest.webmanifest')
+  poner('link[rel="apple-touch-icon"]', enlace('apple-touch-icon'), 'href', esAdmin ? '/apple-touch-icon-admin.png' : '/apple-touch-icon.png')
+  poner('meta[name="apple-mobile-web-app-title"]', meta('apple-mobile-web-app-title'), 'content', esAdmin ? 'Admin Troncos' : 'Los Troncos')
+  poner('meta[name="theme-color"]', meta('theme-color'), 'content', esAdmin ? '#000000' : '#1E4620')
+}
+
+router.afterEach((to) => {
+  aplicarIdentidadDeApp(to.path.startsWith('/admin'))
+})
+
 export default router

@@ -7,7 +7,7 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'apple-touch-icon-admin.png', 'pwa-admin-192x192.png', 'pwa-admin-512x512.png'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}']
       },
@@ -19,6 +19,8 @@ export default defineConfig({
         theme_color: '#1E4620',
         background_color: '#F1F2EE',
         display: 'standalone',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
