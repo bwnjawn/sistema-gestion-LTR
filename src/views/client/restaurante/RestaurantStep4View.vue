@@ -9,6 +9,9 @@ import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import AvisoEnvio from '../../../components/ui/AvisoEnvio.vue'
 import { useEnvioSolicitud } from '../../../composables/useEnvioSolicitud'
+import { useSalidaReserva } from '../../../composables/useSalidaReserva'
+import ConfirmacionReservaAdmin from '../../../components/ui/ConfirmacionReservaAdmin.vue'
+import CasilleroEventoEspecial from '../../../components/ui/CasilleroEventoEspecial.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
@@ -57,10 +60,7 @@ function handleGoToCamping() {
   router.push('/camping/paso1')
 }
 
-function handleGoHome() {
-  store.resetStore()
-  router.push('/')
-}
+const { terminar: handleGoHome } = useSalidaReserva()
 </script>
 
 <template>
@@ -168,6 +168,8 @@ function handleGoHome() {
 
       <DepositInfoCard :total-amount="totalWithIva" :deposit-amount="depositAmount" />
 
+      <CasilleroEventoEspecial v-if="store.isAdminMode" />
+
       <AvisoEnvio
         :sin-conexion="sinConexion"
         :error="errorEnvio"
@@ -177,6 +179,15 @@ function handleGoHome() {
 
       <BarraAccionInferior enviar :loading="isSubmitting || sinConexion" :disabled="sinConexion" @click="handleSendRequest">{{ sinConexion ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar Solicitud' }}</BarraAccionInferior>
     </div>
+
+    <!-- El administrador ve su propia confirmación, sin el texto dirigido al cliente -->
+    <ConfirmacionReservaAdmin
+      v-else-if="store.isAdminMode"
+      :codigo="reservationCode"
+      :servicio="String(activeMealNames ?? '')"
+      :fechas="String(formattedScheduleDisplay)"
+      :total="totalWithIva"
+    />
 
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
       <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-xs border-2 border-emerald-300">

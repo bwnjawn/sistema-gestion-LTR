@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Inbox, Search, Plus, Clock, CheckCircle2, XCircle } from 'lucide-vue-next'
+import { Inbox, Search, Clock, CheckCircle2, XCircle } from 'lucide-vue-next'
 import BaseButton from '../../components/ui/BaseButton.vue'
-import AdminNewBookingModal from '../../components/admin/AdminNewBookingModal.vue'
 import AdminRequestCard from '../../components/admin/AdminRequestCard.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
@@ -19,7 +18,6 @@ const filterStatus = ref<BookingStatus | null>(parseStatusFilter(route.query.est
 const filterType = ref<ServiceType | 'all'>('all')
 const searchQuery = ref('')
 
-const isNewBookingModalOpen = ref(false)
 const openedRequestId = ref<string | null>(null)
 
 // Cuántas otras solicitudes se topan con la indicada (SCRUM-60)
@@ -71,10 +69,6 @@ const emptyMessage = computed(() => {
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
-    <BaseButton variant="primary" size="md" fullWidth @click="isNewBookingModalOpen = true">
-      <Plus class="w-5 h-5 mr-1.5 stroke-[3]" aria-hidden="true" /> Nueva reserva directa
-    </BaseButton>
-
     <!-- Filtros por estado, en una sola línea. Tocar el activo otra vez muestra todas. -->
     <div class="grid grid-cols-3 gap-2" role="group" aria-label="Filtrar por estado">
       <button
@@ -148,11 +142,5 @@ const emptyMessage = computed(() => {
     </div>
 
     <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" @open-request="openedRequestId = $event" />
-
-    <AdminNewBookingModal
-      :is-open="isNewBookingModalOpen"
-      @close="isNewBookingModalOpen = false"
-      @created="filterStatus = null"
-    />
   </div>
 </template>

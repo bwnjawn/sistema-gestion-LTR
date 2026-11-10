@@ -8,12 +8,12 @@
       <router-view />
     </main>
 
-    <!-- Botón Fijo "Nueva Reserva" (Abre la vista pública del cliente '/') -->
+    <!-- Botón Fijo "Nueva Reserva": abre el flujo del cliente en modo administrador (SCRUM-56) -->
     <button
       type="button"
       @click="goToClientBooking"
       class="fixed bottom-sobre-nav right-4 bg-[#25636B] hover:bg-[#1c4c52] text-white font-black py-2.5 px-4 rounded-full shadow-xl border-2 border-brand-border flex items-center gap-2 z-40 transition-transform active:scale-95 touch-target"
-      title="Ingresar nueva reserva desde el portal cliente"
+      title="Cargar una nueva reserva con el flujo del cliente"
     >
       <Plus class="w-5 h-5 stroke-[3]" />
       <span class="text-xs font-black">Nueva Reserva</span>
@@ -33,6 +33,6 @@ import AdminBottomNav from '../components/admin/AdminBottomNav.vue'
 const router = useRouter()
 
 const goToClientBooking = () => {
-  router.push({ name: 'home' })
+  router.push({ name: 'admin-nueva-reserva' })
 }
 </script>

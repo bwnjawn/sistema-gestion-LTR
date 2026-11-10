@@ -4,8 +4,11 @@
 import type {
   BookingStatus,
   Cabin,
+  CampingModality,
   CampingSite,
+  ClientType,
   Payment,
+  RequestSchedule,
   ReservationRequest,
   SelectedMealPayload,
   ServiceType
@@ -13,7 +16,7 @@ import type {
 import { formatDateLong, isPastDate, nightsBetween } from '../lib/dates'
 import { hasUsablePhone } from '../lib/contactLinks'
 import { isCabinAvailable, validateGuestCapacity } from './availability'
-import { calculateBookingPrice, type PriceRates } from './pricing'
+import { calculateBookingPrice, type PriceBreakdown, type PriceRates } from './pricing'
 import { formatCLP } from '../lib/format'
 import { generateUUID } from '../lib/id'
 
@@ -446,6 +449,118 @@ export function applyRequestEdit(
         startDate: edit.startDate,
         endDate: edit.endDate,
         pricing
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Armado de una solicitud desde el borrador del asistente (cliente y administrador)
+// ---------------------------------------------------------------------------
+
+export type OrigenSolicitud = 'cliente' | 'admin'
+
+const PREFIJO_CODIGO: Record<OrigenSolicitud, string> = { cliente: 'SOL', admin: 'ADM' }
+
+/**
+ * Código de solicitud que no se repite con ninguno de los existentes.
+ * `SOL-` para las del cliente y `ADM-` para las que carga el administrador.
+ */
+export function generateRequestCode(
+  existentes: Iterable<string>,
+  origen: OrigenSolicitud,
+  aleatorio: () => number = Math.random
+): string {
+  const usados = new Set(existentes)
+  const prefijo = PREFIJO_CODIGO[origen]
+  for (let intento = 0; intento < 50; intento++) {
+    const codigo = `${prefijo}-${Math.floor(100 + aleatorio() * 900)}`
+    if (!usados.has(codigo)) return codigo
+  }
+  // Los códigos de 3 cifras se agotaron: pasa a 4 cifras, que es raro que choquen
+  let n = 1000
+  while (usados.has(`${prefijo}-${n}`)) n++
+  return `${prefijo}-${n}`
+}
+
+export interface BorradorSolicitud {
+  service: ServiceType
+  checkInDate: string
+  checkOutDate: string
+  guestsCount: number
+  campingType: CampingModality
+  restaurantTime: string
+  selectedMealTypes: string[]
+  mealTimes: Record<string, string>
+  selectedMeals: SelectedMealPayload[]
+  clientType: ClientType
+  clientName: string
+  clientPhone: string
+  clientEmail: string
+  comments: string
+  /** Cabaña o espacio de camping elegido; vacío en restaurante. */
+  resourceId: string
+  resourceName: string
+  isSpecialEvent?: boolean
+}
+
+export interface ContextoSolicitud {
+  origin: OrigenSolicitud
+  requestCode: string
+  /** Precio ya calculado para el borrador (única fuente de montos). */
+  price: PriceBreakdown
+  ivaPercentage: number
+  depositPercentage: number
+  schedule?: RequestSchedule
+  /** Fecha de hoy, para el valor por defecto de la fecha de la reserva. */
+  today: string
+}
+
+/**
+ * Convierte el borrador del asistente en la solicitud que se guarda.
+ * La usan el cliente y el administrador, así no hay dos formas de armar una reserva.
+ * Una reserva del administrador no trae pagos: el abono se registra después en el detalle.
+ */
+export function buildRequestFromDraft(
+  draft: BorradorSolicitud,
+  ctx: ContextoSolicitud
+): Omit<ReservationRequest, 'id' | 'status' | 'createdAt'> {
+  const { price } = ctx
+  const esAdmin = ctx.origin === 'admin'
+
+  return {
+    requestCode: ctx.requestCode,
+    clientName: draft.clientName || (esAdmin ? 'Cliente sin nombre' : 'Cliente Web'),
+    clientPhone: draft.clientPhone || '+56900000000',
+    clientEmail: draft.clientEmail || '',
+    type: draft.service,
+    resourceName: draft.resourceName,
+    date: draft.checkInDate || ctx.today,
+    timeOrDuration: draft.checkOutDate || '1 día',
+    guestsCount: draft.guestsCount,
+    totalAmount: price.totalWithIva,
+    depositRequired: price.depositAmount,
+    payments: [],
+    details: {
+      comments: draft.comments,
+      selectedMeals: draft.selectedMeals,
+      resourceId: draft.resourceId,
+      startDate: draft.checkInDate,
+      endDate: draft.checkOutDate,
+      campingType: draft.campingType,
+      selectedMealTypes: draft.selectedMealTypes,
+      mealTimes: draft.mealTimes,
+      restaurantTime: draft.restaurantTime,
+      clientType: draft.service === 'restaurante' ? draft.clientType : undefined,
+      schedule: ctx.schedule,
+      origin: ctx.origin,
+      isSpecialEvent: draft.isSpecialEvent ? true : undefined,
+      pricing: {
+        subtotal: price.subtotal,
+        ivaAmount: price.ivaAmount,
+        ivaPercentage: ctx.ivaPercentage,
+        depositPercentage: ctx.depositPercentage,
+        nights: price.nights
       }
     }
   }

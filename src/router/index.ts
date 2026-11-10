@@ -54,6 +54,17 @@ const routes = [
     children: [
       { path: '', redirect: { name: 'admin-dashboard' } },
       { path: 'dashboard', name: 'admin-dashboard', meta: { titulo: 'Inicio' }, component: () => import('../views/admin/AdminDashboardView.vue') },
+      // Reserva cargada por el administrador con el flujo del cliente (SCRUM-56): empieza un borrador
+      // vacío en modo administrador y sigue en la pantalla de inicio para elegir el servicio.
+      {
+        path: 'nueva-reserva',
+        name: 'admin-nueva-reserva',
+        component: () => import('../views/client/HomeView.vue'),
+        beforeEnter: () => {
+          useReservationStore().startAdminDraft()
+          return { name: 'home' }
+        }
+      },
       { path: 'solicitudes', name: 'admin-solicitudes', meta: { titulo: 'Solicitudes' }, component: () => import('../views/admin/AdminRequestsView.vue') },
       { path: 'calendario', name: 'admin-calendar', meta: { titulo: 'Calendario' }, component: () => import('../views/admin/AdminCalendarView.vue') },
       { path: 'catalogo', name: 'admin-catalog', meta: { titulo: 'Catálogo' }, component: () => import('../views/admin/AdminCatalogEditView.vue') },
@@ -87,6 +98,11 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
   const reservationStore = useReservationStore()
+
+  // El modo administrador del asistente solo vale con sesión: sin ella se descarta el borrador
+  if (reservationStore.isAdminMode && !authStore.isAuthenticated) {
+    reservationStore.resetStore()
+  }
 
   // Guard de autenticación para administración
   if (to.matched.some(record => record.meta.requiresAuth) && !authStore.isAuthenticated) {

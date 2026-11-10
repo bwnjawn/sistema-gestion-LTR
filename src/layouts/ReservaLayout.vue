@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ClientHeader from '../components/ui/ClientHeader.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
+import FranjaModoAdmin from '../components/ui/FranjaModoAdmin.vue'
+import { useSalidaReserva } from '../composables/useSalidaReserva'
 import { useReservationStore } from '../stores/reservationStore'
 import { useBloqueoScroll } from '../composables/useBloqueoScroll'
 import { WIZARD_STEPS } from '../services/wizard'
@@ -38,6 +40,11 @@ const subtitulo = computed(() => {
 
 function volver() {
   if (paso.value <= 1) {
+    // El administrador no deja borrador: se pregunta o se sale directo
+    if (store.isAdminMode) {
+      cerrar()
+      return
+    }
     // Desde el primer paso se vuelve al inicio y el borrador se conserva
     router.push('/')
     return
@@ -50,8 +57,12 @@ function volver() {
 const confirmando = ref(false)
 useBloqueoScroll(confirmando)
 
+const { terminar: salirAlPanel } = useSalidaReserva()
+
 function cerrar() {
-  if (store.tieneBorrador) {
+  if (store.isAdminMode && !store.tieneBorrador) {
+    salirAlPanel()
+  } else if (store.tieneBorrador) {
     confirmando.value = true
   } else {
     router.push('/')
@@ -65,6 +76,10 @@ function salirGuardando() {
 
 function salirBorrando() {
   confirmando.value = false
+  if (store.isAdminMode) {
+    salirAlPanel()
+    return
+  }
   store.resetStore()
   router.push('/')
 }
@@ -80,6 +95,8 @@ function salirBorrando() {
       @volver="volver"
       @cerrar="cerrar"
     />
+
+    <FranjaModoAdmin v-if="store.isAdminMode && !store.solicitudEnviada" />
 
     <main class="px-4 pt-4">
       <RouterView />
@@ -100,14 +117,16 @@ function salirBorrando() {
         <div class="space-y-1">
           <h2 id="titulo-salir" class="text-xl font-black text-brand-dark">¿Salir de la reserva?</h2>
           <p class="text-base font-bold text-gray-700">
-            Ya elegiste algunos datos. Puedes guardarlos para seguir después o borrarlos.
+            {{ store.isAdminMode
+              ? 'Ya cargaste algunos datos. Si sales, se borran.'
+              : 'Ya elegiste algunos datos. Puedes guardarlos para seguir después o borrarlos.' }}
           </p>
         </div>
         <div class="space-y-2.5">
           <BaseButton variant="primary" size="lg" full-width @click="confirmando = false">
             Seguir reservando
           </BaseButton>
-          <BaseButton variant="outline" size="lg" full-width @click="salirGuardando">
+          <BaseButton v-if="!store.isAdminMode" variant="outline" size="lg" full-width @click="salirGuardando">
             Salir y guardar
           </BaseButton>
           <BaseButton variant="danger" size="lg" full-width @click="salirBorrando">

@@ -7,6 +7,7 @@ import { useSettingsStore } from './settingsStore'
 import { useCatalogStore } from './catalogStore'
 import { todayISO } from '../lib/dates'
 import { calculateBookingPrice, type PriceBreakdown } from '../services/pricing'
+import { buildRequestFromDraft, generateRequestCode } from '../services/requests'
 import type { ClientType, RequestSchedule, ServiceType, SelectedMealPayload } from '../types/domain'
 
 export type { SelectedMealPayload }
@@ -32,6 +33,8 @@ interface WizardDraftState {
   clientPhone: string
   clientEmail: string
   comments: string
+  isAdminMode?: boolean
+  isSpecialEvent?: boolean
 }
 
 function loadDraftFromSession(): WizardDraftState | null {
@@ -92,6 +95,10 @@ export const useReservationStore = defineStore('reservation', () => {
   const clientEmail = ref<string>(initialDraft?.clientEmail ?? '')
   const comments = ref<string>(initialDraft?.comments ?? '')
 
+  // Modo administrador: el admin carga una reserva con el mismo flujo del cliente (SCRUM-56)
+  const isAdminMode = ref<boolean>(initialDraft?.isAdminMode ?? false)
+  const isSpecialEvent = ref<boolean>(initialDraft?.isSpecialEvent ?? false)
+
   // Se enciende al enviar la solicitud: el encabezado deja de ofrecer volver o salir
   const solicitudEnviada = ref(false)
 
@@ -127,7 +134,9 @@ export const useReservationStore = defineStore('reservation', () => {
       clientName,
       clientPhone,
       clientEmail,
-      comments
+      comments,
+      isAdminMode,
+      isSpecialEvent
     ],
     () => {
       saveDraftToSession({
@@ -148,7 +157,9 @@ export const useReservationStore = defineStore('reservation', () => {
         clientName: clientName.value,
         clientPhone: clientPhone.value,
         clientEmail: clientEmail.value,
-        comments: comments.value
+        comments: comments.value,
+        isAdminMode: isAdminMode.value,
+        isSpecialEvent: isSpecialEvent.value
       })
     },
     { deep: true }
@@ -238,7 +249,20 @@ export const useReservationStore = defineStore('reservation', () => {
     clientPhone.value = '+56 9 '
     clientEmail.value = ''
     comments.value = ''
+    isAdminMode.value = false
+    isSpecialEvent.value = false
     clearDraftFromSession()
+  }
+
+  /**
+   * Empieza una reserva cargada por el administrador. Parte de un borrador vacío para que
+   * ningún dato de un cliente se filtre al admin. Solo debe llamarse con sesión de admin
+   * (lo exige la ruta /admin/nueva-reserva).
+   */
+  function startAdminDraft(service: ServiceType = 'cabana') {
+    resetStore()
+    isAdminMode.value = true
+    selectedService.value = service
   }
 
   // Envío a la Persistencia de Administración (requestsStore)
@@ -252,7 +276,8 @@ export const useReservationStore = defineStore('reservation', () => {
       throw new Error('No se pudo calcular el precio: falta seleccionar la cabaña o el espacio de camping.')
     }
 
-    const code = `SOL-${Math.floor(100 + Math.random() * 900)}`
+    const origin = isAdminMode.value ? 'admin' : 'cliente'
+    const code = generateRequestCode(requestsStore.requestCodes, origin)
     let resourceName = 'Restaurante'
     let resourceId = ''
 
@@ -264,40 +289,39 @@ export const useReservationStore = defineStore('reservation', () => {
       resourceId = selectedCampingId.value
     }
 
-    await requestsStore.addRequest({
-      requestCode: code,
-      clientName: clientName.value || 'Cliente Web',
-      clientPhone: clientPhone.value || '+56900000000',
-      clientEmail: clientEmail.value || '',
-      type: selectedService.value,
-      resourceName,
-      date: checkInDate.value || todayISO(),
-      timeOrDuration: checkOutDate.value || '1 día',
-      guestsCount: guestsCount.value,
-      totalAmount: price.totalWithIva,
-      depositRequired: price.depositAmount,
-      payments: [],
-      details: {
-        comments: comments.value,
-        selectedMeals: selectedMeals.value,
-        resourceId,
-        startDate: checkInDate.value,
-        endDate: checkOutDate.value,
+    const solicitud = buildRequestFromDraft(
+      {
+        service: selectedService.value,
+        checkInDate: checkInDate.value,
+        checkOutDate: checkOutDate.value,
+        guestsCount: guestsCount.value,
         campingType: campingType.value,
+        restaurantTime: restaurantTime.value,
         selectedMealTypes: selectedMealTypes.value,
         mealTimes: mealTimes.value,
-        restaurantTime: restaurantTime.value,
-        clientType: selectedService.value === 'restaurante' ? clientType.value : undefined,
+        selectedMeals: selectedMeals.value,
+        clientType: clientType.value,
+        clientName: clientName.value,
+        clientPhone: clientPhone.value,
+        clientEmail: clientEmail.value,
+        comments: comments.value,
+        resourceId,
+        resourceName,
+        isSpecialEvent: isAdminMode.value && isSpecialEvent.value
+      },
+      {
+        origin,
+        requestCode: code,
+        price,
+        ivaPercentage: settingsStore.ivaPercentage,
+        depositPercentage: settingsStore.defaultDepositPercentage,
         schedule: scheduleSnapshot.value,
-        pricing: {
-          subtotal: price.subtotal,
-          ivaAmount: price.ivaAmount,
-          ivaPercentage: settingsStore.ivaPercentage,
-          depositPercentage: settingsStore.defaultDepositPercentage,
-          nights: price.nights
-        }
+        today: todayISO()
       }
-    })
+    )
+
+    // La reserva del administrador ya fue acordada con el cliente: entra confirmada
+    await requestsStore.addRequest(solicitud, isAdminMode.value ? 'confirmed' : 'pending')
 
     // Limpia el borrador de sessionStorage una vez enviada la solicitud
     clearDraftFromSession()
@@ -325,6 +349,9 @@ export const useReservationStore = defineStore('reservation', () => {
     clientEmail,
     comments,
     solicitudEnviada,
+    isAdminMode,
+    isSpecialEvent,
+    startAdminDraft,
     tieneBorrador,
     setService,
     nextStep,

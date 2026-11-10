@@ -3,9 +3,12 @@ import { useRouter } from 'vue-router'
 import { ChevronRight } from 'lucide-vue-next'
 import { useReservationStore } from '../../stores/reservationStore'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
+import FranjaModoAdmin from '../../components/ui/FranjaModoAdmin.vue'
+import { useSalidaReserva } from '../../composables/useSalidaReserva'
 
 const router = useRouter()
 const reservationStore = useReservationStore()
+const { terminar: salirAlPanel } = useSalidaReserva()
 
 function selectService(service: 'cabana' | 'camping' | 'restaurant') {
   reservationStore.setService(service)
@@ -21,6 +24,9 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
 
 <template>
   <div class="flex flex-col min-h-[85vh]">
+    <!-- Modo administrador (SCRUM-56): la misma franja de los pasos, con botón para salir al panel -->
+    <FranjaModoAdmin v-if="reservationStore.isAdminMode" con-salir @salir="salirAlPanel" />
+
     <main class="p-4 space-y-4 grow max-w-md mx-auto w-full pb-contenido-nav">
       
       <!-- Encabezado con Logo y Título Institucional Reincorporado -->
@@ -140,6 +146,6 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
     </main>
 
     <!-- Navegación Inferior -->
-    <ClientBottomNav />
+    <ClientBottomNav v-if="!reservationStore.isAdminMode" />
   </div>
 </template>
