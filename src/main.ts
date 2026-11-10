@@ -6,7 +6,7 @@ import '@fontsource/atkinson-hyperlegible/latin-400.css'
 import '@fontsource/atkinson-hyperlegible/latin-700.css'
 import './assets/main.css'
 import { evitarZoomDobleToque } from './lib/sinZoomDobleToque'
-import { corregirViewportTeclado } from './lib/corregirViewportTeclado'
+import { ajustarBarrasAlViewport } from './lib/ajustarBarrasAlViewport'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -15,4 +15,4 @@ app.use(pinia) // ¡Importante: registrar Pinia antes del router!
 app.use(router)
 app.mount('#app')
 evitarZoomDobleToque()
-corregirViewportTeclado()
+ajustarBarrasAlViewport()

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronLeft, X, WifiOff } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
+import EncabezadoFijo from './EncabezadoFijo.vue'
 
 // Barra superior del cliente. Sin atrás ni cerrar muestra el logo (Contacto);
 // con ellos es la barra del flujo de reserva.
@@ -17,7 +18,7 @@ const settingsStore = useSettingsStore()
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-brand-border shadow-2xs pt-[env(safe-area-inset-top,0px)]">
+  <EncabezadoFijo class="bg-white/95 backdrop-blur-md border-b-2 border-brand-border shadow-2xs">
     <div class="max-w-md mx-auto w-full px-2 h-14 flex items-center gap-1">
       <button
         v-if="conVolver"
@@ -62,5 +63,5 @@ const settingsStore = useSettingsStore()
         Sin conexión a internet.
       </p>
     </div>
-  </header>
+  </EncabezadoFijo>
 </template>

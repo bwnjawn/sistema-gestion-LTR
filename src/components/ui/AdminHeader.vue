@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-gray-300 shadow-sm pt-[env(safe-area-inset-top,0px)]">
+  <EncabezadoFijo class="bg-white/95 backdrop-blur-md border-b-2 border-gray-300 shadow-sm">
     <div class="max-w-md mx-auto w-full px-4 h-14 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3 min-w-0">
         <button
@@ -32,7 +32,7 @@
         Sin conexión a internet. Los cambios se guardan solo en este dispositivo.
       </p>
     </div>
-  </header>
+  </EncabezadoFijo>
 </template>
 
 <script setup lang="ts">
@@ -42,6 +42,7 @@ import { CircleUser, LogOut, WifiOff } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/authStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import DropdownMenu, { type DropdownItem } from './DropdownMenu.vue'
+import EncabezadoFijo from './EncabezadoFijo.vue'
 
 const route = useRoute()
 const router = useRouter()
