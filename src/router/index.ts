@@ -14,7 +14,7 @@ const routes = [
 
   // Flujo de reserva: comparten el encabezado con atrás, título del servicio, paso y salir
   {
-    path: '',
+    path: '/reservar',
     component: () => import('../layouts/ReservaLayout.vue'),
     children: [
     // Flujo Reserva Cabaña
