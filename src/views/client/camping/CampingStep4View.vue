@@ -2,10 +2,11 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  ArrowLeft, Calendar, Pencil, Clock, Receipt, User, Phone, Send, CheckCircle2, FileCheck, Utensils, Home, RotateCcw 
+  Calendar, Pencil, Clock, Receipt, User, Phone, CheckCircle2, FileCheck, Utensils, Home, RotateCcw 
 } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
+import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import HorarioCard from '../../../components/ui/HorarioCard.vue'
@@ -82,7 +83,7 @@ function handleGoHome() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
     
     <div v-if="!isSubmitted" class="space-y-4">
       <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
@@ -175,25 +176,7 @@ function handleGoHome() {
 
       <DepositInfoCard :total-amount="totalWithIva" :deposit-amount="depositAmount" />
 
-      <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-        <div class="max-w-md mx-auto flex items-center gap-3">
-          <BaseButton variant="outline" size="lg" @click="router.push('/camping/paso3')">
-            <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
-            Volver
-          </BaseButton>
-
-          <BaseButton 
-            variant="primary" 
-            size="lg" 
-            fullWidth 
-            :disabled="isSubmitting"
-            @click="handleSendRequest"
-          >
-            <Send class="w-5 h-5 mr-1.5 stroke-[2.5]" />
-            Enviar Solicitud
-          </BaseButton>
-        </div>
-      </div>
+      <BarraAccionInferior enviar :disabled="isSubmitting" @click="handleSendRequest">Enviar Solicitud</BarraAccionInferior>
     </div>
 
     <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">

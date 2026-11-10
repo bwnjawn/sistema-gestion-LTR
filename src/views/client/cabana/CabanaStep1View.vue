@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight, ArrowLeft, Users, Moon } from 'lucide-vue-next'
+import { Users, Moon } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseCalendar from '../../../components/ui/BaseCalendar.vue'
 import HorarioCard from '../../../components/ui/HorarioCard.vue'
 import { useSettingsStore } from '../../../stores/settingsStore'
-import BaseButton from '../../../components/ui/BaseButton.vue'
+import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
@@ -100,10 +100,6 @@ const stayUnavailable = computed(() =>
   nightsCount.value >= 1 && isStayBlocked(reservationStore.checkInDate, reservationStore.checkOutDate)
 )
 
-function handleBack() {
-  router.push('/')
-}
-
 function handleNext() {
   if (nightsCount.value >= 1 && !stayUnavailable.value) {
     reservationStore.nextStep()
@@ -113,7 +109,7 @@ function handleNext() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
     <!-- Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="1" />
@@ -209,25 +205,6 @@ function handleNext() {
 
     </div>
 
-    <!-- Botones Flotantes Inferiores -->
-    <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="max-w-md mx-auto flex items-center gap-3">
-        <BaseButton variant="outline" size="lg" @click="handleBack">
-          <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
-          Volver
-        </BaseButton>
-
-        <BaseButton 
-          variant="primary" 
-          size="lg" 
-          fullWidth 
-          :disabled="nightsCount < 1 || stayUnavailable"
-          @click="handleNext"
-        >
-          Ver Cabañas
-          <ArrowRight class="w-5 h-5 ml-1.5 stroke-[2.5]" />
-        </BaseButton>
-      </div>
-    </div>
+    <BarraAccionInferior :disabled="nightsCount < 1 || stayUnavailable" @click="handleNext">Ver Cabañas</BarraAccionInferior>
   </div>
 </template>

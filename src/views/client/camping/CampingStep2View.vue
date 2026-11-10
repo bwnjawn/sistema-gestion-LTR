@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles, Clock, Eye } from 'lucide-vue-next'
+import { CheckCircle2, Sparkles, Clock, Eye } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
-import BaseButton from '../../../components/ui/BaseButton.vue'
+import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import CampingCard from '../../../components/catalog/CampingCard.vue'
 import HorarioCard from '../../../components/ui/HorarioCard.vue'
 import { useSettingsStore } from '../../../stores/settingsStore'
@@ -59,14 +59,10 @@ function handleNext() {
   }
 }
 
-function handleBack() {
-  store.prevStep()
-  router.push('/camping/paso1')
-}
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="2" />
     </div>
@@ -141,24 +137,6 @@ function handleBack() {
       @close="isModalOpen = false"
     />
 
-    <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="max-w-md mx-auto flex items-center gap-3">
-        <BaseButton variant="outline" size="lg" @click="handleBack">
-          <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
-          Volver
-        </BaseButton>
-
-        <BaseButton 
-          variant="primary" 
-          size="lg" 
-          fullWidth 
-          :disabled="!selectedCampingOption"
-          @click="handleNext"
-        >
-          Tus Datos
-          <ArrowRight class="w-5 h-5 ml-1.5 stroke-[2.5]" />
-        </BaseButton>
-      </div>
-    </div>
+    <BarraAccionInferior :disabled="!selectedCampingOption" @click="handleNext">Tus Datos</BarraAccionInferior>
   </div>
 </template>

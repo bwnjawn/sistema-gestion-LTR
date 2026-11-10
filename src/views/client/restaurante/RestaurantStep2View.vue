@@ -2,9 +2,10 @@
 import { useBloqueoScroll } from '../../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, ArrowRight, Minus, Plus, Sparkles, Check, AlertTriangle, AlertCircle, CheckCircle2, X } from 'lucide-vue-next'
+import { Minus, Plus, Sparkles, Check, AlertTriangle, AlertCircle, CheckCircle2, X } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
+import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
@@ -239,11 +240,6 @@ const isFormValid = computed(() => {
   return true
 })
 
-function handleBack() {
-  store.prevStep()
-  router.push('/restaurante/paso1')
-}
-
 function handleNext() {
   if (!isFormValid.value) return
 
@@ -264,7 +260,7 @@ useBloqueoScroll(computed(() => showIncompleteModal.value))
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
     
     <!-- Modal Incompleto Específico por Categoría -->
     <div 
@@ -542,25 +538,6 @@ useBloqueoScroll(computed(() => showIncompleteModal.value))
       </div>
     </div>
 
-    <!-- Navegación Flotante Fija -->
-    <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="max-w-md mx-auto flex items-center gap-3">
-        <BaseButton variant="outline" size="lg" @click="handleBack">
-          <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
-          Volver
-        </BaseButton>
-
-        <BaseButton 
-          variant="primary" 
-          size="lg" 
-          fullWidth 
-          :disabled="!isFormValid"
-          @click="handleNext"
-        >
-          Tus Datos
-          <ArrowRight class="w-5 h-5 ml-1.5 stroke-[2.5]" />
-        </BaseButton>
-      </div>
-    </div>
+    <BarraAccionInferior :disabled="!isFormValid" @click="handleNext">Tus Datos</BarraAccionInferior>
   </div>
 </template>
