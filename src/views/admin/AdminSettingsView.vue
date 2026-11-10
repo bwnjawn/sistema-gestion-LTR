@@ -2,8 +2,7 @@
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Phone, Settings, MapPin, Mail, Globe, Instagram, Utensils, Users, Percent, Clock, Landmark, ShieldCheck, UserPlus } from 'lucide-vue-next'
-import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
+import { Phone, MapPin, Mail, Globe, Instagram, Utensils, Users, Percent, Clock, Landmark, ShieldCheck, UserPlus } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useAuthStore } from '../../stores/authStore'
 import AdminContactEditModal from '../../components/admin/AdminContactEditModal.vue'
@@ -58,12 +57,6 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-20">
-    <AdminPageTitle
-      title="Ajustes"
-      subtitle="Cambia los datos de contacto, los horarios, el abono y los cupos."
-      :icon="Settings"
-    />
-
     <div class="bg-white p-4 sm:p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">

@@ -46,11 +46,11 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', redirect: { name: 'admin-dashboard' } },
-      { path: 'dashboard', name: 'admin-dashboard', component: () => import('../views/admin/AdminDashboardView.vue') },
-      { path: 'solicitudes', name: 'admin-solicitudes', component: () => import('../views/admin/AdminRequestsView.vue') },
-      { path: 'calendario', name: 'admin-calendar', component: () => import('../views/admin/AdminCalendarView.vue') },
-      { path: 'catalogo', name: 'admin-catalog', component: () => import('../views/admin/AdminCatalogEditView.vue') },
-      { path: 'ajustes', name: 'admin-settings', component: () => import('../views/admin/AdminSettingsView.vue') },
+      { path: 'dashboard', name: 'admin-dashboard', meta: { titulo: 'Inicio' }, component: () => import('../views/admin/AdminDashboardView.vue') },
+      { path: 'solicitudes', name: 'admin-solicitudes', meta: { titulo: 'Solicitudes' }, component: () => import('../views/admin/AdminRequestsView.vue') },
+      { path: 'calendario', name: 'admin-calendar', meta: { titulo: 'Calendario' }, component: () => import('../views/admin/AdminCalendarView.vue') },
+      { path: 'catalogo', name: 'admin-catalog', meta: { titulo: 'Catálogo' }, component: () => import('../views/admin/AdminCatalogEditView.vue') },
+      { path: 'ajustes', name: 'admin-settings', meta: { titulo: 'Ajustes' }, component: () => import('../views/admin/AdminSettingsView.vue') },
       // Rutas antiguas
       { path: 'editar', redirect: { name: 'admin-catalog' } },
       { path: 'mas', redirect: { name: 'admin-settings' } }

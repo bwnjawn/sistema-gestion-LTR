@@ -15,6 +15,8 @@ defineProps<{
   label?: string
   /** Ícono opcional al inicio del botón con texto. */
   icon?: Component
+  /** Ícono del botón cuando no tiene texto (por defecto, tres puntos). */
+  triggerIcon?: Component
   ariaLabel?: string
 }>()
 
@@ -103,6 +105,7 @@ onBeforeUnmount(close)
       <span>{{ label }}</span>
       <ChevronDown :class="['w-4 h-4 stroke-[2.5] transition-transform', isOpen ? 'rotate-180' : '']" />
     </template>
+    <component :is="triggerIcon" v-else-if="triggerIcon" class="w-6 h-6 stroke-[2.5]" aria-hidden="true" />
     <MoreVertical v-else class="w-4 h-4 stroke-[2.5]" />
   </button>
 

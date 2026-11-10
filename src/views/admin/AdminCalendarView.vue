@@ -5,7 +5,6 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, X, User, Phone, 
   Layers, Home, Tent, Utensils 
 } from 'lucide-vue-next'
-import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import AdminCalendarGrid from '../../components/ui/AdminCalendarGrid.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
@@ -146,12 +145,6 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
 
 <template>
   <div class="space-y-4 pb-6">
-    <AdminPageTitle
-      title="Calendario"
-      subtitle="Mira qué días están libres y cuáles tienen reservas."
-      :icon="CalendarDays"
-    />
-
     <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center justify-center gap-2 flex-wrap">
         <button
