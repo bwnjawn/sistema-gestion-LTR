@@ -20,6 +20,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
+  /** Pide abrir el detalle de otra solicitud (la que se cruza con esta). */
+  (e: 'open-request', id: string): void
 }>()
 
 const requestsStore = useRequestsStore()
@@ -29,6 +31,20 @@ const request = computed(() => requestsStore.requests.find(r => r.id === props.r
 const view = computed(() => (request.value ? describeRequest(request.value) : null))
 const payment = computed(() => (request.value ? getPaymentSummary(request.value) : null))
 const isPending = computed(() => request.value?.status === 'pending')
+
+// Solicitudes con las que se topa esta (SCRUM-60); la resolución es manual
+const conflicts = computed(() => {
+  if (!request.value) return []
+  const own = request.value.id
+  return (requestsStore.conflictsByRequestId[own] ?? []).map(c => ({
+    motivo: c.motivo,
+    dias: c.dias.map(d => formatDateShort(d)).join(', '),
+    others: c.solicitudIds
+      .filter(id => id !== own)
+      .map(id => requestsStore.requests.find(r => r.id === id))
+      .filter((r): r is NonNullable<typeof r> => !!r)
+  }))
+})
 
 const paidPercent = computed(() => {
   if (!payment.value || payment.value.total <= 0) return 0
@@ -161,6 +177,27 @@ useBloqueoScroll(computed(() => !!request.value))
         <div>
           <span :class="['inline-block px-4 py-1.5 rounded-full text-base font-black', statusClass]">{{ view.statusLabel }}</span>
         </div>
+
+        <!-- Se cruza con otras solicitudes -->
+        <section v-if="conflicts.length > 0" class="space-y-2 bg-rose-50 border-2 border-status-danger rounded-2xl p-3">
+          <h3 class="text-base font-black text-rose-950 flex items-center gap-1.5">
+            <AlertTriangle class="w-5 h-5 stroke-[2.5]" aria-hidden="true" /> Se cruza con
+          </h3>
+          <div v-for="(conflict, index) in conflicts" :key="index" class="space-y-1.5">
+            <p class="text-sm font-bold text-rose-950">{{ conflict.motivo }}. Días: {{ conflict.dias }}.</p>
+            <button
+              v-for="other in conflict.others"
+              :key="other.id"
+              type="button"
+              @click="emit('open-request', other.id)"
+              class="w-full text-left bg-white border-2 border-rose-300 rounded-xl px-3 py-2 touch-target"
+            >
+              <span class="block text-base font-black text-brand-dark">{{ other.clientName }}</span>
+              <span class="block text-sm font-bold text-gray-700">{{ other.requestCode }} · {{ other.guestsCount }} personas · Toca para ver el detalle</span>
+            </button>
+          </div>
+          <p class="text-sm font-bold text-rose-950">No se rechaza nada solo: decide tú cuál aprobar.</p>
+        </section>
 
         <!-- Fechas -->
         <section class="bg-brand-dark text-white rounded-2xl p-4 space-y-3">

@@ -1,21 +1,37 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, ArrowRight, Users, Utensils, Clock, Check, AlertCircle } from 'lucide-vue-next'
+import { Users, Utensils, Clock, Check, AlertCircle } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseCalendar from '../../../components/ui/BaseCalendar.vue'
-import BaseButton from '../../../components/ui/BaseButton.vue'
+import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
-import { generateTimeSlots, validateGuestCapacity } from '../../../services/availability'
+import { useRequestsStore } from '../../../stores/requestsStore'
+import { generateTimeSlots, validateGuestCapacity, getFullMeals, isRestaurantDayBlocked } from '../../../services/availability'
 import { formatDateShort } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
 const settingsStore = useSettingsStore()
+const requestsStore = useRequestsStore()
 
 store.setService('restaurant')
+
+// El día se bloquea solo si las tres comidas están llenas para el grupo (SCRUM-244)
+function isDayBlocked(dateStr: string): boolean {
+  return isRestaurantDayBlocked(dateStr, store.guestsCount, requestsStore.requests, settingsStore.restaurantCapacity)
+}
+
+// Comidas sin cupo para el grupo en la fecha elegida: se deshabilitan una a una
+const fullMeals = computed(() =>
+  store.checkInDate
+    ? getFullMeals(store.checkInDate, store.guestsCount, requestsStore.requests, settingsStore.restaurantCapacity)
+    : []
+)
+
+const selectedFullMeals = computed(() => store.selectedMealTypes.filter(id => fullMeals.value.includes(id)))
 
 const calendarDate = computed<Date | null>(() => {
   if (!store.checkInDate) return null
@@ -58,13 +74,12 @@ function handleGuestsInput(event: Event) {
     // Campo vacío mientras se escribe: no se fuerza el valor hasta salir del campo
     return
   }
-  store.guestsCount = Math.min(200, val)
+  store.guestsCount = Math.min(settingsStore.restaurantCapacity, val)
 }
 
 // Validación estricta de aforo según reglas del negocio
 const capacityValidation = computed(() => {
-  const maxCap = 200
-  return validateGuestCapacity(store.guestsCount, 1, maxCap)
+  return validateGuestCapacity(store.guestsCount, 1, settingsStore.restaurantCapacity)
 })
 
 const mealOptions = computed(() => {
@@ -122,15 +137,12 @@ const isValid = computed(() => {
   if (!store.checkInDate) return false
   if (!capacityValidation.value.isValid) return false
   if (store.selectedMealTypes.length === 0) return false
+  if (selectedFullMeals.value.length > 0) return false
   for (const mId of store.selectedMealTypes) {
     if (!store.mealTimes[mId]) return false
   }
   return true
 })
-
-function handleBack() {
-  router.push('/')
-}
 
 function handleNext() {
   if (isValid.value) {
@@ -141,7 +153,7 @@ function handleNext() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="1" />
     </div>
@@ -160,6 +172,7 @@ function handleNext() {
         <BaseCalendar 
           :start-date="calendarDate"
           :end-date="calendarDate"
+          :is-date-disabled-fn="isDayBlocked"
           @change="handleCalendarChange"
         />
       </div>
@@ -187,7 +200,7 @@ function handleNext() {
               @input="handleGuestsInput"
               @blur="handleGuestsBlur"
               min="1"
-              max="200"
+              :max="settingsStore.restaurantCapacity"
               class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
             <span class="text-sm font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
@@ -222,14 +235,18 @@ function handleNext() {
             v-for="meal in mealOptions"
             :key="meal.id"
             @click="toggleMealType(meal.id)"
+            :disabled="fullMeals.includes(meal.id) && !store.selectedMealTypes.includes(meal.id)"
             :class="[
               'p-3 rounded-2xl border-2 transition-all touch-target flex flex-col items-center justify-center gap-1 text-center',
-              store.selectedMealTypes.includes(meal.id)
-                ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
-                : 'bg-brand-light text-brand-dark border-brand-border hover:bg-gray-200'
+              fullMeals.includes(meal.id) && !store.selectedMealTypes.includes(meal.id)
+                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                : store.selectedMealTypes.includes(meal.id)
+                  ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
+                  : 'bg-brand-light text-brand-dark border-brand-border hover:bg-gray-200'
             ]"
           >
             <span class="text-sm font-black">{{ meal.label }}</span>
+            <span v-if="fullMeals.includes(meal.id)" class="text-xs font-extrabold">Sin cupo</span>
             <span 
               v-if="store.selectedMealTypes.includes(meal.id)"
               class="w-4 h-4 bg-emerald-400 text-brand-dark rounded-full flex items-center justify-center text-sm font-black"
@@ -238,6 +255,10 @@ function handleNext() {
             </span>
           </button>
         </div>
+
+        <BaseAlert v-if="selectedFullMeals.length > 0" variant="warning" title="Sin cupo en una comida elegida">
+          Para {{ store.guestsCount }} personas ya no queda cupo en: {{ selectedFullMeals.map(id => mealOptions.find(m => m.id === id)?.label).join(', ') }}. Quita esa comida, cambia la fecha o la cantidad de personas.
+        </BaseAlert>
 
         <div 
           v-if="store.selectedMealTypes.length === 0" 
@@ -300,24 +321,6 @@ function handleNext() {
 
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="max-w-md mx-auto flex items-center gap-3">
-        <BaseButton variant="outline" size="lg" @click="handleBack">
-          <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
-          Volver
-        </BaseButton>
-
-        <BaseButton 
-          variant="primary" 
-          size="lg" 
-          fullWidth 
-          :disabled="!isValid"
-          @click="handleNext"
-        >
-          Elegir Menú
-          <ArrowRight class="w-5 h-5 ml-1.5 stroke-[2.5]" />
-        </BaseButton>
-      </div>
-    </div>
+    <BarraAccionInferior :disabled="!isValid" @click="handleNext">Elegir Menú</BarraAccionInferior>
   </div>
 </template>

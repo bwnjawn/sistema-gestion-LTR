@@ -2,9 +2,8 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  Home, Inbox, Calendar, Grid, ArrowRight, CheckCircle2, Clock
+  Inbox, Calendar, Grid, ArrowRight, CheckCircle2, Clock
 } from 'lucide-vue-next'
-import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
 
@@ -25,12 +24,6 @@ function navigateTo(path: string) {
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
-    <AdminPageTitle
-      title="Inicio"
-      subtitle="Resumen de las solicitudes y los ingresos confirmados."
-      :icon="Home"
-    />
-
     <!-- Métricas Generales -->
     <div class="grid grid-cols-2 gap-3">
       <div

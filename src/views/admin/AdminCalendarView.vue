@@ -5,11 +5,12 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, X, User, Phone, 
   Layers, Home, Tent, Utensils 
 } from 'lucide-vue-next'
-import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import AdminCalendarGrid from '../../components/ui/AdminCalendarGrid.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
 import { getDayOccupancy, getRequestsForDay, getWeekDates } from '../../services/availability'
+import { useSettingsStore } from '../../stores/settingsStore'
+import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
 import { isoToDate } from '../../lib/dates'
 import type { ReservationRequest, ServiceType } from '../../types/domain'
 
@@ -23,6 +24,7 @@ const viewModes: { id: ViewMode; label: string }[] = [
 ]
 
 const requestsStore = useRequestsStore()
+const settingsStore = useSettingsStore()
 
 // Filtros Activos por Área
 const activeFilters = ref<ServiceType[]>(['cabana', 'camping', 'restaurante'])
@@ -46,6 +48,8 @@ const toggleFilter = (serviceKey: ServiceType) => {
 const selectedDate = ref<Date>(new Date())
 const showDayDetail = ref(false)
 const selectedRequestDetail = ref<ReservationRequest | null>(null)
+// Detalle de la solicitud tocada en el calendario, con sus cruces (SCRUM-60)
+const openedRequestId = ref<string | null>(null)
 
 const selectedDateISO = computed(() => {
   const d = selectedDate.value
@@ -116,7 +120,7 @@ const weekDays = computed(() =>
       dateStr: iso,
       dayName: d.toLocaleDateString('es-CL', { weekday: 'narrow' }),
       dayNum: d.getDate(),
-      status: getDayOccupancy(iso, requestsStore.requests, activeFilters.value).status
+      status: getDayOccupancy(iso, requestsStore.requests, activeFilters.value, settingsStore.limitesAforo).status
     }
   })
 )
@@ -125,6 +129,10 @@ function getStatusBgClass(status: string) {
   if (status === 'disponible') return 'bg-status-success'
   if (status === 'ocupado') return 'bg-status-danger'
   return 'bg-amber-500'
+}
+
+function hasConflict(id: string): boolean {
+  return (requestsStore.conflictsByRequestId[id]?.length ?? 0) > 0
 }
 
 function formatStatusText(status: string): string {
@@ -137,12 +145,6 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
 
 <template>
   <div class="space-y-4 pb-6">
-    <AdminPageTitle
-      title="Calendario"
-      subtitle="Mira qué días están libres y cuáles tienen reservas."
-      :icon="CalendarDays"
-    />
-
     <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center justify-center gap-2 flex-wrap">
         <button
@@ -213,7 +215,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
         </div>
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-          <span class="text-gray-700">Sobrecupo</span>
+          <span class="text-gray-700">Se topan</span>
         </div>
       </div>
     </div>
@@ -312,13 +314,16 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
             <div 
               v-for="req in filteredRequestsForDay" 
               :key="req.id"
-              @click="selectedRequestDetail = req"
+              @click="selectedRequestDetail = req; openedRequestId = req.id"
               class="p-3 bg-white rounded-2xl border-2 border-brand-border hover:border-brand-dark cursor-pointer text-xs font-bold space-y-1 shadow-2xs"
             >
               <div class="flex justify-between items-center">
                 <span class="font-black text-brand-dark">{{ req.clientName }}</span>
-                <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-brand-light border border-brand-border">
-                  {{ formatStatusText(req.status) }}
+                <span class="flex items-center gap-1.5">
+                  <span v-if="hasConflict(req.id)" class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-rose-100 border border-status-danger text-rose-950">Se cruza</span>
+                  <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-brand-light border border-brand-border">
+                    {{ formatStatusText(req.status) }}
+                  </span>
                 </span>
               </div>
               <div class="flex justify-between text-gray-600 text-xs">
@@ -364,15 +369,19 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
           <div 
             v-for="req in filteredRequestsForDay" 
             :key="req.id"
-            class="p-3 bg-brand-light rounded-2xl border border-brand-border text-xs font-bold space-y-1.5"
+            @click="openedRequestId = req.id"
+            :class="['p-3 bg-brand-light rounded-2xl border text-xs font-bold space-y-1.5 cursor-pointer', hasConflict(req.id) ? 'border-status-danger border-2' : 'border-brand-border']"
           >
             <div class="flex justify-between items-start">
               <div>
                 <span class="font-black text-brand-dark block text-sm">{{ req.clientName }}</span>
                 <span class="text-xs text-gray-700 font-extrabold">{{ req.resourceName }} - {{ req.requestCode }}</span>
               </div>
-              <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-white border border-brand-border">
-                {{ formatStatusText(req.status) }}
+              <span class="flex items-center gap-1.5">
+                <span v-if="hasConflict(req.id)" class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-rose-100 border border-status-danger text-rose-950">Se cruza</span>
+                <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-white border border-brand-border">
+                  {{ formatStatusText(req.status) }}
+                </span>
               </span>
             </div>
 
@@ -397,5 +406,7 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
         </button>
       </div>
     </div>
+
+    <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" @open-request="openedRequestId = $event" />
   </div>
 </template>

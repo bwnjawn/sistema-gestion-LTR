@@ -43,28 +43,52 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | Características del espacio | Baño propio, fogón techado, piso de cemento | SCRUM-30 | por verificar que se muestren |
 | Asignación del espacio | Se asigna el espacio que cubre la cantidad de personas **y** admite la modalidad elegida (`diario`, `pernoctar` o `ambos`). Si hay varios, el de menor capacidad. Si no hay ninguno, se avisa al cliente y no se avanza | SCRUM-240 | ✅ `findCampingSite` en `services/wizard.ts`. Los datos de ejemplo usan `ambos` en los dos espacios; si el admin deja un espacio solo en "diario", los grupos que quieran pernoctar en él no tendrán espacio |
 | Mensaje de abono | El mismo mensaje amarillo que en cabañas | SCRUM-32 | ✅ `DepositInfoCard` |
-| Capacidad total | 150 personas | — | ⚠️ `capacityRules.maxCampingPeopleCapacity`, sin uso verificado |
+| Capacidad total | 150 personas por modalidad: el cupo de `diario` y el de `pernoctar` son separados y no se suman | SCRUM-244 | ✅ `capacityRules.maxCampingPeopleCapacity`, usado por el bloqueo de fechas y el sobrecupo |
 
 ## 4. Restaurante
 
 | Regla | Valor | Historia | Estado |
 |---|---|---|---|
 | Horarios | Desayuno 08:30–11:00, almuerzo 12:30–14:00, once 17:00–19:30 (bloques de 30 min) | — | ✅ `generateTimeSlots` y `settingsStore` |
-| Grupos de más de 30 personas | Máximo 3 menús distintos y mensaje explicativo al llegar al límite | SCRUM-36 | ⚠️ **vive en `RestaurantStep2View.vue`**; moverla a `services/` |
+| Grupos de más de 30 personas | Máximo 3 menús distintos **por comida** (desayuno, almuerzo y once se cuentan por separado), con mensaje explicativo al llegar al límite. Si el grupo crece después de elegir platos y queda sobre el límite, se avisa y no se puede avanzar. El 30 y el 3 son editables en Ajustes | SCRUM-36, 244 | ✅ `services/menus.ts` y `capacityRules.menuLargeGroupThreshold` / `maxMenuVarietiesLargeGroup` |
 | Acompañamientos | Modo `none`, `fixed` (acompañamiento fijo, ej. asado de cordero) o `choice` (el cliente elige) | SCRUM-35, 62, 229 | ✅ en el cliente. ❌ falta el CRUD de administración (SCRUM-229) |
-| Cupo por horario | 8 grupos por bloque | — | ⚠️ `capacityRules.maxRestaurantGroupsPerSlot`, **no se aplica**. `getDayOccupancy` usa un `> 8` fijo que mezcla los tres servicios |
+| Cupo por horario | Reemplazado por el aforo en personas de los espacios (ver más abajo) | SCRUM-244 | `maxRestaurantGroupsPerSlot` quedó sin uso y ya no se muestra en Ajustes |
 | Precio | Suma de platos × cantidad (+ IVA) | — | ✅ `calculateRestaurantPrice` |
+| Espacios y capacidad | Comedor principal 120 personas, carpa 50, comedor secundario 30 (total 200) | SCRUM-244 (reunión con el cliente) | ✅ Capacidades editables en Ajustes (`capacityRules.restaurantSpaces`); el total (200) limita las personas en el paso 1. ❓ Falta decidir si el aforo se cuenta por comida o por hora y cómo se asigna el espacio a un grupo |
+| Sobrecupo en el calendario | Restaurante: personas de una misma comida > capacidad total. Camping: personas del día de una misma modalidad > capacidad del camping. Cabañas: no aplica (un solapamiento se rechaza, SCRUM-60) | SCRUM-244 | ✅ `getDayOccupancy` (provisorio hasta confirmar con el cliente si se mide por comida u hora) |
 
-## 5. Contacto del negocio
+## 5. Bloqueo de fechas en el calendario del cliente
+
+Decidido el 8/11 (SCRUM-244). Cuentan solo las solicitudes activas (`pending` o `confirmed`). Funciones en `services/availability.ts`.
+
+| Servicio | Una fecha se bloquea cuando… | Detalle |
+|---|---|---|
+| Cabañas | Todas las cabañas con capacidad para el grupo están ocupadas esa noche | Depende de las personas indicadas. Una estadía se bloquea si ninguna cabaña que le sirve está libre **todas** las noches (una solicitud lleva una sola cabaña). El día de salida puede ser un día ocupado. Si el grupo supera la cabaña más grande no se bloquea nada (lo resuelve SCRUM-27) |
+| Restaurante | Las tres comidas están llenas para el grupo (personas ya reservadas + grupo > capacidad total) | Las comidas llenas se deshabilitan una a una en el paso 1. Las solicitudes antiguas sin comida definida no cuentan en ninguna comida |
+| Camping | Las personas ya reservadas de esa modalidad + el grupo superan la capacidad del camping | `diario` y `pernoctar` tienen cupos separados. En `pernoctar` se revisa cada noche de la estancia. Las solicitudes antiguas sin modalidad cuentan como `pernoctar` |
+
+El admin no tiene este bloqueo al editar o registrar una reserva: puede cruzar fechas y la resolución es manual (SCRUM-60).
+
+### Solapamientos entre solicitudes (SCRUM-60)
+
+El admin ve una alerta cuando dos o más solicitudes activas (`pending` o `confirmed`) no caben juntas. Las pendientes cuentan igual que las confirmadas. No se rechaza ni cancela nada solo: la resolución es manual. Función: `findConflicts` en `services/availability.ts`.
+
+| Servicio | Hay solapamiento cuando… |
+|---|---|
+| Cabañas | La misma cabaña tiene fechas que se cruzan, en intervalo `[entrada, salida)` |
+| Restaurante | Las personas de una misma comida y día superan la capacidad total del restaurante |
+| Camping | Las personas de un mismo día y modalidad superan la capacidad del camping (diario y pernoctar por separado) |
+
+## 6. Contacto del negocio
 
 Los datos de `ContactView` salen de `settingsStore.contactInfo` y se editan desde `AdminContactEditModal` (SCRUM-231).
 Los enlaces (mapa, Instagram, web) se generan en `lib/contactLinks.ts` a partir de lo que escribe el admin.
 
-- Teléfonos por defecto: +56 9 8502 5056 y +56 9 9588 3385 (el segundo coincide con el que pide SCRUM-49).
+- Teléfonos por defecto: +56 9 8502 5056 y +56 9 5883 3853 (el segundo se corrigió el 8/11 según la reunión con el cliente; antes decía +56 9 9588 3385). `settingsStore.ts` reemplaza solo el número antiguo si el navegador lo tenía guardado.
 - Ubicación del mapa (corregida el 8/11): "Turismo Los Troncos de Repil", coordenadas -41.0616375, -73.647016. Los valores anteriores tenían el signo positivo y apuntaban a otro lugar; `settingsStore.ts` los reemplaza solos si el navegador los tenía guardados.
 - Sitio web por defecto: `fresianatural.cl` (abre `https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html`).
 
-## 6. Decisiones abiertas que bloquean la entrega
+## 7. Decisiones abiertas que bloquean la entrega
 
 | # | Pregunta | A quién | Para cuándo |
 |---|---|---|---|

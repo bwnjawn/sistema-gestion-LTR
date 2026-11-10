@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useRequestsStore } from '../../stores/requestsStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 import { getDayOccupancy } from '../../services/availability'
 import type { ServiceType } from '../../types/domain'
 
@@ -21,6 +22,7 @@ const emit = defineEmits<{
 }>()
 
 const requestsStore = useRequestsStore()
+const settingsStore = useSettingsStore()
 const viewDate = ref<Date>(new Date(props.modelValue))
 
 watch(() => props.modelValue, (newVal) => {
@@ -60,7 +62,7 @@ const monthDays = computed(() => {
     const dd = String(i).padStart(2, '0')
     const dateStr = `${yyyy}-${mm}-${dd}`
 
-    const occupancy = getDayOccupancy(dateStr, requestsStore.requests, props.services)
+    const occupancy = getDayOccupancy(dateStr, requestsStore.requests, props.services, settingsStore.limitesAforo)
 
     days.push({
       date: d,

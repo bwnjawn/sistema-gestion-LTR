@@ -3,12 +3,20 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import type { BusinessInfo, TransferInfo } from '../types/domain'
-import type { RestaurantSchedules, CampingSchedules, CabinSchedules } from '../types/settings'
+import type { RestaurantSchedules, CampingSchedules, CabinSchedules, EspacioRestaurante, LimitesAforo, LimiteVariedades } from '../types/settings'
+import { getRestaurantCapacity } from '../services/availability'
 import { settingsRepository } from '../lib/repositories/settingsRepository'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
 
 export interface CapacityRules {
+  /** Sin uso desde SCRUM-244: el aforo del restaurante ahora sale de `restaurantSpaces`. */
   maxRestaurantGroupsPerSlot: number
+  /** Espacios del restaurante y su capacidad; la suma es el aforo total. */
+  restaurantSpaces: EspacioRestaurante[]
+  /** Grupos de más de estas personas tienen un máximo de platos distintos por comida (SCRUM-36). */
+  menuLargeGroupThreshold: number
+  /** Máximo de platos distintos por comida para grupos grandes. */
+  maxMenuVarietiesLargeGroup: number
   maxCampingPeopleCapacity: number
   marginPercentage: number
 }
@@ -24,7 +32,7 @@ export interface BusinessParametersExtended {
 
 const DEFAULT_CONTACT: BusinessInfo = {
   phone1: '+56 9 8502 5056',
-  phone2: '+56 9 9588 3385',
+  phone2: '+56 9 5883 3853',
   email: 'lostroncosderepil@gmail.com',
   websiteDisplay: 'fresianatural.cl',
   websiteUrl: 'https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html',
@@ -71,6 +79,13 @@ const DEFAULT_PARAMS: BusinessParametersExtended = {
   isConnected: true,
   capacityRules: {
     maxRestaurantGroupsPerSlot: 8,
+    restaurantSpaces: [
+      { id: 'comedor-principal', nombre: 'Comedor principal', capacidad: 120 },
+      { id: 'carpa', nombre: 'Carpa', capacidad: 50 },
+      { id: 'comedor-secundario', nombre: 'Comedor secundario', capacidad: 30 }
+    ],
+    menuLargeGroupThreshold: 30,
+    maxMenuVarietiesLargeGroup: 3,
     maxCampingPeopleCapacity: 150,
     marginPercentage: 10
   }
@@ -81,7 +96,8 @@ const DEFAULT_PARAMS: BusinessParametersExtended = {
 const CONTACTO_ANTIGUO: Partial<BusinessInfo> = {
   mapsUrl: 'https://maps.google.com/?q=-41.1500,-73.4167',
   iframeMapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30000!2d73.4167!3d41.1500',
-  websiteUrl: 'https://www.lostroncosderepil.cl'
+  websiteUrl: 'https://www.lostroncosderepil.cl',
+  phone2: '+56 9 9588 3385'
 }
 
 function migrarContacto(guardado: BusinessInfo): BusinessInfo {
@@ -92,6 +108,7 @@ function migrarContacto(guardado: BusinessInfo): BusinessInfo {
     migrado.websiteUrl = DEFAULT_CONTACT.websiteUrl
     migrado.websiteDisplay = DEFAULT_CONTACT.websiteDisplay
   }
+  if (migrado.phone2 === CONTACTO_ANTIGUO.phone2) migrado.phone2 = DEFAULT_CONTACT.phone2
   return migrado
 }
 
@@ -153,6 +170,18 @@ export const useSettingsStore = defineStore('settings', () => {
     await settingsRepository.saveParameters(val)
   }, { deep: true })
 
+  const capacityRulesActuales = computed<CapacityRules>(() => ({ ...DEFAULT_PARAMS.capacityRules, ...parameters.value.capacityRules }))
+  const restaurantCapacity = computed(() => getRestaurantCapacity(capacityRulesActuales.value.restaurantSpaces))
+  const limitesAforo = computed<LimitesAforo>(() => ({
+    restaurantePersonas: restaurantCapacity.value,
+    campingPersonas: capacityRulesActuales.value.maxCampingPeopleCapacity
+  }))
+
+  const limiteVariedades = computed<LimiteVariedades>(() => ({
+    umbralPersonas: capacityRulesActuales.value.menuLargeGroupThreshold,
+    maxVariedades: capacityRulesActuales.value.maxMenuVarietiesLargeGroup
+  }))
+
   const phone1Clean = computed(() => contactInfo.value.phone1.replace(/\s+/g, ''))
   const phone2Clean = computed(() => contactInfo.value.phone2.replace(/\s+/g, ''))
 
@@ -211,7 +240,11 @@ export const useSettingsStore = defineStore('settings', () => {
     defaultDepositPercentage: computed(() => parameters.value.defaultDepositPercentage ?? 30),
     ivaPercentage: computed(() => parameters.value.ivaPercentage ?? 19),
     marginPercentage: computed(() => parameters.value.marginPercentage ?? 10),
-    capacityRules: computed(() => parameters.value.capacityRules ?? DEFAULT_PARAMS.capacityRules),
+    // Se completa con los valores de fábrica: los parámetros guardados antes de SCRUM-244 no traían los espacios.
+    capacityRules: capacityRulesActuales,
+    restaurantCapacity,
+    limitesAforo,
+    limiteVariedades,
     currentDate: currentDateDynamic,
     isConnected: isOnline,
     phone1Clean,

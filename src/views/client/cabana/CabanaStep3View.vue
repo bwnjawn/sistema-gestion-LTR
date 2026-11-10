@@ -2,11 +2,11 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
-  ArrowLeft, ArrowRight, User, Phone, Mail, FileText, 
+  User, Phone, Mail, FileText, 
   Building2, Clock 
 } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
-import BaseButton from '../../../components/ui/BaseButton.vue'
+import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { isClientContactValid, isClientPhoneIncomplete } from '../../../services/wizard'
@@ -31,11 +31,6 @@ const formattedScheduleDisplay = computed(() => {
 const isFormValid = computed(() => isClientContactValid(store.clientName, store.clientPhone))
 const phoneIncomplete = computed(() => isClientPhoneIncomplete(store.clientPhone))
 
-function handleBack() {
-  store.prevStep()
-  router.push('/cabana/paso2')
-}
-
 function handleNext() {
   if (isFormValid.value) {
     store.nextStep()
@@ -45,7 +40,7 @@ function handleNext() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
     <!-- Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="3" />
@@ -146,25 +141,6 @@ function handleNext() {
 
     </div>
 
-    <!-- Navegación Flotante Fija -->
-    <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="max-w-md mx-auto flex items-center gap-3">
-        <BaseButton variant="outline" size="lg" @click="handleBack">
-          <ArrowLeft class="w-5 h-5 mr-1.5 stroke-[2.5]" />
-          Volver
-        </BaseButton>
-
-        <BaseButton 
-          variant="primary" 
-          size="lg" 
-          fullWidth 
-          :disabled="!isFormValid"
-          @click="handleNext"
-        >
-          Revisar Solicitud
-          <ArrowRight class="w-5 h-5 ml-1.5 stroke-[2.5]" />
-        </BaseButton>
-      </div>
-    </div>
+    <BarraAccionInferior :disabled="!isFormValid" @click="handleNext">Revisar Solicitud</BarraAccionInferior>
   </div>
 </template>

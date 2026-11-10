@@ -1,22 +1,33 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, ArrowRight, Tent, Sun, Moon, Users, AlertCircle } from 'lucide-vue-next'
+import { Tent, Sun, Moon, Users, AlertCircle } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseCalendar from '../../../components/ui/BaseCalendar.vue'
 import HorarioCard from '../../../components/ui/HorarioCard.vue'
-import BaseButton from '../../../components/ui/BaseButton.vue'
+import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
-import { validateGuestCapacity } from '../../../services/availability'
+import { useRequestsStore } from '../../../stores/requestsStore'
+import { validateGuestCapacity, isCampingDayBlocked, isCampingStayBlocked } from '../../../services/availability'
 import { nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
 const settingsStore = useSettingsStore()
+const requestsStore = useRequestsStore()
 
 store.setService('camping')
+
+// Diario y pernoctar tienen cupos separados (SCRUM-244)
+function isDayBlocked(dateStr: string): boolean {
+  return isCampingDayBlocked(dateStr, store.campingType, store.guestsCount, requestsStore.requests, settingsStore.limitesAforo.campingPersonas)
+}
+
+function isStayBlocked(inicio: string, salida: string): boolean {
+  return isCampingStayBlocked(inicio, salida, store.guestsCount, requestsStore.requests, settingsStore.limitesAforo.campingPersonas)
+}
 
 const campingType = computed(() => store.campingType)
 
@@ -97,15 +108,19 @@ const capacityValidation = computed(() => {
   return validateGuestCapacity(store.guestsCount, 1, maxCap)
 })
 
+// Si el cliente cambia las personas o la modalidad después de elegir fecha, el cupo puede no alcanzar
+const dateUnavailable = computed(() => {
+  if (!store.checkInDate) return false
+  if (store.campingType === 'diario') return isDayBlocked(store.checkInDate)
+  return nightsBetween(store.checkInDate, store.checkOutDate) >= 1 && isStayBlocked(store.checkInDate, store.checkOutDate)
+})
+
 const isValid = computed(() => {
   if (!store.checkInDate) return false
+  if (dateUnavailable.value) return false
   if (store.campingType === 'pernoctar' && nightsBetween(store.checkInDate, store.checkOutDate) < 1) return false
   return capacityValidation.value.isValid
 })
-
-function handleBack() {
-  router.push('/')
-}
 
 function handleNext() {
   if (isValid.value) {
@@ -116,7 +131,7 @@ function handleNext() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="1" />
     </div>
@@ -183,8 +198,13 @@ function handleNext() {
         <BaseCalendar 
           :start-date="calendarStartDate"
           :end-date="calendarEndDate"
+          :is-date-disabled-fn="isDayBlocked"
+          :is-range-blocked-fn="isStayBlocked"
           @change="handleCalendarChange"
         />
+        <BaseAlert v-if="dateUnavailable" variant="warning" title="Sin cupo en esa fecha">
+          Para {{ store.guestsCount }} personas no queda cupo de {{ campingType === 'diario' ? 'paseo por el día' : 'pernoctar' }} en la fecha elegida. Cambia la fecha o la cantidad de personas.
+        </BaseAlert>
         <HorarioCard
           :titulo="campingType === 'diario' ? 'Horario del día de campo' : 'Horario de pernoctar'"
           :ingreso="settingsStore.campingSchedules[campingType === 'diario' ? 'diario' : 'pernoctar'].checkIn"
@@ -241,24 +261,6 @@ function handleNext() {
 
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border p-3.5 shadow-2xl">
-      <div class="max-w-md mx-auto flex items-center gap-3">
-        <BaseButton variant="outline" size="lg" @click="handleBack">
-          <ArrowLeft class="w-5 h-5 mr-1 stroke-[2.5]" />
-          Volver
-        </BaseButton>
-
-        <BaseButton 
-          variant="primary" 
-          size="lg" 
-          fullWidth 
-          :disabled="!isValid"
-          @click="handleNext"
-        >
-          Ver Opciones
-          <ArrowRight class="w-5 h-5 ml-1.5 stroke-[2.5]" />
-        </BaseButton>
-      </div>
-    </div>
+    <BarraAccionInferior :disabled="!isValid" @click="handleNext">Ver Opciones</BarraAccionInferior>
   </div>
 </template>

@@ -1,7 +1,7 @@
 // src/stores/requestsStore.ts
 
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { ReservationRequest, BookingStatus } from '../types/domain'
 import { generateUUID } from '../lib/id'
 import { requestsRepository } from '../lib/repositories/requestsRepository'
@@ -10,6 +10,7 @@ import { applyRequestEdit, normalizeRequest, type RequestEdit } from '../service
 import { useCatalogStore } from './catalogStore'
 import { useSettingsStore } from './settingsStore'
 import { buildPayment, validatePayment, type PaymentInput } from '../services/payments'
+import { findConflicts, groupConflictsByRequest } from '../services/availability'
 
 export type { ReservationRequest }
 
@@ -20,6 +21,10 @@ export const useRequestsStore = defineStore('requests', () => {
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+
+  // Solicitudes activas que no caben juntas (SCRUM-60); se recalcula solo al cambiar las solicitudes o los aforos
+  const conflicts = computed(() => findConflicts(requests.value, useSettingsStore().limitesAforo))
+  const conflictsByRequestId = computed(() => groupConflictsByRequest(conflicts.value))
 
   watch(
     requests,
@@ -124,6 +129,8 @@ export const useRequestsStore = defineStore('requests', () => {
     requests,
     isLoading,
     error,
+    conflicts,
+    conflictsByRequestId,
     addRequest,
     updateRequestStatus,
     updateRequestDetails,

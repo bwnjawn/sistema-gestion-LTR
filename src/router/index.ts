@@ -12,23 +12,30 @@ const routes = [
   { path: '/', name: 'home', component: () => import('../views/client/HomeView.vue') },
   { path: '/contacto', name: 'contact', component: () => import('../views/client/ContactView.vue') },
 
-  // Flujo Reserva Cabaña
-  { path: '/cabana/paso1', name: 'cabana-step1', component: () => import('../views/client/cabana/CabanaStep1View.vue') },
-  { path: '/cabana/paso2', name: 'cabana-step2', component: () => import('../views/client/cabana/CabanaStep2View.vue') },
-  { path: '/cabana/paso3', name: 'cabana-step3', component: () => import('../views/client/cabana/CabanaStep3View.vue') },
-  { path: '/cabana/paso4', name: 'cabana-step4', component: () => import('../views/client/cabana/CabanaStep4View.vue') },
+  // Flujo de reserva: comparten el encabezado con atrás, título del servicio, paso y salir
+  {
+    path: '/reservar',
+    component: () => import('../layouts/ReservaLayout.vue'),
+    children: [
+    // Flujo Reserva Cabaña
+    { path: '/cabana/paso1', name: 'cabana-step1', meta: { servicio: 'cabana', paso: 1 }, component: () => import('../views/client/cabana/CabanaStep1View.vue') },
+    { path: '/cabana/paso2', name: 'cabana-step2', meta: { servicio: 'cabana', paso: 2 }, component: () => import('../views/client/cabana/CabanaStep2View.vue') },
+    { path: '/cabana/paso3', name: 'cabana-step3', meta: { servicio: 'cabana', paso: 3 }, component: () => import('../views/client/cabana/CabanaStep3View.vue') },
+    { path: '/cabana/paso4', name: 'cabana-step4', meta: { servicio: 'cabana', paso: 4 }, component: () => import('../views/client/cabana/CabanaStep4View.vue') },
 
-  // Flujo Reserva Camping
-  { path: '/camping/paso1', name: 'camping-step1', component: () => import('../views/client/camping/CampingStep1View.vue') },
-  { path: '/camping/paso2', name: 'camping-step2', component: () => import('../views/client/camping/CampingStep2View.vue') },
-  { path: '/camping/paso3', name: 'camping-step3', component: () => import('../views/client/camping/CampingStep3View.vue') },
-  { path: '/camping/paso4', name: 'camping-step4', component: () => import('../views/client/camping/CampingStep4View.vue') },
+    // Flujo Reserva Camping
+    { path: '/camping/paso1', name: 'camping-step1', meta: { servicio: 'camping', paso: 1 }, component: () => import('../views/client/camping/CampingStep1View.vue') },
+    { path: '/camping/paso2', name: 'camping-step2', meta: { servicio: 'camping', paso: 2 }, component: () => import('../views/client/camping/CampingStep2View.vue') },
+    { path: '/camping/paso3', name: 'camping-step3', meta: { servicio: 'camping', paso: 3 }, component: () => import('../views/client/camping/CampingStep3View.vue') },
+    { path: '/camping/paso4', name: 'camping-step4', meta: { servicio: 'camping', paso: 4 }, component: () => import('../views/client/camping/CampingStep4View.vue') },
 
-  // Flujo Reserva Restaurante
-  { path: '/restaurante/paso1', name: 'restaurant-step1', component: () => import('../views/client/restaurante/RestaurantStep1View.vue') },
-  { path: '/restaurante/paso2', name: 'restaurant-step2', component: () => import('../views/client/restaurante/RestaurantStep2View.vue') },
-  { path: '/restaurante/paso3', name: 'restaurant-step3', component: () => import('../views/client/restaurante/RestaurantStep3View.vue') },
-  { path: '/restaurante/paso4', name: 'restaurant-step4', component: () => import('../views/client/restaurante/RestaurantStep4View.vue') },
+    // Flujo Reserva Restaurante
+    { path: '/restaurante/paso1', name: 'restaurant-step1', meta: { servicio: 'restaurante', paso: 1 }, component: () => import('../views/client/restaurante/RestaurantStep1View.vue') },
+    { path: '/restaurante/paso2', name: 'restaurant-step2', meta: { servicio: 'restaurante', paso: 2 }, component: () => import('../views/client/restaurante/RestaurantStep2View.vue') },
+    { path: '/restaurante/paso3', name: 'restaurant-step3', meta: { servicio: 'restaurante', paso: 3 }, component: () => import('../views/client/restaurante/RestaurantStep3View.vue') },
+    { path: '/restaurante/paso4', name: 'restaurant-step4', meta: { servicio: 'restaurante', paso: 4 }, component: () => import('../views/client/restaurante/RestaurantStep4View.vue') },
+    ]
+  },
 
   // ==========================================
   // RUTAS DE AUTENTICACIÓN
@@ -46,11 +53,11 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', redirect: { name: 'admin-dashboard' } },
-      { path: 'dashboard', name: 'admin-dashboard', component: () => import('../views/admin/AdminDashboardView.vue') },
-      { path: 'solicitudes', name: 'admin-solicitudes', component: () => import('../views/admin/AdminRequestsView.vue') },
-      { path: 'calendario', name: 'admin-calendar', component: () => import('../views/admin/AdminCalendarView.vue') },
-      { path: 'catalogo', name: 'admin-catalog', component: () => import('../views/admin/AdminCatalogEditView.vue') },
-      { path: 'ajustes', name: 'admin-settings', component: () => import('../views/admin/AdminSettingsView.vue') },
+      { path: 'dashboard', name: 'admin-dashboard', meta: { titulo: 'Inicio' }, component: () => import('../views/admin/AdminDashboardView.vue') },
+      { path: 'solicitudes', name: 'admin-solicitudes', meta: { titulo: 'Solicitudes' }, component: () => import('../views/admin/AdminRequestsView.vue') },
+      { path: 'calendario', name: 'admin-calendar', meta: { titulo: 'Calendario' }, component: () => import('../views/admin/AdminCalendarView.vue') },
+      { path: 'catalogo', name: 'admin-catalog', meta: { titulo: 'Catálogo' }, component: () => import('../views/admin/AdminCatalogEditView.vue') },
+      { path: 'ajustes', name: 'admin-settings', meta: { titulo: 'Ajustes' }, component: () => import('../views/admin/AdminSettingsView.vue') },
       // Rutas antiguas
       { path: 'editar', redirect: { name: 'admin-catalog' } },
       { path: 'mas', redirect: { name: 'admin-settings' } }
@@ -64,7 +71,15 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   // Cada vista nueva empieza arriba; al volver atrás se conserva la posición
   scrollBehavior(_to, _from, savedPosition) {
-    return savedPosition ?? { top: 0 }
+    if (savedPosition) return savedPosition
+    // Cada pantalla nueva se ve desde el encabezado. En iPhone, el teclado abierto o el
+    // contenido que aún se pinta pueden dejar la pantalla a medio camino, así que se
+    // suelta el foco y se repite el desplazamiento un instante después.
+    ;(document.activeElement as HTMLElement | null)?.blur?.()
+    const arriba = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    requestAnimationFrame(arriba)
+    setTimeout(arriba, 120)
+    return { top: 0, left: 0 }
   },
   routes
 })
@@ -116,6 +131,38 @@ router.beforeEach((to, _from, next) => {
   }
 
   next()
+})
+
+// Cliente y administrador se instalan como dos apps distintas: según la ruta
+// se cambia el manifest, el ícono y el nombre que iOS lee al "Agregar a inicio".
+function aplicarIdentidadDeApp(esAdmin: boolean) {
+  const poner = (selector: string, crear: () => HTMLElement, atributo: string, valor: string) => {
+    let el = document.head.querySelector<HTMLElement>(selector)
+    if (!el) {
+      el = crear()
+      document.head.appendChild(el)
+    }
+    el.setAttribute(atributo, valor)
+  }
+  const enlace = (rel: string) => () => {
+    const link = document.createElement('link')
+    link.rel = rel
+    return link
+  }
+  const meta = (nombre: string) => () => {
+    const m = document.createElement('meta')
+    m.name = nombre
+    return m
+  }
+
+  poner('link[rel="manifest"]', enlace('manifest'), 'href', esAdmin ? '/manifest-admin.webmanifest' : '/manifest.webmanifest')
+  poner('link[rel="apple-touch-icon"]', enlace('apple-touch-icon'), 'href', esAdmin ? '/apple-touch-icon-admin.png' : '/apple-touch-icon.png')
+  poner('meta[name="apple-mobile-web-app-title"]', meta('apple-mobile-web-app-title'), 'content', esAdmin ? 'Admin Troncos' : 'Los Troncos')
+  poner('meta[name="theme-color"]', meta('theme-color'), 'content', esAdmin ? '#000000' : '#1E4620')
+}
+
+router.afterEach((to) => {
+  aplicarIdentidadDeApp(to.path.startsWith('/admin'))
 })
 
 export default router

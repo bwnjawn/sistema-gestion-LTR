@@ -2,9 +2,8 @@
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { 
-  Home, Tent, Utensils, Grid, Plus, Sparkles, Trash2, AlertTriangle, Pencil 
+  Home, Tent, Utensils, Plus, Sparkles, Trash2, AlertTriangle, Pencil 
 } from 'lucide-vue-next'
-import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import DropdownMenu from '../../components/ui/DropdownMenu.vue'
 import CabinCard from '../../components/catalog/CabinCard.vue'
 import CampingCard from '../../components/catalog/CampingCard.vue'
@@ -167,12 +166,6 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
     
-    <AdminPageTitle
-      title="Catálogo"
-      subtitle="Cabañas, camping y menú que ve el cliente."
-      :icon="Grid"
-    />
-
     <!-- PESTAÑAS PRINCIPALES -->
     <div class="bg-white p-2 rounded-3xl border-2 border-brand-border shadow-2xs">
       <div class="grid grid-cols-3 gap-1.5 p-1 bg-brand-light rounded-2xl border border-brand-border">

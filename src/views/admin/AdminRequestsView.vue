@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { Inbox, Search, Plus, Clock, CheckCircle2, XCircle } from 'lucide-vue-next'
 import BaseButton from '../../components/ui/BaseButton.vue'
-import AdminPageTitle from '../../components/admin/AdminPageTitle.vue'
 import AdminNewBookingModal from '../../components/admin/AdminNewBookingModal.vue'
 import AdminRequestCard from '../../components/admin/AdminRequestCard.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
@@ -22,6 +21,15 @@ const searchQuery = ref('')
 
 const isNewBookingModalOpen = ref(false)
 const openedRequestId = ref<string | null>(null)
+
+// Cuántas otras solicitudes se topan con la indicada (SCRUM-60)
+function countConflictingRequests(id: string): number {
+  const others = new Set<string>()
+  for (const conflict of requestsStore.conflictsByRequestId[id] ?? []) {
+    conflict.solicitudIds.filter(other => other !== id).forEach(other => others.add(other))
+  }
+  return others.size
+}
 
 const filteredRequests = computed(() =>
   filterRequests(requestsStore.requests, {
@@ -63,12 +71,6 @@ const emptyMessage = computed(() => {
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
-    <AdminPageTitle
-      title="Solicitudes"
-      subtitle="Revisa, aprueba y registra los pagos de cada solicitud."
-      :icon="Inbox"
-    />
-
     <BaseButton variant="primary" size="md" fullWidth @click="isNewBookingModalOpen = true">
       <Plus class="w-5 h-5 mr-1.5 stroke-[3]" aria-hidden="true" /> Nueva reserva directa
     </BaseButton>
@@ -125,6 +127,7 @@ const emptyMessage = computed(() => {
         v-for="req in filteredRequests"
         :key="req.id"
         :request="req"
+        :conflict-count="countConflictingRequests(req.id)"
         @open="openedRequestId = $event"
         @approve="requestsStore.confirmRequest($event)"
         @reject="openedRequestId = $event"
@@ -144,7 +147,7 @@ const emptyMessage = computed(() => {
       </div>
     </div>
 
-    <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" />
+    <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" @open-request="openedRequestId = $event" />
 
     <AdminNewBookingModal
       :is-open="isNewBookingModalOpen"
