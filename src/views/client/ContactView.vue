@@ -7,7 +7,7 @@ const settingsStore = useSettingsStore()
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-20">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
     <!-- Encabezado -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-1 text-center">
       <span class="text-sm font-black text-brand-accent uppercase tracking-wider block">

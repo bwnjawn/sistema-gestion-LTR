@@ -21,7 +21,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
 
 <template>
   <div class="flex flex-col min-h-[85vh]">
-    <main class="p-4 space-y-4 grow max-w-md mx-auto w-full pb-24">
+    <main class="p-4 space-y-4 grow max-w-md mx-auto w-full pb-contenido-nav">
       
       <!-- Encabezado con Logo y Título Institucional Reincorporado -->
       <div class="flex items-center gap-3.5 px-1 pt-2">
