@@ -38,7 +38,12 @@ function cargarOtra() {
       </div>
       <h2 class="text-2xl font-black text-brand-dark tracking-tight">Reserva registrada</h2>
       <p class="text-base font-bold text-gray-700">
-        Quedó <strong class="font-black text-brand-dark">confirmada</strong> en la lista de solicitudes.
+        <template v-if="store.estadoUltimaReservaAdmin === 'pending'">
+          Quedó <strong class="font-black text-brand-dark">pendiente</strong> porque se cruza con otra solicitud. Resuélvelo desde la lista de solicitudes.
+        </template>
+        <template v-else>
+          Quedó <strong class="font-black text-brand-dark">confirmada</strong> en la lista de solicitudes.
+        </template>
         <template v-if="store.isSpecialEvent"> Marcada como evento especial.</template>
       </p>
     </div>

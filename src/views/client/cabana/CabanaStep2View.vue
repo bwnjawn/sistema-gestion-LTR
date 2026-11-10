@@ -9,7 +9,7 @@ import CabinModal from '../../../components/catalog/CabinModal.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { useRequestsStore } from '../../../stores/requestsStore'
-import { isCabinAvailable } from '../../../services/availability'
+import { isCabinOfferable, getPendingCabinOverlaps } from '../../../services/availability'
 import type { Cabin } from '../../../types/domain'
 
 const router = useRouter()
@@ -20,7 +20,8 @@ const requestsStore = useRequestsStore()
 const showDetailModal = ref(false)
 const selectedCabinForModal = ref<Cabin | null>(null)
 
-// Filtrado de cabañas por capacidad Y disponibilidad real de fechas
+// Cabañas con capacidad suficiente y sin ninguna reserva confirmada en esas fechas.
+// Las que solo tienen pendientes se ofrecen; el administrador las ve con un aviso (SCRUM-260).
 const availableCabins = computed(() => {
   return catalogStore.cabins.filter(c => {
     const hasCapacity = c.capacity >= reservationStore.guestsCount
@@ -28,7 +29,7 @@ const availableCabins = computed(() => {
 
     if (!reservationStore.checkInDate || !reservationStore.checkOutDate) return true
 
-    return isCabinAvailable(
+    return isCabinOfferable(
       c.id,
       reservationStore.checkInDate,
       reservationStore.checkOutDate,
@@ -36,6 +37,18 @@ const availableCabins = computed(() => {
     )
   })
 })
+
+/** Códigos de las solicitudes pendientes que se cruzan con una cabaña (solo se avisan al administrador). */
+function cruces(cabin: Cabin): string[] {
+  if (!reservationStore.isAdminMode) return []
+  if (!reservationStore.checkInDate || !reservationStore.checkOutDate) return []
+  return getPendingCabinOverlaps(
+    cabin.id,
+    reservationStore.checkInDate,
+    reservationStore.checkOutDate,
+    requestsStore.requests
+  ).map(r => r.requestCode)
+}
 
 function openCabinDetail(cabin: Cabin) {
   selectedCabinForModal.value = cabin
@@ -62,7 +75,12 @@ function nextStep() {
     <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-1">
       <h2 class="text-base font-black text-brand-dark">Selecciona tu Cabaña</h2>
       <p class="text-sm font-medium text-gray-600">
-        Cabañas disponibles para {{ reservationStore.guestsCount }} personas en tus fechas.
+        <template v-if="reservationStore.isAdminMode">
+          Cabañas para {{ reservationStore.guestsCount }} personas. Si una tiene solicitudes pendientes en esas fechas, se avisa y tu reserva queda pendiente. Las confirmadas no se ofrecen.
+        </template>
+        <template v-else>
+          Cabañas disponibles para {{ reservationStore.guestsCount }} personas en tus fechas.
+        </template>
       </p>
     </div>
 
@@ -80,6 +98,12 @@ function nextStep() {
           @select="selectCabin"
         >
           <template #actions>
+            <p
+              v-if="cruces(cabin).length > 0"
+              class="mb-2 rounded-xl border-2 border-amber-600 bg-amber-50 px-3 py-2 text-sm font-black text-amber-900"
+            >
+              Hay una solicitud pendiente en estas fechas ({{ cruces(cabin).join(', ') }}). Tu reserva quedará pendiente.
+            </p>
             <div class="flex gap-2">
               <button
                 type="button"

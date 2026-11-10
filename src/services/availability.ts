@@ -32,6 +32,20 @@ export function isCabinAvailable(
   /** Solicitud que se está modificando: no cuenta como conflicto consigo misma. */
   excludeRequestId?: string
 ): boolean {
+  return getCabinOverlaps(cabinId, checkInDate, checkOutDate, existingRequests, excludeRequestId).length === 0
+}
+
+/**
+ * Solicitudes activas de una cabaña que se cruzan con las fechas indicadas.
+ * El administrador las usa para ver una cabaña ocupada y elegirla igual (SCRUM-260).
+ */
+export function getCabinOverlaps(
+  cabinId: string,
+  checkInDate: string,
+  checkOutDate: string,
+  existingRequests: ReservationRequest[],
+  excludeRequestId?: string
+): ReservationRequest[] {
   const activeBookings = existingRequests.filter(r => {
     if (excludeRequestId && r.id === excludeRequestId) return false
     const rawType = r.type as string
@@ -40,14 +54,61 @@ export function isCabinAvailable(
     const isActive = rawStatus === 'confirmed' || rawStatus === 'pending' || rawStatus === 'confirmada' || rawStatus === 'pendiente'
     return isCabina && isActive && r.details?.resourceId === cabinId
   })
-  for (const booking of activeBookings) {
+  return activeBookings.filter(booking => {
     const bStart = booking.details?.startDate || booking.date
     const bEnd = booking.details?.endDate || booking.timeOrDuration || ''
-    if (isDateRangeOverlapping(checkInDate, checkOutDate, bStart, bEnd)) {
-      return false
-    }
-  }
-  return true
+    return isDateRangeOverlapping(checkInDate, checkOutDate, bStart, bEnd)
+  })
+}
+
+/** Una solicitud confirmada es la única que retiene fechas y cupos (decisión del 10/11, SCRUM-263). */
+export function isRequestConfirmed(req: Pick<ReservationRequest, 'status'>): boolean {
+  const estado = req.status as string
+  return estado === 'confirmed' || estado === 'confirmada'
+}
+
+/**
+ * Una cabaña se puede ofrecer para elegir cuando ninguna reserva confirmada se cruza con las fechas.
+ * Las pendientes no la bloquean: solo se avisan (SCRUM-260).
+ */
+export function isCabinOfferable(
+  cabinId: string,
+  checkInDate: string,
+  checkOutDate: string,
+  existingRequests: ReservationRequest[]
+): boolean {
+  return !getCabinOverlaps(cabinId, checkInDate, checkOutDate, existingRequests).some(isRequestConfirmed)
+}
+
+/** Solicitudes pendientes que se cruzan con una cabaña en las fechas indicadas (para avisar al administrador). */
+export function getPendingCabinOverlaps(
+  cabinId: string,
+  checkInDate: string,
+  checkOutDate: string,
+  existingRequests: ReservationRequest[]
+): ReservationRequest[] {
+  return getCabinOverlaps(cabinId, checkInDate, checkOutDate, existingRequests).filter(r => !isRequestConfirmed(r))
+}
+
+/**
+ * Estado inicial de una reserva que registra el administrador: confirmada si no se cruza con nada,
+ * pendiente si se cruza con otras solicitudes, para que el administrador resuelva el cruce (SCRUM-260).
+ */
+export function initialStatusForAdminRequest(
+  newRequest: Omit<ReservationRequest, 'id' | 'status' | 'createdAt'>,
+  existingRequests: ReservationRequest[],
+  limites: LimitesAforo = LIMITES_AFORO_POR_DEFECTO
+): 'confirmed' | 'pending' {
+  const ID_TEMPORAL = '__nueva_reserva__'
+  const candidata = {
+    ...newRequest,
+    id: ID_TEMPORAL,
+    status: 'pending',
+    createdAt: ''
+  } as ReservationRequest
+  const hayCruce = findConflicts([...existingRequests, candidata], limites)
+    .some(conflicto => conflicto.solicitudIds.includes(ID_TEMPORAL))
+  return hayCruce ? 'pending' : 'confirmed'
 }
 
 /**

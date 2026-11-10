@@ -8,6 +8,7 @@ import { useCatalogStore } from './catalogStore'
 import { todayISO } from '../lib/dates'
 import { calculateBookingPrice, type PriceBreakdown } from '../services/pricing'
 import { buildRequestFromDraft, generateRequestCode } from '../services/requests'
+import { initialStatusForAdminRequest } from '../services/availability'
 import type { ClientType, RequestSchedule, ServiceType, SelectedMealPayload } from '../types/domain'
 
 export type { SelectedMealPayload }
@@ -101,6 +102,8 @@ export const useReservationStore = defineStore('reservation', () => {
 
   // Se enciende al enviar la solicitud: el encabezado deja de ofrecer volver o salir
   const solicitudEnviada = ref(false)
+  /** Estado con el que quedó la última reserva del administrador (pendiente si se cruzó con otras). */
+  const estadoUltimaReservaAdmin = ref<'confirmed' | 'pending'>('confirmed')
 
   /** El cliente ya eligió o escribió algo que se perdería al salir. */
   const tieneBorrador = computed(() =>
@@ -320,8 +323,13 @@ export const useReservationStore = defineStore('reservation', () => {
       }
     )
 
-    // La reserva del administrador ya fue acordada con el cliente: entra confirmada
-    await requestsStore.addRequest(solicitud, isAdminMode.value ? 'confirmed' : 'pending')
+    // La reserva del administrador ya fue acordada con el cliente: entra confirmada,
+    // salvo que se cruce con otras solicitudes: entonces entra pendiente para resolver el cruce (SCRUM-260)
+    const estadoInicial = isAdminMode.value
+      ? initialStatusForAdminRequest(solicitud, requestsStore.requests, settingsStore.limitesAforo)
+      : 'pending'
+    await requestsStore.addRequest(solicitud, estadoInicial)
+    if (isAdminMode.value) estadoUltimaReservaAdmin.value = estadoInicial as 'confirmed' | 'pending'
 
     // Limpia el borrador de sessionStorage una vez enviada la solicitud
     clearDraftFromSession()
@@ -349,6 +357,7 @@ export const useReservationStore = defineStore('reservation', () => {
     clientEmail,
     comments,
     solicitudEnviada,
+    estadoUltimaReservaAdmin,
     isAdminMode,
     isSpecialEvent,
     startAdminDraft,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findConflicts, getDayOccupancy, groupConflictsByRequest } from '../src/services/availability'
+import { findConflicts, getCabinOverlaps, getDayOccupancy, getPendingCabinOverlaps, groupConflictsByRequest, initialStatusForAdminRequest, isCabinOfferable } from '../src/services/availability'
 import type { ReservationRequest } from '../src/types/domain'
 
 const LIMITES = { restaurantePersonas: 200, campingPersonas: 150 }
@@ -104,5 +104,61 @@ describe('detección de solapamientos', () => {
     const lista = [cabana('a', 'c8', '2027-03-10', '2027-03-13'), cabana('b', 'c8', '2027-03-12', '2027-03-15')]
     expect(getDayOccupancy('2027-03-12', lista, undefined, LIMITES).status).toBe('sobrecupo')
     expect(getDayOccupancy('2027-03-11', lista, undefined, LIMITES).status).toBe('ocupado')
+  })
+})
+
+describe('getCabinOverlaps (SCRUM-260)', () => {
+  it('devuelve las solicitudes activas de la misma cabaña que se cruzan', () => {
+    const reservas = [
+      cabana('a', '6', '2026-12-20', '2026-12-22'),
+      cabana('b', '7', '2026-12-20', '2026-12-22'),
+      cabana('c', '6', '2026-12-20', '2026-12-22', 'rejected')
+    ]
+    const cruces = getCabinOverlaps('6', '2026-12-21', '2026-12-23', reservas)
+    expect(cruces.map(r => r.id)).toEqual(['a'])
+  })
+
+  it('salida y entrada el mismo día no se cruzan', () => {
+    const reservas = [cabana('a', '6', '2026-12-20', '2026-12-22')]
+    expect(getCabinOverlaps('6', '2026-12-22', '2026-12-24', reservas)).toEqual([])
+  })
+})
+
+describe('Cabañas ofrecidas y estado de la reserva del admin (SCRUM-260)', () => {
+  it('una cabaña con una confirmada en esas fechas no se ofrece', () => {
+    const reservas = [cabana('a', '6', '2026-12-20', '2026-12-22', 'confirmed')]
+    expect(isCabinOfferable('6', '2026-12-21', '2026-12-23', reservas)).toBe(false)
+  })
+
+  it('una cabaña con solo pendientes se ofrece y las pendientes se avisan', () => {
+    const reservas = [cabana('a', '6', '2026-12-20', '2026-12-22', 'pending')]
+    expect(isCabinOfferable('6', '2026-12-21', '2026-12-23', reservas)).toBe(true)
+    expect(getPendingCabinOverlaps('6', '2026-12-21', '2026-12-23', reservas).map(r => r.id)).toEqual(['a'])
+  })
+
+  it('una cabaña con una confirmada y una pendiente no se ofrece', () => {
+    const reservas = [
+      cabana('a', '6', '2026-12-20', '2026-12-22', 'pending'),
+      cabana('b', '6', '2026-12-20', '2026-12-22', 'confirmed')
+    ]
+    expect(isCabinOfferable('6', '2026-12-20', '2026-12-22', reservas)).toBe(false)
+  })
+
+  it('salida y entrada el mismo día no cuentan como cruce', () => {
+    const reservas = [cabana('a', '6', '2026-12-20', '2026-12-22', 'confirmed')]
+    expect(isCabinOfferable('6', '2026-12-22', '2026-12-24', reservas)).toBe(true)
+  })
+
+  it('la reserva del admin entra confirmada si no se cruza con nada', () => {
+    const nueva = cabana('x', '6', '2026-12-20', '2026-12-22')
+    const { id, status, ...sinId } = nueva as any
+    expect(initialStatusForAdminRequest(sinId, [cabana('a', '7', '2026-12-20', '2026-12-22')], LIMITES)).toBe('confirmed')
+  })
+
+  it('la reserva del admin entra pendiente si se cruza con una pendiente', () => {
+    const nueva = cabana('x', '6', '2026-12-20', '2026-12-22')
+    const { id, status, ...sinId } = nueva as any
+    const existentes = [cabana('a', '6', '2026-12-21', '2026-12-23', 'pending')]
+    expect(initialStatusForAdminRequest(sinId, existentes, LIMITES)).toBe('pending')
   })
 })
