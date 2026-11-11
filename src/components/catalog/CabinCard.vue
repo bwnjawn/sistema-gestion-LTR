@@ -24,10 +24,7 @@ const displayImage = computed(() => {
 
 const normalizedFeatures = computed(() => {
   if (!props.cabin.features) return []
-  return props.cabin.features.map(f => {
-    if (typeof f === 'string') return { text: f }
-    return { text: f.text || f.name || '', icon: f.icon || '' }
-  })
+  return props.cabin.features.map(f => ({ text: f, icon: '' }))
 })
 </script>
 

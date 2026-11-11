@@ -1,38 +1,52 @@
 // src/stores/catalogStore.ts
 
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { Cabin, CampingSite, Dish } from '../types/domain'
 import { generateUUID } from '../lib/id'
 import { catalogRepository } from '../lib/repositories/catalogRepository'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
 import { DEFAULT_CABINS, DEFAULT_CAMPING, DEFAULT_DISHES, DEFAULT_GLOBAL_SIDES } from '../data/catalogoInicial'
 import { migrarIdsPlatos } from '../services/migracionIds'
+import { normalizarCabana, normalizarLista, normalizarPlato, normalizarSitio } from '../services/migracionCatalogo'
+
+/** Lee una lista guardada y la lleva al modelo vigente (SCRUM-245); si cambió, la vuelve a guardar. */
+function cargarNormalizado<T>(clave: string, porDefecto: T[], normalizar: (x: any) => T): T[] {
+  const guardada = getStorageItem<T[]>(clave, porDefecto)
+  const normalizada = normalizarLista(guardada, normalizar)
+  if (normalizada !== guardada) setStorageItem(clave, normalizada)
+  return normalizada
+}
 
 export const useCatalogStore = defineStore('catalog', () => {
-  const cabins = ref<Cabin[]>(getStorageItem('cabins', DEFAULT_CABINS))
-  const campingSites = ref<CampingSite[]>(getStorageItem('camping_sites', DEFAULT_CAMPING))
+  // Las listas completas incluyen lo dado de baja (borrado lógico). Las vistas leen solo lo activo
+  // (`cabins`, `campingSites`, `dishes`); las reservas antiguas siguen encontrando lo que ya no está activo.
+  const todasLasCabanas = ref<Cabin[]>(cargarNormalizado('cabins', DEFAULT_CABINS, normalizarCabana))
+  const todosLosSitios = ref<CampingSite[]>(cargarNormalizado('camping_sites', DEFAULT_CAMPING, normalizarSitio))
   // Los platos guardados con id antiguos (no UUID) se migran y se vuelven a guardar (SCRUM-247)
   const platosGuardados = getStorageItem<Dish[]>('dishes', DEFAULT_DISHES)
   const platosMigrados = migrarIdsPlatos(platosGuardados)
   if (platosMigrados !== platosGuardados) setStorageItem('dishes', platosMigrados)
-  const dishes = ref<Dish[]>(platosMigrados)
+  const todosLosPlatos = ref<Dish[]>(cargarNormalizado('dishes', platosMigrados, normalizarPlato))
+  const cabins = computed(() => todasLasCabanas.value.filter(c => c.isActive))
+  const campingSites = computed(() => todosLosSitios.value.filter(s => s.isActive))
+  const dishes = computed(() => todosLosPlatos.value.filter(d => d.isActive))
   const globalSideDishes = ref<string[]>(getStorageItem('global_sides', DEFAULT_GLOBAL_SIDES))
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  watch(cabins, async (val) => {
+  watch(todasLasCabanas, async (val) => {
     setStorageItem('cabins', val)
     await catalogRepository.saveCabins(val)
   }, { deep: true })
 
-  watch(campingSites, async (val) => {
+  watch(todosLosSitios, async (val) => {
     setStorageItem('camping_sites', val)
     await catalogRepository.saveCampingSites(val)
   }, { deep: true })
 
-  watch(dishes, async (val) => {
+  watch(todosLosPlatos, async (val) => {
     setStorageItem('dishes', val)
     await catalogRepository.saveDishes(val)
   }, { deep: true })
@@ -56,9 +70,10 @@ export const useCatalogStore = defineStore('catalog', () => {
         mainImage: cabinData.mainImage || '',
         images: cabinData.images || (cabinData.mainImage ? [cabinData.mainImage] : []),
         features: cabinData.features || [],
-        enMantencion: cabinData.enMantencion ?? false
+        enMantencion: cabinData.enMantencion ?? false,
+        isActive: true
       }
-      cabins.value.push(newCabin)
+      todasLasCabanas.value.push(newCabin)
       return newCabin
     } catch (e: any) {
       error.value = 'Error al agregar la cabaña.'
@@ -72,9 +87,9 @@ export const useCatalogStore = defineStore('catalog', () => {
     isLoading.value = true
     error.value = null
     try {
-      const idx = cabins.value.findIndex(c => c.id === id)
+      const idx = todasLasCabanas.value.findIndex(c => c.id === id)
       if (idx !== -1) {
-        cabins.value[idx] = { ...cabins.value[idx], ...updated }
+        todasLasCabanas.value[idx] = { ...todasLasCabanas.value[idx], ...updated }
       }
     } catch (e: any) {
       error.value = 'Error al actualizar la cabaña.'
@@ -87,7 +102,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     isLoading.value = true
     error.value = null
     try {
-      cabins.value = cabins.value.filter(c => c.id !== id)
+      await updateCabin(id, { isActive: false })
     } catch (e: any) {
       error.value = 'Error al eliminar la cabaña.'
     } finally {
@@ -107,12 +122,13 @@ export const useCatalogStore = defineStore('catalog', () => {
         minCapacity: siteData.minCapacity ?? 1,
         maxCapacity: siteData.maxCapacity ?? 10,
         isSpecial: siteData.isSpecial ?? false,
-        modality: siteData.modality || 'pernoctar',
+        modality: siteData.modality ?? 'pernoctar',
         image: siteData.image || '',
         images: siteData.images || (siteData.image ? [siteData.image] : []),
-        features: siteData.features || []
+        features: siteData.features || [],
+        isActive: true
       }
-      campingSites.value.push(newSite)
+      todosLosSitios.value.push(newSite)
       return newSite
     } catch (e: any) {
       error.value = 'Error al agregar sitio de camping.'
@@ -126,9 +142,9 @@ export const useCatalogStore = defineStore('catalog', () => {
     isLoading.value = true
     error.value = null
     try {
-      const idx = campingSites.value.findIndex(s => s.id === id)
+      const idx = todosLosSitios.value.findIndex(s => s.id === id)
       if (idx !== -1) {
-        campingSites.value[idx] = { ...campingSites.value[idx], ...updated }
+        todosLosSitios.value[idx] = { ...todosLosSitios.value[idx], ...updated }
       }
     } catch (e: any) {
       error.value = 'Error al actualizar sitio de camping.'
@@ -141,7 +157,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     isLoading.value = true
     error.value = null
     try {
-      campingSites.value = campingSites.value.filter(s => s.id !== id)
+      await updateCampingSite(id, { isActive: false })
     } catch (e: any) {
       error.value = 'Error al eliminar sitio de camping.'
     } finally {
@@ -153,21 +169,20 @@ export const useCatalogStore = defineStore('catalog', () => {
     isLoading.value = true
     error.value = null
     try {
+      const modo = dishData.sideMode ?? 'none'
       const newDish: Dish = {
         id: generateUUID(),
         name: dishData.name || 'Nuevo Plato',
         price: dishData.price || 0,
         description: dishData.description || '',
-        mealCategory: dishData.mealCategory || 'Almuerzo',
-        hasSelectableSides: dishData.hasSelectableSides ?? true,
-        sideMode: dishData.sideMode || (dishData.hasSelectableSides ? 'choice' : 'fixed'),
-        availableSides: dishData.availableSides || [],
-        availableSideDishes: dishData.availableSideDishes || dishData.availableSides || [],
-        fixedSide: dishData.fixedSide || '',
-        image: dishData.image || dishData.mainImage || '',
-        mainImage: dishData.mainImage || dishData.image || ''
+        mealType: dishData.mealType ?? 'almuerzo',
+        sideMode: modo,
+        availableSides: modo === 'choice' ? dishData.availableSides ?? [] : [],
+        fixedSide: modo === 'fixed' ? dishData.fixedSide ?? '' : '',
+        image: dishData.image || '',
+        isActive: true
       }
-      dishes.value.push(newDish)
+      todosLosPlatos.value.push(newDish)
       return newDish
     } catch (e: any) {
       error.value = 'Error al agregar el plato.'
@@ -181,9 +196,9 @@ export const useCatalogStore = defineStore('catalog', () => {
     isLoading.value = true
     error.value = null
     try {
-      const idx = dishes.value.findIndex(d => d.id === id)
+      const idx = todosLosPlatos.value.findIndex(d => d.id === id)
       if (idx !== -1) {
-        dishes.value[idx] = { ...dishes.value[idx], ...updated }
+        todosLosPlatos.value[idx] = { ...todosLosPlatos.value[idx], ...updated }
       }
     } catch (e: any) {
       error.value = 'Error al actualizar el plato.'
@@ -196,7 +211,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     isLoading.value = true
     error.value = null
     try {
-      dishes.value = dishes.value.filter(d => d.id !== id)
+      await updateDish(id, { isActive: false })
     } catch (e: any) {
       error.value = 'Error al eliminar el plato.'
     } finally {
@@ -219,6 +234,9 @@ export const useCatalogStore = defineStore('catalog', () => {
     cabins,
     campingSites,
     dishes,
+    todasLasCabanas,
+    todosLosSitios,
+    todosLosPlatos,
     globalSideDishes,
     sideDishes: globalSideDishes,
     isLoading,

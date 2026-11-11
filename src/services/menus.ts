@@ -1,6 +1,15 @@
 // src/services/menus.ts
 
+import type { MealType } from '../types/domain'
 import type { LimiteVariedades } from '../types/settings'
+
+/** Las comidas en su orden del día, y el texto que ve el usuario de cada una. */
+export const ORDEN_COMIDAS: readonly MealType[] = ['desayuno', 'almuerzo', 'once']
+export const ETIQUETAS_COMIDA: Record<MealType, string> = {
+  desayuno: 'Desayuno',
+  almuerzo: 'Almuerzo',
+  once: 'Once'
+}
 
 /** Valores de fábrica: más de 30 personas, máximo 3 platos distintos por comida (SCRUM-36). */
 export const LIMITE_VARIEDADES_POR_DEFECTO: LimiteVariedades = { umbralPersonas: 30, maxVariedades: 3 }

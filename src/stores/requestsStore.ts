@@ -122,8 +122,8 @@ export const useRequestsStore = defineStore('requests', () => {
     const settingsStore = useSettingsStore()
     const result = applyRequestEdit(requests.value[index], edit, {
       requests: requests.value,
-      cabins: catalogStore.cabins,
-      campingSites: catalogStore.campingSites,
+      cabins: catalogStore.todasLasCabanas,
+      campingSites: catalogStore.todosLosSitios,
       currentRates: {
         depositPercentage: settingsStore.defaultDepositPercentage,
         ivaPercentage: settingsStore.ivaPercentage

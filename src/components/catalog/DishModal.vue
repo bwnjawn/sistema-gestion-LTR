@@ -2,7 +2,8 @@
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, watch, computed } from 'vue'
 import { X, Save, Plus, Check } from 'lucide-vue-next'
-import type { Dish, SideDishMode } from '../../types/catalog'
+import type { Dish, MealType, SideDishMode } from '../../types/domain'
+import { ETIQUETAS_COMIDA, ORDEN_COMIDAS } from '../../services/menus'
 import ImageGalleryEditor from '../ui/ImageGalleryEditor.vue'
 
 const props = defineProps<{
@@ -24,7 +25,7 @@ const form = ref<{
   name: string
   price: number
   description: string
-  mealCategory: 'Desayuno' | 'Almuerzo' | 'Once'
+  mealType: MealType
   sideMode: SideDishMode
   fixedSide: string
   availableSides: string[]
@@ -34,7 +35,7 @@ const form = ref<{
   name: '',
   price: 10000,
   description: '',
-  mealCategory: 'Almuerzo',
+  mealType: 'almuerzo',
   sideMode: 'choice',
   fixedSide: '',
   availableSides: [],
@@ -47,15 +48,15 @@ const newSideInput = ref('')
 watch(() => props.dish, (newDish) => {
   if (newDish) {
     isEditing.value = true
-    const currentSides = newDish.availableSides || newDish.availableSideDishes || []
-    const mode: SideDishMode = newDish.sideMode || (newDish.hasSelectableSides !== false ? 'choice' : (newDish.fixedSide ? 'fixed' : 'none'))
-    const initialImg = newDish.image || newDish.mainImage || ''
+    const currentSides = newDish.availableSides || []
+    const mode: SideDishMode = newDish.sideMode
+    const initialImg = newDish.image || ''
     
     form.value = {
       name: newDish.name || '',
       price: newDish.price || 10000,
       description: newDish.description || '',
-      mealCategory: (newDish.mealCategory as any) || 'Almuerzo',
+      mealType: newDish.mealType,
       sideMode: mode,
       fixedSide: newDish.fixedSide || '',
       availableSides: [...currentSides],
@@ -68,7 +69,7 @@ watch(() => props.dish, (newDish) => {
       name: '',
       price: 10000,
       description: '',
-      mealCategory: 'Almuerzo',
+      mealType: 'almuerzo',
       sideMode: 'choice',
       fixedSide: '',
       availableSides: props.globalSideDishes ? [...props.globalSideDishes] : [],
@@ -104,14 +105,11 @@ function handleSave() {
     name: form.value.name,
     price: form.value.price,
     description: form.value.description,
-    mealCategory: form.value.mealCategory,
+    mealType: form.value.mealType,
     sideMode: form.value.sideMode,
-    hasSelectableSides: form.value.sideMode === 'choice',
     fixedSide: form.value.sideMode === 'fixed' ? form.value.fixedSide : '',
     availableSides: form.value.sideMode === 'choice' ? form.value.availableSides : [],
-    availableSideDishes: form.value.sideMode === 'choice' ? form.value.availableSides : [],
-    image: imgUrl,
-    mainImage: imgUrl
+    image: imgUrl
   })
   emit('close')
 }
@@ -155,10 +153,8 @@ useBloqueoScroll(computed(() => props.isOpen))
 
           <div>
             <label class="block text-gray-700 mb-1">Categoría de Comida *</label>
-            <select v-model="form.mealCategory" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-xs">
-              <option value="Desayuno">Desayuno</option>
-              <option value="Almuerzo">Almuerzo</option>
-              <option value="Once">Once</option>
+            <select v-model="form.mealType" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-xs">
+              <option v-for="comida in ORDEN_COMIDAS" :key="comida" :value="comida">{{ ETIQUETAS_COMIDA[comida] }}</option>
             </select>
           </div>
         </div>
