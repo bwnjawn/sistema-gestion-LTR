@@ -208,7 +208,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
         </h2>
 
         <p class="text-sm sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
-          Registramos tu solicitud de camping para tu grupo de <strong class="text-brand-dark font-black">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
+          Registramos tu solicitud de camping para tu grupo de <strong class="text-brand-dark font-black">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>. <span class="block mt-2 text-brand-dark font-black">Tu solicitud queda pendiente. La fecha se asegura al confirmar y abonar.</span>
         </p>
       </div>
 

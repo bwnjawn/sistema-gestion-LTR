@@ -140,3 +140,38 @@ describe('bloqueo de fechas del cliente', () => {
     expect(getDayOccupancy('2027-03-10', lista, undefined, LIMITES).status).toBe('ocupado')
   })
 })
+
+describe('solo las confirmadas bloquean; las pendientes solo avisan (SCRUM-263)', () => {
+  const cabanas = [{ id: 'c8', name: 'Cabaña 8', capacity: 8, pricePerNight: 1 }] as Cabin[]
+  const pendiente = (r: ReservationRequest) => ({ ...r, status: 'pending' }) as ReservationRequest
+
+  it('cabañas: una pendiente no bloquea la noche ni la estadía, pero una confirmada sí', () => {
+    const base = {
+      id: 'a', type: 'cabana', date: '2027-03-10', guestsCount: 2,
+      details: { resourceId: 'c8', startDate: '2027-03-10', endDate: '2027-03-12' }
+    } as ReservationRequest
+    expect(isCabinNightBlocked('2027-03-10', 4, cabanas, [pendiente(base)])).toBe(false)
+    expect(isCabinStayBlocked('2027-03-10', '2027-03-12', 4, cabanas, [pendiente(base)])).toBe(false)
+    expect(isCabinStayBlocked('2027-03-10', '2027-03-12', 4, cabanas, [{ ...base, status: 'confirmed' } as ReservationRequest])).toBe(true)
+  })
+
+  it('restaurante: las pendientes no llenan la comida, las confirmadas sí', () => {
+    const llena = almuerzo(200, 'a')
+    expect(getFullMeals('2026-11-14', 10, [pendiente(llena)], 200)).toEqual([])
+    expect(getFullMeals('2026-11-14', 10, [llena], 200)).toEqual(['almuerzo'])
+  })
+
+  it('camping: las pendientes no consumen cupo, las confirmadas sí', () => {
+    const grande = {
+      id: 'c', type: 'camping', status: 'pending', date: '2027-03-10', guestsCount: 150,
+      details: { campingType: 'pernoctar', startDate: '2027-03-10', endDate: '2027-03-11' }
+    } as ReservationRequest
+    expect(isCampingDayBlocked('2027-03-10', 'pernoctar', 10, [grande], 150)).toBe(false)
+    expect(isCampingDayBlocked('2027-03-10', 'pernoctar', 10, [{ ...grande, status: 'confirmed' } as ReservationRequest], 150)).toBe(true)
+  })
+
+  it('el aviso del admin sigue contando pendientes: sobrecupo con una pendiente y una confirmada', () => {
+    const lista = [almuerzo(120, 'a'), pendiente(almuerzo(81, 'b'))]
+    expect(getDayOccupancy('2026-11-14', lista, undefined, LIMITES).status).toBe('sobrecupo')
+  })
+})

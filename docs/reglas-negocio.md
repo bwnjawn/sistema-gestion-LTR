@@ -32,7 +32,7 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 | Capacidad | Cabañas de 6 y de 8 personas | SCRUM-27 | ❓ ¿Se permite una persona adicional? |
 | Precio | Precio por noche × noches (+ IVA) | — | ✅ `calculateCabinPrice` |
 | Horarios | Check-in 15:00 y check-out 11:00 (valores por defecto, editables) | SCRUM-26 | ❓ Falta decidir si la hora es fija o flexible (pendiente de reunión interna) |
-| Disponibilidad | Una cabaña con una reserva **confirmada** en las fechas, en intervalo `[entrada, salida)`, **no se ofrece a nadie** (ni cliente ni admin). Las **pendientes** no bloquean: el cliente ve la cabaña libre y el admin la ve con un aviso dentro de su tarjeta | SCRUM-60, 260, 263 | ⚠️ `isCabinAvailable` hoy cuenta pendientes y confirmadas; cambia con SCRUM-263 |
+| Disponibilidad | Una cabaña con una reserva **confirmada** en las fechas, en intervalo `[entrada, salida)`, **no se ofrece a nadie** (ni cliente ni admin). Las **pendientes** no bloquean: el cliente ve la cabaña libre y el admin la ve con un aviso dentro de su tarjeta | SCRUM-60, 260, 263 | ✅ `isCabinAvailable` (solo confirmadas) y `getPendingCabinOverlaps` (aviso) |
 | Reserva del admin | Entra **confirmada** si no se cruza con nada, y **pendiente** si se cruza con pendientes. Con una confirmada en la cabaña, no se puede elegir | SCRUM-56, 260 | ❌ falta implementar (hoy entra siempre confirmada) |
 | Mantención | Una cabaña con la marca **"En mantención"** no sale para nuevas reservas, ni para el cliente ni para el admin, hasta que el admin la desactive. No tiene fechas. Las reservas existentes no cambian y se avisa si tiene reservas futuras activas | SCRUM-266 | ❌ decidido el 10/11, falta implementar. ❓ Si camping y restaurante también necesitan el check (D12, a preguntar al cliente) |
 | Varias cabañas para una familia | El **admin las enlaza al registrar**: una solicitud por cabaña unidas por `grupoId`, y se confirman todas o ninguna | SCRUM-265 | ❌ decidido el 10/11, falta implementar. ❓ Reparto de personas entre cabañas y si el total y el abono se calculan juntos o por cabaña |
@@ -67,7 +67,7 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 
 Decidido el 8/11 (SCRUM-244) y **corregido el 10/11 (SCRUM-263)**: bloquean solo las solicitudes **confirmadas** (`confirmed`). Las pendientes no bloquean al cliente; dos clientes pueden pedir el mismo día y el admin decide cuál confirmar. Funciones en `services/availability.ts`.
 
-> Estado del código: `isCabinAvailable`, `getDayOccupancy` y los bloqueos de SCRUM-244 todavía cuentan pendientes y confirmadas juntas. Hay que separar el bloqueo (solo confirmadas) del aviso de demanda del admin (pendientes y confirmadas), en SCRUM-263.
+> Estado del código (SCRUM-263, hecho): `isCabinAvailable`, `getFullMeals` y `isCampingDayBlocked` cuentan solo confirmadas. `getDayOccupancy` y `findConflicts` siguen contando pendientes y confirmadas, porque muestran la demanda al admin. Al terminar, el cliente ve: "Tu solicitud queda pendiente. La fecha se asegura al confirmar y abonar".
 
 | Servicio | Una fecha se bloquea cuando… | Detalle |
 |---|---|---|
