@@ -36,6 +36,9 @@ const normalizedFeatures = computed(() => {
     <!-- Imagen Principal -->
     <div class="relative h-44 sm:h-48 w-full bg-gray-100 overflow-hidden">
       <img :src="displayImage" :alt="cabin.name" class="w-full h-full object-cover" />
+      <div v-if="cabin.enMantencion" class="absolute top-3 left-3 bg-amber-200 text-amber-950 border-2 border-amber-600 px-3 py-1 rounded-full font-black text-sm">
+        En mantención
+      </div>
       <div class="absolute top-3 right-3 bg-brand-dark/90 text-white px-3 py-1 rounded-full font-black text-sm">
         {{ formattedPrice }} la noche
       </div>

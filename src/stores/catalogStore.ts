@@ -184,7 +184,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         description: cabinData.description || '',
         mainImage: cabinData.mainImage || '',
         images: cabinData.images || (cabinData.mainImage ? [cabinData.mainImage] : []),
-        features: cabinData.features || []
+        features: cabinData.features || [],
+        enMantencion: cabinData.enMantencion ?? false
       }
       cabins.value.push(newCabin)
       return newCabin

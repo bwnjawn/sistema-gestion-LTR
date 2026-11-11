@@ -8,6 +8,7 @@ import { useCatalogStore } from './catalogStore'
 import { todayISO } from '../lib/dates'
 import { calculateBookingPrice, type PriceBreakdown } from '../services/pricing'
 import { buildRequestFromDraft, generateRequestCode } from '../services/requests'
+import { isCabinInMaintenance } from '../services/availability'
 import { puedeConfirmarseNueva } from '../services/cruces'
 import { buildPayment, validatePayment } from '../services/payments'
 import type { ClientType, PaymentMethod, RequestSchedule, ServiceType, SelectedMealPayload } from '../types/domain'
@@ -304,7 +305,12 @@ export const useReservationStore = defineStore('reservation', () => {
     let resourceId = ''
 
     if (selectedService.value === 'cabana') {
-      resourceName = catalogStore.cabins.find(c => c.id === selectedCabinId.value)?.name ?? 'Cabaña'
+      const cabana = catalogStore.cabins.find(c => c.id === selectedCabinId.value)
+      // Pudo pasar a mantención mientras se llenaba el formulario (SCRUM-266)
+      if (cabana && isCabinInMaintenance(cabana)) {
+        throw new Error('Esa cabaña no está disponible por ahora. Vuelve al paso 2 y elige otra.')
+      }
+      resourceName = cabana?.name ?? 'Cabaña'
       resourceId = selectedCabinId.value
     } else if (selectedService.value === 'camping') {
       resourceName = catalogStore.campingSites.find(s => s.id === selectedCampingId.value)?.name ?? 'Camping'

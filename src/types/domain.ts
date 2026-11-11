@@ -27,6 +27,11 @@ export interface Cabin {
   mainImage?: string
   images?: string[]
   features?: CabinFeature[]
+  /**
+   * Marca de servicio o mantención (SCRUM-266): mientras esté activa, la cabaña no se ofrece para nuevas
+   * reservas, ni al cliente ni al administrador. No tiene fechas; las reservas existentes no cambian.
+   */
+  enMantencion?: boolean
 }
 
 // 3. Camping

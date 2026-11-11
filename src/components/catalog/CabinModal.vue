@@ -68,7 +68,8 @@ const form = ref<Partial<Cabin>>({
   description: '',
   mainImage: '',
   images: [],
-  features: []
+  features: [],
+  enMantencion: false
 })
 
 const newFeatureInput = ref('')
@@ -86,7 +87,8 @@ watch(() => props.cabin, (newCabin) => {
       description: newCabin.description || '',
       mainImage: newCabin.mainImage || '',
       images: newCabin.images ? [...newCabin.images] : (newCabin.mainImage ? [newCabin.mainImage] : []),
-      features: featStrings
+      features: featStrings,
+      enMantencion: newCabin.enMantencion === true
     }
   } else {
     isEditing.value = false
@@ -98,7 +100,8 @@ watch(() => props.cabin, (newCabin) => {
       description: '',
       mainImage: '',
       images: [],
-      features: []
+      features: [],
+      enMantencion: false
     }
   }
 }, { immediate: true })
@@ -299,6 +302,17 @@ useBloqueoScroll(computed(() => props.isOpen))
             <label class="block text-gray-700 mb-1">Descripción General</label>
             <textarea v-model="form.description" rows="2" placeholder="Cabaña totalmente equipada..." class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs"></textarea>
           </div>
+
+          <!-- Marca de servicio o mantención (SCRUM-266) -->
+          <label class="flex items-start gap-3 bg-amber-50 p-3 rounded-2xl border-2 border-amber-500 cursor-pointer touch-target">
+            <input type="checkbox" v-model="form.enMantencion" class="mt-0.5 w-6 h-6 shrink-0 accent-brand-dark" />
+            <span class="space-y-0.5">
+              <span class="block text-sm font-black text-amber-950">En mantención</span>
+              <span class="block text-xs font-bold text-amber-950">
+                Mientras esté activa, la cabaña no se ofrece para nuevas reservas (ni al cliente ni a ti). Las reservas que ya tiene no cambian. Desactívala cuando vuelva a estar lista.
+              </span>
+            </span>
+          </label>
 
           <!-- Galería de Fotos (hasta 8) -->
           <ImageGalleryEditor
