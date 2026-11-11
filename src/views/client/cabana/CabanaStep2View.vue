@@ -9,7 +9,7 @@ import CabinModal from '../../../components/catalog/CabinModal.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { useRequestsStore } from '../../../stores/requestsStore'
-import { isCabinOfferable, getPendingCabinOverlaps } from '../../../services/availability'
+import { isCabinAvailable, getPendingCabinOverlaps } from '../../../services/availability'
 import type { Cabin } from '../../../types/domain'
 
 const router = useRouter()
@@ -29,7 +29,7 @@ const availableCabins = computed(() => {
 
     if (!reservationStore.checkInDate || !reservationStore.checkOutDate) return true
 
-    return isCabinOfferable(
+    return isCabinAvailable(
       c.id,
       reservationStore.checkInDate,
       reservationStore.checkOutDate,

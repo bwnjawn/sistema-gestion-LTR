@@ -199,7 +199,7 @@ function handleSendRequest() {
         </h2>
 
         <p class="text-sm sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
-          Registramos tu solicitud para <strong class="text-brand-dark font-black">{{ selectedCabin?.name }}</strong> ({{ nightsCount }} noche/s). Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>.
+          Registramos tu solicitud para <strong class="text-brand-dark font-black">{{ selectedCabin?.name }}</strong> ({{ nightsCount }} noche/s). Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>. <span class="block mt-2 text-brand-dark font-black">Tu solicitud queda pendiente. La fecha se asegura al confirmar y abonar.</span>
         </p>
       </div>
 

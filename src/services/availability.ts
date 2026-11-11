@@ -22,7 +22,8 @@ export function isDateRangeOverlapping(
 }
 
 /**
- * Verifica si una cabaña específica está libre en las fechas indicadas.
+ * Verifica si una cabaña está libre en las fechas indicadas: ninguna reserva confirmada se cruza.
+ * Las pendientes no bloquean, solo se avisan con `getPendingCabinOverlaps` (SCRUM-260, 263).
  */
 export function isCabinAvailable(
   cabinId: string,
@@ -32,12 +33,12 @@ export function isCabinAvailable(
   /** Solicitud que se está modificando: no cuenta como conflicto consigo misma. */
   excludeRequestId?: string
 ): boolean {
-  return getCabinOverlaps(cabinId, checkInDate, checkOutDate, existingRequests, excludeRequestId).length === 0
+  return !getCabinOverlaps(cabinId, checkInDate, checkOutDate, existingRequests, excludeRequestId).some(isRequestConfirmed)
 }
 
 /**
- * Solicitudes activas de una cabaña que se cruzan con las fechas indicadas.
- * El administrador las usa para ver una cabaña ocupada y elegirla igual (SCRUM-260).
+ * Solicitudes activas (pendientes y confirmadas) de una cabaña que se cruzan con las fechas indicadas.
+ * Sirve para avisar la demanda al administrador; para bloquear se usa `isCabinAvailable`.
  */
 export function getCabinOverlaps(
   cabinId: string,
@@ -65,19 +66,6 @@ export function getCabinOverlaps(
 export function isRequestConfirmed(req: Pick<ReservationRequest, 'status'>): boolean {
   const estado = req.status as string
   return estado === 'confirmed' || estado === 'confirmada'
-}
-
-/**
- * Una cabaña se puede ofrecer para elegir cuando ninguna reserva confirmada se cruza con las fechas.
- * Las pendientes no la bloquean: solo se avisan (SCRUM-260).
- */
-export function isCabinOfferable(
-  cabinId: string,
-  checkInDate: string,
-  checkOutDate: string,
-  existingRequests: ReservationRequest[]
-): boolean {
-  return !getCabinOverlaps(cabinId, checkInDate, checkOutDate, existingRequests).some(isRequestConfirmed)
 }
 
 /** Solicitudes pendientes que se cruzan con una cabaña en las fechas indicadas (para avisar al administrador). */
@@ -269,16 +257,25 @@ function modalidadCamping(r: ReservationRequest): CampingModality {
   return r.details?.campingType ?? 'pernoctar'
 }
 
-/** Personas de camping de una modalidad que ocupan un día (diario y pernoctar tienen cupos separados). */
-function personasCampingDelDia(dateStr: string, modalidad: CampingModality, solicitudes: ReservationRequest[]): number {
+/**
+ * Personas de camping de una modalidad que ocupan un día (diario y pernoctar tienen cupos separados).
+ * Con `soloConfirmadas` se cuenta lo que bloquea al cliente; sin él, la demanda que ve el administrador.
+ */
+function personasCampingDelDia(
+  dateStr: string,
+  modalidad: CampingModality,
+  solicitudes: ReservationRequest[],
+  soloConfirmadas = false
+): number {
   return getRequestsForDay(dateStr, solicitudes, ['camping'])
+    .filter(r => !soloConfirmadas || isRequestConfirmed(r))
     .filter(r => modalidadCamping(r) === modalidad)
     .reduce((total, r) => total + r.guestsCount, 0)
 }
 
 /**
  * Calcula el estado de ocupación diaria para el calendario administrativo.
- * Solo cuenta solicitudes activas y respeta los servicios elegidos.
+ * Cuenta pendientes y confirmadas (la demanda), no solo lo que bloquea; respeta los servicios elegidos.
  * "Sobrecupo" significa que las reservas del día se topan: una cabaña con dos reservas activas o superar
  * el aforo permitido: personas por comida en el restaurante
  * (provisorio hasta definir con el cliente si se mide por comida u hora) y personas por día
@@ -364,14 +361,14 @@ export function isCabinStayBlocked(
   return getAvailableCabinsForStay(queSirven, guestsCount, checkIn, checkOut, existingRequests).length === 0
 }
 
-/** Comidas del restaurante que no admiten al grupo ese día (personas ya reservadas + grupo > capacidad). */
+/** Comidas del restaurante que no admiten al grupo ese día (personas ya confirmadas + grupo > capacidad). */
 export function getFullMeals(
   dateStr: string,
   guestsCount: number,
   existingRequests: ReservationRequest[],
   capacidadRestaurante: number
 ): string[] {
-  const delDia = getRequestsForDay(dateStr, existingRequests, ['restaurante'])
+  const delDia = getRequestsForDay(dateStr, existingRequests, ['restaurante']).filter(isRequestConfirmed)
   const porComida = personasRestaurantePorComida(delDia)
   return COMIDAS_RESTAURANTE.filter(comida => (porComida[comida] || 0) + guestsCount > capacidadRestaurante)
 }
@@ -396,7 +393,7 @@ export function isCampingDayBlocked(
   capacidadCamping: number
 ): boolean {
   if (isPastDate(dateStr)) return true
-  return personasCampingDelDia(dateStr, modalidad, existingRequests) + guestsCount > capacidadCamping
+  return personasCampingDelDia(dateStr, modalidad, existingRequests, true) + guestsCount > capacidadCamping
 }
 
 /** Una estancia de pernoctar se bloquea si alguna de sus noches [entrada, salida) no tiene cupo. */

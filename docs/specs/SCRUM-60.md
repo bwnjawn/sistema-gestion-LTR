@@ -1,6 +1,6 @@
 # SCRUM-60 — Detectar solapamientos de reservas
 
-Estado: código del aviso listo (8/11). **Regla corregida el 10/11:** solo las confirmadas bloquean. Falta ajustar el código (SCRUM-263 y 260) y resolver al confirmar (SCRUM-262). Verificación manual pendiente.
+Estado: código del aviso listo (8/11). **Regla corregida el 10/11:** solo las confirmadas bloquean. Código ajustado en SCRUM-260 y 263; falta resolver al confirmar (SCRUM-262). Verificación manual pendiente.
 Fase: 2 (16 al 20/11)
 
 ## Contexto
@@ -49,8 +49,11 @@ Hecho el 8/11:
 - Pruebas en `tests/conflictos.test.ts`.
 
 **Falta (cambios del 10/11):**
-- SCRUM-263: separar el bloqueo (solo confirmadas) del aviso de demanda (pendientes y confirmadas). Hoy `isCabinAvailable`, `getDayOccupancy` y los bloqueos del cliente cuentan las dos juntas.
+Hecho el 10/11:
+- SCRUM-263: el bloqueo cuenta solo confirmadas (`isCabinAvailable`, `getFullMeals`, `isCampingDayBlocked`); el aviso de demanda (`getDayOccupancy`, `findConflicts`) sigue contando pendientes y confirmadas.
 - SCRUM-260: el admin ve las cabañas con solo pendientes (con aviso dentro de la tarjeta) y no ve las confirmadas; su reserva entra pendiente si se cruza.
+
+**Falta:**
 - SCRUM-262: diálogo al confirmar y salidas de contacto.
 
 ## Decisiones

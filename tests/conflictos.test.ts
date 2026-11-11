@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findConflicts, getCabinOverlaps, getDayOccupancy, getPendingCabinOverlaps, groupConflictsByRequest, initialStatusForAdminRequest, isCabinOfferable } from '../src/services/availability'
+import { findConflicts, getCabinOverlaps, getDayOccupancy, getPendingCabinOverlaps, groupConflictsByRequest, initialStatusForAdminRequest, isCabinAvailable } from '../src/services/availability'
 import type { ReservationRequest } from '../src/types/domain'
 
 const LIMITES = { restaurantePersonas: 200, campingPersonas: 150 }
@@ -127,12 +127,12 @@ describe('getCabinOverlaps (SCRUM-260)', () => {
 describe('Cabañas ofrecidas y estado de la reserva del admin (SCRUM-260)', () => {
   it('una cabaña con una confirmada en esas fechas no se ofrece', () => {
     const reservas = [cabana('a', '6', '2026-12-20', '2026-12-22', 'confirmed')]
-    expect(isCabinOfferable('6', '2026-12-21', '2026-12-23', reservas)).toBe(false)
+    expect(isCabinAvailable('6', '2026-12-21', '2026-12-23', reservas)).toBe(false)
   })
 
   it('una cabaña con solo pendientes se ofrece y las pendientes se avisan', () => {
     const reservas = [cabana('a', '6', '2026-12-20', '2026-12-22', 'pending')]
-    expect(isCabinOfferable('6', '2026-12-21', '2026-12-23', reservas)).toBe(true)
+    expect(isCabinAvailable('6', '2026-12-21', '2026-12-23', reservas)).toBe(true)
     expect(getPendingCabinOverlaps('6', '2026-12-21', '2026-12-23', reservas).map(r => r.id)).toEqual(['a'])
   })
 
@@ -141,12 +141,12 @@ describe('Cabañas ofrecidas y estado de la reserva del admin (SCRUM-260)', () =
       cabana('a', '6', '2026-12-20', '2026-12-22', 'pending'),
       cabana('b', '6', '2026-12-20', '2026-12-22', 'confirmed')
     ]
-    expect(isCabinOfferable('6', '2026-12-20', '2026-12-22', reservas)).toBe(false)
+    expect(isCabinAvailable('6', '2026-12-20', '2026-12-22', reservas)).toBe(false)
   })
 
   it('salida y entrada el mismo día no cuentan como cruce', () => {
     const reservas = [cabana('a', '6', '2026-12-20', '2026-12-22', 'confirmed')]
-    expect(isCabinOfferable('6', '2026-12-22', '2026-12-24', reservas)).toBe(true)
+    expect(isCabinAvailable('6', '2026-12-22', '2026-12-24', reservas)).toBe(true)
   })
 
   it('la reserva del admin entra confirmada si no se cruza con nada', () => {
