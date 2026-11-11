@@ -9,7 +9,7 @@ import CabinModal from '../../../components/catalog/CabinModal.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { useRequestsStore } from '../../../stores/requestsStore'
-import { isCabinAvailable, getPendingCabinOverlaps } from '../../../services/availability'
+import { getBookableCabins, isCabinAvailable, getPendingCabinOverlaps } from '../../../services/availability'
 import type { Cabin } from '../../../types/domain'
 
 const router = useRouter()
@@ -20,10 +20,10 @@ const requestsStore = useRequestsStore()
 const showDetailModal = ref(false)
 const selectedCabinForModal = ref<Cabin | null>(null)
 
-// Cabañas con capacidad suficiente y sin ninguna reserva confirmada en esas fechas.
+// Cabañas con capacidad suficiente, fuera de mantención (SCRUM-266) y sin ninguna reserva confirmada en esas fechas.
 // Las que solo tienen pendientes se ofrecen; el administrador las ve con un aviso (SCRUM-260).
 const availableCabins = computed(() => {
-  return catalogStore.cabins.filter(c => {
+  return getBookableCabins(catalogStore.cabins).filter(c => {
     const hasCapacity = c.capacity >= reservationStore.guestsCount
     if (!hasCapacity) return false
 
@@ -134,6 +134,7 @@ function nextStep() {
     <div v-else class="bg-white p-6 rounded-3xl border-2 border-brand-border text-center space-y-2">
       <p class="text-sm font-bold text-gray-600">
         No se encontraron cabañas disponibles o con capacidad suficiente para {{ reservationStore.guestsCount }} personas en las fechas seleccionadas.
+        <template v-if="reservationStore.isAdminMode"> Las cabañas en mantención no se ofrecen: desactiva la marca desde el Catálogo.</template>
       </p>
     </div>
 

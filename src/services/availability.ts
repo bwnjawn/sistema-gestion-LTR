@@ -296,7 +296,45 @@ export function getDayOccupancy(
 // Bloqueo de fechas en el calendario del cliente (SCRUM-244)
 // ---------------------------------------------------------------------------
 
-/** Cabañas con capacidad para el grupo y libres todas las noches de la estadía [entrada, salida). */
+// ---------------------------------------------------------------------------
+// Cabañas en mantención (SCRUM-266)
+// ---------------------------------------------------------------------------
+
+/** Una cabaña con la marca "En mantención" no se ofrece para nuevas reservas. */
+export function isCabinInMaintenance(cabin: Pick<Cabin, 'enMantencion'>): boolean {
+  return cabin.enMantencion === true
+}
+
+/** Cabañas que se pueden ofrecer para una reserva nueva: las que no están en mantención. */
+export function getBookableCabins(cabins: Cabin[]): Cabin[] {
+  return cabins.filter(c => !isCabinInMaintenance(c))
+}
+
+/**
+ * Reservas activas (pendientes o confirmadas) de una cabaña cuya estadía aún no termina.
+ * Sirve para avisar al administrador cuando pone en mantención una cabaña que todavía tiene reservas:
+ * esas reservas no cambian, la decisión de qué hacer con ellas es suya.
+ */
+export function getUpcomingCabinRequests(
+  cabinId: string,
+  existingRequests: ReservationRequest[],
+  hoy: string
+): ReservationRequest[] {
+  return existingRequests.filter(r => {
+    const rawType = r.type as string
+    const rawStatus = r.status as string
+    const esCabana = rawType === 'cabana' || rawType === 'cabaña'
+    const activa = rawStatus === 'confirmed' || rawStatus === 'pending' || rawStatus === 'confirmada' || rawStatus === 'pendiente'
+    if (!esCabana || !activa || r.details?.resourceId !== cabinId) return false
+    const salida = r.details?.endDate || r.timeOrDuration || ''
+    return !!salida && salida > hoy
+  })
+}
+
+/**
+ * Cabañas con capacidad para el grupo, fuera de mantención y libres todas las noches de la estadía
+ * [entrada, salida).
+ */
 export function getAvailableCabinsForStay(
   cabins: Cabin[],
   guestsCount: number,
@@ -304,7 +342,7 @@ export function getAvailableCabinsForStay(
   checkOut: string,
   existingRequests: ReservationRequest[]
 ): Cabin[] {
-  return cabins.filter(c =>
+  return getBookableCabins(cabins).filter(c =>
     c.capacity >= guestsCount && isCabinAvailable(c.id, checkIn, checkOut, existingRequests)
   )
 }
@@ -335,6 +373,8 @@ export function isCabinStayBlocked(
   cabins: Cabin[],
   existingRequests: ReservationRequest[]
 ): boolean {
+  // Las cabañas en mantención cuentan como que sirven pero no están libres: si todas las que le sirven están
+  // en mantención, la estadía se bloquea (getAvailableCabinsForStay las descarta)
   const queSirven = cabins.filter(c => c.capacity >= guestsCount)
   if (queSirven.length === 0) return false
   return getAvailableCabinsForStay(queSirven, guestsCount, checkIn, checkOut, existingRequests).length === 0

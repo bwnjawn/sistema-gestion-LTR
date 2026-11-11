@@ -2,7 +2,7 @@
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { 
-  Home, Tent, Utensils, Plus, Sparkles, Trash2, AlertTriangle, Pencil 
+  Home, Tent, Utensils, Plus, Sparkles, Trash2, AlertTriangle, Pencil, Wrench, X 
 } from 'lucide-vue-next'
 import DropdownMenu from '../../components/ui/DropdownMenu.vue'
 import CabinCard from '../../components/catalog/CabinCard.vue'
@@ -12,9 +12,14 @@ import CabinModal from '../../components/catalog/CabinModal.vue'
 import CampingModal from '../../components/catalog/CampingModal.vue'
 import DishModal from '../../components/catalog/DishModal.vue'
 import { useCatalogStore } from '../../stores/catalogStore'
+import { useRequestsStore } from '../../stores/requestsStore'
+import { getUpcomingCabinRequests } from '../../services/availability'
+import { formatDateShort, todayISO } from '../../lib/dates'
+import type { ReservationRequest } from '../../types/domain'
 import type { Cabin, CampingSite, Dish } from '../../types/catalog'
 
 const catalogStore = useCatalogStore()
+const requestsStore = useRequestsStore()
 
 // Pestañas Principales
 const activeCategory = ref<'cabana' | 'camping' | 'restaurante'>('cabana')
@@ -49,8 +54,40 @@ const cardMenuItems = [
   { key: 'delete', label: 'Eliminar', icon: Trash2, danger: true }
 ]
 
+// Menú de cada cabaña: además de editar y eliminar, activa o desactiva la mantención (SCRUM-266)
+function cabinMenuItems(cabin: Cabin) {
+  return [
+    cardMenuItems[0],
+    { key: 'maintenance', label: cabin.enMantencion ? 'Volver a habilitar' : 'Poner en mantención', icon: Wrench },
+    cardMenuItems[1]
+  ]
+}
+
+// Al poner en mantención una cabaña con reservas por venir, se avisa: esas reservas no cambian
+const avisoMantencion = ref<{ cabana: string; solicitudes: ReservationRequest[] } | null>(null)
+
+function avisarReservasPorVenir(cabin: Cabin) {
+  const solicitudes = getUpcomingCabinRequests(cabin.id, requestsStore.requests, todayISO())
+  avisoMantencion.value = solicitudes.length > 0 ? { cabana: cabin.name, solicitudes } : null
+}
+
+function describirReserva(r: ReservationRequest): string {
+  const entrada = r.details?.startDate || r.date
+  const salida = r.details?.endDate || r.timeOrDuration || ''
+  return `${r.requestCode} · ${r.clientName} · ${formatDateShort(entrada)} al ${formatDateShort(salida)}`
+}
+
+function cambiarMantencion(cabin: Cabin) {
+  const activar = !cabin.enMantencion
+  catalogStore.updateCabin(cabin.id, { enMantencion: activar })
+  if (activar) avisarReservasPorVenir(cabin)
+  else avisoMantencion.value = null
+}
+
 function handleCardAction(key: string, kind: 'cabin' | 'camping' | 'dish', item: any) {
-  if (key === 'edit') {
+  if (key === 'maintenance') {
+    cambiarMantencion(item)
+  } else if (key === 'edit') {
     if (kind === 'cabin') openEditCabinModal(item)
     else if (kind === 'camping') openEditCampingModal(item)
     else openEditDishModal(item)
@@ -114,7 +151,11 @@ function openEditDishModal(dish: Dish) {
 
 function saveCabin(cabinData: Partial<Cabin>) {
   if (selectedCabin.value) {
-    catalogStore.updateCabin(selectedCabin.value.id, cabinData)
+    const cabin = selectedCabin.value
+    const pasaAMantencion = cabinData.enMantencion === true && cabin.enMantencion !== true
+    catalogStore.updateCabin(cabin.id, cabinData)
+    if (pasaAMantencion) avisarReservasPorVenir(cabin)
+    else if (cabinData.enMantencion !== true) avisoMantencion.value = null
   } else {
     catalogStore.addCabin(cabinData)
   }
@@ -208,6 +249,22 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
 
     <!-- CABAÑAS -->
     <div v-if="activeCategory === 'cabana'" class="space-y-4">
+      <div v-if="avisoMantencion" class="bg-amber-50 border-2 border-amber-600 rounded-2xl p-3 space-y-2" role="status">
+        <div class="flex items-start justify-between gap-2">
+          <p class="text-sm font-black text-amber-950 flex items-start gap-1.5">
+            <AlertTriangle class="w-5 h-5 stroke-[2.5] shrink-0" aria-hidden="true" />
+            {{ avisoMantencion.cabana }} quedó en mantención, pero tiene {{ avisoMantencion.solicitudes.length }}
+            {{ avisoMantencion.solicitudes.length === 1 ? 'reserva' : 'reservas' }} por venir. No cambian: revísalas desde Solicitudes.
+          </p>
+          <button type="button" aria-label="Cerrar aviso" @click="avisoMantencion = null" class="p-1 rounded-full text-amber-950 touch-target shrink-0">
+            <X class="w-5 h-5 stroke-[2.5]" />
+          </button>
+        </div>
+        <ul class="text-sm font-bold text-amber-950 space-y-0.5">
+          <li v-for="r in avisoMantencion.solicitudes" :key="r.id">{{ describirReserva(r) }}</li>
+        </ul>
+      </div>
+
       <CabinCard 
         v-for="cabin in catalogStore.cabins" 
         :key="cabin.id" 
@@ -215,7 +272,7 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
       >
         <template #actions="{ cabin: item }">
           <div class="flex items-center justify-end">
-            <DropdownMenu :items="cardMenuItems" :aria-label="`Opciones de ${item.name}`" @select="key => handleCardAction(key, 'cabin', item)" />
+            <DropdownMenu :items="cabinMenuItems(item)" :aria-label="`Opciones de ${item.name}`" @select="key => handleCardAction(key, 'cabin', item)" />
           </div>
         </template>
       </CabinCard>
