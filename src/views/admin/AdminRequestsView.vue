@@ -5,6 +5,7 @@ import { Inbox, Search, Clock, CheckCircle2, XCircle } from 'lucide-vue-next'
 import BaseButton from '../../components/ui/BaseButton.vue'
 import AdminRequestCard from '../../components/admin/AdminRequestCard.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
+import AdminConfirmarCruceDialog from '../../components/admin/AdminConfirmarCruceDialog.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { STATUS_LABELS } from '../../services/requests'
 import { countByStatus, filterRequests, parseStatusFilter } from '../../services/requestFilters'
@@ -19,6 +20,17 @@ const filterType = ref<ServiceType | 'all'>('all')
 const searchQuery = ref('')
 
 const openedRequestId = ref<string | null>(null)
+
+// Aprobar desde la tarjeta: si la solicitud se cruza con otras, se pregunta cuál confirmar (SCRUM-262)
+const cruceId = ref<string | null>(null)
+
+function aprobar(id: string) {
+  if (requestsStore.crossedRequestsFor(id).length > 0) {
+    cruceId.value = id
+    return
+  }
+  requestsStore.confirmRequest(id)
+}
 
 // Cuántas otras solicitudes se topan con la indicada (SCRUM-60)
 function countConflictingRequests(id: string): number {
@@ -123,7 +135,7 @@ const emptyMessage = computed(() => {
         :request="req"
         :conflict-count="countConflictingRequests(req.id)"
         @open="openedRequestId = $event"
-        @approve="requestsStore.confirmRequest($event)"
+        @approve="aprobar($event)"
         @reject="openedRequestId = $event"
       />
 
@@ -142,5 +154,6 @@ const emptyMessage = computed(() => {
     </div>
 
     <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" @open-request="openedRequestId = $event" />
+    <AdminConfirmarCruceDialog :request-id="cruceId" @close="cruceId = null" />
   </div>
 </template>

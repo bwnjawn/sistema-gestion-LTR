@@ -6,6 +6,7 @@ import {
 } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
 import AdminRequestEditForm from './AdminRequestEditForm.vue'
+import AdminConfirmarCruceDialog from './AdminConfirmarCruceDialog.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { buildMailtoUrl, buildTelUrl, buildWhatsappUrl, hasUsablePhone } from '../../lib/contactLinks'
 import { formatDateShort, formatDateTime, todayISO } from '../../lib/dates'
@@ -68,6 +69,7 @@ const paymentNotes = ref('')
 const paymentError = ref('')
 
 watch(() => props.requestId, () => {
+  cruceId.value = null
   confirmingReject.value = false
   isEditing.value = false
   paymentAmount.value = null
@@ -77,9 +79,16 @@ watch(() => props.requestId, () => {
   paymentError.value = ''
 })
 
-function approve() {
+// Si la solicitud se cruza con otras, se abre el diálogo para elegir cuál confirmar (SCRUM-262)
+const cruceId = ref<string | null>(null)
+
+async function approve() {
   if (!request.value) return
-  requestsStore.confirmRequest(request.value.id)
+  if (requestsStore.crossedRequestsFor(request.value.id).length > 0) {
+    cruceId.value = request.value.id
+    return
+  }
+  await requestsStore.confirmRequest(request.value.id)
   emit('close')
 }
 
@@ -428,5 +437,7 @@ useBloqueoScroll(computed(() => !!request.value))
         <BaseButton variant="outline" fullWidth @click="emit('close')">Cerrar</BaseButton>
       </div>
     </div>
+
+    <AdminConfirmarCruceDialog :request-id="cruceId" @close="cruceId = null" />
   </div>
 </template>

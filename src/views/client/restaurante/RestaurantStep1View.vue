@@ -172,6 +172,7 @@ function handleNext() {
         <BaseCalendar 
           :start-date="calendarDate"
           :end-date="calendarDate"
+          single
           :is-date-disabled-fn="isDayBlocked"
           @change="handleCalendarChange"
         />

@@ -11,6 +11,7 @@ import { useCatalogStore } from './catalogStore'
 import { useSettingsStore } from './settingsStore'
 import { buildPayment, validatePayment, type PaymentInput } from '../services/payments'
 import { findConflicts, groupConflictsByRequest } from '../services/availability'
+import { getCrossedRequests, puedeConfirmarse, type SolicitudEnCruce } from '../services/cruces'
 
 export type { ReservationRequest }
 
@@ -114,6 +115,10 @@ export const useRequestsStore = defineStore('requests', () => {
       currentRates: {
         depositPercentage: settingsStore.defaultDepositPercentage,
         ivaPercentage: settingsStore.ivaPercentage
+      },
+      capacidades: {
+        restaurante: settingsStore.restaurantCapacity,
+        camping: settingsStore.limitesAforo.campingPersonas
       }
     })
     if (!result.ok) return { ok: false, message: result.message }
@@ -122,8 +127,24 @@ export const useRequestsStore = defineStore('requests', () => {
     return { ok: true }
   }
 
-  async function confirmRequest(id: string): Promise<void> {
+  /** Solicitudes que se cruzan con la indicada, para decidir cuál confirmar (SCRUM-262). Vacío si no hay cruces. */
+  function crossedRequestsFor(id: string): SolicitudEnCruce[] {
+    return getCrossedRequests(id, requests.value, useSettingsStore().limitesAforo)
+  }
+
+  /**
+   * Confirma una solicitud. No confirma si chocaría con una reserva ya confirmada:
+   * nunca deben quedar dos confirmadas cruzadas. Devuelve si se confirmó.
+   */
+  async function confirmRequest(id: string): Promise<boolean> {
+    const found = requests.value.find(r => r.id === id)
+    if (!found) return false
+    if (!puedeConfirmarse(found, requests.value, useSettingsStore().limitesAforo)) {
+      error.value = 'No se puede confirmar: ya hay una reserva confirmada en esas fechas o cupos.'
+      return false
+    }
     await updateRequestStatus(id, 'confirmed')
+    return true
   }
 
   async function rejectRequest(id: string): Promise<void> {
@@ -142,6 +163,7 @@ export const useRequestsStore = defineStore('requests', () => {
     updateRequestDetails,
     registerPayment,
     removePayment,
+    crossedRequestsFor,
     confirmRequest,
     rejectRequest
   }

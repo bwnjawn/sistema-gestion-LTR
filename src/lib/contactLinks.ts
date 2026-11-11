@@ -53,8 +53,11 @@ export function buildWhatsappUrl(phone: string, message?: string): string {
   return `https://wa.me/${digits}${text}`
 }
 
-export function buildMailtoUrl(email: string, subject?: string): string {
+export function buildMailtoUrl(email: string, subject?: string, body?: string): string {
   const clean = (email || '').trim()
   if (!clean) return ''
-  return subject ? `mailto:${clean}?subject=${encodeURIComponent(subject)}` : `mailto:${clean}`
+  const params: string[] = []
+  if (subject) params.push(`subject=${encodeURIComponent(subject)}`)
+  if (body) params.push(`body=${encodeURIComponent(body)}`)
+  return params.length > 0 ? `mailto:${clean}?${params.join('&')}` : `mailto:${clean}`
 }
