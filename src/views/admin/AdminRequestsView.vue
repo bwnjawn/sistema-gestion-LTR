@@ -6,6 +6,8 @@ import BaseButton from '../../components/ui/BaseButton.vue'
 import AdminRequestCard from '../../components/admin/AdminRequestCard.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
 import AdminConfirmarCruceDialog from '../../components/admin/AdminConfirmarCruceDialog.vue'
+import AdminConfirmarSinAbonoDialog from '../../components/admin/AdminConfirmarSinAbonoDialog.vue'
+import { getPaymentSummary } from '../../services/payments'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { STATUS_LABELS } from '../../services/requests'
 import { countByStatus, filterRequests, parseStatusFilter } from '../../services/requestFilters'
@@ -24,7 +26,20 @@ const openedRequestId = ref<string | null>(null)
 // Aprobar desde la tarjeta: si la solicitud se cruza con otras, se pregunta cuál confirmar (SCRUM-262)
 const cruceId = ref<string | null>(null)
 
+// Si falta abono, primero se avisa (SCRUM-264); el admin decide si confirma igual
+const sinAbonoId = ref<string | null>(null)
+
 function aprobar(id: string) {
+  const req = requestsStore.requests.find(r => r.id === id)
+  if (req && getPaymentSummary(req).depositPending > 0) {
+    sinAbonoId.value = id
+    return
+  }
+  continuarAprobacion(id)
+}
+
+function continuarAprobacion(id: string) {
+  sinAbonoId.value = null
   if (requestsStore.crossedRequestsFor(id).length > 0) {
     cruceId.value = id
     return
@@ -154,6 +169,7 @@ const emptyMessage = computed(() => {
     </div>
 
     <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" @open-request="openedRequestId = $event" />
+    <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="continuarAprobacion" @close="sinAbonoId = null" />
     <AdminConfirmarCruceDialog :request-id="cruceId" @close="cruceId = null" />
   </div>
 </template>

@@ -19,6 +19,7 @@ const showTransferModal = ref(false)
 const isEditingParameters = ref(false)
 
 const editDeposit = ref(settingsStore.defaultDepositPercentage)
+const editDeadline = ref(settingsStore.depositDeadlineHours)
 const editIva = ref(settingsStore.ivaPercentage)
 const editMargin = ref(settingsStore.marginPercentage)
 const editSpaces = ref(settingsStore.capacityRules.restaurantSpaces.map(e => ({ ...e })))
@@ -28,6 +29,7 @@ const editMenuVarieties = ref(settingsStore.capacityRules.maxMenuVarietiesLargeG
 
 function openParametersEdit() {
   editDeposit.value = settingsStore.defaultDepositPercentage
+  editDeadline.value = settingsStore.depositDeadlineHours
   editIva.value = settingsStore.ivaPercentage
   editMargin.value = settingsStore.marginPercentage
   editSpaces.value = settingsStore.capacityRules.restaurantSpaces.map(e => ({ ...e }))
@@ -40,6 +42,7 @@ function openParametersEdit() {
 async function saveParameters() {
   await settingsStore.updateParameters({
     defaultDepositPercentage: editDeposit.value,
+    depositDeadlineHours: Math.max(1, Number(editDeadline.value) || 1),
     ivaPercentage: editIva.value,
     marginPercentage: editMargin.value
   })
@@ -150,10 +153,14 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
         </button>
       </div>
 
-      <div class="grid grid-cols-3 gap-2 text-xs font-bold">
+      <div class="grid grid-cols-2 gap-2 text-xs font-bold">
         <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
           <span class="text-xs text-gray-700 uppercase block">Abono exigido</span>
           <span class="text-sm font-black text-brand-dark">{{ settingsStore.defaultDepositPercentage }}%</span>
+        </div>
+        <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
+          <span class="text-xs text-gray-700 uppercase block">Plazo del abono</span>
+          <span class="text-sm font-black text-brand-dark">{{ settingsStore.depositDeadlineHours }} h</span>
         </div>
         <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
           <span class="text-xs text-gray-700 uppercase block">IVA</span>
@@ -212,6 +219,10 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
           <div>
             <label class="block text-gray-600 mb-1">Abono requerido (%):</label>
             <input type="number" v-model.number="editDeposit" min="0" max="100" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-1">Plazo para abonar desde que llega la solicitud (horas):</label>
+            <input type="number" inputmode="numeric" v-model.number="editDeadline" min="1" max="720" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
           <div>
             <label class="block text-gray-600 mb-1">IVA (%):</label>

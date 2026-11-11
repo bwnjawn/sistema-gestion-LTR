@@ -11,6 +11,7 @@ import { useEnvioSolicitud } from '../../../composables/useEnvioSolicitud'
 import { useSalidaReserva } from '../../../composables/useSalidaReserva'
 import ConfirmacionReservaAdmin from '../../../components/ui/ConfirmacionReservaAdmin.vue'
 import CasilleroEventoEspecial from '../../../components/ui/CasilleroEventoEspecial.vue'
+import SelectorEstadoReservaAdmin from '../../../components/ui/SelectorEstadoReservaAdmin.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
@@ -162,6 +163,7 @@ function handleSendRequest() {
 
       <DepositInfoCard :total-amount="totalWithIva" :deposit-amount="depositAmount" />
 
+      <SelectorEstadoReservaAdmin v-if="store.isAdminMode" :deposit-amount="depositAmount" :total-amount="totalWithIva" />
       <CasilleroEventoEspecial v-if="store.isAdminMode" />
 
       <AvisoEnvio

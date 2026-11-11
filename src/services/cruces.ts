@@ -61,6 +61,19 @@ export function puedeConfirmarse(
 }
 
 /**
+ * Lo mismo que `puedeConfirmarse`, para una reserva que el administrador aún no guardó:
+ * puede cargarla como confirmada si no choca con otra confirmada. Los cruces con pendientes no lo impiden.
+ */
+export function puedeConfirmarseNueva(
+  nueva: Omit<ReservationRequest, 'id' | 'status' | 'createdAt'>,
+  existentes: ReservationRequest[],
+  limites: LimitesAforo = LIMITES_AFORO_POR_DEFECTO
+): boolean {
+  const candidata = { ...nueva, id: '__nueva_reserva__', status: 'pending', createdAt: '' } as ReservationRequest
+  return puedeConfirmarse(candidata, existentes, limites)
+}
+
+/**
  * Grupo completo de solicitudes que compiten con la indicada, para el diálogo de confirmación.
  * Incluye las cadenas: si A choca con B y B choca con C, al aprobar A también se ve C,
  * porque confirmar A deja a B sin lugar y eso cambia lo que pasa con C.

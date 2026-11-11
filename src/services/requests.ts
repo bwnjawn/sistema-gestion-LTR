@@ -272,9 +272,16 @@ export function describeRequest(req: ReservationRequest): RequestView {
   }
 }
 
-/** Una solicitud pendiente que lleva 24 horas o más sin gestionarse. */
-export function isStalePending(req: Pick<ReservationRequest, 'status' | 'createdAt'>, now: number = Date.now()): boolean {
+/**
+ * Una solicitud pendiente que lleva 24 horas o más sin gestionarse.
+ * Las que no exigen abono (institución) no alertan: no hay nada que esperar (SCRUM-264).
+ */
+export function isStalePending(
+  req: Pick<ReservationRequest, 'status' | 'createdAt'> & Partial<Pick<ReservationRequest, 'depositRequired'>>,
+  now: number = Date.now()
+): boolean {
   if (req.status !== 'pending' || !req.createdAt) return false
+  if (req.depositRequired === 0) return false
   const created = new Date(req.createdAt).getTime()
   if (isNaN(created)) return false
   return (now - created) / (1000 * 3600) >= 24

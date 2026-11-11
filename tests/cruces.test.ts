@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { diasEntre, getCrossedRequests, puedeConfirmarse } from '../src/services/cruces'
+import { diasEntre, getCrossedRequests, puedeConfirmarse, puedeConfirmarseNueva } from '../src/services/cruces'
 import { buildAsuntoFechaNoDisponible, buildMensajeFechaNoDisponible } from '../src/services/mensajesCliente'
 import { buildMailtoUrl } from '../src/lib/contactLinks'
 import type { ReservationRequest } from '../src/types/domain'
@@ -121,5 +121,22 @@ describe('mensaje para el cliente cuya fecha ya no está disponible', () => {
     const url = buildMailtoUrl('a@b.cl', 'Asunto uno', 'Hola, ¿qué tal?')
     expect(url).toBe(`mailto:a@b.cl?subject=${encodeURIComponent('Asunto uno')}&body=${encodeURIComponent('Hola, ¿qué tal?')}`)
     expect(buildMailtoUrl('a@b.cl')).toBe('mailto:a@b.cl')
+  })
+})
+
+describe('reserva nueva del admin (SCRUM-264)', () => {
+  const { id, status, ...nueva } = cabana('x', '6', '2026-12-20', '2026-12-22') as any
+  const sinCreatedAt = nueva as Omit<ReservationRequest, 'id' | 'status' | 'createdAt'>
+
+  it('puede cargarse confirmada si no choca con una confirmada', () => {
+    expect(puedeConfirmarseNueva(sinCreatedAt, [cabana('a', '7', '2026-12-20', '2026-12-22', 'confirmed')], LIMITES)).toBe(true)
+  })
+
+  it('un cruce con pendientes no lo impide', () => {
+    expect(puedeConfirmarseNueva(sinCreatedAt, [cabana('a', '6', '2026-12-21', '2026-12-23', 'pending')], LIMITES)).toBe(true)
+  })
+
+  it('no puede confirmarse si choca con una confirmada', () => {
+    expect(puedeConfirmarseNueva(sinCreatedAt, [cabana('a', '6', '2026-12-21', '2026-12-23', 'confirmed')], LIMITES)).toBe(false)
   })
 })

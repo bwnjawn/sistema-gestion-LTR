@@ -39,7 +39,7 @@ function cargarOtra() {
       <h2 class="text-2xl font-black text-brand-dark tracking-tight">Reserva registrada</h2>
       <p class="text-base font-bold text-gray-700">
         <template v-if="store.estadoUltimaReservaAdmin === 'pending'">
-          Quedó <strong class="font-black text-brand-dark">pendiente</strong> porque se cruza con otra solicitud. Resuélvelo desde la lista de solicitudes.
+          Quedó <strong class="font-black text-brand-dark">pendiente de abono</strong> en la lista de solicitudes. No retiene fechas hasta que la confirmes.
         </template>
         <template v-else>
           Quedó <strong class="font-black text-brand-dark">confirmada</strong> en la lista de solicitudes.
@@ -70,7 +70,7 @@ function cargarOtra() {
         <span class="text-brand-dark font-black">{{ formatCLP(total) }}</span>
       </div>
       <p class="text-sm font-bold text-gray-600 pt-1">
-        Aún no tiene pagos registrados. Anota el abono desde el detalle de la reserva.
+        {{ store.adminAbonoMonto ? 'El abono recibido quedó registrado. Puedes anotar más pagos desde el detalle.' : 'Aún no tiene pagos registrados. Anota el abono desde el detalle de la reserva.' }}
       </p>
     </div>
 

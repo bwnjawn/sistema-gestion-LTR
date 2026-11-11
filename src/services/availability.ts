@@ -79,27 +79,6 @@ export function getPendingCabinOverlaps(
 }
 
 /**
- * Estado inicial de una reserva que registra el administrador: confirmada si no se cruza con nada,
- * pendiente si se cruza con otras solicitudes, para que el administrador resuelva el cruce (SCRUM-260).
- */
-export function initialStatusForAdminRequest(
-  newRequest: Omit<ReservationRequest, 'id' | 'status' | 'createdAt'>,
-  existingRequests: ReservationRequest[],
-  limites: LimitesAforo = LIMITES_AFORO_POR_DEFECTO
-): 'confirmed' | 'pending' {
-  const ID_TEMPORAL = '__nueva_reserva__'
-  const candidata = {
-    ...newRequest,
-    id: ID_TEMPORAL,
-    status: 'pending',
-    createdAt: ''
-  } as ReservationRequest
-  const hayCruce = findConflicts([...existingRequests, candidata], limites)
-    .some(conflicto => conflicto.solicitudIds.includes(ID_TEMPORAL))
-  return hayCruce ? 'pending' : 'confirmed'
-}
-
-/**
  * Valida si la fecha solicitada es pasada respecto a hoy.
  */
 export { isPastDate }

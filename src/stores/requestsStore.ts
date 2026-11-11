@@ -9,7 +9,12 @@ import { getStorageItem, setStorageItem } from '../lib/persistence'
 import { applyRequestEdit, normalizeRequest, type RequestEdit } from '../services/requests'
 import { useCatalogStore } from './catalogStore'
 import { useSettingsStore } from './settingsStore'
-import { buildPayment, validatePayment, type PaymentInput } from '../services/payments'
+import {
+  buildPayment,
+  calculateInitialDepositDueAt,
+  validatePayment,
+  type PaymentInput
+} from '../services/payments'
 import { findConflicts, groupConflictsByRequest } from '../services/availability'
 import { getCrossedRequests, puedeConfirmarse, type SolicitudEnCruce } from '../services/cruces'
 
@@ -53,6 +58,8 @@ export const useRequestsStore = defineStore('requests', () => {
         status,
         createdAt: new Date().toISOString()
       }
+      // Las pendientes tienen plazo para el abono desde que se envían; las confirmadas no
+      req.depositDueAt = calculateInitialDepositDueAt(req, useSettingsStore().depositDeadlineHours)
       requests.value.unshift(req)
       await requestsRepository.addRequest(req)
       return req
@@ -71,6 +78,8 @@ export const useRequestsStore = defineStore('requests', () => {
       const found = requests.value.find(r => r.id === id)
       if (found) {
         found.status = status
+        // Confirmada: el abono ya no se espera con plazo
+        if (status === 'confirmed') found.depositDueAt = undefined
         await requestsRepository.updateStatus(id, status)
       }
     } catch (e: any) {
@@ -151,6 +160,23 @@ export const useRequestsStore = defineStore('requests', () => {
     await updateRequestStatus(id, 'rejected')
   }
 
+  /**
+   * "Abono vencido": el admin decide cancelar la solicitud pendiente. La app nunca lo hace sola.
+   * Las canceladas no cuentan en fechas ni cupos.
+   */
+  async function cancelOverdueRequest(id: string): Promise<void> {
+    const found = requests.value.find(r => r.id === id)
+    if (!found || found.status !== 'pending') return
+    await updateRequestStatus(id, 'cancelled')
+  }
+
+  /** "Abono vencido": el admin decide esperar y se da un plazo nuevo desde ahora. */
+  function extendDepositDeadline(id: string): void {
+    const found = requests.value.find(r => r.id === id)
+    if (!found || found.status !== 'pending') return
+    found.depositDueAt = calculateInitialDepositDueAt(found, useSettingsStore().depositDeadlineHours)
+  }
+
   return {
     requests,
     isLoading,
@@ -165,6 +191,8 @@ export const useRequestsStore = defineStore('requests', () => {
     removePayment,
     crossedRequestsFor,
     confirmRequest,
-    rejectRequest
+    rejectRequest,
+    cancelOverdueRequest,
+    extendDepositDeadline
   }
 })

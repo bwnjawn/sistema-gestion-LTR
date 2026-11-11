@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findConflicts, getCabinOverlaps, getDayOccupancy, getPendingCabinOverlaps, groupConflictsByRequest, initialStatusForAdminRequest, isCabinAvailable } from '../src/services/availability'
+import { findConflicts, getCabinOverlaps, getDayOccupancy, getPendingCabinOverlaps, groupConflictsByRequest, isCabinAvailable } from '../src/services/availability'
 import type { ReservationRequest } from '../src/types/domain'
 
 const LIMITES = { restaurantePersonas: 200, campingPersonas: 150 }
@@ -147,18 +147,5 @@ describe('Cabañas ofrecidas y estado de la reserva del admin (SCRUM-260)', () =
   it('salida y entrada el mismo día no cuentan como cruce', () => {
     const reservas = [cabana('a', '6', '2026-12-20', '2026-12-22', 'confirmed')]
     expect(isCabinAvailable('6', '2026-12-22', '2026-12-24', reservas)).toBe(true)
-  })
-
-  it('la reserva del admin entra confirmada si no se cruza con nada', () => {
-    const nueva = cabana('x', '6', '2026-12-20', '2026-12-22')
-    const { id, status, ...sinId } = nueva as any
-    expect(initialStatusForAdminRequest(sinId, [cabana('a', '7', '2026-12-20', '2026-12-22')], LIMITES)).toBe('confirmed')
-  })
-
-  it('la reserva del admin entra pendiente si se cruza con una pendiente', () => {
-    const nueva = cabana('x', '6', '2026-12-20', '2026-12-22')
-    const { id, status, ...sinId } = nueva as any
-    const existentes = [cabana('a', '6', '2026-12-21', '2026-12-23', 'pending')]
-    expect(initialStatusForAdminRequest(sinId, existentes, LIMITES)).toBe('pending')
   })
 })

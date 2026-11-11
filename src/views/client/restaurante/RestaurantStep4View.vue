@@ -12,11 +12,13 @@ import { useEnvioSolicitud } from '../../../composables/useEnvioSolicitud'
 import { useSalidaReserva } from '../../../composables/useSalidaReserva'
 import ConfirmacionReservaAdmin from '../../../components/ui/ConfirmacionReservaAdmin.vue'
 import CasilleroEventoEspecial from '../../../components/ui/CasilleroEventoEspecial.vue'
+import SelectorEstadoReservaAdmin from '../../../components/ui/SelectorEstadoReservaAdmin.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { formatCLP } from '../../../lib/format'
+import { isDepositExempt } from '../../../services/pricing'
 import { formatDateShort } from '../../../lib/dates'
 
 const router = useRouter()
@@ -29,6 +31,7 @@ const subtotal = computed(() => store.priceBreakdown?.subtotal ?? 0)
 const ivaAmount = computed(() => store.priceBreakdown?.ivaAmount ?? 0)
 const totalWithIva = computed(() => store.priceBreakdown?.totalWithIva ?? 0)
 const depositAmount = computed(() => store.priceBreakdown?.depositAmount ?? 0)
+const depositExempt = computed(() => isDepositExempt('restaurante', store.clientType))
 
 const formattedScheduleDisplay = computed(() => {
   if (!store.checkInDate) return 'Sin fecha'
@@ -166,8 +169,9 @@ const { terminar: handleGoHome } = useSalidaReserva()
         </div>
       </div>
 
-      <DepositInfoCard :total-amount="totalWithIva" :deposit-amount="depositAmount" />
+      <DepositInfoCard :total-amount="totalWithIva" :deposit-amount="depositAmount" :exempt="depositExempt" />
 
+      <SelectorEstadoReservaAdmin v-if="store.isAdminMode" :deposit-amount="depositAmount" :total-amount="totalWithIva" />
       <CasilleroEventoEspecial v-if="store.isAdminMode" />
 
       <AvisoEnvio

@@ -3,7 +3,8 @@ import { computed } from 'vue'
 import { AlertTriangle, Building2, Calendar, Check, Tent, Users, Utensils, X } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
 import { formatCLP } from '../../lib/format'
-import { getPaymentSummary } from '../../services/payments'
+import { formatDateTime } from '../../lib/dates'
+import { getPaymentSummary, isConfirmedWithoutDeposit, isDepositOverdue } from '../../services/payments'
 import { describeRequest, isStalePending } from '../../services/requests'
 import type { ReservationRequest } from '../../types/domain'
 
@@ -58,8 +59,23 @@ const missingClass = computed(() => {
   return payment.value.state === 'sin_abono' ? 'text-status-danger' : 'text-amber-900'
 })
 
+const overdue = computed(() => isDepositOverdue(props.request))
+
+// Plazo vigente para abonar, mientras la solicitud esté pendiente y falte abono
+const dueText = computed(() => {
+  const r = props.request
+  if (r.status !== 'pending' || !r.depositDueAt || overdue.value || payment.value.depositPending <= 0) return ''
+  return `Abono hasta el ${formatDateTime(r.depositDueAt)}`
+})
+
+const confirmedWithoutDeposit = computed(() => isConfirmedWithoutDeposit(props.request))
+
 const paymentHint = computed(() => {
   const p = payment.value
+  if (props.request.status === 'pending' && p.depositRequired > 0 && p.depositPending === 0 && p.state !== 'pagado_total') {
+    return 'Abono recibido: falta aprobar'
+  }
+  if (p.state === 'sin_abono_exigido') return 'Sin abono exigido'
   if (p.state === 'pagado_total') return 'Pagado completo'
   if (p.state === 'abono_completo') return 'Abono recibido'
   if (p.state === 'abono_parcial') return `Faltan ${formatCLP(p.depositPending)} para completar el abono`
@@ -73,9 +89,13 @@ const paymentHint = computed(() => {
       'bg-white p-4 rounded-2xl border border-gray-500 border-l-8 shadow-md space-y-3',
       accentClass,
       isStale ? 'ring-2 ring-amber-500' : '',
-      conflictCount ? 'ring-2 ring-status-danger' : ''
+      conflictCount || overdue ? 'ring-2 ring-status-danger' : ''
     ]"
   >
+    <p v-if="overdue" class="bg-rose-100 border border-status-danger text-rose-950 px-3 py-1.5 rounded-lg text-sm font-black flex items-center gap-1.5">
+      <AlertTriangle class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
+      Abono vencido. Abre el detalle para contactar al cliente, esperar o cancelar.
+    </p>
     <p v-if="isStale" class="bg-amber-100 border border-amber-500 text-amber-950 px-3 py-1.5 rounded-lg text-sm font-black flex items-center gap-1.5">
       <AlertTriangle class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
       Pendiente hace más de 24 horas sin gestionar
@@ -142,6 +162,8 @@ const paymentHint = computed(() => {
       <p class="text-sm font-bold text-gray-800">
         Pagado {{ formatCLP(payment.totalPaid) }} · {{ paymentHint }}
       </p>
+      <p v-if="dueText" class="text-sm font-black text-amber-900">{{ dueText }}</p>
+      <p v-if="confirmedWithoutDeposit" class="text-sm font-black text-amber-900">Confirmada sin abono completo</p>
     </div>
 
     <!-- Acciones -->

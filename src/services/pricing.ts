@@ -2,7 +2,7 @@
 // Único lugar donde se calculan precios. Las vistas y el envío de la solicitud
 // usan estas funciones, para que el monto que ve el cliente sea el que se guarda.
 
-import type { Cabin, CampingModality, CampingSite, ServiceType } from '../types/domain'
+import type { Cabin, CampingModality, CampingSite, ClientType, ServiceType } from '../types/domain'
 import { nightsBetween } from '../lib/dates'
 
 export interface PriceBreakdown {
@@ -83,8 +83,18 @@ export function calculateRestaurantPrice(
   return buildBreakdown(subtotal, 1, rates)
 }
 
+/**
+ * Exención de abono (SCRUM-264): los clientes de tipo Institución que reservan en restaurante
+ * no pagan abono (el Estado paga después). Empresa, Organización y Paseo escolar sí pagan. Solo aplica a restaurante,
+ * porque es el único servicio donde se registra el tipo de cliente.
+ */
+export function isDepositExempt(service: ServiceType, clientType: ClientType | undefined): boolean {
+  return service === 'restaurante' && clientType === 'Institución'
+}
+
 export interface BookingPriceInput extends PriceRates {
   service: ServiceType
+  clientType?: ClientType
   cabin?: Cabin | null
   campingSite?: CampingSite | null
   checkInDate: string
@@ -121,5 +131,6 @@ export function calculateBookingPrice(input: BookingPriceInput): PriceBreakdown 
     )
   }
 
-  return calculateRestaurantPrice(input.meals, rates)
+  const price = calculateRestaurantPrice(input.meals, rates)
+  return isDepositExempt(input.service, input.clientType) ? { ...price, depositAmount: 0 } : price
 }

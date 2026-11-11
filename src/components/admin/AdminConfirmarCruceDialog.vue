@@ -6,6 +6,8 @@ import { computed, ref, watch } from 'vue'
 import { AlertTriangle, Calendar, Check, Mail, MessageCircle, Phone, X } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
 import AdminRequestEditForm from './AdminRequestEditForm.vue'
+import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
+import { getPaymentSummary } from '../../services/payments'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { buildMailtoUrl, buildTelUrl, buildWhatsappUrl, hasUsablePhone } from '../../lib/contactLinks'
 import { formatDateShort } from '../../lib/dates'
@@ -68,7 +70,20 @@ function mostrarSalidas(fila: { confirmada: boolean; puedeConfirmarse: boolean }
   return !fila.confirmada && !fila.puedeConfirmarse
 }
 
+// Si a la elegida le falta abono, primero se avisa (SCRUM-264)
+const sinAbonoId = ref<string | null>(null)
+
 async function confirmar(id: string) {
+  const req = requestsStore.requests.find(r => r.id === id)
+  if (req && getPaymentSummary(req).depositPending > 0) {
+    sinAbonoId.value = id
+    return
+  }
+  await confirmarIgual(id)
+}
+
+async function confirmarIgual(id: string) {
+  sinAbonoId.value = null
   await requestsStore.confirmRequest(id)
 }
 
@@ -223,5 +238,7 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
         </div>
       </template>
     </div>
+
+    <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="confirmarIgual" @close="sinAbonoId = null" />
   </div>
 </template>

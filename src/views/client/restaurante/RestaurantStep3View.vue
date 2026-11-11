@@ -16,7 +16,7 @@ import type { ClientType } from '../../../types/domain'
 const router = useRouter()
 const store = useReservationStore()
 
-const clientTypes: ClientType[] = ['Particular', 'Empresa', 'Colegio', 'Institución']
+const clientTypes: ClientType[] = ['Particular', 'Empresa', 'Organización', 'Paseo escolar', 'Institución']
 const selectedClientType = computed({
   get: () => store.clientType,
   set: (value: ClientType) => { store.clientType = value }
@@ -105,7 +105,7 @@ function handleNext() {
         <input 
           type="text"
           v-model="store.clientName"
-          :placeholder="selectedClientType === 'Particular' ? 'Ej: Juan Pérez' : 'Ej: Colegio San Martín'"
+          :placeholder="selectedClientType === 'Particular' ? 'Ej: Juan Pérez' : 'Ej: Escuela Rural Repil'"
           class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
       </div>
