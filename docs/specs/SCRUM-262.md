@@ -44,7 +44,9 @@ Tareas relacionadas, todas en el Sprint 2:
 - **Grupo completo (10/11):** el diálogo no muestra solo los choques directos, sino todas las solicitudes alcanzables siguiendo los cruces (si A choca con B y B con C, al aprobar A también se ve C). Cada solicitud dice con quién se cruza. Si el grupo resulta poco claro, se ajusta o se agregan las consecuencias de cada opción.
 - **Mover la fecha es un paso aparte:** al tocar "Modificar fecha" el diálogo muestra solo ese formulario, con su barra fija de "Guardar cambios" y sin el botón de cerrar de abajo, que se confundía con guardar. "Guardar" se desactiva mientras no haya cambios y, si hay cambios sin guardar, salir pide confirmación.
 - **El calendario de cambio de fecha muestra los días ocupados** (`services/cambioFecha.ts`): una reserva confirmada bloquea (cabaña, cupo de restaurante y de camping) y las pendientes de otros solo se marcan con un punto. La propia solicitud no cuenta contra sí misma, y se usan las personas del formulario. El administrador no puede forzar un día bloqueado, y `applyRequestEdit` valida lo mismo al guardar (también restaurante y camping).
-- **Calendario general (`BaseCalendar.vue`):** tocar la llegada otra vez borra las fechas, hay un botón "Borrar fechas", una línea de ayuda por paso, y un día que no sirve de salida pero sí de llegada pasa a ser la nueva llegada (antes la selección podía quedar pegada). Los días de un solo día (restaurante y camping diario) usan el modo `single`.
+- **Calendario general (`BaseCalendar.vue`, SCRUM-269):** tocar la llegada otra vez borra las fechas, hay un botón "Borrar fechas", y un día que no sirve de salida pero sí de llegada pasa a ser la nueva llegada (antes la selección podía quedar pegada). Sin texto de ayuda. Los días de un solo día (restaurante y camping diario) usan el modo `single`.
+- **Día de salida sobre una llegada ocupada:** la salida puede ser el día en que empieza otra reserva (se sale en la mañana y la otra llega en la tarde). Solo se ofrece como salida si la estadía completa es válida, y nunca como llegada. Una vez elegido se pinta como cualquier día elegido y se puede tocar para quitarlo.
+- **Rango estilo Airbnb:** llegada y salida son círculos oscuros unidos por una franja continua verde (`emerald-200`) con puntas redondeadas al inicio y fin de cada fila y del mes.
 
 ## Preguntas abiertas
 - Ninguna por ahora.
@@ -59,3 +61,5 @@ Tareas relacionadas, todas en el Sprint 2:
 - [ ] En el calendario de cambio de fecha, los días con una reserva confirmada no se pueden elegir y los que tienen solo pendientes llevan un punto.
 - [ ] "Guardar cambios" está desactivado sin cambios, y la barra de guardar queda siempre a la vista.
 - [ ] En cualquier calendario, tocar la llegada otra vez borra las fechas y "Borrar fechas" funciona; no se puede quedar pegado.
+- [ ] Reserva A del 10 al 12: elegir una estadía que termine el 10 deja marcar el 10 como salida, se ve como día elegido y se puede quitar. Sin llegada elegida, el 10 no se puede marcar.
+- [ ] El rango se ve como una franja continua entre llegada y salida, también al cruzar de semana y de mes.

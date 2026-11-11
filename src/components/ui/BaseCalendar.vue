@@ -155,7 +155,7 @@ function clearDates() {
 }
 
 function handleDateClick(dayNum: number) {
-  if (isDisabled(dayNum)) return
+  if (estaDeshabilitado(dayNum)) return
 
   const clickedDate = new Date(currentYear.value, currentMonth.value, dayNum)
   clickedDate.setHours(0, 0, 0, 0)
@@ -180,12 +180,31 @@ function handleDateClick(dayNum: number) {
   }
 }
 
-const ayuda = computed(() => {
-  if (props.single) return props.startDate ? 'Toca el día elegido otra vez para quitarlo.' : 'Elige el día.'
-  if (!props.startDate) return 'Elige el día de llegada.'
-  if (!props.endDate) return 'Ahora elige el día de salida. Toca la llegada otra vez para borrar las fechas.'
-  return 'Toca la llegada para borrar las fechas, o un día nuevo para empezar de nuevo.'
-})
+/** Un día elegido nunca se pinta ni se bloquea como ocupado, aunque no sirva de llegada (por ejemplo, una salida). */
+function estaDeshabilitado(dayNum: number): boolean {
+  return isDisabled(dayNum) && !isSelectedStart(dayNum) && !isSelectedEnd(dayNum)
+}
+
+/** Columna del día en la semana (0 = lunes). */
+function columna(dayNum: number): number {
+  return (firstDayOffset.value + dayNum - 1) % 7
+}
+
+/** Clases de la franja que une llegada y salida; vacío si el día no lleva franja. */
+function claseBanda(dayNum: number): string {
+  if (props.single || !props.startDate || !props.endDate) return ''
+  const inicio = isSelectedStart(dayNum)
+  const fin = isSelectedEnd(dayNum)
+  if (inicio && fin) return ''
+  const base = 'absolute top-0.5 bottom-0.5 bg-emerald-200'
+  if (inicio) return `${base} left-1/2 right-0`
+  if (fin) return `${base} left-0 right-1/2`
+  if (!isInRange(dayNum)) return ''
+  // Los extremos de cada fila (y del mes) llevan la punta redondeada
+  const izquierda = columna(dayNum) === 0 || dayNum === 1 ? ' rounded-l-full' : ''
+  const derecha = columna(dayNum) === 6 || dayNum === daysInMonth.value ? ' rounded-r-full' : ''
+  return `${base} left-0 right-0${izquierda}${derecha}`
+}
 
 function isSelectedStart(dayNum: number) {
   if (!props.startDate) return false
@@ -263,39 +282,40 @@ function isToday(dayNum: number) {
       <div class="grid grid-cols-7 gap-y-1.5 text-center font-extrabold text-base">
         <span v-for="blank in firstDayOffset" :key="'b-' + blank" class="h-12"></span>
 
-        <button 
-          type="button"
-          v-for="day in daysInMonth" 
-          :key="day"
-          @click="handleDateClick(day)"
-          :disabled="isDisabled(day)"
-          :class="[
-            'h-12 w-full relative flex items-center justify-center rounded-full transition-all touch-target focus:outline-none focus:ring-2 focus:ring-brand-accent',
-            isDisabled(day)
-              ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through'
-              : isSelectedStart(day) || isSelectedEnd(day)
-                ? 'bg-brand-dark text-white shadow-md z-10 font-black scale-105'
-                : isInRange(day)
-                  ? 'bg-emerald-100 text-brand-dark rounded-none font-black'
-                  : isToday(day)
-                    ? 'border-2 border-brand-dark bg-emerald-50 text-brand-dark font-black'
-                    : 'hover:bg-brand-light text-brand-dark'
-          ]"
-        >
-          {{ day }}
-          <span
-            v-if="isDateMarkedFn && !isDisabled(day) && isDateMarkedFn(formatDateISO(day))"
-            class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-amber-500"
-            aria-hidden="true"
-          ></span>
-        </button>
+        <div v-for="day in daysInMonth" :key="day" class="relative h-12 flex items-center justify-center">
+          <!-- Franja continua del rango, como en Airbnb: sale del círculo de llegada y entra al de salida -->
+          <span v-if="claseBanda(day)" :class="claseBanda(day)" aria-hidden="true"></span>
+
+          <button
+            type="button"
+            @click="handleDateClick(day)"
+            :disabled="estaDeshabilitado(day)"
+            :class="[
+              'relative z-10 h-11 w-11 flex items-center justify-center rounded-full transition-colors touch-target focus:outline-none focus:ring-2 focus:ring-brand-accent',
+              estaDeshabilitado(day)
+                ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through'
+                : isSelectedStart(day) || isSelectedEnd(day)
+                  ? 'bg-brand-dark text-white shadow-md font-black'
+                  : isInRange(day)
+                    ? 'text-brand-dark font-black'
+                    : isToday(day)
+                      ? 'border-2 border-brand-dark bg-emerald-50 text-brand-dark font-black'
+                      : 'hover:bg-brand-light text-brand-dark'
+            ]"
+          >
+            {{ day }}
+            <span
+              v-if="isDateMarkedFn && !estaDeshabilitado(day) && isDateMarkedFn(formatDateISO(day))"
+              class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-amber-500"
+              aria-hidden="true"
+            ></span>
+          </button>
+        </div>
       </div>
     </div>
 
-    <div class="text-center space-y-2">
-      <p class="text-sm font-bold text-gray-700">{{ ayuda }}</p>
+    <div v-if="startDate" class="text-center">
       <button
-        v-if="startDate"
         type="button"
         @click="clearDates"
         class="px-4 py-2 bg-white border-2 border-brand-border text-brand-dark font-extrabold text-sm rounded-full hover:bg-brand-light active:scale-95 transition-transform touch-target"
