@@ -16,6 +16,7 @@ import type {
 import { formatDateLong, isPastDate, nightsBetween } from '../lib/dates'
 import { hasUsablePhone } from '../lib/contactLinks'
 import { isCabinAvailable, validateGuestCapacity } from './availability'
+import { isMoveDayBlocked, isMoveStayBlocked, type CapacidadesCambioFecha } from './cambioFecha'
 import { calculateBookingPrice, type PriceBreakdown, type PriceRates } from './pricing'
 import { formatCLP } from '../lib/format'
 import { generateUUID } from '../lib/id'
@@ -300,6 +301,8 @@ export interface RequestEditContext {
   campingSites: CampingSite[]
   /** Porcentajes vigentes; solo se usan si la solicitud no guardó los suyos. */
   currentRates: PriceRates
+  /** Cupos de restaurante y camping; sin ellos no se revisa el cupo al mover la fecha. */
+  capacidades?: CapacidadesCambioFecha
 }
 
 export type RequestEditResult =
@@ -389,6 +392,16 @@ export function applyRequestEdit(
   if (datesChanged && req.type === 'cabana' && resourceId) {
     if (!isCabinAvailable(resourceId, edit.startDate, edit.endDate, ctx.requests, req.id)) {
       return { ok: false, message: 'Esa cabaña ya está reservada en esas fechas. Elige otras fechas.' }
+    }
+  }
+
+  // Restaurante y camping: la fecha nueva no puede quedar sin cupo por reservas confirmadas
+  if (datesChanged && ctx.capacidades && (req.type === 'restaurante' || req.type === 'camping')) {
+    const sinCupo =
+      isMoveDayBlocked(req, edit.startDate, ctx.requests, ctx.capacidades) ||
+      (!single && isMoveStayBlocked(req, edit.startDate, edit.endDate, ctx.requests, ctx.capacidades))
+    if (sinCupo) {
+      return { ok: false, message: 'No queda cupo en esas fechas. Elige otras fechas.' }
     }
   }
 

@@ -1,6 +1,6 @@
 # SCRUM-60 — Detectar solapamientos de reservas
 
-Estado: código del aviso listo (8/11). **Regla corregida el 10/11:** solo las confirmadas bloquean. Código ajustado en SCRUM-260 y 263; falta resolver al confirmar (SCRUM-262). Verificación manual pendiente.
+Estado: código del aviso listo (8/11). **Regla corregida el 10/11:** solo las confirmadas bloquean. Código ajustado en SCRUM-260, 263 y 262 (resolver al confirmar). Verificación manual pendiente.
 Fase: 2 (16 al 20/11)
 
 ## Contexto
@@ -48,13 +48,10 @@ Hecho el 8/11:
 - Tarjeta de la lista: aviso "Se cruza con N solicitudes". Detalle: sección "Se cruza con" con enlace a cada solicitud. Calendario: leyenda "Se topan", insignia "Se cruza" en las listas del día y acceso al detalle al tocar una solicitud.
 - Pruebas en `tests/conflictos.test.ts`.
 
-**Falta (cambios del 10/11):**
 Hecho el 10/11:
 - SCRUM-263: el bloqueo cuenta solo confirmadas (`isCabinAvailable`, `getFullMeals`, `isCampingDayBlocked`); el aviso de demanda (`getDayOccupancy`, `findConflicts`) sigue contando pendientes y confirmadas.
 - SCRUM-260: el admin ve las cabañas con solo pendientes (con aviso dentro de la tarjeta) y no ve las confirmadas; su reserva entra pendiente si se cruza.
-
-**Falta:**
-- SCRUM-262: diálogo al confirmar y salidas de contacto.
+- SCRUM-262: diálogo al aprobar una solicitud que se cruza (`AdminConfirmarCruceDialog.vue`, datos en `services/cruces.ts`), con salidas de contacto para quien no queda confirmado.
 
 ## Decisiones
 1. **Una sola función `findConflicts(requests)`** en `services/availability.ts`. Devuelve grupos de solicitudes en conflicto con el motivo.

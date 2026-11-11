@@ -198,6 +198,7 @@ function handleNext() {
         <BaseCalendar 
           :start-date="calendarStartDate"
           :end-date="calendarEndDate"
+          :single="campingType === 'diario'"
           :is-date-disabled-fn="isDayBlocked"
           :is-range-blocked-fn="isStayBlocked"
           @change="handleCalendarChange"
