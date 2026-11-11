@@ -45,7 +45,7 @@ Orden desde el 8/11 (en revisión: 236 a 242, 252, 253, 254, 58, 59, 233):
 
 **No hecho o con pendientes**
 - Ninguna de las dos historias se verificó a mano en el navegador ni en celular: solo build y pruebas automáticas (55 pruebas).
-- SCRUM-244: queda el tope fijo de 20 personas en el paso 1 de cabañas (se decide junto con SCRUM-27) y falta confirmar con el cliente si el aforo del restaurante se mide por comida u hora y si el máximo de 3 menús es por comida o en total.
+- SCRUM-244: queda el tope fijo de 20 personas en el paso 1 de cabañas (se decide junto con SCRUM-27) y el aforo del restaurante se mide **por comida** (decidido; se confirma en la próxima reunión, D13) y falta confirmar si el máximo de 3 menús es por comida o en total.
 - El bloqueo del calendario no aplica al admin (puede cruzar fechas; resolución manual).
 - SCRUM-56, 229, 231, 257 y 245 no se tocaron.
 - El CI de GitHub (SCRUM-235) sigue sin probarse con un push; no hay push de nada.
@@ -53,7 +53,7 @@ Orden desde el 8/11 (en revisión: 236 a 242, 252, 253, 254, 58, 59, 233):
 **Reunión con el cliente — análisis (todo estaba en Jira salvo lo marcado)**
 - Ya existían: SCRUM-27, 47, 51, 42, 72/23, 68/69, 43, 44, 45, 37, 36, 35/229, 84–87, 104–106, 67, 28–31, 50 y 49. Sin contradicciones, salvo las dudas de abajo.
 - Nuevo: capacidades del restaurante (120/50/30), ya cargado en SCRUM-244.
-- Dudas para el cliente: cabañas "7 y 8" en el acta contra "6 y 8" en Jira y en el catálogo; persona extra por cabaña; horarios reales de pernoctar y de cabañas; si el máximo de 3 menús es por comida o en total; si el aforo del restaurante es por comida u hora.
+- Dudas para el cliente: cabañas "7 y 8" en el acta contra "6 y 8" en Jira y en el catálogo; persona extra por cabaña; horarios reales de pernoctar y de cabañas; si el máximo de 3 menús es por comida o en total; confirmar que el aforo del restaurante es por comida (D13, regla provisoria vigente).
 - Jira desactualizado: SCRUM-37 y SCRUM-42 figuran "Por hacer" aunque el código ya cubre horarios y categoría de cliente; conviene cerrarlas tras verificar.
 
 **Siguiente según el plan:** SCRUM-56 (nueva reserva con el flujo del cliente), luego 229/231, 257 y 245.

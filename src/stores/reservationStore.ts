@@ -8,8 +8,9 @@ import { useCatalogStore } from './catalogStore'
 import { todayISO } from '../lib/dates'
 import { calculateBookingPrice, type PriceBreakdown } from '../services/pricing'
 import { buildRequestFromDraft, generateRequestCode } from '../services/requests'
-import { initialStatusForAdminRequest } from '../services/availability'
-import type { ClientType, RequestSchedule, ServiceType, SelectedMealPayload } from '../types/domain'
+import { puedeConfirmarseNueva } from '../services/cruces'
+import { buildPayment, validatePayment } from '../services/payments'
+import type { ClientType, PaymentMethod, RequestSchedule, ServiceType, SelectedMealPayload } from '../types/domain'
 
 export type { SelectedMealPayload }
 
@@ -36,6 +37,9 @@ interface WizardDraftState {
   comments: string
   isAdminMode?: boolean
   isSpecialEvent?: boolean
+  adminEstado?: 'confirmed' | 'pending'
+  adminAbonoMonto?: number | null
+  adminAbonoMedio?: PaymentMethod
 }
 
 function loadDraftFromSession(): WizardDraftState | null {
@@ -99,10 +103,15 @@ export const useReservationStore = defineStore('reservation', () => {
   // Modo administrador: el admin carga una reserva con el mismo flujo del cliente (SCRUM-56)
   const isAdminMode = ref<boolean>(initialDraft?.isAdminMode ?? false)
   const isSpecialEvent = ref<boolean>(initialDraft?.isSpecialEvent ?? false)
+  // Al final de la reserva el admin elige cómo queda: pendiente de abono (con plazo) o confirmada (SCRUM-264),
+  // y puede anotar el abono que ya recibió
+  const adminEstado = ref<'confirmed' | 'pending'>(initialDraft?.adminEstado ?? 'pending')
+  const adminAbonoMonto = ref<number | null>(initialDraft?.adminAbonoMonto ?? null)
+  const adminAbonoMedio = ref<PaymentMethod>(initialDraft?.adminAbonoMedio ?? 'transferencia')
 
   // Se enciende al enviar la solicitud: el encabezado deja de ofrecer volver o salir
   const solicitudEnviada = ref(false)
-  /** Estado con el que quedó la última reserva del administrador (pendiente si se cruzó con otras). */
+  /** Estado con el que quedó la última reserva del administrador, según lo que eligió. */
   const estadoUltimaReservaAdmin = ref<'confirmed' | 'pending'>('confirmed')
 
   /** El cliente ya eligió o escribió algo que se perdería al salir. */
@@ -139,7 +148,10 @@ export const useReservationStore = defineStore('reservation', () => {
       clientEmail,
       comments,
       isAdminMode,
-      isSpecialEvent
+      isSpecialEvent,
+      adminEstado,
+      adminAbonoMonto,
+      adminAbonoMedio
     ],
     () => {
       saveDraftToSession({
@@ -162,7 +174,10 @@ export const useReservationStore = defineStore('reservation', () => {
         clientEmail: clientEmail.value,
         comments: comments.value,
         isAdminMode: isAdminMode.value,
-        isSpecialEvent: isSpecialEvent.value
+        isSpecialEvent: isSpecialEvent.value,
+        adminEstado: adminEstado.value,
+        adminAbonoMonto: adminAbonoMonto.value,
+        adminAbonoMedio: adminAbonoMedio.value
       })
     },
     { deep: true }
@@ -189,6 +204,7 @@ export const useReservationStore = defineStore('reservation', () => {
     const catalogStore = useCatalogStore()
     return calculateBookingPrice({
       service: selectedService.value,
+      clientType: clientType.value,
       cabin: catalogStore.cabins.find(c => c.id === selectedCabinId.value),
       campingSite: catalogStore.campingSites.find(s => s.id === selectedCampingId.value),
       checkInDate: checkInDate.value,
@@ -254,6 +270,9 @@ export const useReservationStore = defineStore('reservation', () => {
     comments.value = ''
     isAdminMode.value = false
     isSpecialEvent.value = false
+    adminEstado.value = 'pending'
+    adminAbonoMonto.value = null
+    adminAbonoMedio.value = 'transferencia'
     clearDraftFromSession()
   }
 
@@ -323,13 +342,24 @@ export const useReservationStore = defineStore('reservation', () => {
       }
     )
 
-    // La reserva del administrador ya fue acordada con el cliente: entra confirmada,
-    // salvo que se cruce con otras solicitudes: entonces entra pendiente para resolver el cruce (SCRUM-260)
-    const estadoInicial = isAdminMode.value
-      ? initialStatusForAdminRequest(solicitud, requestsStore.requests, settingsStore.limitesAforo)
-      : 'pending'
+    // El administrador elige cómo queda la reserva (SCRUM-264): pendiente de abono, con plazo, o confirmada.
+    // Si ya recibió un abono lo anota aquí; si elige confirmada con abono incompleto, queda "sin abono".
+    let estadoInicial: 'confirmed' | 'pending' = 'pending'
+    if (isAdminMode.value) {
+      estadoInicial = adminEstado.value
+      const monto = Number(adminAbonoMonto.value) || 0
+      if (monto > 0) {
+        const pago = { amount: monto, method: adminAbonoMedio.value }
+        const validacion = validatePayment(solicitud, pago)
+        if (!validacion.isValid) throw new Error(validacion.message)
+        solicitud.payments = [buildPayment(pago)]
+      }
+      if (estadoInicial === 'confirmed' && !puedeConfirmarseNueva(solicitud, requestsStore.requests, settingsStore.limitesAforo)) {
+        throw new Error('No se puede cargar como confirmada: ya hay una reserva confirmada en esas fechas o cupos. Cárgala como pendiente.')
+      }
+    }
     await requestsStore.addRequest(solicitud, estadoInicial)
-    if (isAdminMode.value) estadoUltimaReservaAdmin.value = estadoInicial as 'confirmed' | 'pending'
+    if (isAdminMode.value) estadoUltimaReservaAdmin.value = estadoInicial
 
     // Limpia el borrador de sessionStorage una vez enviada la solicitud
     clearDraftFromSession()
@@ -360,6 +390,9 @@ export const useReservationStore = defineStore('reservation', () => {
     estadoUltimaReservaAdmin,
     isAdminMode,
     isSpecialEvent,
+    adminEstado,
+    adminAbonoMonto,
+    adminAbonoMedio,
     startAdminDraft,
     tieneBorrador,
     setService,

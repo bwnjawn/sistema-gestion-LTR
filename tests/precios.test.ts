@@ -60,4 +60,34 @@ describe('precios', () => {
     })
     expect(r).toBeNull()
   })
+
+  describe('exención de abono (SCRUM-264)', () => {
+    const pedido = (service: 'restaurante' | 'cabana', clientType: 'Institución' | 'Paseo escolar' | 'Organización' | 'Empresa') => ({
+      ...tarifas,
+      service,
+      clientType,
+      cabin: cabana,
+      checkInDate: '2026-11-13',
+      checkOutDate: '2026-11-15',
+      guestsCount: 2,
+      campingType: 'diario' as const,
+      meals: [{ id: 'a', name: 'Plato', price: 10000, quantity: 10 }]
+    })
+
+    it('Institución en restaurante no paga abono, pero el total no cambia', () => {
+      const r = calculateBookingPrice(pedido('restaurante', 'Institución'))!
+      expect(r.depositAmount).toBe(0)
+      expect(r.totalWithIva).toBe(119000)
+    })
+
+    it('Paseo escolar, Organización y Empresa en restaurante sí pagan abono', () => {
+      expect(calculateBookingPrice(pedido('restaurante', 'Paseo escolar'))!.depositAmount).toBe(35700)
+      expect(calculateBookingPrice(pedido('restaurante', 'Organización'))!.depositAmount).toBe(35700)
+      expect(calculateBookingPrice(pedido('restaurante', 'Empresa'))!.depositAmount).toBe(35700)
+    })
+
+    it('la exención no aplica fuera del restaurante', () => {
+      expect(calculateBookingPrice(pedido('cabana', 'Institución'))!.depositAmount).toBeGreaterThan(0)
+    })
+  })
 })

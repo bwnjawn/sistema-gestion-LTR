@@ -7,11 +7,13 @@ import {
 import BaseButton from '../ui/BaseButton.vue'
 import AdminRequestEditForm from './AdminRequestEditForm.vue'
 import AdminConfirmarCruceDialog from './AdminConfirmarCruceDialog.vue'
+import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 import { buildMailtoUrl, buildTelUrl, buildWhatsappUrl, hasUsablePhone } from '../../lib/contactLinks'
 import { formatDateShort, formatDateTime, todayISO } from '../../lib/dates'
 import { formatCLP } from '../../lib/format'
-import { PAYMENT_METHOD_LABELS, getPaymentSummary } from '../../services/payments'
+import { PAYMENT_METHOD_LABELS, getPaymentSummary, isConfirmedWithoutDeposit, isDepositOverdue } from '../../services/payments'
 import { canEditRequest, describeRequest } from '../../services/requests'
 import type { PaymentMethod } from '../../types/domain'
 
@@ -26,6 +28,7 @@ const emit = defineEmits<{
 }>()
 
 const requestsStore = useRequestsStore()
+const settingsStore = useSettingsStore()
 
 // La solicitud se lee siempre del store, así el detalle se actualiza solo al aprobar o registrar pagos.
 const request = computed(() => requestsStore.requests.find(r => r.id === props.requestId) ?? null)
@@ -71,6 +74,8 @@ const paymentError = ref('')
 watch(() => props.requestId, () => {
   cruceId.value = null
   confirmingReject.value = false
+  confirmingCancel.value = false
+  sinAbonoId.value = null
   isEditing.value = false
   paymentAmount.value = null
   paymentMethod.value = 'transferencia'
@@ -82,7 +87,20 @@ watch(() => props.requestId, () => {
 // Si la solicitud se cruza con otras, se abre el diálogo para elegir cuál confirmar (SCRUM-262)
 const cruceId = ref<string | null>(null)
 
-async function approve() {
+// Si falta abono, primero se avisa (SCRUM-264); el admin decide si confirma igual
+const sinAbonoId = ref<string | null>(null)
+
+function approve() {
+  if (!request.value) return
+  if (payment.value && payment.value.depositPending > 0) {
+    sinAbonoId.value = request.value.id
+    return
+  }
+  continueApproval()
+}
+
+async function continueApproval() {
+  sinAbonoId.value = null
   if (!request.value) return
   if (requestsStore.crossedRequestsFor(request.value.id).length > 0) {
     cruceId.value = request.value.id
@@ -136,10 +154,39 @@ const missingClass = computed(() => {
   return payment.value.state === 'sin_abono' ? 'text-status-danger' : 'text-amber-900'
 })
 
+const overdue = computed(() => !!request.value && isDepositOverdue(request.value))
+const confirmingCancel = ref(false)
+
+// Plazo vigente para abonar (pendiente, con abono pendiente y sin vencer)
+const dueText = computed(() => {
+  const r = request.value
+  if (!r || r.status !== 'pending' || !r.depositDueAt || overdue.value || !payment.value || payment.value.depositPending <= 0) return ''
+  return `El cliente tiene plazo para abonar hasta el ${formatDateTime(r.depositDueAt)}.`
+})
+
+function waitForDeposit() {
+  if (!request.value) return
+  requestsStore.extendDepositDeadline(request.value.id)
+}
+
+async function cancelOverdue() {
+  if (!request.value) return
+  await requestsStore.cancelOverdueRequest(request.value.id)
+  confirmingCancel.value = false
+  emit('close')
+}
+
 const depositMessage = computed(() => {
   const p = payment.value
   if (!p) return ''
+  if (p.state === 'sin_abono_exigido') return 'Esta reserva no exige abono (cliente Institución). Se cobra el total después.'
   if (p.state === 'pagado_total') return 'La reserva está pagada por completo.'
+  if (request.value && isConfirmedWithoutDeposit(request.value)) {
+    return `Confirmada sin el abono completo: faltan ${formatCLP(p.depositPending)} del abono exigido de ${formatCLP(p.depositRequired)}.`
+  }
+  if (request.value?.status === 'pending' && p.depositRequired > 0 && p.depositPending === 0) {
+    return `Abono recibido (${formatCLP(p.totalPaid)}). Falta que apruebes la solicitud.`
+  }
   if (p.depositPending > 0) return `Faltan ${formatCLP(p.depositPending)} para completar el abono exigido de ${formatCLP(p.depositRequired)}.`
   return `El abono exigido de ${formatCLP(p.depositRequired)} ya está cubierto. Queda un saldo de ${formatCLP(p.balance)}.`
 })
@@ -147,7 +194,7 @@ const depositMessage = computed(() => {
 const depositMessageClass = computed(() => {
   const p = payment.value
   if (!p) return ''
-  if (p.state === 'pagado_total' || p.depositPending === 0) return 'bg-emerald-50 border-status-success text-emerald-950'
+  if (p.state === 'sin_abono_exigido' || p.state === 'pagado_total' || p.depositPending === 0) return 'bg-emerald-50 border-status-success text-emerald-950'
   return p.state === 'sin_abono' ? 'bg-rose-50 border-status-danger text-rose-950' : 'bg-amber-50 border-amber-500 text-amber-950'
 })
 useBloqueoScroll(computed(() => !!request.value))
@@ -360,6 +407,26 @@ useBloqueoScroll(computed(() => !!request.value))
           </div>
 
           <p :class="['text-base font-black border-2 rounded-xl p-3', depositMessageClass]">{{ depositMessage }}</p>
+          <p v-if="dueText" class="text-base font-black bg-amber-50 border-2 border-amber-500 text-amber-950 rounded-xl p-3">{{ dueText }}</p>
+
+          <!-- Abono vencido: el admin decide; la reserva nunca se libera sola -->
+          <div v-if="overdue" class="border-2 border-status-danger bg-rose-50 rounded-2xl p-3 space-y-2">
+            <p class="text-base font-black text-rose-950 flex items-start gap-1.5">
+              <AlertTriangle class="w-5 h-5 stroke-[2.5] shrink-0 mt-0.5" aria-hidden="true" />
+              Abono vencido: el plazo terminó el {{ formatDateTime(request.depositDueAt!) }} y falta el abono. Puedes contactar al cliente (en Contacto, más arriba), darle más plazo o cancelar la solicitud.
+            </p>
+            <div v-if="!confirmingCancel" class="grid grid-cols-2 gap-2">
+              <BaseButton variant="outline" @click="waitForDeposit">Esperar {{ settingsStore.depositDeadlineHours }} h más</BaseButton>
+              <BaseButton variant="outline" class="!border-status-danger !text-status-danger" @click="confirmingCancel = true">Cancelar solicitud</BaseButton>
+            </div>
+            <div v-else class="space-y-2">
+              <p class="text-base font-black text-rose-950">¿Cancelar la solicitud de {{ request.clientName }}? Queda en "Cancelada" y el cliente tendrá que volver a solicitarla.</p>
+              <div class="grid grid-cols-2 gap-2">
+                <BaseButton variant="danger" @click="cancelOverdue">Sí, cancelar</BaseButton>
+                <BaseButton variant="outline" @click="confirmingCancel = false">No, volver</BaseButton>
+              </div>
+            </div>
+          </div>
 
           <!-- Pagos recibidos -->
           <div class="space-y-1.5">
@@ -438,6 +505,7 @@ useBloqueoScroll(computed(() => !!request.value))
       </div>
     </div>
 
+    <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="continueApproval" @close="sinAbonoId = null" />
     <AdminConfirmarCruceDialog :request-id="cruceId" @close="cruceId = null" />
   </div>
 </template>

@@ -9,9 +9,12 @@ import { copiarTexto } from '../../lib/clipboard'
 const props = defineProps<{
   totalAmount?: number
   depositAmount?: number
+  /** Institución en restaurante: no paga abono (SCRUM-264). */
+  exempt?: boolean
 }>()
 
 const settingsStore = useSettingsStore()
+const deadlineHours = computed(() => settingsStore.depositDeadlineHours)
 
 const transfer = computed(() => settingsStore.transferInfo)
 
@@ -54,6 +57,18 @@ async function copiarDatos() {
       <h3 class="text-sm font-black">Política de Abono y Garantía</h3>
     </div>
 
+    <!-- Instituciones: sin abono -->
+    <template v-if="exempt">
+      <div class="flex items-start gap-2.5 p-3.5 bg-emerald-50 rounded-2xl border-2 border-emerald-400 text-sm font-bold text-emerald-950">
+        <ShieldCheck class="w-6 h-6 text-emerald-700 shrink-0 stroke-[2.5]" />
+        <span>
+          <strong class="font-black block">Tu institución no necesita pagar abono.</strong>
+          Esto es solo una solicitud: te contactaremos para confirmarla. El pago se coordina después con el restaurante.
+        </span>
+      </div>
+    </template>
+
+    <template v-else>
     <!-- Aviso destacado -->
     <div class="flex items-start gap-2.5 p-3.5 bg-amber-100 rounded-2xl border-2 border-amber-500 text-sm font-bold text-amber-950">
       <AlertTriangle class="w-6 h-6 text-amber-700 shrink-0 stroke-[2.5]" />
@@ -105,9 +120,14 @@ async function copiarDatos() {
       <p v-if="transfer.email" class="text-gray-700">Envía el comprobante a {{ transfer.email }}</p>
     </div>
 
+    <p class="text-sm font-bold text-gray-700">
+      Tienes {{ deadlineHours }} horas desde que envías la solicitud para transferir el abono. Si no llega a tiempo, nos pondremos en contacto contigo.
+    </p>
+
     <div class="flex items-start gap-2 pt-1 text-sm font-bold text-gray-600">
       <CreditCard class="w-4 h-4 text-brand-accent shrink-0 mt-0.5" />
       <span>El saldo restante se cancela directamente al momento de tu llegada al centro turístico.</span>
     </div>
+    </template>
   </div>
 </template>

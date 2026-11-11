@@ -23,7 +23,7 @@ Depende de SCRUM-59 (estado de las solicitudes) y de SCRUM-57 (calendario del ad
 |---|---|
 | Cabaña | Dos solicitudes activas tienen la misma cabaña y sus fechas se solapan |
 | Camping | En un mismo día y modalidad (diario o pernoctar, cupos separados) las personas suman más que la capacidad del camping |
-| Restaurante | En un mismo día y comida las personas suman más que la capacidad del restaurante (suma de sus espacios). Provisorio hasta confirmar si se mide por comida u hora |
+| Restaurante | En un mismo día y comida las personas suman más que la capacidad del restaurante (suma de sus espacios). El aforo se mide por comida (decidido con el cliente; se confirma en la próxima reunión, D13) |
 
 "Activa" significa `pending` o `confirmed`; las rechazadas y canceladas no cuentan. El intervalo es `[entrada, salida)`.
 
@@ -79,7 +79,7 @@ Hecho el 10/11:
 - Sin conexión (SCRUM-250): la confirmación hecha sin internet queda "Sin sincronizar" y, al reconectar, puede quedar "En conflicto, por resolver".
 
 ## Preguntas abiertas
-- Si el aforo del restaurante se mide por comida u hora (afecta también SCRUM-244).
+- Confirmar en la próxima reunión que el aforo del restaurante se mide por comida (D13; afecta también SCRUM-244). Mientras tanto se respeta esa regla.
 - Evento especial nocturno (SCRUM-261).
 
 ## Verificación manual

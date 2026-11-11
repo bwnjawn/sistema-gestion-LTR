@@ -89,7 +89,7 @@ describe('buildRequestFromDraft', () => {
 
   it('el cliente de restaurante guarda su categoría; las cabañas no', () => {
     expect(buildRequestFromDraft(borrador, contexto).details?.clientType).toBeUndefined()
-    const rest = buildRequestFromDraft({ ...borrador, service: 'restaurante', clientType: 'Colegio' }, contexto)
-    expect(rest.details?.clientType).toBe('Colegio')
+    const rest = buildRequestFromDraft({ ...borrador, service: 'restaurante', clientType: 'Paseo escolar' }, contexto)
+    expect(rest.details?.clientType).toBe('Paseo escolar')
   })
 })

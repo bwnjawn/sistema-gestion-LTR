@@ -5,7 +5,7 @@ export type ServiceType = 'cabana' | 'camping' | 'restaurante'
 export type BookingStatus = 'pending' | 'confirmed' | 'rejected' | 'cancelled'
 export type CampingModality = 'diario' | 'pernoctar'
 export type SideDishMode = 'none' | 'fixed' | 'choice'
-export type ClientType = 'Particular' | 'Empresa' | 'Colegio' | 'Institución'
+export type ClientType = 'Particular' | 'Empresa' | 'Organización' | 'Paseo escolar' | 'Institución'
 export type PaymentMethod = 'transferencia' | 'efectivo' | 'debito'
 
 // 2. Cabañas
@@ -124,6 +124,12 @@ export interface ReservationRequest {
   payments: Payment[]
   status: BookingStatus
   createdAt: string
+  /**
+   * Hasta cuándo debe llegar el abono (ISO), solo en solicitudes pendientes: corre desde que se envía
+   * la solicitud (SCRUM-264). Si vence sin el abono, se marca "Abono vencido"; el admin decide qué hacer.
+   * Las confirmadas y las que no exigen abono no tienen plazo.
+   */
+  depositDueAt?: string
   details?: {
     comments?: string
     selectedMeals?: SelectedMealPayload[]
@@ -166,6 +172,8 @@ export interface TransferInfo {
 
 export interface BusinessParameters {
   defaultDepositPercentage: number
+  /** Horas que tiene el cliente para abonar desde que el admin confirma. */
+  depositDeadlineHours?: number
   marginPercentage: number
   currentDate: string
   isConnected: boolean

@@ -5,6 +5,7 @@ import { ref, computed, watch } from 'vue'
 import type { BusinessInfo, TransferInfo } from '../types/domain'
 import type { RestaurantSchedules, CampingSchedules, CabinSchedules, EspacioRestaurante, LimitesAforo, LimiteVariedades } from '../types/settings'
 import { getRestaurantCapacity } from '../services/availability'
+import { DEFAULT_DEPOSIT_DEADLINE_HOURS } from '../services/payments'
 import { settingsRepository } from '../lib/repositories/settingsRepository'
 import { getStorageItem, setStorageItem } from '../lib/persistence'
 
@@ -23,6 +24,8 @@ export interface CapacityRules {
 
 export interface BusinessParametersExtended {
   defaultDepositPercentage: number
+  /** Horas para abonar desde que el admin confirma (SCRUM-264). */
+  depositDeadlineHours?: number
   ivaPercentage: number
   marginPercentage: number
   currentDate: string
@@ -73,6 +76,7 @@ const DEFAULT_CABIN_SCHEDULES: CabinSchedules = {
 
 const DEFAULT_PARAMS: BusinessParametersExtended = {
   defaultDepositPercentage: 30,
+  depositDeadlineHours: DEFAULT_DEPOSIT_DEADLINE_HOURS,
   ivaPercentage: 19,
   marginPercentage: 10,
   currentDate: '',
@@ -238,6 +242,7 @@ export const useSettingsStore = defineStore('settings', () => {
     isLoading,
     error,
     defaultDepositPercentage: computed(() => parameters.value.defaultDepositPercentage ?? 30),
+    depositDeadlineHours: computed(() => parameters.value.depositDeadlineHours || DEFAULT_DEPOSIT_DEADLINE_HOURS),
     ivaPercentage: computed(() => parameters.value.ivaPercentage ?? 19),
     marginPercentage: computed(() => parameters.value.marginPercentage ?? 10),
     // Se completa con los valores de fábrica: los parámetros guardados antes de SCRUM-244 no traían los espacios.

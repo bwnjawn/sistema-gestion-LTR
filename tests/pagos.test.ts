@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildPayment, getPaymentSummary, validatePayment } from '../src/services/payments'
+import { buildPayment, calculateInitialDepositDueAt, getPaymentSummary, isConfirmedWithoutDeposit, isDepositOverdue, validatePayment } from '../src/services/payments'
 import type { Payment } from '../src/types/domain'
 
 function pago(amount: number): Payment {
@@ -32,5 +32,44 @@ describe('pagos', () => {
     const p = buildPayment({ amount: 1000.6, method: 'debito', notes: '  ok  ' })
     expect(p.amount).toBe(1001)
     expect(p.notes).toBe('ok')
+  })
+})
+
+describe('plazo del abono (SCRUM-264)', () => {
+  const ahora = new Date('2026-11-11T12:00:00.000Z')
+  const base = { totalAmount: 100000, depositRequired: 30000 }
+
+  it('una pendiente tiene 48 horas desde que se envía', () => {
+    expect(calculateInitialDepositDueAt({ ...base, status: 'pending', payments: [] }, 48, ahora)).toBe('2026-11-13T12:00:00.000Z')
+  })
+
+  it('no hay plazo si está confirmada, no exige abono o el abono ya está', () => {
+    expect(calculateInitialDepositDueAt({ ...base, status: 'confirmed', payments: [] }, 48, ahora)).toBeUndefined()
+    expect(calculateInitialDepositDueAt({ ...base, depositRequired: 0, status: 'pending', payments: [] }, 48, ahora)).toBeUndefined()
+    expect(calculateInitialDepositDueAt({ ...base, status: 'pending', payments: [pago(30000)] }, 48, ahora)).toBeUndefined()
+  })
+
+  it('vence solo si está pendiente, falta abono y pasó el plazo', () => {
+    const req = { ...base, status: 'pending' as const, payments: [], depositDueAt: '2026-11-13T12:00:00.000Z' }
+    const antes = new Date('2026-11-13T11:59:00.000Z').getTime()
+    const despues = new Date('2026-11-13T12:01:00.000Z').getTime()
+    expect(isDepositOverdue(req, antes)).toBe(false)
+    expect(isDepositOverdue(req, despues)).toBe(true)
+    expect(isDepositOverdue({ ...req, payments: [pago(30000)] }, despues)).toBe(false)
+    expect(isDepositOverdue({ ...req, status: 'confirmed' }, despues)).toBe(false)
+    expect(isDepositOverdue({ ...req, depositDueAt: undefined }, despues)).toBe(false)
+  })
+
+  it('una reserva sin abono exigido queda "sin abono exigido"', () => {
+    const r = getPaymentSummary({ totalAmount: 100000, depositRequired: 0, payments: [] })
+    expect(r.state).toBe('sin_abono_exigido')
+    expect(r.depositPending).toBe(0)
+  })
+
+  it('confirmada con abono pendiente se marca "sin abono"', () => {
+    expect(isConfirmedWithoutDeposit({ ...base, status: 'confirmed', payments: [] })).toBe(true)
+    expect(isConfirmedWithoutDeposit({ ...base, status: 'confirmed', payments: [pago(30000)] })).toBe(false)
+    expect(isConfirmedWithoutDeposit({ ...base, depositRequired: 0, status: 'confirmed', payments: [] })).toBe(false)
+    expect(isConfirmedWithoutDeposit({ ...base, status: 'pending', payments: [] })).toBe(false)
   })
 })
