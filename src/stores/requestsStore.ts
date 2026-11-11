@@ -21,9 +21,12 @@ import { getCrossedRequests, puedeConfirmarse, type SolicitudEnCruce } from '../
 export type { ReservationRequest }
 
 export const useRequestsStore = defineStore('requests', () => {
-  const requests = ref<ReservationRequest[]>(
-    getStorageItem<ReservationRequest[]>('requests', []).map(normalizeRequest)
-  )
+  const solicitudesGuardadas = getStorageItem<ReservationRequest[]>('requests', [])
+  const requests = ref<ReservationRequest[]>(solicitudesGuardadas.map(normalizeRequest))
+  // Si al cargar se migró algo (por ejemplo id antiguos de platos, SCRUM-247), se vuelve a guardar
+  if (JSON.stringify(requests.value) !== JSON.stringify(solicitudesGuardadas)) {
+    setStorageItem('requests', requests.value)
+  }
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
