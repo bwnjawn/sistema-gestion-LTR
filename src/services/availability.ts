@@ -144,6 +144,86 @@ export function generateTimeSlots(startHour: string, endHour: string, stepMinute
   return slots
 }
 
+/** Horario de una comida: la primera y la última hora que se puede pedir (ambas incluidas). */
+export interface RangoHora {
+  start: string
+  end: string
+}
+
+export type ResultadoHora = { valida: true; hora: string } | { valida: false; mensaje: string }
+
+/** Minutos desde las 00:00 de un texto de hora: "13:30", "9.30", "930" o "13" (= 13:00). */
+function minutosDeTexto(texto: string): number | null {
+  const limpio = texto.trim().replace('.', ':')
+  let horas: number
+  let minutos: number
+  const conDosPuntos = limpio.match(/^(\d{1,2}):(\d{2})$/)
+  if (conDosPuntos) {
+    horas = Number(conDosPuntos[1])
+    minutos = Number(conDosPuntos[2])
+  } else if (/^\d{3,4}$/.test(limpio)) {
+    // "930" → 9:30 y "1330" → 13:30
+    horas = Number(limpio.slice(0, -2))
+    minutos = Number(limpio.slice(-2))
+  } else if (/^\d{1,2}$/.test(limpio)) {
+    horas = Number(limpio)
+    minutos = 0
+  } else {
+    return null
+  }
+  if (horas > 23 || minutos > 59) return null
+  return horas * 60 + minutos
+}
+
+function textoDeMinutos(minutos: number): string {
+  const h = Math.floor(minutos / 60).toString().padStart(2, '0')
+  const m = (minutos % 60).toString().padStart(2, '0')
+  return `${h}:${m}`
+}
+
+/**
+ * Horas que el cliente puede elegir para una comida (SCRUM-37): todas las medias horas exactas (:00 y :30)
+ * que caen dentro del horario, extremos incluidos. Si el administrador cambia el horario, la lista cambia sola:
+ * un horario 12:45–14:15 da 13:00, 13:30 y 14:00.
+ */
+export function horasDeComida(rango: RangoHora, pasoMinutos: number = 30): string[] {
+  const inicio = minutosDeTexto(rango.start)
+  const fin = minutosDeTexto(rango.end)
+  if (inicio === null || fin === null || fin < inicio) return []
+  const horas: string[] = []
+  // Primera media hora que no queda antes del inicio
+  for (let m = Math.ceil(inicio / pasoMinutos) * pasoMinutos; m <= fin; m += pasoMinutos) {
+    horas.push(textoDeMinutos(m))
+  }
+  return horas
+}
+
+/**
+ * Valida una hora de comida (SCRUM-37): debe estar dentro del horario y caer en una media hora exacta
+ * (no vale 8:45). Sirve para revisar lo que quedó guardado (un borrador, o una hora que el administrador
+ * dejó fuera al cambiar el horario). Si es válida devuelve la hora ya normalizada (`HH:MM`); si no, un mensaje.
+ */
+export function validarHoraComida(texto: string, rango: RangoHora, pasoMinutos: number = 30): ResultadoHora {
+  if (!texto.trim()) return { valida: false, mensaje: 'Elige la hora de tu comida.' }
+  const inicio = minutosDeTexto(rango.start)
+  const fin = minutosDeTexto(rango.end)
+  const disponibles = horasDeComida(rango, pasoMinutos)
+  if (inicio === null || fin === null || disponibles.length === 0) {
+    return { valida: false, mensaje: 'Esta comida no tiene un horario definido.' }
+  }
+
+  const minutos = minutosDeTexto(texto)
+  if (minutos === null) return { valida: false, mensaje: 'La hora no se entiende. Elige una de la lista.' }
+
+  if (minutos < inicio || minutos > fin) {
+    return { valida: false, mensaje: `Elige una hora entre ${textoDeMinutos(inicio)} y ${textoDeMinutos(fin)}.` }
+  }
+  if (minutos % pasoMinutos !== 0) {
+    return { valida: false, mensaje: `Solo se puede pedir de media en media hora, por ejemplo ${disponibles.slice(0, 2).join(' o ')}.` }
+  }
+  return { valida: true, hora: textoDeMinutos(minutos) }
+}
+
 const FORMATO_FECHA = /^\d{4}-\d{2}-\d{2}$/
 
 /** Acepta los valores antiguos ('cabaña') que aún pueden estar guardados en el navegador. */

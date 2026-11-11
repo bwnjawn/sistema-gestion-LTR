@@ -9,8 +9,9 @@ import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
 import { useRequestsStore } from '../../../stores/requestsStore'
-import { generateTimeSlots, validateGuestCapacity, getFullMeals, isRestaurantDayBlocked } from '../../../services/availability'
+import { horasDeComida, validarHoraComida, validateGuestCapacity, getFullMeals, isRestaurantDayBlocked } from '../../../services/availability'
 import { formatDateShort } from '../../../lib/dates'
+import { ORDEN_COMIDAS } from '../../../services/menus'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -85,32 +86,35 @@ const capacityValidation = computed(() => {
 const mealOptions = computed(() => {
   const sched = settingsStore.restaurantSchedules
   return [
-    {
-      id: 'desayuno',
-      label: 'Desayuno',
-      rangeText: `${sched.desayuno.start} - ${sched.desayuno.end}`,
-      times: sched.desayuno.times && sched.desayuno.times.length > 0
-        ? sched.desayuno.times
-        : generateTimeSlots(sched.desayuno.start, sched.desayuno.end, 30)
-    },
-    {
-      id: 'almuerzo',
-      label: 'Almuerzo',
-      rangeText: `${sched.almuerzo.start} - ${sched.almuerzo.end}`,
-      times: sched.almuerzo.times && sched.almuerzo.times.length > 0
-        ? sched.almuerzo.times
-        : generateTimeSlots(sched.almuerzo.start, sched.almuerzo.end, 30)
-    },
-    {
-      id: 'once',
-      label: 'Once',
-      rangeText: `${sched.once.start} - ${sched.once.end}`,
-      times: sched.once.times && sched.once.times.length > 0
-        ? sched.once.times
-        : generateTimeSlots(sched.once.start, sched.once.end, 30)
-    }
-  ]
+    { id: 'desayuno', label: 'Desayuno', start: sched.desayuno.start, end: sched.desayuno.end },
+    { id: 'almuerzo', label: 'Almuerzo', start: sched.almuerzo.start, end: sched.almuerzo.end },
+    { id: 'once', label: 'Once', start: sched.once.start, end: sched.once.end }
+  ].map(m => ({ ...m, rangeText: `${m.start} - ${m.end}` }))
 })
+
+// Las comidas elegidas siempre se muestran en el orden del día, sin importar cuál se tocó primero
+const comidasEnOrden = computed(() => ORDEN_COMIDAS.filter(id => store.selectedMealTypes.includes(id)))
+
+function rangoDe(mealId: string) {
+  const opt = mealOptions.value.find(m => m.id === mealId)
+  return { start: opt?.start ?? '', end: opt?.end ?? '' }
+}
+
+// La hora se elige de una lista con las medias horas del horario de cada comida (SCRUM-37).
+// Si el administrador cambia el horario, la lista cambia sola.
+function horasDe(mealId: string): string[] {
+  return horasDeComida(rangoDe(mealId))
+}
+
+// Una hora guardada que ya no está en la lista (por ejemplo, el administrador cambió el horario) cuenta como no elegida
+function horaElegida(mealId: string): string {
+  const guardada = store.mealTimes[mealId] ?? ''
+  return horasDe(mealId).includes(guardada) ? guardada : ''
+}
+
+for (const id of store.selectedMealTypes) {
+  if (!horaElegida(id)) delete store.mealTimes[id]
+}
 
 function toggleMealType(id: string) {
   const idx = store.selectedMealTypes.indexOf(id)
@@ -119,18 +123,13 @@ function toggleMealType(id: string) {
     delete store.mealTimes[id]
   } else {
     store.selectedMealTypes.push(id)
-    const opt = mealOptions.value.find(m => m.id === id)
-    if (opt && opt.times && opt.times.length > 0) {
-      const defaultTime = opt.times[0]
-      store.mealTimes[id] = defaultTime
-      store.restaurantTime = defaultTime
-    }
   }
 }
 
-function selectMealTime(mealId: string, time: string) {
-  store.mealTimes[mealId] = time
-  store.restaurantTime = time
+function elegirHora(mealId: string, hora: string) {
+  if (!hora) return
+  store.mealTimes[mealId] = hora
+  store.restaurantTime = hora
 }
 
 const isValid = computed(() => {
@@ -139,7 +138,7 @@ const isValid = computed(() => {
   if (store.selectedMealTypes.length === 0) return false
   if (selectedFullMeals.value.length > 0) return false
   for (const mId of store.selectedMealTypes) {
-    if (!store.mealTimes[mId]) return false
+    if (!validarHoraComida(store.mealTimes[mId] ?? '', rangoDe(mId)).valida) return false
   }
   return true
 })
@@ -271,7 +270,7 @@ function handleNext() {
       </div>
 
       <div 
-        v-for="mealId in store.selectedMealTypes" 
+        v-for="mealId in comidasEnOrden" 
         :key="mealId"
         class="bg-brand-light p-4 rounded-2xl border-2 border-brand-border space-y-2.5"
       >
@@ -285,22 +284,19 @@ function handleNext() {
           </span>
         </div>
 
-        <div class="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            v-for="timeSlot in mealOptions.find(m => m.id === mealId)?.times"
-            :key="timeSlot"
-            @click="selectMealTime(mealId, timeSlot)"
-            :class="[
-              'py-2.5 px-3 rounded-xl font-black text-sm transition-all touch-target border-2',
-              store.mealTimes[mealId] === timeSlot
-                ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
-                : 'bg-white text-brand-dark border-brand-border hover:bg-gray-100'
-            ]"
-          >
-            {{ timeSlot }} horas
-          </button>
-        </div>
+        <select
+          :id="`hora-${mealId}`"
+          :value="horaElegida(mealId)"
+          :aria-label="`Hora para ${mealOptions.find(m => m.id === mealId)?.label}`"
+          :class="[
+            'w-full p-3 rounded-xl border-2 bg-white font-black text-lg text-center touch-target',
+            horaElegida(mealId) ? 'border-brand-dark text-brand-dark' : 'border-brand-border text-gray-600'
+          ]"
+          @change="elegirHora(mealId, ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="" disabled>Elige la hora</option>
+          <option v-for="hora in horasDe(mealId)" :key="hora" :value="hora">{{ hora }} horas</option>
+        </select>
       </div>
 
       <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-sm font-bold text-gray-700">

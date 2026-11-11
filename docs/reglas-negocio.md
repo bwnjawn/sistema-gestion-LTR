@@ -56,7 +56,7 @@ Estados de implementación: ✅ en servicio · ⚠️ en vista o con valor fijo 
 
 | Regla | Valor | Historia | Estado |
 |---|---|---|---|
-| Horarios | Desayuno 08:30–11:00, almuerzo 12:30–14:00, once 17:00–19:30 (bloques de 30 min) | — | ✅ `generateTimeSlots` y `settingsStore` |
+| Horarios | Desayuno 08:30–11:00, almuerzo 12:30–14:00, once 17:00–19:30. **El cliente elige la hora de cada comida en una lista desplegable** que parte en "Elige la hora" y se puede cambiar. La lista trae todas las medias horas exactas (:00 y :30) del horario, extremos incluidos; si el administrador cambia el horario, la lista cambia sola (12:45–14:15 da 13:00, 13:30 y 14:00). Una hora guardada que ya no está en la lista cuenta como no elegida | SCRUM-37 | ✅ `horasDeComida` y `validarHoraComida` en `services/availability.ts`; el horario sale de `settingsStore.restaurantSchedules` (la lista `times` del ajuste ya no se usa) |
 | Grupos de más de 30 personas | Máximo 3 menús distintos **por comida** (desayuno, almuerzo y once se cuentan por separado), con mensaje explicativo al llegar al límite. Si el grupo crece después de elegir platos y queda sobre el límite, se avisa y no se puede avanzar. El 30 y el 3 son editables en Ajustes | SCRUM-36, 244 | ✅ `services/menus.ts` y `capacityRules.menuLargeGroupThreshold` / `maxMenuVarietiesLargeGroup` |
 | Acompañamientos | Modo `none`, `fixed` (acompañamiento fijo, ej. asado de cordero) o `choice` (el cliente elige) | SCRUM-35, 62, 229 | ✅ en el cliente. ❌ falta el CRUD de administración (SCRUM-229) |
 | Cupo por horario | Reemplazado por el aforo en personas de los espacios (ver más abajo) | SCRUM-244 | `maxRestaurantGroupsPerSlot` quedó sin uso y ya no se muestra en Ajustes |
