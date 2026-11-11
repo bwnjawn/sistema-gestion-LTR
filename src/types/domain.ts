@@ -4,6 +4,10 @@
 export type ServiceType = 'cabana' | 'camping' | 'restaurante'
 export type BookingStatus = 'pending' | 'confirmed' | 'rejected' | 'cancelled'
 export type CampingModality = 'diario' | 'pernoctar'
+/** Modalidades que admite un espacio de camping: una de las dos o ambas. */
+export type CampingSiteModality = CampingModality | 'ambos'
+/** Las tres comidas del restaurante. Siempre en minúscula; la etiqueta para mostrar sale de `ETIQUETAS_COMIDA`. */
+export type MealType = 'desayuno' | 'almuerzo' | 'once'
 export type SideDishMode = 'none' | 'fixed' | 'choice'
 export type ClientType = 'Particular' | 'Empresa' | 'Organización' | 'Paseo escolar' | 'Institución'
 export type PaymentMethod = 'transferencia' | 'efectivo' | 'debito'
@@ -15,6 +19,7 @@ export interface CabinFeatureObj {
   icon?: string
 }
 
+/** Forma antigua de una característica; hoy se guarda solo el texto. Solo la lee la migración del catálogo. */
 export type CabinFeature = string | CabinFeatureObj
 
 export interface Cabin {
@@ -26,7 +31,9 @@ export interface Cabin {
   description?: string
   mainImage?: string
   images?: string[]
-  features?: CabinFeature[]
+  features?: string[]
+  /** Borrado lógico: una cabaña inactiva no aparece en ninguna parte, pero las reservas que la usaron la conservan. */
+  isActive: boolean
   /**
    * Marca de servicio o mantención (SCRUM-266): mientras esté activa, la cabaña no se ofrece para nuevas
    * reservas, ni al cliente ni al administrador. No tiene fechas; las reservas existentes no cambian.
@@ -43,10 +50,12 @@ export interface CampingSite {
   minCapacity: number
   maxCapacity: number
   isSpecial: boolean
-  modality: CampingModality | string
+  modality: CampingSiteModality
   image?: string
   images?: string[]
   features?: string[]
+  /** Borrado lógico (ver `Cabin.isActive`). */
+  isActive: boolean
 }
 
 // 4. Restaurante
@@ -55,14 +64,16 @@ export interface Dish {
   name: string
   price: number
   description?: string
-  mealCategory?: 'Desayuno' | 'Almuerzo' | 'Once' | string
-  hasSelectableSides?: boolean
-  sideMode?: SideDishMode
-  availableSides?: string[]
-  availableSideDishes?: string[]
+  mealType: MealType
+  /** `none`: sin acompañamiento · `fixed`: uno fijo (`fixedSide`) · `choice`: el cliente elige entre `availableSides`. */
+  sideMode: SideDishMode
+  /** Acompañamientos entre los que elige el cliente (solo con `sideMode: 'choice'`). */
+  availableSides: string[]
+  /** Acompañamiento incluido (solo con `sideMode: 'fixed'`). */
   fixedSide?: string
   image?: string
-  mainImage?: string
+  /** Borrado lógico (ver `Cabin.isActive`). */
+  isActive: boolean
 }
 
 export interface GlobalSideDish {
@@ -76,8 +87,8 @@ export interface SelectedMealPayload {
   name: string
   price: number
   quantity: number
-  /** Comida a la que pertenece el plato (desayuno, almuerzo, once). */
-  mealType?: string
+  /** Comida a la que pertenece el plato. */
+  mealType?: MealType
   /** Acompañamiento fijo del plato, si tiene. */
   fixedSide?: string
   /** Cantidad elegida por acompañamiento. */
@@ -149,6 +160,83 @@ export interface ReservationRequest {
     schedule?: RequestSchedule
     [key: string]: any
   }
+}
+
+// 5b. Modelo de reserva para la base de datos (SCRUM-245)
+// Es la forma que tendrá una reserva en Supabase (ver docs/supabase-esquema.md). Las vistas siguen usando
+// `ReservationRequest`; `services/adaptadoresReserva.ts` convierte entre ambos en el borde del repositorio.
+
+/** Un plato elegido dentro de una comida, con la copia del nombre y el precio al momento de reservar. */
+export interface BookingItem {
+  /** Plato del catálogo; queda nulo si el plato ya no existe. */
+  dishId: string | null
+  name: string
+  unitPrice: number
+  quantity: number
+  fixedSide?: string
+  /** Cantidad elegida por acompañamiento. */
+  sides: Record<string, number>
+}
+
+/** Una comida de la reserva de restaurante: su hora y los platos elegidos para ella. */
+export interface BookingMeal {
+  mealType: MealType
+  /** Hora de la comida, `HH:MM`. */
+  time: string
+  items: BookingItem[]
+}
+
+export interface BookingPricing {
+  subtotal: number
+  ivaPercentage: number
+  ivaAmount: number
+  total: number
+  depositPercentage: number
+  /** Abono exigido; 0 si el cliente está exento (Institución en restaurante). */
+  depositRequired: number
+}
+
+export type BookingOrigin = 'cliente' | 'admin'
+
+export interface Booking {
+  id: string
+  /** `SOL-…` si la envió el cliente, `ADM-…` si la cargó el admin. */
+  code: string
+  origin: BookingOrigin
+  type: ServiceType
+  status: BookingStatus
+  clientName: string
+  clientPhone: string
+  clientEmail?: string
+  /** Solo restaurante. */
+  clientType?: ClientType
+  /** Solo cabaña. */
+  cabinId?: string
+  /** Solo camping. */
+  campingSiteId?: string
+  /** Solo camping. */
+  campingModality?: CampingModality
+  /** `YYYY-MM-DD`. */
+  startDate: string
+  /** `YYYY-MM-DD`. En cabañas es la salida (el día no cuenta como ocupado); en el resto, igual a `startDate`. */
+  endDate: string
+  guestsCount: number
+  /** Horario vigente al reservar (cabaña y camping), `HH:MM`. */
+  checkInTime?: string
+  checkOutTime?: string
+  comments?: string
+  pricing: BookingPricing
+  /** Plazo del abono (ISO); solo pendientes que exigen abono. */
+  depositDueAt?: string
+  /** Solo restaurante: una entrada por comida elegida. */
+  meals: BookingMeal[]
+  payments: Payment[]
+  /** Varias cabañas de una misma familia (SCRUM-265). */
+  groupId?: string
+  /** Sin conexión: choca con una confirmada y espera que el admin lo resuelva (SCRUM-250). */
+  inConflict: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 // 6. Información del Negocio y Configuración

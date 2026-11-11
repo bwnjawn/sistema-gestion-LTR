@@ -43,11 +43,7 @@ const currentMealType = computed(() => {
 const totalGuests = computed(() => store.guestsCount)
 
 const currentMealDishes = computed(() => {
-  const catLabel = mealLabels[currentMealType.value] || 'Almuerzo'
-  return catalogStore.dishes.filter(d => {
-    const dishCat = (d.mealCategory || '').toLowerCase()
-    return dishCat === currentMealType.value.toLowerCase() || (d.mealCategory || '') === catLabel
-  })
+  return catalogStore.dishes.filter(d => d.mealType === currentMealType.value)
 })
 
 const selections = ref<Record<string, { count: number; sides: Record<string, number> }>>({})
@@ -71,9 +67,7 @@ function getDishSelection(dishId: string) {
 }
 
 function getSideDishes(dish: Dish): string[] {
-  if (dish.availableSides && dish.availableSides.length > 0) return dish.availableSides
-  if (dish.availableSideDishes && dish.availableSideDishes.length > 0) return dish.availableSideDishes
-  return []
+  return dish.availableSides
 }
 
 // Platos distintos con al menos una unidad elegida
@@ -170,11 +164,7 @@ const dishStatusMap = computed(() => {
 })
 
 function getMealSelectedCount(mealType: string): number {
-  const catLabel = mealLabels[mealType] || 'Almuerzo'
-  const mealDishes = catalogStore.dishes.filter(d => {
-    const dishCat = (d.mealCategory || '').toLowerCase()
-    return dishCat === mealType.toLowerCase() || (d.mealCategory || '') === catLabel
-  })
+  const mealDishes = catalogStore.dishes.filter(d => d.mealType === mealType)
   return mealDishes.reduce((sum, d) => sum + (selections.value[d.id]?.count || 0), 0)
 }
 
@@ -198,7 +188,7 @@ function syncToStore() {
         name: dish.name,
         price: dish.price,
         quantity: sel.count,
-        mealType: (dish.mealCategory || '').toLowerCase(),
+        mealType: dish.mealType,
         count: sel.count,
         fixedSide: dish.fixedSide,
         sides: sel.sides,
@@ -216,10 +206,7 @@ function selectMealTab(idx: number) {
 // Comidas que quedaron con más variedades de las permitidas (por ejemplo, si el grupo creció en el paso 1)
 const mealsOverVarietyLimit = computed(() =>
   activeMealTypes.value.filter(mId => {
-    const dishes = catalogStore.dishes.filter(d => {
-      const cat = (d.mealCategory || '').toLowerCase()
-      return cat === mId.toLowerCase() || (d.mealCategory || '') === mealLabels[mId]
-    })
+    const dishes = catalogStore.dishes.filter(d => d.mealType === mId)
     return superaLimiteVariedades(totalGuests.value, countVarieties(dishes), settingsStore.limiteVariedades)
   })
 )
@@ -404,7 +391,7 @@ useBloqueoScroll(computed(() => showIncompleteModal.value))
         <!-- Foto -->
         <div class="relative h-40 w-full bg-gray-100 rounded-2xl overflow-hidden mb-1">
           <img 
-            :src="dish.image || dish.mainImage || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'" 
+            :src="dish.image || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'" 
             :alt="dish.name"
             class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
             @error="(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80' }"

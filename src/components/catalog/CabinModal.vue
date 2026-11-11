@@ -78,7 +78,7 @@ watch(() => props.cabin, (newCabin) => {
   currentImageIndex.value = 0
   if (newCabin) {
     isEditing.value = true
-    const featStrings = (newCabin.features || []).map(f => typeof f === 'string' ? f : (f as any).text || (f as any).name || '')
+    const featStrings = [...(newCabin.features || [])]
     form.value = {
       name: newCabin.name || '',
       capacity: newCabin.capacity || 2,
@@ -223,7 +223,7 @@ useBloqueoScroll(computed(() => props.isOpen))
                 class="bg-brand-light text-brand-dark border border-brand-border px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5"
               >
                 <Check class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-                {{ typeof feature === 'string' ? feature : (feature as any).text }}
+                {{ feature }}
               </span>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Utensils, CheckCircle2 } from 'lucide-vue-next'
 import type { Dish } from '../../types/catalog'
 import { formatCLP } from '../../lib/format'
+import { ETIQUETAS_COMIDA } from '../../services/menus'
 
 const props = withDefaults(defineProps<{
   dish: Dish
@@ -23,20 +24,14 @@ const emit = defineEmits<{
 const formattedPrice = computed(() => formatCLP(props.dish.price))
 
 const displayImage = computed(() => {
-  return props.dish.image || props.dish.mainImage || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'
+  return props.dish.image || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'
 })
 
-const categoryLabel = computed(() => props.dish.mealCategory || 'Almuerzo')
+const categoryLabel = computed(() => ETIQUETAS_COMIDA[props.dish.mealType])
 
-const isChoiceSide = computed(() => {
-  if (props.dish.sideMode) return props.dish.sideMode === 'choice'
-  return props.dish.hasSelectableSides !== false
-})
+const isChoiceSide = computed(() => props.dish.sideMode === 'choice')
 
-const isFixedSide = computed(() => {
-  if (props.dish.sideMode) return props.dish.sideMode === 'fixed'
-  return !isChoiceSide.value && !!props.dish.fixedSide
-})
+const isFixedSide = computed(() => props.dish.sideMode === 'fixed')
 </script>
 
 <template>

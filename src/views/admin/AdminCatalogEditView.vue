@@ -15,7 +15,8 @@ import { useCatalogStore } from '../../stores/catalogStore'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { getUpcomingCabinRequests } from '../../services/availability'
 import { formatDateShort, todayISO } from '../../lib/dates'
-import type { ReservationRequest } from '../../types/domain'
+import type { MealType, ReservationRequest } from '../../types/domain'
+import { ETIQUETAS_COMIDA, ORDEN_COMIDAS } from '../../services/menus'
 import type { Cabin, CampingSite, Dish } from '../../types/catalog'
 
 const catalogStore = useCatalogStore()
@@ -26,16 +27,17 @@ const activeCategory = ref<'cabana' | 'camping' | 'restaurante'>('cabana')
 const restaurantTab = ref<'dishes' | 'sides'>('dishes')
 
 // Filtros Restaurante
-const selectedDishCategoryFilter = ref('Todos')
-const dishCategories = ['Todos', 'Desayuno', 'Almuerzo', 'Once']
+const selectedDishCategoryFilter = ref<MealType | 'todos'>('todos')
+const dishCategories: Array<{ valor: MealType | 'todos'; etiqueta: string }> = [
+  { valor: 'todos', etiqueta: 'Todos' },
+  ...ORDEN_COMIDAS.map(c => ({ valor: c, etiqueta: ETIQUETAS_COMIDA[c] }))
+]
 
 const filteredMenuDishes = computed(() => {
-  if (selectedDishCategoryFilter.value === 'Todos') {
+  if (selectedDishCategoryFilter.value === 'todos') {
     return catalogStore.dishes
   }
-  return catalogStore.dishes.filter(
-    d => (d.mealCategory || '').toLowerCase() === selectedDishCategoryFilter.value.toLowerCase()
-  )
+  return catalogStore.dishes.filter(d => d.mealType === selectedDishCategoryFilter.value)
 })
 
 // Modales de Edición
@@ -298,8 +300,8 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
 
       <div v-if="restaurantTab === 'dishes'" class="space-y-3">
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
-          <button v-for="cat in dishCategories" :key="cat" type="button" @click="selectedDishCategoryFilter = cat" :class="['px-3.5 py-1.5 rounded-2xl text-xs font-black border transition-all shrink-0', selectedDishCategoryFilter === cat ? 'bg-brand-dark text-white border-brand-dark shadow-2xs' : 'bg-white text-gray-600 border-brand-border hover:bg-gray-50']">
-            {{ cat }}
+          <button v-for="cat in dishCategories" :key="cat.valor" type="button" @click="selectedDishCategoryFilter = cat.valor" :class="['px-3.5 py-1.5 rounded-2xl text-xs font-black border transition-all shrink-0', selectedDishCategoryFilter === cat.valor ? 'bg-brand-dark text-white border-brand-dark shadow-2xs' : 'bg-white text-gray-600 border-brand-border hover:bg-gray-50']">
+            {{ cat.etiqueta }}
           </button>
         </div>
 
