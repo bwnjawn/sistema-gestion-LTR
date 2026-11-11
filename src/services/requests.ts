@@ -20,6 +20,7 @@ import { isMoveDayBlocked, isMoveStayBlocked, type CapacidadesCambioFecha } from
 import { calculateBookingPrice, type PriceBreakdown, type PriceRates } from './pricing'
 import { formatCLP } from '../lib/format'
 import { generateUUID } from '../lib/id'
+import { migrarIdsPlatosElegidos } from './migracionIds'
 
 // ---------------------------------------------------------------------------
 // Normalización de datos guardados con formatos anteriores
@@ -49,7 +50,8 @@ const ESTADOS_ANTIGUOS: Record<string, BookingStatus> = {
  * - tipos y estados con nombres antiguos,
  * - `depositAmount` (que era el abono exigido) pasa a `depositRequired`,
  * - `details.extraPaid` (número suelto) pasa a un pago registrado,
- * - fechas de entrada y salida dentro de `details`.
+ * - fechas de entrada y salida dentro de `details`,
+ * - id antiguos de platos (no UUID) dentro de `details.selectedMeals` (SCRUM-247).
  * No modifica el objeto recibido.
  */
 export function normalizeRequest(raw: any): ReservationRequest {
@@ -74,6 +76,9 @@ export function normalizeRequest(raw: any): ReservationRequest {
     }]
   }
   delete details.extraPaid
+  if (Array.isArray(details.selectedMeals)) {
+    details.selectedMeals = migrarIdsPlatosElegidos(details.selectedMeals)
+  }
 
   const { depositAmount, ...rest } = raw
   return {

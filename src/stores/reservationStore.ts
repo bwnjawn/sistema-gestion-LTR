@@ -9,6 +9,7 @@ import { todayISO } from '../lib/dates'
 import { calculateBookingPrice, type PriceBreakdown } from '../services/pricing'
 import { buildRequestFromDraft, generateRequestCode } from '../services/requests'
 import { isCabinInMaintenance } from '../services/availability'
+import { migrarIdsPlatosElegidos } from '../services/migracionIds'
 import { puedeConfirmarseNueva } from '../services/cruces'
 import { buildPayment, validatePayment } from '../services/payments'
 import type { ClientType, PaymentMethod, RequestSchedule, ServiceType, SelectedMealPayload } from '../types/domain'
@@ -47,7 +48,11 @@ function loadDraftFromSession(): WizardDraftState | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY)
-    return raw ? JSON.parse(raw) : null
+    if (!raw) return null
+    const borrador: WizardDraftState = JSON.parse(raw)
+    // Un borrador con platos de id antiguos (no UUID) sigue apuntando al plato del catálogo (SCRUM-247)
+    borrador.selectedMeals = migrarIdsPlatosElegidos(borrador.selectedMeals) ?? []
+    return borrador
   } catch {
     return null
   }

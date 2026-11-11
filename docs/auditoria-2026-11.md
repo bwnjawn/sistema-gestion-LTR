@@ -12,7 +12,7 @@ Origen: una revisión externa anterior. Cada punto se comprobó en el código ac
 | 3 | El precio mostrado puede diferir del guardado | Step4 con `0.19` y `\|\| 65000` / `\|\| 10000`; `reservationStore.ts:207-224` recalcula; `calculateCabinPrice` y `calculateRestaurantPrice` sin uso | SCRUM-238 |
 | 4 | Toda solicitud nueva aparece "Abonado (Parcial)" | `AdminRequestsView.calculatePaymentState` trata `depositAmount` (requerido) como pagado | SCRUM-239 |
 | 5 | `AdminNewBookingModal` calcula mal y `addRequest` fuerza `pending`; el botón flotante "Nueva Reserva" lleva al portal del cliente | `AdminNewBookingModal.vue`, `AdminLayout.vue:11` | SCRUM-56 (spec) |
-| 6 | IDs de platos no son UUID (`g6…`, `h7…`, `i8…`, `j9…`) | `catalogStore.ts:90,102,113,124` | SCRUM-247 |
+| 6 | IDs de platos no son UUID (`g6…`, `h7…`, `i8…`, `j9…`) | `catalogStore.ts:90,102,113,124` | SCRUM-247 · ✅ corregido el 11/11: semillas en `src/data/catalogoInicial.ts`, migración de datos guardados en `services/migracionIds.ts` |
 | 7 | Los repositorios son un espejo y los errores no llegan a las acciones; claves distintas (`global_sides` / `global_side_dishes`) | `requestsStore.ts` (`watch`), `catalogStore.ts:149`, `catalogRepository.ts:43` | SCRUM-246 |
 | 8 | Calendario: semana con `getDay() + 1`, día de salida contado como ocupado | `AdminCalendarView.vue:66,114` | SCRUM-243 |
 | 9 | El aforo no se aplica; `isDateDisabledFn` sin uso; tope fijo de 200 en restaurante | `AdminSettingsView.vue`, `RestaurantStep1View.vue:60` | SCRUM-60 y la historia de aforo |
