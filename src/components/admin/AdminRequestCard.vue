@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { AlertTriangle, Building2, Calendar, Check, Tent, Users, Utensils, X } from 'lucide-vue-next'
+import { AlertTriangle, Building2, Calendar, Check, Tent, Users, Utensils, Waves, X } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
 import { formatCLP } from '../../lib/format'
 import { formatDateTime } from '../../lib/dates'
@@ -32,6 +32,7 @@ const paidPercent = computed(() =>
 const serviceIcon = computed(() => {
   if (props.request.type === 'cabana') return Building2
   if (props.request.type === 'camping') return Tent
+  if (props.request.type === 'piscina') return Waves
   return Utensils
 })
 

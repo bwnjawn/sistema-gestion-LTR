@@ -17,7 +17,7 @@ import { formatDateLong, isPastDate, nightsBetween } from '../lib/dates'
 import { hasUsablePhone } from '../lib/contactLinks'
 import { isCabinAvailable, validateGuestCapacity } from './availability'
 import { isMoveDayBlocked, isMoveStayBlocked, type CapacidadesCambioFecha } from './cambioFecha'
-import { calculateBookingPrice, type PriceBreakdown, type PriceRates } from './pricing'
+import { calculateBookingPrice, calculatePoolPrice, type PriceBreakdown, type PriceRates } from './pricing'
 import { formatCLP } from '../lib/format'
 import { generateUUID } from '../lib/id'
 import { migrarIdsPlatosElegidos } from './migracionIds'
@@ -31,7 +31,8 @@ const TIPOS_ANTIGUOS: Record<string, ServiceType> = {
   cabana: 'cabana',
   camping: 'camping',
   restaurant: 'restaurante',
-  restaurante: 'restaurante'
+  restaurante: 'restaurante',
+  piscina: 'piscina'
 }
 
 const ESTADOS_ANTIGUOS: Record<string, BookingStatus> = {
@@ -98,7 +99,8 @@ export function normalizeRequest(raw: any): ReservationRequest {
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   cabana: 'Cabaña',
   camping: 'Camping',
-  restaurante: 'Restaurante'
+  restaurante: 'Restaurante',
+  piscina: 'Piscina'
 }
 
 export const STATUS_LABELS: Record<BookingStatus, string> = {
@@ -200,7 +202,7 @@ export function describeRequest(req: ReservationRequest): RequestView {
   const start = details.startDate || req.date
   const end = details.endDate || ''
   const nights = nightsBetween(start, end)
-  const isDayVisit = req.type === 'restaurante' || (req.type === 'camping' && details.campingType === 'diario')
+  const isDayVisit = isSingleDayRequest(req)
 
   const stayDates: InfoRow[] = []
   let staySummary: InfoRow | undefined
@@ -259,10 +261,13 @@ export function describeRequest(req: ReservationRequest): RequestView {
   const priceRows: InfoRow[] = []
   if (details.pricing) {
     const p = details.pricing
-    priceRows.push({ label: 'Subtotal', value: formatCLP(p.subtotal) })
-    priceRows.push({ label: `IVA (${p.ivaPercentage}%)`, value: formatCLP(p.ivaAmount) })
+    // La piscina no desglosa IVA: el precio de la entrada es el final
+    if (p.ivaPercentage > 0) {
+      priceRows.push({ label: 'Subtotal', value: formatCLP(p.subtotal) })
+      priceRows.push({ label: `IVA (${p.ivaPercentage}%)`, value: formatCLP(p.ivaAmount) })
+    }
   }
-  priceRows.push({ label: 'Total con IVA', value: formatCLP(req.totalAmount) })
+  priceRows.push({ label: req.type === 'piscina' ? 'Total' : 'Total con IVA', value: formatCLP(req.totalAmount) })
 
   return {
     serviceLabel: SERVICE_LABELS[req.type],
@@ -328,7 +333,7 @@ export function canEditRequest(req: Pick<ReservationRequest, 'status'>): boolean
 
 /** True si la solicitud es de un solo día (restaurante o camping sin pernoctar). */
 export function isSingleDayRequest(req: Pick<ReservationRequest, 'type' | 'details'>): boolean {
-  return req.type === 'restaurante' || (req.type === 'camping' && req.details?.campingType === 'diario')
+  return req.type === 'restaurante' || req.type === 'piscina' || (req.type === 'camping' && req.details?.campingType === 'diario')
 }
 
 /** Los datos que hoy tiene la solicitud, listos para precargar el formulario de edición. */
@@ -421,8 +426,17 @@ export function applyRequestEdit(
   let depositRequired = req.depositRequired
   let pricing = req.details?.pricing
 
+  const esPiscina = req.type === 'piscina'
+  // La piscina cobra por persona: solo cambia el total si cambian las personas, con el mismo valor por persona
+  if (esPiscina && guestsChanged) {
+    const porPersona = Math.round(req.totalAmount / Math.max(1, original.guestsCount))
+    const price = calculatePoolPrice(porPersona, edit.guestsCount)
+    totalAmount = price.totalWithIva
+    depositRequired = 0
+    pricing = { subtotal: price.subtotal, ivaAmount: 0, ivaPercentage: 0, depositPercentage: 0, nights: 1 }
+  }
   // El restaurante cobra por platos, no por personas ni por fechas: su precio no se recalcula.
-  const needsNewPrice = req.type !== 'restaurante' && (datesChanged || guestsChanged)
+  const needsNewPrice = req.type !== 'restaurante' && !esPiscina && (datesChanged || guestsChanged)
   if (needsNewPrice) {
     if (!cabin && !site) {
       return { ok: false, message: 'No se encontró la cabaña o el espacio original para recalcular el precio.' }

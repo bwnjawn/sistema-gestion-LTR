@@ -34,6 +34,11 @@ const routes = [
     { path: '/restaurante/paso2', name: 'restaurant-step2', meta: { servicio: 'restaurante', paso: 2 }, component: () => import('../views/client/restaurante/RestaurantStep2View.vue') },
     { path: '/restaurante/paso3', name: 'restaurant-step3', meta: { servicio: 'restaurante', paso: 3 }, component: () => import('../views/client/restaurante/RestaurantStep3View.vue') },
     { path: '/restaurante/paso4', name: 'restaurant-step4', meta: { servicio: 'restaurante', paso: 4 }, component: () => import('../views/client/restaurante/RestaurantStep4View.vue') },
+
+    // Flujo Piscina (solicitud solo informativa, SCRUM-44)
+    { path: '/piscina/paso1', name: 'piscina-step1', meta: { servicio: 'piscina', paso: 1 }, component: () => import('../views/client/piscina/PiscinaStep1View.vue') },
+    { path: '/piscina/paso2', name: 'piscina-step2', meta: { servicio: 'piscina', paso: 2 }, component: () => import('../views/client/piscina/PiscinaStep2View.vue') },
+    { path: '/piscina/paso3', name: 'piscina-step3', meta: { servicio: 'piscina', paso: 3 }, component: () => import('../views/client/piscina/PiscinaStep3View.vue') },
     ]
   },
 
@@ -144,6 +149,14 @@ router.beforeEach((to, _from, next) => {
   }
   if (to.name === 'restaurant-step4' && !isClientContactValid(reservationStore.clientName, reservationStore.clientPhone)) {
     return next({ name: 'restaurant-step1' })
+  }
+
+  // Guards de navegación para el flujo de Piscina
+  if (to.name === 'piscina-step2' && !reservationStore.checkInDate) {
+    return next({ name: 'piscina-step1' })
+  }
+  if (to.name === 'piscina-step3' && !isClientContactValid(reservationStore.clientName, reservationStore.clientPhone)) {
+    return next({ name: 'piscina-step1' })
   }
 
   next()

@@ -15,6 +15,7 @@ Un spec describe **cómo** se construye una historia. Jira sigue siendo la fuent
 | [SCRUM-56](SCRUM-56.md) | El admin registra una reserva con el flujo del cliente (hecha; decisiones corregidas el 10/11) | Hecha |
 | [SCRUM-262](SCRUM-262.md) | Resolver cruces al confirmar y avisar al cliente por llamada, correo o WhatsApp | Fase 2 (adelantable) |
 | [SCRUM-229](SCRUM-229.md) | CRUD de acompañamientos (sin, fijo o elegible) | Fase 2 |
+| [SCRUM-44](SCRUM-44.md) | Piscina: solicitud solo informativa, sin abono ni aprobación | Fase 2 |
 | [SCRUM-27](SCRUM-27.md) | Spike: varias cabañas por solicitud | Aplazada (Sprint 3) |
 
 Documentos relacionados: [`../reglas-negocio.md`](../reglas-negocio.md) y [`../plan-entrega.md`](../plan-entrega.md).

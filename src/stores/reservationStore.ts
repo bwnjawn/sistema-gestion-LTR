@@ -219,7 +219,8 @@ export const useReservationStore = defineStore('reservation', () => {
       campingType: campingType.value,
       meals: selectedMeals.value,
       depositPercentage: settingsStore.defaultDepositPercentage,
-      ivaPercentage: settingsStore.ivaPercentage
+      ivaPercentage: settingsStore.ivaPercentage,
+      poolPrice: settingsStore.poolEntryPrice
     })
   })
 
@@ -306,7 +307,7 @@ export const useReservationStore = defineStore('reservation', () => {
 
     const origin = isAdminMode.value ? 'admin' : 'cliente'
     const code = generateRequestCode(requestsStore.requestCodes, origin)
-    let resourceName = 'Restaurante'
+    let resourceName = selectedService.value === 'piscina' ? 'Piscina' : 'Restaurante'
     let resourceId = ''
 
     if (selectedService.value === 'cabana') {
@@ -355,8 +356,10 @@ export const useReservationStore = defineStore('reservation', () => {
 
     // El administrador elige cómo queda la reserva (SCRUM-264): pendiente de abono, con plazo, o confirmada.
     // Si ya recibió un abono lo anota aquí; si elige confirmada con abono incompleto, queda "sin abono".
-    let estadoInicial: 'confirmed' | 'pending' = 'pending'
-    if (isAdminMode.value) {
+    // La piscina (SCRUM-44) es solo informativa: queda confirmada sola, sin abono ni plazo, sea cliente o admin.
+    const esPiscina = selectedService.value === 'piscina'
+    let estadoInicial: 'confirmed' | 'pending' = esPiscina ? 'confirmed' : 'pending'
+    if (isAdminMode.value && !esPiscina) {
       estadoInicial = adminEstado.value
       const monto = Number(adminAbonoMonto.value) || 0
       if (monto > 0) {
