@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { ChevronRight } from 'lucide-vue-next'
 import { useReservationStore } from '../../stores/reservationStore'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
+import TarjetaEventoEspecial from '../../components/ui/TarjetaEventoEspecial.vue'
 import FranjaModoAdmin from '../../components/ui/FranjaModoAdmin.vue'
 import { useSalidaReserva } from '../../composables/useSalidaReserva'
 
@@ -142,6 +143,9 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
             </div>
           </div>
         </div>
+
+        <!-- Evento especial (SCRUM-45): no es una reserva, deriva a los dueños. El admin lo registra aparte. -->
+        <TarjetaEventoEspecial v-if="!reservationStore.isAdminMode" />
       </div>
     </main>
 
