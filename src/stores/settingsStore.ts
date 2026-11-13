@@ -1,136 +1,47 @@
 // src/stores/settingsStore.ts
 
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import type { BusinessInfo, TransferInfo } from '../types/domain'
-import type { RestaurantSchedules, CampingSchedules, CabinSchedules, EspacioRestaurante, LimitesAforo, LimiteVariedades } from '../types/settings'
+import type {
+  AjustesGuardados,
+  BusinessParametersExtended,
+  CabinSchedules,
+  CampingSchedules,
+  CapacityRules,
+  ClaveAjuste,
+  LimiteVariedades,
+  LimitesAforo,
+  RestaurantSchedules
+} from '../types/settings'
 import { getRestaurantCapacity } from '../services/availability'
 import { DEFAULT_DEPOSIT_DEADLINE_HOURS } from '../services/payments'
-import { settingsRepository } from '../lib/repositories/settingsRepository'
-import { getStorageItem, setStorageItem } from '../lib/persistence'
+import {
+  DEFAULT_CABIN_SCHEDULES,
+  DEFAULT_CAMPING_SCHEDULES,
+  DEFAULT_CONTACT,
+  DEFAULT_PARAMS,
+  DEFAULT_RESTAURANT_SCHEDULES,
+  DEFAULT_TRANSFER,
+  PRECIO_PISCINA_POR_DEFECTO
+} from '../data/ajustesPorDefecto'
+import { repositorios } from '../lib/repositories'
+import { persistirConReversion } from '../lib/persistirConReversion'
+import { mensajeDeError } from '../lib/errores'
 
-export interface CapacityRules {
-  /** Sin uso desde SCRUM-244: el aforo del restaurante ahora sale de `restaurantSpaces`. */
-  maxRestaurantGroupsPerSlot: number
-  /** Espacios del restaurante y su capacidad; la suma es el aforo total. */
-  restaurantSpaces: EspacioRestaurante[]
-  /** Grupos de más de estas personas tienen un máximo de platos distintos por comida (SCRUM-36). */
-  menuLargeGroupThreshold: number
-  /** Máximo de platos distintos por comida para grupos grandes. */
-  maxMenuVarietiesLargeGroup: number
-  maxCampingPeopleCapacity: number
-  marginPercentage: number
-}
-
-export interface BusinessParametersExtended {
-  defaultDepositPercentage: number
-  /** Horas para abonar desde que el admin confirma (SCRUM-264). */
-  depositDeadlineHours?: number
-  ivaPercentage: number
-  /** Precio de la entrada a la piscina por persona (SCRUM-44). Valor de ejemplo hasta tener el real (SCRUM-270). */
-  poolEntryPrice?: number
-  marginPercentage: number
-  currentDate: string
-  isConnected: boolean
-  capacityRules: CapacityRules
-}
-
-/** Valor de ejemplo de la entrada a la piscina (CLP por persona): el real está por confirmar con el cliente. */
-export const PRECIO_PISCINA_POR_DEFECTO = 3000
-
-const DEFAULT_CONTACT: BusinessInfo = {
-  phone1: '+56 9 8502 5056',
-  phone2: '+56 9 5883 3853',
-  email: 'lostroncosderepil@gmail.com',
-  websiteDisplay: 'fresianatural.cl',
-  websiteUrl: 'https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html',
-  instagramUser: '@lostroncosderepil',
-  instagramUrl: 'https://instagram.com/lostroncosderepil',
-  address: 'Sector Repil s/n, Comuna de Fresia, Región de Los Lagos, Chile',
-  // Ubicación real de "Turismo Los Troncos de Repil" (-41.0616375, -73.647016)
-  mapsUrl: 'https://www.google.com/maps/place/Turismo+Los+Troncos+de+Repil/@-41.0616375,-73.647016,17z',
-  iframeMapUrl: 'https://maps.google.com/maps?q=-41.0616375,-73.647016&z=17&output=embed'
-}
-
-// Datos de ejemplo hasta que el cliente entregue los reales (D3); el admin los edita en Ajustes.
-const DEFAULT_TRANSFER: TransferInfo = {
-  bank: 'Banco Estado',
-  accountType: 'Cuenta Vista / Cuenta RUT',
-  accountNumber: '12345678',
-  holderName: 'Los Troncos de Repil',
-  holderRut: '12.345.678-9',
-  email: 'lostroncosderepil@gmail.com'
-}
-
-const DEFAULT_RESTAURANT_SCHEDULES: RestaurantSchedules = {
-  desayuno: { start: '08:30', end: '11:00', times: ['08:30', '09:00', '09:30', '10:00', '10:30', '11:00'] },
-  almuerzo: { start: '12:30', end: '14:00', times: ['12:30', '13:00', '13:30', '14:00'] },
-  once: { start: '17:00', end: '19:30', times: ['17:00', '17:30', '18:00', '18:30', '19:00', '19:30'] }
-}
-
-const DEFAULT_CAMPING_SCHEDULES: CampingSchedules = {
-  diario: { checkIn: '09:00', checkOut: '19:30', display: 'Día de ingreso (09:00 hrs) - Día de ingreso (19:30 hrs)' },
-  pernoctar: { checkIn: '12:00', checkOut: '11:00', display: 'Día de ingreso (12:00 hrs) - Día de salida (11:00 hrs)' }
-}
-
-const DEFAULT_CABIN_SCHEDULES: CabinSchedules = {
-  checkIn: '15:00',
-  checkOut: '11:00',
-  display: 'Día de ingreso (15:00 hrs) - Día de salida (11:00 hrs)'
-}
-
-const DEFAULT_PARAMS: BusinessParametersExtended = {
-  defaultDepositPercentage: 30,
-  depositDeadlineHours: DEFAULT_DEPOSIT_DEADLINE_HOURS,
-  ivaPercentage: 19,
-  poolEntryPrice: PRECIO_PISCINA_POR_DEFECTO,
-  marginPercentage: 10,
-  currentDate: '',
-  isConnected: true,
-  capacityRules: {
-    maxRestaurantGroupsPerSlot: 8,
-    restaurantSpaces: [
-      { id: 'comedor-principal', nombre: 'Comedor principal', capacidad: 120 },
-      { id: 'carpa', nombre: 'Carpa', capacidad: 50 },
-      { id: 'comedor-secundario', nombre: 'Comedor secundario', capacidad: 30 }
-    ],
-    menuLargeGroupThreshold: 30,
-    maxMenuVarietiesLargeGroup: 3,
-    maxCampingPeopleCapacity: 150,
-    marginPercentage: 10
-  }
-}
-
-// Valores de fábrica anteriores (mapa con coordenadas erróneas y sitio antiguo): si el navegador
-// los tiene guardados, se reemplazan por los actuales. Lo que el admin editó a mano no se toca.
-const CONTACTO_ANTIGUO: Partial<BusinessInfo> = {
-  mapsUrl: 'https://maps.google.com/?q=-41.1500,-73.4167',
-  iframeMapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30000!2d73.4167!3d41.1500',
-  websiteUrl: 'https://www.lostroncosderepil.cl',
-  phone2: '+56 9 9588 3385'
-}
-
-function migrarContacto(guardado: BusinessInfo): BusinessInfo {
-  const migrado = { ...guardado }
-  if (migrado.mapsUrl === CONTACTO_ANTIGUO.mapsUrl) migrado.mapsUrl = DEFAULT_CONTACT.mapsUrl
-  if (migrado.iframeMapUrl?.startsWith(CONTACTO_ANTIGUO.iframeMapUrl as string)) migrado.iframeMapUrl = DEFAULT_CONTACT.iframeMapUrl
-  if (migrado.websiteUrl === CONTACTO_ANTIGUO.websiteUrl) {
-    migrado.websiteUrl = DEFAULT_CONTACT.websiteUrl
-    migrado.websiteDisplay = DEFAULT_CONTACT.websiteDisplay
-  }
-  if (migrado.phone2 === CONTACTO_ANTIGUO.phone2) migrado.phone2 = DEFAULT_CONTACT.phone2
-  return migrado
-}
+export type { BusinessParametersExtended, CapacityRules }
 
 export const useSettingsStore = defineStore('settings', () => {
-  const contactInfo = ref<BusinessInfo>(migrarContacto(getStorageItem('contact_info', DEFAULT_CONTACT)))
-  const transferInfo = ref<TransferInfo>({ ...DEFAULT_TRANSFER, ...getStorageItem('transfer_info', DEFAULT_TRANSFER) })
-  const restaurantSchedules = ref<RestaurantSchedules>(getStorageItem('restaurant_schedules', DEFAULT_RESTAURANT_SCHEDULES))
-  const campingSchedules = ref<CampingSchedules>(getStorageItem('camping_schedules', DEFAULT_CAMPING_SCHEDULES))
-  const cabinSchedules = ref<CabinSchedules>(getStorageItem('cabin_schedules', DEFAULT_CABIN_SCHEDULES))
-  const parameters = ref<BusinessParametersExtended>(getStorageItem('parameters', DEFAULT_PARAMS))
+  // Estado inicial: los valores de fábrica. `init()` los reemplaza por lo que haya guardado el administrador.
+  const contactInfo = ref<BusinessInfo>({ ...DEFAULT_CONTACT })
+  const transferInfo = ref<TransferInfo>({ ...DEFAULT_TRANSFER })
+  const restaurantSchedules = ref<RestaurantSchedules>(structuredClone(DEFAULT_RESTAURANT_SCHEDULES))
+  const campingSchedules = ref<CampingSchedules>(structuredClone(DEFAULT_CAMPING_SCHEDULES))
+  const cabinSchedules = ref<CabinSchedules>({ ...DEFAULT_CABIN_SCHEDULES })
+  const parameters = ref<BusinessParametersExtended>(structuredClone(DEFAULT_PARAMS))
 
   const isLoading = ref(false)
+  const isReady = ref(false)
   const error = ref<string | null>(null)
 
   const isOnline = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
@@ -150,35 +61,61 @@ export const useSettingsStore = defineStore('settings', () => {
     return str.charAt(0).toUpperCase() + str.slice(1)
   })
 
-  watch(contactInfo, async (val) => {
-    setStorageItem('contact_info', val)
-    await settingsRepository.saveContactInfo(val)
-  }, { deep: true })
+  /** Carga los ajustes guardados desde el repositorio. Se llama una vez al arrancar la app. */
+  async function init(): Promise<void> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const repo = repositorios().settings
+      const [contacto, transferencia, restaurante, camping, cabana, parametros] = await Promise.all([
+        repo.get('contact_info', DEFAULT_CONTACT),
+        repo.get('transfer_info', DEFAULT_TRANSFER),
+        repo.get('restaurant_schedules', DEFAULT_RESTAURANT_SCHEDULES),
+        repo.get('camping_schedules', DEFAULT_CAMPING_SCHEDULES),
+        repo.get('cabin_schedules', DEFAULT_CABIN_SCHEDULES),
+        repo.get('parameters', DEFAULT_PARAMS)
+      ])
+      contactInfo.value = contacto
+      // Lo guardado antes de que existieran campos nuevos se completa con los de fábrica
+      transferInfo.value = { ...DEFAULT_TRANSFER, ...transferencia }
+      restaurantSchedules.value = restaurante
+      campingSchedules.value = camping
+      cabinSchedules.value = cabana
+      parameters.value = parametros
+      isReady.value = true
+    } catch (e) {
+      error.value = mensajeDeError(e, 'No se pudieron cargar los ajustes.')
+      throw e
+    } finally {
+      isLoading.value = false
+    }
+  }
 
-  watch(transferInfo, async (val) => {
-    setStorageItem('transfer_info', val)
-    await settingsRepository.saveTransferInfo(val)
-  }, { deep: true })
-
-  watch(restaurantSchedules, async (val) => {
-    setStorageItem('restaurant_schedules', val)
-    await settingsRepository.saveRestaurantSchedules(val)
-  }, { deep: true })
-
-  watch(campingSchedules, async (val) => {
-    setStorageItem('camping_schedules', val)
-    await settingsRepository.saveCampingSchedules(val)
-  }, { deep: true })
-
-  watch(cabinSchedules, async (val) => {
-    setStorageItem('cabin_schedules', val)
-    await settingsRepository.saveCabinSchedules(val)
-  }, { deep: true })
-
-  watch(parameters, async (val) => {
-    setStorageItem('parameters', val)
-    await settingsRepository.saveParameters(val)
-  }, { deep: true })
+  /** Cambia un ajuste en pantalla, lo guarda y, si falla, lo deja como estaba y avisa. */
+  async function guardarAjuste<K extends ClaveAjuste>(
+    clave: K,
+    destino: { value: AjustesGuardados[K] },
+    nuevo: AjustesGuardados[K],
+    mensaje: string
+  ): Promise<boolean> {
+    const previo = destino.value
+    isLoading.value = true
+    error.value = null
+    try {
+      await persistirConReversion({
+        aplicar: () => { destino.value = nuevo },
+        revertir: () => { destino.value = previo },
+        persistir: () => repositorios().settings.save(clave, nuevo),
+        mensaje
+      })
+      return true
+    } catch (e) {
+      error.value = mensajeDeError(e, mensaje)
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
 
   const capacityRulesActuales = computed<CapacityRules>(() => ({ ...DEFAULT_PARAMS.capacityRules, ...parameters.value.capacityRules }))
   const restaurantCapacity = computed(() => getRestaurantCapacity(capacityRulesActuales.value.restaurantSpaces))
@@ -195,47 +132,37 @@ export const useSettingsStore = defineStore('settings', () => {
   const phone1Clean = computed(() => contactInfo.value.phone1.replace(/\s+/g, ''))
   const phone2Clean = computed(() => contactInfo.value.phone2.replace(/\s+/g, ''))
 
-  async function updateContactInfo(info: Partial<BusinessInfo>): Promise<void> {
-    isLoading.value = true
-    error.value = null
-    try {
-      contactInfo.value = { ...contactInfo.value, ...info }
-    } catch (e: any) {
-      error.value = 'Error al actualizar la información de contacto.'
-    } finally {
-      isLoading.value = false
-    }
+  async function updateContactInfo(info: Partial<BusinessInfo>): Promise<boolean> {
+    return guardarAjuste('contact_info', contactInfo, { ...contactInfo.value, ...info }, 'No se pudo guardar la información de contacto.')
   }
 
-  async function updateTransferInfo(info: Partial<TransferInfo>): Promise<void> {
-    transferInfo.value = { ...transferInfo.value, ...info }
+  async function updateTransferInfo(info: Partial<TransferInfo>): Promise<boolean> {
+    return guardarAjuste('transfer_info', transferInfo, { ...transferInfo.value, ...info }, 'No se pudieron guardar los datos de transferencia.')
   }
 
-  async function updateParameters(params: Partial<BusinessParametersExtended>): Promise<void> {
-    isLoading.value = true
-    error.value = null
-    try {
-      parameters.value = { ...parameters.value, ...params }
-    } catch (e: any) {
-      error.value = 'Error al actualizar los parámetros del negocio.'
-    } finally {
-      isLoading.value = false
-    }
+  async function updateParameters(params: Partial<BusinessParametersExtended>): Promise<boolean> {
+    return guardarAjuste('parameters', parameters, { ...parameters.value, ...params }, 'No se pudieron guardar los parámetros del negocio.')
   }
 
-  async function updateCapacityRules(rules: Partial<CapacityRules>): Promise<void> {
-    isLoading.value = true
-    error.value = null
-    try {
-      parameters.value.capacityRules = {
-        ...parameters.value.capacityRules,
-        ...rules
-      }
-    } catch (e: any) {
-      error.value = 'Error al actualizar las reglas de aforo.'
-    } finally {
-      isLoading.value = false
-    }
+  async function updateCapacityRules(rules: Partial<CapacityRules>): Promise<boolean> {
+    return guardarAjuste(
+      'parameters',
+      parameters,
+      { ...parameters.value, capacityRules: { ...parameters.value.capacityRules, ...rules } },
+      'No se pudieron guardar las reglas de aforo.'
+    )
+  }
+
+  async function updateCampingSchedules(horarios: CampingSchedules): Promise<boolean> {
+    return guardarAjuste('camping_schedules', campingSchedules, horarios, 'No se pudieron guardar los horarios de camping.')
+  }
+
+  async function updateRestaurantSchedules(horarios: RestaurantSchedules): Promise<boolean> {
+    return guardarAjuste('restaurant_schedules', restaurantSchedules, horarios, 'No se pudieron guardar los horarios del restaurante.')
+  }
+
+  async function updateCabinSchedules(horarios: CabinSchedules): Promise<boolean> {
+    return guardarAjuste('cabin_schedules', cabinSchedules, horarios, 'No se pudieron guardar los horarios de las cabañas.')
   }
 
   return {
@@ -246,7 +173,9 @@ export const useSettingsStore = defineStore('settings', () => {
     cabinSchedules,
     parameters,
     isLoading,
+    isReady,
     error,
+    init,
     defaultDepositPercentage: computed(() => parameters.value.defaultDepositPercentage ?? 30),
     depositDeadlineHours: computed(() => parameters.value.depositDeadlineHours || DEFAULT_DEPOSIT_DEADLINE_HOURS),
     ivaPercentage: computed(() => parameters.value.ivaPercentage ?? 19),
@@ -264,6 +193,9 @@ export const useSettingsStore = defineStore('settings', () => {
     updateContactInfo,
     updateTransferInfo,
     updateParameters,
-    updateCapacityRules
+    updateCapacityRules,
+    updateCampingSchedules,
+    updateRestaurantSchedules,
+    updateCabinSchedules
   }
 })

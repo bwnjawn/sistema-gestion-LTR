@@ -49,11 +49,7 @@ export function getCabinOverlaps(
 ): ReservationRequest[] {
   const activeBookings = existingRequests.filter(r => {
     if (excludeRequestId && r.id === excludeRequestId) return false
-    const rawType = r.type as string
-    const rawStatus = r.status as string
-    const isCabina = rawType === 'cabana' || rawType === 'cabaña'
-    const isActive = rawStatus === 'confirmed' || rawStatus === 'pending' || rawStatus === 'confirmada' || rawStatus === 'pendiente'
-    return isCabina && isActive && r.details?.resourceId === cabinId
+    return r.type === 'cabana' && isRequestActive(r) && r.details?.resourceId === cabinId
   })
   return activeBookings.filter(booking => {
     const bStart = booking.details?.startDate || booking.date
@@ -64,8 +60,7 @@ export function getCabinOverlaps(
 
 /** Una solicitud confirmada es la única que retiene fechas y cupos (decisión del 10/11, SCRUM-263). */
 export function isRequestConfirmed(req: Pick<ReservationRequest, 'status'>): boolean {
-  const estado = req.status as string
-  return estado === 'confirmed' || estado === 'confirmada'
+  return req.status === 'confirmed'
 }
 
 /** Solicitudes pendientes que se cruzan con una cabaña en las fechas indicadas (para avisar al administrador). */
@@ -93,8 +88,7 @@ export function isDateDisabled(
   resourceId?: string
 ): boolean {
   if (isPastDate(dateStr)) return true
-  const rawServiceType = serviceType as string
-  if ((rawServiceType === 'cabana' || rawServiceType === 'cabaña') && resourceId) {
+  if (serviceType === 'cabana' && resourceId) {
     // Si la cabaña tiene una reserva activa para esa noche
     const checkOutStr = addDays(dateStr, 1)
     return !isCabinAvailable(resourceId, dateStr, checkOutStr, existingRequests)
@@ -226,15 +220,9 @@ export function validarHoraComida(texto: string, rango: RangoHora, pasoMinutos: 
 
 const FORMATO_FECHA = /^\d{4}-\d{2}-\d{2}$/
 
-/** Acepta los valores antiguos ('cabaña') que aún pueden estar guardados en el navegador. */
-function normalizarServicio(tipo: string): ServiceType {
-  return (tipo === 'cabaña' ? 'cabana' : tipo) as ServiceType
-}
-
 /** Una solicitud ocupa el calendario solo si está pendiente o confirmada (no rechazada ni cancelada). */
 export function isRequestActive(req: Pick<ReservationRequest, 'status'>): boolean {
-  const estado = req.status as string
-  return estado === 'pending' || estado === 'confirmed' || estado === 'pendiente' || estado === 'confirmada'
+  return req.status === 'pending' || req.status === 'confirmed'
 }
 
 /**
@@ -268,7 +256,7 @@ export function getRequestsForDay(
 ): ReservationRequest[] {
   return existingRequests.filter(r =>
     isRequestActive(r) &&
-    (!services || services.includes(normalizarServicio(r.type))) &&
+    (!services || services.includes(r.type)) &&
     requestOccupiesDay(r, dateStr)
   )
 }
@@ -347,13 +335,13 @@ export function getDayOccupancy(
   limites: LimitesAforo = LIMITES_AFORO_POR_DEFECTO
 ): { confirmedCount: number; pendingCount: number; status: 'disponible' | 'ocupado' | 'sobrecupo' } {
   const dayRequests = getRequestsForDay(dateStr, existingRequests, services)
-  const confirmedCount = dayRequests.filter(r => (r.status as string) === 'confirmed' || (r.status as string) === 'confirmada').length
+  const confirmedCount = dayRequests.filter(isRequestConfirmed).length
   const pendingCount = dayRequests.length - confirmedCount
 
-  const restaurante = dayRequests.filter(r => normalizarServicio(r.type) === 'restaurante')
+  const restaurante = dayRequests.filter(r => r.type === 'restaurante')
   const maxRestaurante = Math.max(0, ...Object.values(personasRestaurantePorComida(restaurante)))
   const recursosCabana = dayRequests
-    .filter(r => normalizarServicio(r.type) === 'cabana')
+    .filter(r => r.type === 'cabana')
     .map(r => r.details?.resourceId)
     .filter(Boolean)
   const cabanaCruzada = new Set(recursosCabana).size !== recursosCabana.length
@@ -401,11 +389,7 @@ export function getUpcomingCabinRequests(
   hoy: string
 ): ReservationRequest[] {
   return existingRequests.filter(r => {
-    const rawType = r.type as string
-    const rawStatus = r.status as string
-    const esCabana = rawType === 'cabana' || rawType === 'cabaña'
-    const activa = rawStatus === 'confirmed' || rawStatus === 'pending' || rawStatus === 'confirmada' || rawStatus === 'pendiente'
-    if (!esCabana || !activa || r.details?.resourceId !== cabinId) return false
+    if (r.type !== 'cabana' || !isRequestActive(r) || r.details?.resourceId !== cabinId) return false
     const salida = r.details?.endDate || r.timeOrDuration || ''
     return !!salida && salida > hoy
   })
@@ -577,7 +561,7 @@ export function findConflicts(
   const porCabana = new Map<string, ReservationRequest[]>()
   for (const r of activas) {
     const recurso = r.details?.resourceId
-    if (normalizarServicio(r.type) !== 'cabana' || !recurso) continue
+    if (r.type !== 'cabana' || !recurso) continue
     porCabana.set(recurso, [...(porCabana.get(recurso) || []), r])
   }
   for (const reservas of porCabana.values()) {
@@ -602,7 +586,7 @@ export function findConflicts(
 
   // Restaurante: personas por día y comida
   const porComida = new Map<string, { personas: number; ids: string[] }>()
-  for (const r of activas.filter(x => normalizarServicio(x.type) === 'restaurante')) {
+  for (const r of activas.filter(x => x.type === 'restaurante')) {
     const dia = getRequestDateRange(r).start
     if (!dia) continue
     const comidas = r.details?.selectedMealTypes?.length ? r.details.selectedMealTypes : ['sin-comida']
@@ -621,7 +605,7 @@ export function findConflicts(
 
   // Camping: personas por día y modalidad (diario y pernoctar tienen cupos separados)
   const porDiaCamping = new Map<string, { personas: number; ids: string[] }>()
-  for (const r of activas.filter(x => normalizarServicio(x.type) === 'camping')) {
+  for (const r of activas.filter(x => x.type === 'camping')) {
     for (const dia of diasQueOcupa(r)) {
       const clave = `${dia}|${modalidadCamping(r)}`
       const actual = porDiaCamping.get(clave) || { personas: 0, ids: [] }

@@ -1,9 +1,10 @@
-// src/data/catalogoInicial.ts
-// Datos semilla del catálogo: lo que ve la app la primera vez, antes de que el admin lo edite.
+// src/data/seed.ts
+// Datos semilla: lo que ve la app la primera vez, antes de que el admin lo edite. Solo los usan los
+// repositorios locales (src/lib/repositories/) y las pruebas; con Supabase (SCRUM-248) viven en la base.
 // Todos los id deben ser UUID válidos (una columna `uuid` de Postgres rechaza cualquier otro valor):
 // lo comprueba tests/migracionIds.test.ts. Los id antiguos de platos se migran en services/migracionIds.ts.
 
-import type { Cabin, CampingSite, Dish } from '../types/domain'
+import type { AdminUserWithPassword, Cabin, CampingSite, Dish } from '../types/domain'
 
 export const DEFAULT_CABINS: Cabin[] = [
   {
@@ -144,4 +145,26 @@ export const DEFAULT_GLOBAL_SIDES: string[] = [
   'Arroz con verduras',
   'Ensalada surtida',
   'Ensalada a la chilena'
+]
+
+// Administradores de fábrica. AUTENTICACIÓN DE PROTOTIPO: las contraseñas viajan en el código y se guardan en
+// texto plano en el navegador. Sirve para una demo cerrada; la autenticación real llega con Supabase Auth
+// (SCRUM-248), que elimina esta lista. No reutilices aquí una contraseña que uses en otro sitio.
+export const DEFAULT_ADMINS: AdminUserWithPassword[] = [
+  {
+    id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380c11',
+    name: 'Dueño 1 (Principal)',
+    email: 'dueno1@troncosderepil.cl',
+    passwordHash: 'UucfZdqLKjRD',
+    role: 'owner',
+    createdAt: '2026-01-01'
+  },
+  {
+    id: 'f2eebc99-9c0b-4ef8-bb6d-6bb9bd380c22',
+    name: 'Dueño 2 (Administración)',
+    email: 'dueno2@troncosderepil.cl',
+    passwordHash: 'i64CA7dk9MaM',
+    role: 'owner',
+    createdAt: '2026-01-01'
+  }
 ]

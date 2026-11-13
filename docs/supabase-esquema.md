@@ -265,7 +265,7 @@ Todas las tablas con `enable row level security`. Dos roles: **público** (clave
 
 **El público no lee reservas.** Para que el cliente vea fechas bloqueadas sin exponer datos personales, y para que envíe una solicitud, se usan dos funciones `security definer` (se llaman con `supabase.rpc`):
 
-- `fechas_ocupadas(tipo, desde, hasta)`: devuelve solo agregados, sin nombre ni teléfono: por cabaña y noche si hay una confirmada; por comida y día, las personas ya confirmadas; por modalidad y día, las personas de camping. Cuenta solo `confirmed` (SCRUM-263).
+- `fechas_ocupadas(desde, hasta)`: devuelve solo agregados, sin nombre ni teléfono, con la forma de `FechasOcupadas` (`src/types/disponibilidad.ts`): una fila por cabaña y noche si hay una confirmada; por comida y día, las personas ya confirmadas; por modalidad y día, las personas de camping (cada noche de una estadía de pernoctar). Cuenta solo `confirmed` (SCRUM-263) y no incluye la piscina.
 - `crear_solicitud(payload jsonb)`: valida el payload, vuelve a calcular precio y abono en el servidor (no confía en los totales del cliente), fija `estado = 'pending'` y `origen = 'cliente'` (**salvo `piscina`, que nace `confirmed`**, sin abono y sin validar cupos), genera el código y devuelve `{ id, codigo }`.
 
 **Al confirmar** (trigger sobre `estado`): la restricción de exclusión impide dos cabañas confirmadas cruzadas; para restaurante y camping, el trigger suma las personas ya confirmadas del mismo día y comida/modalidad y rechaza si superan el aforo. En la reconexión sin conexión (SCRUM-250), el error de la restricción es lo que marca `en_conflicto = true` en lugar de perder la reserva.
@@ -284,3 +284,32 @@ Todas las tablas con `enable row level security`. Dos roles: **público** (clave
 3. **Códigos `SOL-`/`ADM-` con secuencia** (reemplaza los aleatorios de 3 y 4 dígitos).
 4. **Instantánea de precios en `reserva_items`** en vez de apuntar siempre al plato.
 5. **Una cabaña por reserva**; las familias se enlazan con `grupo_id` (SCRUM-265), sin tabla de grupos.
+
+## 9. Capa de datos en la app (SCRUM-246)
+
+Las vistas llaman al **store de Pinia**; el store llama a un **repositorio por entidad** (`src/lib/repositories/`). Hoy los implementa el almacenamiento local; SCRUM-248 agrega otra implementación de las mismas interfaces y la registra en `src/lib/repositories/index.ts` (`repositorios()` / `usarRepositorios()`), sin tocar stores ni vistas.
+
+| Interfaz | Operaciones | Tabla en Supabase |
+|---|---|---|
+| `Repositorio<T>` (cabañas, espacios de camping, platos, administradores) | `list`, `getById`, `create`, `update(id, cambios)`, `remove` | `cabanas`, `sitios_camping`, `platos`, `perfiles_admin` |
+| `RequestRepository` (extiende `Repositorio`) | además `listByRange(desde, hasta)` | `reservas` (+ `reserva_comidas`, `reserva_items`), con los adaptadores de `services/adaptadoresReserva.ts` en el borde |
+| `PaymentRepository` | `listByRequest`, `add`, `remove` | `pagos` |
+| `AvailabilityRepository` | `fechasOcupadas(desde, hasta)` → `FechasOcupadas` | función `fechas_ocupadas` (el público no lee `reservas`) |
+| `GlobalSideRepository` | `list`, `add`, `remove` (lista de nombres) | `acompanamientos` |
+| `SettingsRepository` | `get(clave, porDefecto)`, `save(clave, valor)` | `ajustes` |
+| `AuthRepository` | `admins` (un `Repositorio`), `getSession`, `saveSession`, `clearSession` | Supabase Auth (reemplaza este repositorio) |
+
+Reglas de la capa:
+- **Sin `watch` que guarden.** Cada acción aplica el cambio en pantalla, llama al repositorio y, si falla, lo **revierte** y muestra el aviso global (`persistirConReversion`, `AvisoErrores`). El repositorio lanza `ErrorDeAlmacenamiento` / `ErrorNoEncontrado` (`src/lib/errores.ts`).
+- **`init()` asíncrono** en cada store; `main.ts` no monta la app hasta que todos cargan (`src/lib/arranque.ts`). Si falla, muestra una pantalla con "Reintentar".
+- **Semillas** (`src/data/seed.ts`) solo las usa el repositorio local, mientras no haya nada guardado. Los valores de fábrica de los ajustes están en `src/data/ajustesPorDefecto.ts`.
+- **`migrateLegacyData()`** (`src/lib/migrarDatosLocales.ts`) lleva lo guardado en el navegador al formato vigente al arrancar. Solo existe para el almacenamiento local; en Supabase los datos nacen en el formato vigente, así que el código ya no acepta valores antiguos (`'cabaña'`, `'confirmada'`, `'pendiente'`…).
+- **Claves unificadas:** los acompañamientos globales usan solo `global_sides` (la clave `global_side_dishes` se borra al migrar).
+- **El cliente no lee solicitudes.** Las pantallas del cliente (cabaña, camping y restaurante, pasos 1 y 2) toman la disponibilidad del `disponibilidadStore`, que pide `fechasOcupadas` al arrancar (hoy + 730 días) y la vuelve a pedir cuando el admin confirma, cancela, rechaza o mueve una reserva. Las reglas están en `services/disponibilidad.ts` y `tests/disponibilidad.test.ts` comprueba que dan lo mismo que las de `services/availability.ts`, que sigue usando el administrador con la lista completa.
+
+### Pendiente para SCRUM-248 (no cubierto por 246)
+1. **Enviar la solicitud del cliente** será `crear_solicitud`, que recalcula el precio y asigna el código; hoy el store genera el id y el código (`generateRequestCode`). El store deberá quedarse con lo que devuelva `RequestRepository.create`.
+2. **No cargar todas las solicitudes para el cliente.** `requestsStore.init()` pide la lista completa al arrancar; con las reglas de acceso solo debe cargarse con sesión de administrador (por ejemplo, desde la guarda de las rutas `/admin`). Hoy se carga para todos porque el código `SOL-` se genera comparando con los existentes.
+3. **Datos frescos entre dispositivos:** los stores cargan una sola vez; hará falta refrescar o usar realtime, y pedir por mes con `listByRange`.
+4. **Sin conexión (SCRUM-250):** la reversión de `persistirConReversion` asume que un fallo se deshace; offline una solicitud debe quedar en cola y no revertirse.
+5. **Migración de lo guardado en los navegadores** hacia la base.

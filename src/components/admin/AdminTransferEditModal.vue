@@ -46,12 +46,12 @@ const campos: { clave: keyof typeof form.value; etiqueta: string; tipo: string }
   { clave: 'email', etiqueta: 'Correo para enviar el comprobante', tipo: 'email' }
 ]
 
-function guardar() {
+async function guardar() {
   const limpio = Object.fromEntries(
     Object.entries(form.value).map(([clave, valor]) => [clave, String(valor).trim()])
   )
-  settingsStore.updateTransferInfo(limpio)
-  emit('close')
+  const guardado = await settingsStore.updateTransferInfo(limpio)
+  if (guardado) emit('close')
 }
 useBloqueoScroll(computed(() => props.isOpen))
 </script>

@@ -37,9 +37,9 @@ export function isMoveDayBlocked(
   capacidades: CapacidadesCambioFecha
 ): boolean {
   const otras = sinLaPropia(solicitud, todas)
-  const tipo = solicitud.type as string
+  const tipo = solicitud.type
 
-  if ((tipo === 'cabana' || tipo === 'cabaña') && solicitud.details?.resourceId) {
+  if (tipo === 'cabana' && solicitud.details?.resourceId) {
     return !isCabinAvailable(solicitud.details.resourceId, dia, addDays(dia, 1), todas, solicitud.id)
   }
 
@@ -67,9 +67,9 @@ export function isMoveStayBlocked(
   todas: ReservationRequest[],
   capacidades: CapacidadesCambioFecha
 ): boolean {
-  const tipo = solicitud.type as string
+  const tipo = solicitud.type
 
-  if ((tipo === 'cabana' || tipo === 'cabaña') && solicitud.details?.resourceId) {
+  if (tipo === 'cabana' && solicitud.details?.resourceId) {
     return !isCabinAvailable(solicitud.details.resourceId, entrada, salida, todas, solicitud.id)
   }
 
@@ -86,12 +86,12 @@ export function hasPendingOnMoveDay(
   dia: string,
   todas: ReservationRequest[]
 ): boolean {
-  const tipo = solicitud.type as string
+  const tipo = solicitud.type
   const delMismoServicio = getRequestsForDay(dia, sinLaPropia(solicitud, todas), [solicitud.type]).filter(
     r => !isRequestConfirmed(r)
   )
 
-  if (tipo === 'cabana' || tipo === 'cabaña') {
+  if (tipo === 'cabana') {
     return delMismoServicio.some(r => r.details?.resourceId === solicitud.details?.resourceId)
   }
   if (tipo === 'camping') {

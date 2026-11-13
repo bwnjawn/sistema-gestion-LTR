@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CABINS, DEFAULT_CAMPING, DEFAULT_DISHES } from '../src/data/catalogoInicial'
+import { DEFAULT_CABINS, DEFAULT_CAMPING, DEFAULT_DISHES } from '../src/data/seed'
 import {
   normalizarCabana,
   normalizarComida,

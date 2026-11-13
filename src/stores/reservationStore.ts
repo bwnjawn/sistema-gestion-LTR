@@ -224,9 +224,8 @@ export const useReservationStore = defineStore('reservation', () => {
     })
   })
 
-  function setService(service: ServiceType | 'cabaña' | 'restaurant') {
-    const normalized: ServiceType = service === 'restaurant' ? 'restaurante' : service === 'cabaña' ? 'cabana' : service
-    selectedService.value = normalized
+  function setService(service: ServiceType) {
+    selectedService.value = service
     currentStep.value = 1
     solicitudEnviada.value = false
   }
@@ -241,9 +240,8 @@ export const useReservationStore = defineStore('reservation', () => {
     }
   }
 
-  function prepareCrossServiceBooking(newService: ServiceType | 'cabaña' | 'restaurant') {
-    const normalized: ServiceType = newService === 'restaurant' ? 'restaurante' : newService === 'cabaña' ? 'cabana' : newService
-    selectedService.value = normalized
+  function prepareCrossServiceBooking(newService: ServiceType) {
+    selectedService.value = newService
     currentStep.value = 1
     solicitudEnviada.value = false
     selectedCabinId.value = ''

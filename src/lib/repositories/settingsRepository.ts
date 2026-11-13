@@ -1,72 +1,29 @@
- // src/lib/repositories/settingsRepository.ts
+// src/lib/repositories/settingsRepository.ts
+// Ajustes del negocio: contacto, transferencia, parámetros y horarios. Un valor por clave.
+// Con Supabase (SCRUM-248) son las filas de la tabla `ajustes`.
 
-import type { BusinessInfo, BusinessParameters, TransferInfo } from '../../types/domain'
-import type { RestaurantSchedules, CampingSchedules, CabinSchedules } from '../../types/settings'
-import { getStorageItem, setStorageItem } from '../persistence'
+import type { AjustesGuardados, ClaveAjuste } from '../../types/settings'
+import type { Almacenamiento } from '../persistence'
+import { almacenamientoLocal } from '../persistence'
 
 export interface SettingsRepository {
-  getContactInfo(fallback: BusinessInfo): Promise<BusinessInfo>
-  saveContactInfo(info: BusinessInfo): Promise<void>
-  getTransferInfo(fallback: TransferInfo): Promise<TransferInfo>
-  saveTransferInfo(info: TransferInfo): Promise<void>
-  getParameters(fallback: BusinessParameters): Promise<BusinessParameters>
-  saveParameters(params: BusinessParameters): Promise<void>
-  getRestaurantSchedules(fallback: RestaurantSchedules): Promise<RestaurantSchedules>
-  saveRestaurantSchedules(schedules: RestaurantSchedules): Promise<void>
-  getCampingSchedules(fallback: CampingSchedules): Promise<CampingSchedules>
-  saveCampingSchedules(schedules: CampingSchedules): Promise<void>
-  getCabinSchedules(fallback: CabinSchedules): Promise<CabinSchedules>
-  saveCabinSchedules(schedules: CabinSchedules): Promise<void>
+  /** El valor guardado, o `porDefecto` si el administrador aún no lo cambió. */
+  get<K extends ClaveAjuste>(clave: K, porDefecto: AjustesGuardados[K]): Promise<AjustesGuardados[K]>
+  save<K extends ClaveAjuste>(clave: K, valor: AjustesGuardados[K]): Promise<void>
 }
 
 export class LocalSettingsRepository implements SettingsRepository {
-  async getContactInfo(fallback: BusinessInfo): Promise<BusinessInfo> {
-    return getStorageItem('contact_info', fallback)
+  private readonly almacenamiento: Almacenamiento
+
+  constructor(almacenamiento: Almacenamiento = almacenamientoLocal) {
+    this.almacenamiento = almacenamiento
   }
 
-  async saveContactInfo(info: BusinessInfo): Promise<void> {
-    setStorageItem('contact_info', info)
+  async get<K extends ClaveAjuste>(clave: K, porDefecto: AjustesGuardados[K]): Promise<AjustesGuardados[K]> {
+    return this.almacenamiento.leer(clave, porDefecto)
   }
 
-  async getTransferInfo(fallback: TransferInfo): Promise<TransferInfo> {
-    return getStorageItem('transfer_info', fallback)
-  }
-
-  async saveTransferInfo(info: TransferInfo): Promise<void> {
-    setStorageItem('transfer_info', info)
-  }
-
-  async getParameters(fallback: BusinessParameters): Promise<BusinessParameters> {
-    return getStorageItem('parameters', fallback)
-  }
-
-  async saveParameters(params: BusinessParameters): Promise<void> {
-    setStorageItem('parameters', params)
-  }
-
-  async getRestaurantSchedules(fallback: RestaurantSchedules): Promise<RestaurantSchedules> {
-    return getStorageItem('restaurant_schedules', fallback)
-  }
-
-  async saveRestaurantSchedules(schedules: RestaurantSchedules): Promise<void> {
-    setStorageItem('restaurant_schedules', schedules)
-  }
-
-  async getCampingSchedules(fallback: CampingSchedules): Promise<CampingSchedules> {
-    return getStorageItem('camping_schedules', fallback)
-  }
-
-  async saveCampingSchedules(schedules: CampingSchedules): Promise<void> {
-    setStorageItem('camping_schedules', schedules)
-  }
-
-  async getCabinSchedules(fallback: CabinSchedules): Promise<CabinSchedules> {
-    return getStorageItem('cabin_schedules', fallback)
-  }
-
-  async saveCabinSchedules(schedules: CabinSchedules): Promise<void> {
-    setStorageItem('cabin_schedules', schedules)
+  async save<K extends ClaveAjuste>(clave: K, valor: AjustesGuardados[K]): Promise<void> {
+    this.almacenamiento.escribir(clave, valor)
   }
 }
-
-export const settingsRepository: SettingsRepository = new LocalSettingsRepository()

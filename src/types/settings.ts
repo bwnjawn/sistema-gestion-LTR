@@ -1,5 +1,7 @@
 // src/types/settings.ts
 
+import type { BusinessInfo, TransferInfo } from './domain'
+
 export type {
   BusinessInfo,
   BusinessParameters
@@ -56,3 +58,41 @@ export interface LimiteVariedades {
   /** Máximo de platos distintos por comida cuando se aplica la regla. */
   maxVariedades: number
 }
+
+export interface CapacityRules {
+  /** Sin uso desde SCRUM-244: el aforo del restaurante ahora sale de `restaurantSpaces`. */
+  maxRestaurantGroupsPerSlot: number
+  /** Espacios del restaurante y su capacidad; la suma es el aforo total. */
+  restaurantSpaces: EspacioRestaurante[]
+  /** Grupos de más de estas personas tienen un máximo de platos distintos por comida (SCRUM-36). */
+  menuLargeGroupThreshold: number
+  /** Máximo de platos distintos por comida para grupos grandes. */
+  maxMenuVarietiesLargeGroup: number
+  maxCampingPeopleCapacity: number
+  marginPercentage: number
+}
+
+export interface BusinessParametersExtended {
+  defaultDepositPercentage: number
+  /** Horas para abonar desde que el cliente envía la solicitud (SCRUM-264). */
+  depositDeadlineHours?: number
+  ivaPercentage: number
+  /** Precio de la entrada a la piscina por persona (SCRUM-44). Valor de ejemplo hasta tener el real (SCRUM-270). */
+  poolEntryPrice?: number
+  marginPercentage: number
+  currentDate: string
+  isConnected: boolean
+  capacityRules: CapacityRules
+}
+
+/** Los ajustes que se guardan, por clave. Es lo que lee y escribe `SettingsRepository`. */
+export interface AjustesGuardados {
+  contact_info: BusinessInfo
+  transfer_info: TransferInfo
+  parameters: BusinessParametersExtended
+  restaurant_schedules: RestaurantSchedules
+  camping_schedules: CampingSchedules
+  cabin_schedules: CabinSchedules
+}
+
+export type ClaveAjuste = keyof AjustesGuardados

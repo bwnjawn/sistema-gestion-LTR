@@ -25,10 +25,12 @@ watch(() => props.isOpen, (newVal) => {
   }
 })
 
-function handleSave() {
-  settingsStore.campingSchedules.diario = { ...campingDiario.value }
-  settingsStore.campingSchedules.pernoctar = { ...campingPernoctar.value }
-  emit('close')
+async function handleSave() {
+  const guardado = await settingsStore.updateCampingSchedules({
+    diario: { ...campingDiario.value },
+    pernoctar: { ...campingPernoctar.value }
+  })
+  if (guardado) emit('close')
 }
 useBloqueoScroll(computed(() => props.isOpen))
 </script>
