@@ -137,8 +137,8 @@ function hasConflict(id: string): boolean {
 }
 
 function formatStatusText(status: string): string {
-  if (status === 'confirmed' || status === 'confirmada') return 'Confirmada'
-  if (status === 'rejected' || status === 'rechazada') return 'Rechazada'
+  if (status === 'confirmed') return 'Confirmada'
+  if (status === 'rejected') return 'Rechazada'
   return 'Pendiente'
 }
 useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !== 'diario'))

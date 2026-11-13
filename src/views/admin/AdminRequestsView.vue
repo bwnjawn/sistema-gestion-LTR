@@ -38,13 +38,13 @@ function aprobar(id: string) {
   continuarAprobacion(id)
 }
 
-function continuarAprobacion(id: string) {
+async function continuarAprobacion(id: string) {
   sinAbonoId.value = null
   if (requestsStore.crossedRequestsFor(id).length > 0) {
     cruceId.value = id
     return
   }
-  requestsStore.confirmRequest(id)
+  await requestsStore.confirmRequest(id)
 }
 
 // Cuántas otras solicitudes se topan con la indicada (SCRUM-60)

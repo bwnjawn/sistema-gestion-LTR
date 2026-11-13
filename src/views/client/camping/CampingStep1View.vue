@@ -9,24 +9,24 @@ import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
-import { useRequestsStore } from '../../../stores/requestsStore'
-import { validateGuestCapacity, isCampingDayBlocked, isCampingStayBlocked } from '../../../services/availability'
+import { useDisponibilidadStore } from '../../../stores/disponibilidadStore'
+import { validateGuestCapacity } from '../../../services/availability'
 import { nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const store = useReservationStore()
 const settingsStore = useSettingsStore()
-const requestsStore = useRequestsStore()
+const disponibilidad = useDisponibilidadStore()
 
 store.setService('camping')
 
 // Diario y pernoctar tienen cupos separados (SCRUM-244)
 function isDayBlocked(dateStr: string): boolean {
-  return isCampingDayBlocked(dateStr, store.campingType, store.guestsCount, requestsStore.requests, settingsStore.limitesAforo.campingPersonas)
+  return disponibilidad.consulta.diaCampingBloqueado(dateStr, store.campingType, store.guestsCount, settingsStore.limitesAforo.campingPersonas)
 }
 
 function isStayBlocked(inicio: string, salida: string): boolean {
-  return isCampingStayBlocked(inicio, salida, store.guestsCount, requestsStore.requests, settingsStore.limitesAforo.campingPersonas)
+  return disponibilidad.consulta.estadiaCampingBloqueada(inicio, salida, store.guestsCount, settingsStore.limitesAforo.campingPersonas)
 }
 
 const campingType = computed(() => store.campingType)

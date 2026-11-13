@@ -38,12 +38,12 @@ watch(() => props.isOpen, (newVal) => {
   }
 })
 
-function handleSave() {
+async function handleSave() {
   const current = settingsStore.contactInfo
   const addressChanged = form.value.address.trim() !== (current.address || '').trim()
   const instagramUser = cleanInstagramUser(form.value.instagramUser)
 
-  settingsStore.updateContactInfo({
+  const guardado = await settingsStore.updateContactInfo({
     phone1: form.value.phone1,
     phone2: form.value.phone2,
     email: form.value.email,
@@ -57,7 +57,7 @@ function handleSave() {
       ? { mapsUrl: buildMapsUrl(form.value.address), iframeMapUrl: buildMapEmbedUrl(form.value.address) }
       : {})
   })
-  emit('close')
+  if (guardado) emit('close')
 }
 useBloqueoScroll(computed(() => props.isOpen))
 </script>

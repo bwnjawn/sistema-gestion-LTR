@@ -110,9 +110,9 @@ async function continueApproval() {
   emit('close')
 }
 
-function reject() {
+async function reject() {
   if (!request.value) return
-  requestsStore.rejectRequest(request.value.id)
+  await requestsStore.rejectRequest(request.value.id)
   confirmingReject.value = false
   emit('close')
 }
@@ -122,9 +122,9 @@ function fillPendingDeposit() {
   paymentAmount.value = payment.value.depositPending > 0 ? payment.value.depositPending : payment.value.balance
 }
 
-function submitPayment() {
+async function submitPayment() {
   if (!request.value) return
-  const result = requestsStore.registerPayment(request.value.id, {
+  const result = await requestsStore.registerPayment(request.value.id, {
     amount: Number(paymentAmount.value),
     method: paymentMethod.value,
     paidOn: paymentDate.value,
@@ -164,9 +164,9 @@ const dueText = computed(() => {
   return `El cliente tiene plazo para abonar hasta el ${formatDateTime(r.depositDueAt)}.`
 })
 
-function waitForDeposit() {
+async function waitForDeposit() {
   if (!request.value) return
-  requestsStore.extendDepositDeadline(request.value.id)
+  await requestsStore.extendDepositDeadline(request.value.id)
 }
 
 async function cancelOverdue() {

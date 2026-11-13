@@ -66,7 +66,7 @@ function handleSendRequest() {
 }
 
 function handleGoToRestaurant() {
-  store.prepareCrossServiceBooking('restaurant')
+  store.prepareCrossServiceBooking('restaurante')
   router.push('/restaurante/paso1')
 }
 

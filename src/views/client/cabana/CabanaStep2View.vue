@@ -9,13 +9,15 @@ import CabinModal from '../../../components/catalog/CabinModal.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { useRequestsStore } from '../../../stores/requestsStore'
-import { getBookableCabins, isCabinAvailable, getPendingCabinOverlaps } from '../../../services/availability'
+import { useDisponibilidadStore } from '../../../stores/disponibilidadStore'
+import { getBookableCabins, getPendingCabinOverlaps } from '../../../services/availability'
 import type { Cabin } from '../../../types/domain'
 
 const router = useRouter()
 const reservationStore = useReservationStore()
 const catalogStore = useCatalogStore()
 const requestsStore = useRequestsStore()
+const disponibilidad = useDisponibilidadStore()
 
 const showDetailModal = ref(false)
 const selectedCabinForModal = ref<Cabin | null>(null)
@@ -29,12 +31,7 @@ const availableCabins = computed(() => {
 
     if (!reservationStore.checkInDate || !reservationStore.checkOutDate) return true
 
-    return isCabinAvailable(
-      c.id,
-      reservationStore.checkInDate,
-      reservationStore.checkOutDate,
-      requestsStore.requests
-    )
+    return disponibilidad.consulta.cabanaLibre(c.id, reservationStore.checkInDate, reservationStore.checkOutDate)
   })
 })
 

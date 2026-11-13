@@ -283,3 +283,11 @@ export interface AdminUser {
   role: 'owner' | 'admin' | 'staff'
   createdAt?: string
 }
+
+/**
+ * Administrador con su contraseña. AUTENTICACIÓN DE PROTOTIPO: la contraseña se guarda en texto plano en el
+ * navegador. Desaparece con Supabase Auth (SCRUM-248).
+ */
+export interface AdminUserWithPassword extends AdminUser {
+  passwordHash: string
+}
