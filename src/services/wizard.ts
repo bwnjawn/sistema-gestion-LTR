@@ -86,5 +86,11 @@ export const WIZARD_STEPS: Record<ServiceType, WizardStep[]> = {
     { id: 2, label: 'Menú', icon: 'utensils' },
     { id: 3, label: 'Datos', icon: 'user' },
     { id: 4, label: 'Confirmar', icon: 'check' }
+  ],
+  // La piscina (SCRUM-44) es solo informativa: fecha y personas, datos de contacto y confirmación
+  piscina: [
+    { id: 1, label: 'Fecha', icon: 'calendar' },
+    { id: 2, label: 'Datos', icon: 'user' },
+    { id: 3, label: 'Confirmar', icon: 'check' }
   ]
 }

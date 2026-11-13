@@ -181,7 +181,10 @@ function save() {
       />
     </div>
 
-    <p v-if="request.type !== 'restaurante'" class="text-sm font-bold text-gray-700">
+    <p v-if="request.type === 'piscina'" class="text-sm font-bold text-gray-700">
+      Si cambias las personas, el total se recalcula con el mismo valor por persona.
+    </p>
+    <p v-else-if="request.type !== 'restaurante'" class="text-sm font-bold text-gray-700">
       Si cambias las fechas o las personas, el total y el abono exigido se recalculan. Los pagos ya registrados se conservan.
     </p>
 

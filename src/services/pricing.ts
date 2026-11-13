@@ -84,6 +84,15 @@ export function calculateRestaurantPrice(
 }
 
 /**
+ * Entrada a la piscina (SCRUM-44): personas × precio de la entrada. El valor ya es el final (sin IVA aparte)
+ * y no exige abono. El precio es provisorio y lo edita el administrador en Ajustes (SCRUM-270).
+ */
+export function calculatePoolPrice(pricePerPerson: number, guestsCount: number): PriceBreakdown {
+  const subtotal = Math.round(Math.max(0, pricePerPerson || 0) * Math.max(1, guestsCount))
+  return { subtotal, ivaAmount: 0, totalWithIva: subtotal, depositAmount: 0, nights: 1 }
+}
+
+/**
  * Exención de abono (SCRUM-264): los clientes de tipo Institución que reservan en restaurante
  * no pagan abono (el Estado paga después). Empresa, Organización y Paseo escolar sí pagan. Solo aplica a restaurante,
  * porque es el único servicio donde se registra el tipo de cliente.
@@ -102,6 +111,8 @@ export interface BookingPriceInput extends PriceRates {
   guestsCount: number
   campingType: CampingModality
   meals: SelectedMealItem[]
+  /** Precio de la entrada a la piscina por persona (solo servicio `piscina`). */
+  poolPrice?: number
 }
 
 /**
@@ -130,6 +141,8 @@ export function calculateBookingPrice(input: BookingPriceInput): PriceBreakdown 
       rates
     )
   }
+
+  if (input.service === 'piscina') return calculatePoolPrice(input.poolPrice ?? 0, input.guestsCount)
 
   const price = calculateRestaurantPrice(input.meals, rates)
   return isDepositExempt(input.service, input.clientType) ? { ...price, depositAmount: 0 } : price

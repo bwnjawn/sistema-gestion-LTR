@@ -179,7 +179,11 @@ async function cancelOverdue() {
 const depositMessage = computed(() => {
   const p = payment.value
   if (!p) return ''
-  if (p.state === 'sin_abono_exigido') return 'Esta reserva no exige abono (cliente Institución). Se cobra el total después.'
+  if (p.state === 'sin_abono_exigido') {
+    return request.value?.type === 'piscina'
+      ? 'La piscina no exige abono: queda confirmada al enviarse.'
+      : 'Esta reserva no exige abono (cliente Institución). Se cobra el total después.'
+  }
   if (p.state === 'pagado_total') return 'La reserva está pagada por completo.'
   if (request.value && isConfirmedWithoutDeposit(request.value)) {
     return `Confirmada sin el abono completo: faltan ${formatCLP(p.depositPending)} del abono exigido de ${formatCLP(p.depositRequired)}.`

@@ -36,9 +36,9 @@ export interface ContextoAdaptador {
 // Utilidades
 // ---------------------------------------------------------------------------
 
-/** Una solicitud de camping de día o de restaurante ocupa un solo día; el resto, de entrada a salida. */
+/** Una solicitud de camping de día, de restaurante o de piscina ocupa un solo día; el resto, de entrada a salida. */
 function ocupaUnDia(req: Pick<ReservationRequest, 'type' | 'details'>): boolean {
-  return req.type === 'restaurante' || (req.type === 'camping' && req.details?.campingType === 'diario')
+  return req.type === 'restaurante' || req.type === 'piscina' || (req.type === 'camping' && req.details?.campingType === 'diario')
 }
 
 function origenDe(req: ReservationRequest): BookingOrigin {
@@ -153,12 +153,13 @@ export function requestToBooking(req: ReservationRequest, ctx: ContextoAdaptador
 
 function nombreDelRecurso(b: Booking, ctx: ContextoAdaptador): string {
   if (b.type === 'restaurante') return 'Restaurante'
+  if (b.type === 'piscina') return 'Piscina'
   if (b.type === 'cabana') return ctx.cabins?.find(c => c.id === b.cabinId)?.name ?? 'Cabaña'
   return ctx.campingSites?.find(s => s.id === b.campingSiteId)?.name ?? 'Camping'
 }
 
 export function bookingToRequest(b: Booking, ctx: ContextoAdaptador = {}): ReservationRequest {
-  const unDia = b.type === 'restaurante' || (b.type === 'camping' && b.campingModality === 'diario')
+  const unDia = b.type === 'restaurante' || b.type === 'piscina' || (b.type === 'camping' && b.campingModality === 'diario')
   const noches = unDia ? 1 : nightsBetween(b.startDate, b.endDate)
   const pricing: RequestPricing = {
     subtotal: b.pricing.subtotal,

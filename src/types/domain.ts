@@ -1,7 +1,11 @@
 // src/types/domain.ts
 
 // 1. Tipos Canónicos del Sistema
-export type ServiceType = 'cabana' | 'camping' | 'restaurante'
+/**
+ * `piscina` (SCRUM-44) es una solicitud solo informativa: queda confirmada al enviarse, sin abono ni plazo,
+ * y no bloquea fechas ni cupos de nada.
+ */
+export type ServiceType = 'cabana' | 'camping' | 'restaurante' | 'piscina'
 export type BookingStatus = 'pending' | 'confirmed' | 'rejected' | 'cancelled'
 export type CampingModality = 'diario' | 'pernoctar'
 /** Modalidades que admite un espacio de camping: una de las dos o ambas. */

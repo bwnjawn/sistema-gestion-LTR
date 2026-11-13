@@ -15,7 +15,7 @@ Principios:
 
 | Tipo | Valores |
 |---|---|
-| `tipo_servicio` | `cabana`, `camping`, `restaurante` |
+| `tipo_servicio` | `cabana`, `camping`, `restaurante`, `piscina` (solicitud solo informativa: nace `confirmed`, sin abono, no cuenta en cruces ni cupos; SCRUM-44) |
 | `estado_reserva` | `pending`, `confirmed`, `rejected`, `cancelled` |
 | `modalidad_camping` | `diario`, `pernoctar` |
 | `tipo_comida` | `desayuno`, `almuerzo`, `once` |
@@ -113,7 +113,7 @@ create table reservas (
   sitio_id uuid references sitios_camping,        -- solo camping
   modalidad_camping modalidad_camping,            -- solo camping
   fecha_inicio date not null,
-  fecha_fin date not null,                        -- cabaña: salida (excluida); resto = fecha_inicio
+  fecha_fin date not null,                        -- cabaña y pernoctar: salida (excluida); resto (incluida piscina) = fecha_inicio
   personas integer not null check (personas > 0),
   hora_entrada time,                              -- cabaña y camping: horario vigente al reservar
   hora_salida time,
@@ -125,7 +125,7 @@ create table reservas (
   iva_monto integer not null,
   total integer not null,
   abono_porcentaje numeric(5,2) not null,
-  abono_exigido integer not null,                 -- 0 si es Institución en restaurante
+  abono_exigido integer not null,                 -- 0 si es Institución en restaurante o si es piscina
   abono_vence_en timestamptz,                     -- solo pendientes con abono exigido
 
   -- Grupos y sincronización
@@ -235,7 +235,7 @@ create table ajustes (                            -- una fila por clave; el valo
 );
 ```
 
-Claves de `ajustes` (las mismas que hoy usa `settingsRepository` en `localStorage`): `contacto`, `transferencia`, `parametros` (abono por defecto, plazo en horas, margen), `horarios_restaurante`, `horarios_camping`, `horarios_cabana`, `limites_aforo` (camping, topes de grupo y variedades de menú).
+Claves de `ajustes` (las mismas que hoy usa `settingsRepository` en `localStorage`): `contacto`, `transferencia`, `parametros` (abono por defecto, plazo en horas, margen, precio de la entrada a la piscina), `horarios_restaurante`, `horarios_camping`, `horarios_cabana`, `limites_aforo` (camping, topes de grupo y variedades de menú).
 
 Las reglas de aforo **no tienen tabla propia**: el aforo de camping y la regla de variedades de menú son valores de `ajustes`, y el del restaurante es la suma de `espacios_restaurante`. Los límites de camping y restaurante no pueden ser una restricción de exclusión (dependen de sumar personas); se validan en la función `crear_solicitud` y al confirmar (ver sección 6).
 
@@ -266,7 +266,7 @@ Todas las tablas con `enable row level security`. Dos roles: **público** (clave
 **El público no lee reservas.** Para que el cliente vea fechas bloqueadas sin exponer datos personales, y para que envíe una solicitud, se usan dos funciones `security definer` (se llaman con `supabase.rpc`):
 
 - `fechas_ocupadas(tipo, desde, hasta)`: devuelve solo agregados, sin nombre ni teléfono: por cabaña y noche si hay una confirmada; por comida y día, las personas ya confirmadas; por modalidad y día, las personas de camping. Cuenta solo `confirmed` (SCRUM-263).
-- `crear_solicitud(payload jsonb)`: valida el payload, vuelve a calcular precio y abono en el servidor (no confía en los totales del cliente), fija `estado = 'pending'` y `origen = 'cliente'`, genera el código y devuelve `{ id, codigo }`.
+- `crear_solicitud(payload jsonb)`: valida el payload, vuelve a calcular precio y abono en el servidor (no confía en los totales del cliente), fija `estado = 'pending'` y `origen = 'cliente'` (**salvo `piscina`, que nace `confirmed`**, sin abono y sin validar cupos), genera el código y devuelve `{ id, codigo }`.
 
 **Al confirmar** (trigger sobre `estado`): la restricción de exclusión impide dos cabañas confirmadas cruzadas; para restaurante y camping, el trigger suma las personas ya confirmadas del mismo día y comida/modalidad y rechaza si superan el aforo. En la reconexión sin conexión (SCRUM-250), el error de la restricción es lo que marca `en_conflicto = true` en lugar de perder la reserva.
 

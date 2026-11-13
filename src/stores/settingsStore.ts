@@ -27,11 +27,16 @@ export interface BusinessParametersExtended {
   /** Horas para abonar desde que el admin confirma (SCRUM-264). */
   depositDeadlineHours?: number
   ivaPercentage: number
+  /** Precio de la entrada a la piscina por persona (SCRUM-44). Valor de ejemplo hasta tener el real (SCRUM-270). */
+  poolEntryPrice?: number
   marginPercentage: number
   currentDate: string
   isConnected: boolean
   capacityRules: CapacityRules
 }
+
+/** Valor de ejemplo de la entrada a la piscina (CLP por persona): el real está por confirmar con el cliente. */
+export const PRECIO_PISCINA_POR_DEFECTO = 3000
 
 const DEFAULT_CONTACT: BusinessInfo = {
   phone1: '+56 9 8502 5056',
@@ -78,6 +83,7 @@ const DEFAULT_PARAMS: BusinessParametersExtended = {
   defaultDepositPercentage: 30,
   depositDeadlineHours: DEFAULT_DEPOSIT_DEADLINE_HOURS,
   ivaPercentage: 19,
+  poolEntryPrice: PRECIO_PISCINA_POR_DEFECTO,
   marginPercentage: 10,
   currentDate: '',
   isConnected: true,
@@ -244,6 +250,7 @@ export const useSettingsStore = defineStore('settings', () => {
     defaultDepositPercentage: computed(() => parameters.value.defaultDepositPercentage ?? 30),
     depositDeadlineHours: computed(() => parameters.value.depositDeadlineHours || DEFAULT_DEPOSIT_DEADLINE_HOURS),
     ivaPercentage: computed(() => parameters.value.ivaPercentage ?? 19),
+    poolEntryPrice: computed(() => parameters.value.poolEntryPrice ?? PRECIO_PISCINA_POR_DEFECTO),
     marginPercentage: computed(() => parameters.value.marginPercentage ?? 10),
     // Se completa con los valores de fábrica: los parámetros guardados antes de SCRUM-244 no traían los espacios.
     capacityRules: capacityRulesActuales,

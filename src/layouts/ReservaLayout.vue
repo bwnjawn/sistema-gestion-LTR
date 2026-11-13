@@ -18,13 +18,15 @@ const store = useReservationStore()
 const NOMBRE_SERVICIO: Record<ServiceType, string> = {
   cabana: 'Cabaña',
   camping: 'Camping',
-  restaurante: 'Restaurante'
+  restaurante: 'Restaurante',
+  piscina: 'Piscina'
 }
 // Prefijo del nombre de ruta de cada flujo (cabana-step2, restaurant-step2...)
 const PREFIJO_RUTA: Record<ServiceType, string> = {
   cabana: 'cabana-step',
   camping: 'camping-step',
-  restaurante: 'restaurant-step'
+  restaurante: 'restaurant-step',
+  piscina: 'piscina-step'
 }
 
 const servicio = computed(() => (route.meta.servicio as ServiceType | undefined) ?? 'cabana')

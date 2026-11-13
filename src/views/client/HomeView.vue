@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ChevronRight } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { ChevronRight, Waves, PartyPopper } from 'lucide-vue-next'
 import { useReservationStore } from '../../stores/reservationStore'
+import { useSettingsStore } from '../../stores/settingsStore'
+import { formatCLP } from '../../lib/format'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
-import TarjetaEventoEspecial from '../../components/ui/TarjetaEventoEspecial.vue'
+import TarjetaServicioExtra from '../../components/ui/TarjetaServicioExtra.vue'
+import HojaContactoEvento from '../../components/ui/HojaContactoEvento.vue'
 import FranjaModoAdmin from '../../components/ui/FranjaModoAdmin.vue'
 import { useSalidaReserva } from '../../composables/useSalidaReserva'
 
 const router = useRouter()
 const reservationStore = useReservationStore()
+const settingsStore = useSettingsStore()
+const contactoEventoAbierto = ref(false)
 const { terminar: salirAlPanel } = useSalidaReserva()
 
-function selectService(service: 'cabana' | 'camping' | 'restaurant') {
+function selectService(service: 'cabana' | 'camping' | 'restaurant' | 'piscina') {
   reservationStore.setService(service)
   if (service === 'cabana') {
     router.push('/cabana/paso1')
@@ -19,6 +25,8 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
     router.push('/camping/paso1')
   } else if (service === 'restaurant') {
     router.push('/restaurante/paso1')
+  } else if (service === 'piscina') {
+    router.push('/piscina/paso1')
   }
 }
 </script>
@@ -66,7 +74,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
         <!-- CARD 1: CABAÑA -->
         <div 
           @click="selectService('cabana')"
-          class="relative h-40 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
+          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
         >
           <img 
             src="https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=800&q=80" 
@@ -93,7 +101,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
         <!-- CARD 2: ACAMPAR -->
         <div 
           @click="selectService('camping')"
-          class="relative h-40 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
+          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
         >
           <img 
             src="https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80" 
@@ -120,7 +128,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
         <!-- CARD 3: COMER -->
         <div 
           @click="selectService('restaurant')"
-          class="relative h-40 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
+          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
         >
           <img 
             src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80" 
@@ -144,10 +152,33 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant') {
           </div>
         </div>
 
-        <!-- Evento especial (SCRUM-45): no es una reserva, deriva a los dueños. El admin lo registra aparte. -->
-        <TarjetaEventoEspecial v-if="!reservationStore.isAdminMode" />
+        <!-- Servicios extra, más bajos y lado a lado (el administrador solo ve Piscina, a lo ancho) -->
+        <div class="grid grid-cols-2 gap-3.5">
+          <!-- Piscina (SCRUM-44): solo para quien no contrata otro servicio; es una solicitud informativa -->
+          <TarjetaServicioExtra
+            :class="{ 'col-span-2': reservationStore.isAdminMode }"
+            titulo="Piscina"
+            :subtitulo="`${formatCLP(settingsStore.poolEntryPrice)} por persona`"
+            imagen="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=800&q=80"
+            nota="Gratis si reservas otro servicio"
+            :icono="Waves"
+            @click="selectService('piscina')"
+          />
+
+          <!-- Evento especial (SCRUM-45): no es una reserva, abre los contactos de los dueños -->
+          <TarjetaServicioExtra
+            v-if="!reservationStore.isAdminMode"
+            titulo="Evento especial"
+            subtitulo="Contacta a los dueños"
+            imagen="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=800&q=80"
+            :icono="PartyPopper"
+            @click="contactoEventoAbierto = true"
+          />
+        </div>
       </div>
     </main>
+
+    <HojaContactoEvento :abierto="contactoEventoAbierto" @cerrar="contactoEventoAbierto = false" />
 
     <!-- Navegación Inferior -->
     <ClientBottomNav v-if="!reservationStore.isAdminMode" />

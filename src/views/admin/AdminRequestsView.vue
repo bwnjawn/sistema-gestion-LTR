@@ -81,7 +81,8 @@ const typeFilters: { id: ServiceType | 'all'; label: string }[] = [
   { id: 'all', label: 'Todos' },
   { id: 'cabana', label: 'Cabaña' },
   { id: 'camping', label: 'Camping' },
-  { id: 'restaurante', label: 'Restaurante' }
+  { id: 'restaurante', label: 'Restaurante' },
+  { id: 'piscina', label: 'Piscina' }
 ]
 
 const emptyMessage = computed(() => {

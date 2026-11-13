@@ -3,7 +3,7 @@ import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { 
   CalendarDays, ChevronLeft, ChevronRight, X, User, Phone, 
-  Layers, Home, Tent, Utensils 
+  Layers, Home, Tent, Utensils, Waves
 } from 'lucide-vue-next'
 import AdminCalendarGrid from '../../components/ui/AdminCalendarGrid.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
@@ -27,11 +27,12 @@ const requestsStore = useRequestsStore()
 const settingsStore = useSettingsStore()
 
 // Filtros Activos por Área
-const activeFilters = ref<ServiceType[]>(['cabana', 'camping', 'restaurante'])
-const isAllSelected = computed(() => activeFilters.value.length === 3)
+const TODOS_LOS_SERVICIOS: ServiceType[] = ['cabana', 'camping', 'restaurante', 'piscina']
+const activeFilters = ref<ServiceType[]>([...TODOS_LOS_SERVICIOS])
+const isAllSelected = computed(() => activeFilters.value.length === TODOS_LOS_SERVICIOS.length)
 
 const selectAllFilters = () => {
-  activeFilters.value = ['cabana', 'camping', 'restaurante']
+  activeFilters.value = [...TODOS_LOS_SERVICIOS]
 }
 
 const toggleFilter = (serviceKey: ServiceType) => {
@@ -201,6 +202,20 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
           ]"
         >
           <Utensils class="w-4 h-4 stroke-[2.5]" />
+        </button>
+
+        <button
+          type="button"
+          @click="toggleFilter('piscina')"
+          title="Piscina"
+          :class="[
+            'p-2.5 rounded-2xl border transition-all active:scale-95 flex items-center justify-center touch-target shadow-2xs',
+            activeFilters.includes('piscina')
+              ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-black'
+              : 'bg-white text-gray-700 border-gray-400'
+          ]"
+        >
+          <Waves class="w-4 h-4 stroke-[2.5]" />
         </button>
       </div>
 

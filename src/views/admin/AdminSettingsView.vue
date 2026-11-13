@@ -3,6 +3,7 @@ import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Phone, MapPin, Mail, Globe, Instagram, Utensils, Users, Percent, Clock, Landmark, ShieldCheck, UserPlus } from 'lucide-vue-next'
+import { formatCLP } from '../../lib/format'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useAuthStore } from '../../stores/authStore'
 import AdminContactEditModal from '../../components/admin/AdminContactEditModal.vue'
@@ -21,6 +22,7 @@ const isEditingParameters = ref(false)
 const editDeposit = ref(settingsStore.defaultDepositPercentage)
 const editDeadline = ref(settingsStore.depositDeadlineHours)
 const editIva = ref(settingsStore.ivaPercentage)
+const editPoolPrice = ref(settingsStore.poolEntryPrice)
 const editMargin = ref(settingsStore.marginPercentage)
 const editSpaces = ref(settingsStore.capacityRules.restaurantSpaces.map(e => ({ ...e })))
 const editMaxCamping = ref(settingsStore.capacityRules.maxCampingPeopleCapacity)
@@ -31,6 +33,7 @@ function openParametersEdit() {
   editDeposit.value = settingsStore.defaultDepositPercentage
   editDeadline.value = settingsStore.depositDeadlineHours
   editIva.value = settingsStore.ivaPercentage
+  editPoolPrice.value = settingsStore.poolEntryPrice
   editMargin.value = settingsStore.marginPercentage
   editSpaces.value = settingsStore.capacityRules.restaurantSpaces.map(e => ({ ...e }))
   editMaxCamping.value = settingsStore.capacityRules.maxCampingPeopleCapacity
@@ -44,6 +47,7 @@ async function saveParameters() {
     defaultDepositPercentage: editDeposit.value,
     depositDeadlineHours: Math.max(1, Number(editDeadline.value) || 1),
     ivaPercentage: editIva.value,
+    poolEntryPrice: Math.max(0, Math.round(Number(editPoolPrice.value) || 0)),
     marginPercentage: editMargin.value
   })
   await settingsStore.updateCapacityRules({
@@ -167,6 +171,10 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
           <span class="text-sm font-black text-brand-dark">{{ settingsStore.ivaPercentage }}%</span>
         </div>
         <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
+          <span class="text-xs text-gray-700 uppercase block">Entrada a la piscina</span>
+          <span class="text-sm font-black text-brand-dark">{{ formatCLP(settingsStore.poolEntryPrice) }}</span>
+        </div>
+        <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
           <span class="text-xs text-gray-700 uppercase block">Margen de cupos</span>
           <span class="text-sm font-black text-brand-dark">{{ settingsStore.marginPercentage }}%</span>
         </div>
@@ -227,6 +235,10 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
           <div>
             <label class="block text-gray-600 mb-1">IVA (%):</label>
             <input type="number" v-model.number="editIva" min="0" max="100" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-1">Entrada a la piscina por persona ($, sin abono):</label>
+            <input type="number" inputmode="numeric" v-model.number="editPoolPrice" min="0" max="1000000" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
           </div>
           <div>
             <label class="block text-gray-600 mb-1">Margen de cupos (%):</label>
