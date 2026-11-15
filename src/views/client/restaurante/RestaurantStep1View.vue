@@ -8,27 +8,27 @@ import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
-import { useRequestsStore } from '../../../stores/requestsStore'
-import { horasDeComida, validarHoraComida, validateGuestCapacity, getFullMeals, isRestaurantDayBlocked } from '../../../services/availability'
+import { useDisponibilidadStore } from '../../../stores/disponibilidadStore'
+import { horasDeComida, validarHoraComida, validateGuestCapacity } from '../../../services/availability'
 import { formatDateShort } from '../../../lib/dates'
 import { ORDEN_COMIDAS } from '../../../services/menus'
 
 const router = useRouter()
 const store = useReservationStore()
 const settingsStore = useSettingsStore()
-const requestsStore = useRequestsStore()
+const disponibilidad = useDisponibilidadStore()
 
-store.setService('restaurant')
+store.setService('restaurante')
 
 // El día se bloquea solo si las tres comidas están llenas para el grupo (SCRUM-244)
 function isDayBlocked(dateStr: string): boolean {
-  return isRestaurantDayBlocked(dateStr, store.guestsCount, requestsStore.requests, settingsStore.restaurantCapacity)
+  return disponibilidad.consulta.diaRestauranteBloqueado(dateStr, store.guestsCount, settingsStore.restaurantCapacity)
 }
 
 // Comidas sin cupo para el grupo en la fecha elegida: se deshabilitan una a una
 const fullMeals = computed(() =>
   store.checkInDate
-    ? getFullMeals(store.checkInDate, store.guestsCount, requestsStore.requests, settingsStore.restaurantCapacity)
+    ? disponibilidad.consulta.comidasLlenas(store.checkInDate, store.guestsCount, settingsStore.restaurantCapacity)
     : []
 )
 

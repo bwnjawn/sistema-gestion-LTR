@@ -2,78 +2,42 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { AdminUser } from '../types/domain'
+import type { AdminUser, AdminUserWithPassword } from '../types/domain'
 import { generateUUID } from '../lib/id'
 import { todayISO } from '../lib/dates'
-import { authRepository } from '../lib/repositories/authRepository'
-import { getStorageItem, setStorageItem } from '../lib/persistence'
+import { repositorios } from '../lib/repositories'
+import { persistirConReversion } from '../lib/persistirConReversion'
+import { mensajeDeError } from '../lib/errores'
 
-export type { AdminUser }
+export type { AdminUser, AdminUserWithPassword }
 
 export const MIN_CONTRASENA = 8
 
-export interface AdminUserWithPassword extends AdminUser {
-  passwordHash: string
-}
-
 // AUTENTICACIÓN DE PROTOTIPO: las contraseñas se guardan en texto plano en el navegador y
 // viajan dentro del código. Sirve para una demo cerrada; la autenticación real llega con
-// Supabase Auth (SCRUM-248). No reutilices aquí una contraseña que uses en otro sitio.
-const CONTRASENA_ANTIGUA = 'admin123'
-
-const DEFAULT_ADMINS: AdminUserWithPassword[] = [
-  {
-    id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380c11',
-    name: 'Dueño 1 (Principal)',
-    email: 'dueno1@troncosderepil.cl',
-    passwordHash: 'UucfZdqLKjRD',
-    role: 'owner',
-    createdAt: '2026-01-01'
-  },
-  {
-    id: 'f2eebc99-9c0b-4ef8-bb6d-6bb9bd380c22',
-    name: 'Dueño 2 (Administración)',
-    email: 'dueno2@troncosderepil.cl',
-    passwordHash: 'i64CA7dk9MaM',
-    role: 'owner',
-    createdAt: '2026-01-01'
-  }
-]
-
-/**
- * Los administradores guardados con la contraseña antigua de ejemplo se descartan y se
- * reponen los de fábrica, para que ningún navegador conserve el acceso con 'admin123'.
- */
-function sinContrasenaAntigua(lista: AdminUserWithPassword[]): AdminUserWithPassword[] {
-  const vigentes = lista.filter(a => a.passwordHash !== CONTRASENA_ANTIGUA)
-  const faltantes = DEFAULT_ADMINS.filter(d => !vigentes.some(a => a.id === d.id))
-  return [...faltantes, ...vigentes]
-}
+// Supabase Auth (SCRUM-248), que reemplaza este store. No reutilices aquí una contraseña
+// que uses en otro sitio.
 
 export const useAuthStore = defineStore('auth', () => {
-  const adminsList = ref<AdminUserWithPassword[]>(
-    sinContrasenaAntigua(getStorageItem('admin_list', DEFAULT_ADMINS))
-  )
-
-  const currentUser = ref<AdminUser | null>(
-    getStorageItem('admin_user', null)
-  )
+  const adminsList = ref<AdminUserWithPassword[]>([])
+  const currentUser = ref<AdminUser | null>(null)
 
   const isLoading = ref(false)
   const authError = ref<string | null>(null)
   const isAuthenticated = computed(() => !!currentUser.value)
 
-  function saveAdminsToStorage(): void {
-    setStorageItem('admin_list', adminsList.value)
-  }
-
-  // Deja guardada la lista ya depurada (sin la contraseña antigua).
-  saveAdminsToStorage()
-
-  // La sesión de un administrador que ya no existe se cierra.
-  if (currentUser.value && !adminsList.value.some(a => a.id === currentUser.value!.id)) {
-    currentUser.value = null
-    void authRepository.clearSession()
+  /** Carga los administradores y la sesión guardada. Se llama una vez al arrancar la app. */
+  async function init(): Promise<void> {
+    const repo = repositorios().auth
+    adminsList.value = await repo.admins.list()
+    const sesion = await repo.getSession()
+    // La sesión de un administrador que ya no existe se cierra.
+    if (sesion && !adminsList.value.some(a => a.id === sesion.id)) {
+      currentUser.value = null
+      await repo.clearSession()
+    } else {
+      currentUser.value = sesion
+    }
   }
 
   /**
@@ -97,8 +61,12 @@ export const useAuthStore = defineStore('auth', () => {
           role: foundUser.role,
           createdAt: foundUser.createdAt
         }
-        currentUser.value = sessionUser
-        await authRepository.saveCurrentSessionUser(sessionUser)
+        await persistirConReversion({
+          aplicar: () => { currentUser.value = sessionUser },
+          revertir: () => { currentUser.value = null },
+          persistir: () => repositorios().auth.saveSession(sessionUser),
+          mensaje: 'No se pudo guardar la sesión.'
+        })
         isLoading.value = false
         return true
       } else {
@@ -107,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
         return false
       }
     } catch (e) {
-      authError.value = 'Ocurrió un error inesperado al intentar iniciar sesión.'
+      authError.value = mensajeDeError(e, 'Ocurrió un error inesperado al intentar iniciar sesión.')
       isLoading.value = false
       return false
     }
@@ -158,12 +126,16 @@ export const useAuthStore = defineStore('auth', () => {
         createdAt: todayDate
       }
 
-      adminsList.value.push(newAdmin)
-      saveAdminsToStorage()
+      await persistirConReversion({
+        aplicar: () => { adminsList.value.push(newAdmin) },
+        revertir: () => { adminsList.value = adminsList.value.filter(a => a.id !== newAdmin.id) },
+        persistir: () => repositorios().auth.admins.create(newAdmin),
+        mensaje: 'No se pudo registrar al administrador.'
+      })
       isLoading.value = false
       return true
     } catch (e) {
-      authError.value = 'Error al registrar el nuevo usuario administrador.'
+      authError.value = mensajeDeError(e, 'Error al registrar el nuevo usuario administrador.')
       isLoading.value = false
       return false
     }
@@ -174,7 +146,7 @@ export const useAuthStore = defineStore('auth', () => {
    */
   async function logout(): Promise<void> {
     currentUser.value = null
-    await authRepository.clearSession()
+    await repositorios().auth.clearSession()
   }
 
   return {
@@ -183,6 +155,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading,
     authError,
     isAuthenticated,
+    init,
     login,
     register,
     logout

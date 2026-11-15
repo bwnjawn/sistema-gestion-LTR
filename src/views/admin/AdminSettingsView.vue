@@ -43,21 +43,21 @@ function openParametersEdit() {
 }
 
 async function saveParameters() {
-  await settingsStore.updateParameters({
+  const parametrosGuardados = await settingsStore.updateParameters({
     defaultDepositPercentage: editDeposit.value,
     depositDeadlineHours: Math.max(1, Number(editDeadline.value) || 1),
     ivaPercentage: editIva.value,
     poolEntryPrice: Math.max(0, Math.round(Number(editPoolPrice.value) || 0)),
     marginPercentage: editMargin.value
   })
-  await settingsStore.updateCapacityRules({
+  const reglasGuardadas = await settingsStore.updateCapacityRules({
     restaurantSpaces: editSpaces.value.map(e => ({ ...e, capacidad: Math.max(0, Number(e.capacidad) || 0) })),
     menuLargeGroupThreshold: Math.max(1, Number(editMenuThreshold.value) || 1),
     maxMenuVarietiesLargeGroup: Math.max(1, Number(editMenuVarieties.value) || 1),
     maxCampingPeopleCapacity: editMaxCamping.value,
     marginPercentage: editMargin.value
   })
-  isEditingParameters.value = false
+  if (parametrosGuardados && reglasGuardadas) isEditingParameters.value = false
 }
 useBloqueoScroll(computed(() => isEditingParameters.value))
 </script>

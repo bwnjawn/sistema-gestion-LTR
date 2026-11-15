@@ -5,6 +5,7 @@ import { ChevronRight, Waves, PartyPopper } from 'lucide-vue-next'
 import { useReservationStore } from '../../stores/reservationStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { formatCLP } from '../../lib/format'
+import type { ServiceType } from '../../types/domain'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
 import TarjetaServicioExtra from '../../components/ui/TarjetaServicioExtra.vue'
 import HojaContactoEvento from '../../components/ui/HojaContactoEvento.vue'
@@ -17,13 +18,13 @@ const settingsStore = useSettingsStore()
 const contactoEventoAbierto = ref(false)
 const { terminar: salirAlPanel } = useSalidaReserva()
 
-function selectService(service: 'cabana' | 'camping' | 'restaurant' | 'piscina') {
+function selectService(service: ServiceType) {
   reservationStore.setService(service)
   if (service === 'cabana') {
     router.push('/cabana/paso1')
   } else if (service === 'camping') {
     router.push('/camping/paso1')
-  } else if (service === 'restaurant') {
+  } else if (service === 'restaurante') {
     router.push('/restaurante/paso1')
   } else if (service === 'piscina') {
     router.push('/piscina/paso1')
@@ -127,7 +128,7 @@ function selectService(service: 'cabana' | 'camping' | 'restaurant' | 'piscina')
 
         <!-- CARD 3: COMER -->
         <div 
-          @click="selectService('restaurant')"
+          @click="selectService('restaurante')"
           class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
         >
           <img 

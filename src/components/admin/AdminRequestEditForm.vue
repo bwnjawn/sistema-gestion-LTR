@@ -113,9 +113,9 @@ function requestSave() {
   save()
 }
 
-function save() {
+async function save() {
   confirmingDates.value = false
-  const result = requestsStore.updateRequestDetails(props.request.id, {
+  const result = await requestsStore.updateRequestDetails(props.request.id, {
     ...form.value,
     guestsCount: Number(form.value.guestsCount)
   })

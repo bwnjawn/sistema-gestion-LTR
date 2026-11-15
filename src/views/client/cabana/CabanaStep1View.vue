@@ -10,26 +10,25 @@ import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
-import { useRequestsStore } from '../../../stores/requestsStore'
-import { isCabinNightBlocked, isCabinStayBlocked } from '../../../services/availability'
+import { useDisponibilidadStore } from '../../../stores/disponibilidadStore'
 import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
 const router = useRouter()
 const settingsStore = useSettingsStore()
 const reservationStore = useReservationStore()
 const catalogStore = useCatalogStore()
-const requestsStore = useRequestsStore()
+const disponibilidad = useDisponibilidadStore()
 
 reservationStore.setService('cabana')
 
 // Una noche se bloquea si todas las cabañas con capacidad para el grupo están ocupadas (SCRUM-244)
 function isNightBlocked(dateStr: string): boolean {
-  return isCabinNightBlocked(dateStr, reservationStore.guestsCount, catalogStore.cabins, requestsStore.requests)
+  return disponibilidad.consulta.nocheCabanaBloqueada(dateStr, reservationStore.guestsCount, catalogStore.cabins)
 }
 
 // Una estadía se bloquea si ninguna cabaña que le sirve está libre todas las noches
 function isStayBlocked(inicio: string, salida: string): boolean {
-  return isCabinStayBlocked(inicio, salida, reservationStore.guestsCount, catalogStore.cabins, requestsStore.requests)
+  return disponibilidad.consulta.estadiaCabanaBloqueada(inicio, salida, reservationStore.guestsCount, catalogStore.cabins)
 }
 
 // Conversión de string (YYYY-MM-DD) a objeto Date para BaseCalendar (corrige TS2322)
