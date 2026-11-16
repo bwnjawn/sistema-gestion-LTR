@@ -1,38 +1,21 @@
 <template>
-  <nav class="barra-fija-inferior fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-[#e3eae1]/95 backdrop-blur-md border-t-2 border-brand-border px-2.5 pt-3 pb-seguro-nav shadow-2xl">
+  <!-- Mismo estilo que la barra del admin: ícono relleno y oscuro cuando está activo, más una etiqueta -->
+  <nav class="barra-fija-inferior fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-[#e3eae1]/95 backdrop-blur-md border-t-2 border-brand-border px-2.5 pt-2.5 pb-seguro-nav shadow-2xl">
     <div class="grid grid-cols-2 gap-2">
-      <!-- Pestaña Inicio -->
-      <button 
-        type="button" 
-        @click="goToHome"
-        aria-label="Inicio"
-        :aria-current="isHomeActive ? 'page' : undefined"
-        title="Inicio"
+      <button
+        v-for="item in items"
+        :key="item.etiqueta"
+        type="button"
+        @click="item.ir"
+        :aria-label="item.etiqueta"
+        :aria-current="item.activo ? 'page' : undefined"
         :class="[
-          'py-3 px-3 rounded-2xl flex items-center justify-center border touch-target active:scale-95 transition-all',
-          isHomeActive
-            ? 'bg-[#c5d7be] text-brand-dark border-brand-border shadow-2xs'
-            : 'bg-white/60 hover:bg-white text-gray-600 border-brand-border/60 font-extrabold'
+          'py-2 rounded-2xl flex flex-col items-center justify-center gap-0.5 touch-target active:scale-95 transition-colors',
+          item.activo ? 'text-brand-dark' : 'text-gray-600'
         ]"
       >
-        <Home class="w-6 h-6 stroke-[2.5]" aria-hidden="true" />
-      </button>
-
-      <!-- Pestaña Contacto -->
-      <button 
-        type="button" 
-        @click="goToContact"
-        aria-label="Contacto"
-        :aria-current="isContactActive ? 'page' : undefined"
-        title="Contacto"
-        :class="[
-          'py-3 px-3 rounded-2xl flex items-center justify-center border touch-target active:scale-95 transition-all',
-          isContactActive
-            ? 'bg-[#c5d7be] text-brand-dark border-brand-border shadow-2xs'
-            : 'bg-white/60 hover:bg-white text-gray-600 border-brand-border/60 font-extrabold'
-        ]"
-      >
-        <PhoneCall class="w-6 h-6 stroke-[2.5]" aria-hidden="true" />
+        <IconoBarra :nombre="item.icono" :activo="item.activo" />
+        <span :class="['text-xs', item.activo ? 'font-bold' : 'font-normal']">{{ item.etiqueta }}</span>
       </button>
     </div>
   </nav>
@@ -41,7 +24,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Home, PhoneCall } from 'lucide-vue-next'
+import IconoBarra, { type NombreIconoBarra } from './IconoBarra.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -60,4 +43,9 @@ const goToContact = () => {
     router.push({ name: 'contact' })
   }
 }
+
+const items = computed<{ etiqueta: string; icono: NombreIconoBarra; activo: boolean; ir: () => void }[]>(() => [
+  { etiqueta: 'Inicio', icono: 'inicio', activo: isHomeActive.value, ir: goToHome },
+  { etiqueta: 'Contacto', icono: 'contacto', activo: isContactActive.value, ir: goToContact }
+])
 </script>
