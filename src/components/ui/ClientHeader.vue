@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronLeft, X, WifiOff } from 'lucide-vue-next'
+import { ChevronLeft, CircleHelp, X, WifiOff } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 
 // Barra superior del cliente. Sin atrás ni cerrar muestra el logo (Contacto);
@@ -9,9 +9,11 @@ defineProps<{
   subtitulo?: string
   conVolver?: boolean
   conCerrar?: boolean
+  /** Muestra el botón "?" que abre la ayuda del paso. */
+  conAyuda?: boolean
 }>()
 
-defineEmits<{ (e: 'volver'): void; (e: 'cerrar'): void }>()
+defineEmits<{ (e: 'volver'): void; (e: 'cerrar'): void; (e: 'ayuda'): void }>()
 
 const settingsStore = useSettingsStore()
 </script>
@@ -39,6 +41,17 @@ const settingsStore = useSettingsStore()
         <h1 class="text-xl font-black text-brand-dark leading-tight truncate">{{ titulo }}</h1>
         <p v-if="subtitulo" class="text-sm font-bold text-gray-700 leading-tight truncate">{{ subtitulo }}</p>
       </div>
+
+      <!-- Sin borde ni fondo: el ícono ya es un círculo y un marco lo dejaría doble -->
+      <button
+        v-if="conAyuda"
+        type="button"
+        class="touch-target shrink-0 inline-flex items-center justify-center text-brand-dark active:scale-90 transition-transform"
+        aria-label="Ayuda de este paso"
+        @click="$emit('ayuda')"
+      >
+        <CircleHelp class="w-6 h-6 stroke-[2.5]" aria-hidden="true" />
+      </button>
 
       <button
         v-if="conCerrar"

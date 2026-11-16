@@ -3,10 +3,8 @@
 // ni plazo ni aprobación: sirve para que el administrador sepa quién viene.
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { CheckCircle2, FileCheck, Pencil, RotateCcw } from 'lucide-vue-next'
-import StepIndicator from '../../../components/ui/StepIndicator.vue'
+import { CheckCircle2, FileCheck, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '../../../components/ui/BaseButton.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import AvisoEnvio from '../../../components/ui/AvisoEnvio.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import ConfirmacionReservaAdmin from '../../../components/ui/ConfirmacionReservaAdmin.vue'
@@ -40,47 +38,29 @@ const { terminar: handleGoHome } = useSalidaReserva()
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-precio">
     <div v-if="!isSubmitted" class="space-y-4">
-      <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
-        <StepIndicator :current-step="3" />
-      </div>
+      <h2 class="text-2xl font-bold text-brand-dark leading-tight">Revisa tu visita</h2>
 
-      <BaseAlert variant="info" title="Revisa tu visita antes de enviar">
-        No necesitas abonar nada: al enviar, tu visita queda registrada.
-      </BaseAlert>
-
-      <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-4">
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider">Visita a la piscina</h3>
-            <button type="button" @click="router.push('/piscina/paso1')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
-              <Pencil class="w-3.5 h-3.5" /> Editar
-            </button>
+      <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-4">
+        <div class="space-y-0.5">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Visita</p>
+            <button type="button" @click="router.push('/piscina/paso1')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
-          <p class="text-sm font-black text-brand-dark">{{ formatDateShort(store.checkInDate) }} · {{ personas }}</p>
+          <p class="text-xl font-bold text-brand-dark">{{ formatDateShort(store.checkInDate) }}</p>
+          <p class="text-sm text-gray-700">{{ personas }}</p>
         </div>
-
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider">Datos de contacto</h3>
-            <button type="button" @click="router.push('/piscina/paso2')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
-              <Pencil class="w-3.5 h-3.5" /> Editar
-            </button>
+        <div class="space-y-0.5 pt-4 border-t border-gray-200">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Contacto</p>
+            <button type="button" @click="router.push('/piscina/paso2')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
-          <p class="text-sm font-black text-brand-dark">{{ store.clientName }}</p>
-          <p class="text-sm font-bold text-gray-700">{{ store.clientPhone }}</p>
+          <p class="text-base font-bold text-brand-dark">{{ store.clientName }}</p>
+          <p class="text-sm text-gray-700">{{ store.clientPhone }}</p>
         </div>
-
-        <div class="border-t border-gray-200/60 pt-3 space-y-1 text-sm font-bold text-gray-600">
-          <div class="flex justify-between">
-            <span>{{ personas }} × {{ formatCLP(settingsStore.poolEntryPrice) }}</span>
-            <span>{{ formatCLP(total) }}</span>
-          </div>
-          <div class="flex justify-between text-base font-black text-brand-dark">
-            <span>Total</span>
-            <span>{{ formatCLP(total) }}</span>
-          </div>
+        <div class="pt-4 border-t border-gray-200 space-y-1.5 text-sm text-gray-700">
+          <div class="flex justify-between gap-3"><span>{{ personas }} × {{ formatCLP(settingsStore.poolEntryPrice) }}</span><span>{{ formatCLP(total) }}</span></div>
         </div>
       </div>
 
@@ -91,7 +71,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
         @reintentar="handleSendRequest"
       />
 
-      <BarraAccionInferior enviar :loading="isSubmitting || sinConexion" :disabled="sinConexion" @click="handleSendRequest">{{ sinConexion ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar' }}</BarraAccionInferior>
+      <BarraAccionInferior enviar :total="total" :abono="0" sin-abono :loading="isSubmitting || sinConexion" :disabled="sinConexion" @click="handleSendRequest">{{ sinConexion ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar' }}</BarraAccionInferior>
     </div>
 
     <!-- El administrador ve su propia confirmación, sin el texto dirigido al cliente -->
@@ -109,20 +89,20 @@ const { terminar: handleGoHome } = useSalidaReserva()
       </div>
 
       <div class="space-y-2.5">
-        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-black text-brand-dark">
+        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-bold text-brand-dark">
           <FileCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           <span>Código: {{ reservationCode }}</span>
         </div>
-        <h2 class="text-2xl font-black text-brand-dark tracking-tight">¡Visita registrada!</h2>
-        <p class="text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
-          Te esperamos el <strong class="text-brand-dark font-black">{{ formatDateShort(store.checkInDate) }}</strong> con
-          <strong class="text-brand-dark font-black">{{ personas }}</strong>. No necesitas abonar nada.
+        <h2 class="text-2xl font-bold text-brand-dark tracking-tight">¡Visita registrada!</h2>
+        <p class="text-sm text-gray-700 leading-relaxed max-w-xs mx-auto">
+          Te esperamos el <strong class="text-brand-dark font-bold">{{ formatDateShort(store.checkInDate) }}</strong> con
+          <strong class="text-brand-dark font-bold">{{ personas }}</strong>. No necesitas abonar nada.
         </p>
       </div>
 
-      <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left text-sm font-bold text-gray-700 flex justify-between items-center">
+      <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left text-sm text-gray-700 flex justify-between items-center">
         <span class="text-gray-500">Total de la entrada:</span>
-        <span class="text-base font-black text-brand-dark">{{ formatCLP(total) }}</span>
+        <span class="text-base font-bold text-brand-dark">{{ formatCLP(total) }}</span>
       </div>
 
       <BaseButton variant="outline" size="lg" fullWidth @click="handleGoHome">

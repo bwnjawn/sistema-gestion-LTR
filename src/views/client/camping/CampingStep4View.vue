@@ -1,21 +1,17 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  Calendar, Pencil, Clock, Receipt, User, Phone, CheckCircle2, FileCheck, Utensils, Home, RotateCcw 
-} from 'lucide-vue-next'
-import StepIndicator from '../../../components/ui/StepIndicator.vue'
+import { CheckCircle2, FileCheck, Utensils, Home, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import AvisoEnvio from '../../../components/ui/AvisoEnvio.vue'
 import { useEnvioSolicitud } from '../../../composables/useEnvioSolicitud'
 import { useSalidaReserva } from '../../../composables/useSalidaReserva'
 import ConfirmacionReservaAdmin from '../../../components/ui/ConfirmacionReservaAdmin.vue'
 import CasilleroEventoEspecial from '../../../components/ui/CasilleroEventoEspecial.vue'
-import SelectorEstadoReservaAdmin from '../../../components/ui/SelectorEstadoReservaAdmin.vue'
+import ModalEstadoReservaAdmin from '../../../components/ui/ModalEstadoReservaAdmin.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
+import DatosTransferencia from '../../../components/ui/DatosTransferencia.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
-import HorarioCard from '../../../components/ui/HorarioCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
@@ -65,6 +61,19 @@ function handleSendRequest() {
   })
 }
 
+// El administrador elige cómo queda la reserva en un modal antes de enviar; el cliente envía directo
+const mostrarEstadoAdmin = ref(false)
+
+function alTocarEnviar() {
+  if (store.isAdminMode) mostrarEstadoAdmin.value = true
+  else handleSendRequest()
+}
+
+function confirmarEstadoAdmin() {
+  mostrarEstadoAdmin.value = false
+  handleSendRequest()
+}
+
 function handleGoToRestaurant() {
   store.prepareCrossServiceBooking('restaurante')
   router.push('/restaurante/paso1')
@@ -79,100 +88,48 @@ const { terminar: handleGoHome } = useSalidaReserva()
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
+  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-precio">
     
     <div v-if="!isSubmitted" class="space-y-4">
-      <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
-        <StepIndicator :current-step="4" />
-      </div>
+      <h2 class="text-2xl font-bold text-brand-dark leading-tight">Revisa tu reserva</h2>
 
-      <BaseAlert variant="info" title="Revisa tu solicitud antes de enviar">
-        Verifica todos los datos de tu reserva de camping antes de confirmar.
-      </BaseAlert>
-
-      <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
-        
-        <div class="space-y-2">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Calendar class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              Fechas y Modalidad
-            </h3>
-            <button type="button" @click="router.push('/camping/paso1')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
-              <Pencil class="w-3.5 h-3.5" /> Editar
-            </button>
+      <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-4">
+        <div class="space-y-0.5">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Espacio</p>
+            <button type="button" @click="router.push('/camping/paso2')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
-          <p class="text-sm font-black text-brand-dark">
-            {{ formattedScheduleDisplay }}
-          </p>
-          <HorarioCard :ingreso="horarioCamping.checkIn" :salida="horarioCamping.checkOut" :salida-mismo-dia="isDiario" />
+          <p class="text-xl font-bold text-brand-dark">{{ selectedCampingSite?.name }}</p>
+          <p class="text-sm text-gray-700">{{ store.guestsCount }} personas</p>
         </div>
-
-        <div class="space-y-2">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              Espacio Seleccionado
-            </h3>
-            <button type="button" @click="router.push('/camping/paso2')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
-              <Pencil class="w-3.5 h-3.5" /> Editar
-            </button>
+        <div class="space-y-0.5 pt-4 border-t border-gray-200">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Fechas y modalidad</p>
+            <button type="button" @click="router.push('/camping/paso1')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-black text-brand-dark">{{ selectedCampingSite?.name }}</span>
-            <span class="text-sm font-extrabold text-gray-600">{{ store.guestsCount }} personas</span>
-          </div>
+          <p class="text-base font-bold text-brand-dark">{{ formattedScheduleDisplay }}</p>
+          <p class="text-sm text-gray-700">Ingreso {{ horarioCamping.checkIn }} hrs · Salida {{ horarioCamping.checkOut }} hrs{{ isDiario ? ' (mismo día)' : '' }}</p>
         </div>
-
-        <div class="space-y-2">
-          <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-            <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              Datos del Titular
-            </h3>
-            <button type="button" @click="router.push('/camping/paso3')" class="text-sm font-black text-brand-accent hover:underline flex items-center gap-1">
-              <Pencil class="w-3.5 h-3.5" /> Editar
-            </button>
+        <div class="space-y-0.5 pt-4 border-t border-gray-200">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Titular</p>
+            <button type="button" @click="router.push('/camping/paso3')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
-          <div class="text-sm font-bold text-gray-700 space-y-1">
-            <p class="text-sm font-black text-brand-dark">{{ store.clientName }}</p>
-            <p class="flex items-center gap-1"><Phone class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" /> {{ store.clientPhone }}</p>
-            <p v-if="store.clientEmail" class="text-gray-500">{{ store.clientEmail }}</p>
-          </div>
+          <p class="text-base font-bold text-brand-dark">{{ store.clientName }}</p>
+          <p class="text-sm text-gray-700">{{ store.clientPhone }}</p>
+          <p v-if="store.clientEmail" class="text-sm text-gray-700">{{ store.clientEmail }}</p>
         </div>
-
-        <div v-if="store.comments" class="space-y-1 bg-amber-50 p-3 rounded-2xl border border-amber-200">
-          <span class="text-sm font-black text-amber-900 uppercase tracking-wider block">Comentarios Adicionales:</span>
-          <p class="text-sm font-semibold text-amber-950 italic">"{{ store.comments }}"</p>
+        <div v-if="store.comments" class="pt-4 border-t border-gray-200 space-y-0.5">
+          <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Comentarios</p>
+          <p class="text-sm text-gray-700 italic">"{{ store.comments }}"</p>
         </div>
-
-      </div>
-
-      <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-3">
-        <div class="flex items-center gap-1.5 border-b border-gray-100 pb-2">
-          <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <h3 class="text-sm font-extrabold text-gray-500 uppercase tracking-wider">Desglose de Tarifas</h3>
-        </div>
-
-        <div class="space-y-2 text-sm font-bold text-gray-600">
-          <div class="flex justify-between">
-            <span>{{ store.guestsCount }} personas x {{ isDiario ? '1 día' : nightsCount + ' noche/s' }}:</span>
-            <span>{{ formatCLP(subtotal) }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span>IVA (19%):</span>
-            <span>{{ formatCLP(ivaAmount) }}</span>
-          </div>
-          <div class="flex justify-between text-base font-black text-brand-dark border-t border-gray-200/60 pt-2">
-            <span>Total Estimado:</span>
-            <span>{{ formatCLP(totalWithIva) }}</span>
-          </div>
+        <div class="pt-4 border-t border-gray-200 space-y-1.5 text-sm text-gray-700">
+          <div class="flex justify-between gap-3"><span>{{ store.guestsCount }} personas × {{ isDiario ? '1 día' : nightsCount + ' noche/s' }}</span><span>{{ formatCLP(subtotal) }}</span></div>
+          <div class="flex justify-between gap-3"><span>IVA (19%)</span><span>{{ formatCLP(ivaAmount) }}</span></div>
         </div>
       </div>
 
-      <DepositInfoCard :total-amount="totalWithIva" :deposit-amount="depositAmount" />
-
-      <SelectorEstadoReservaAdmin v-if="store.isAdminMode" :deposit-amount="depositAmount" :total-amount="totalWithIva" />
+      <DepositInfoCard v-if="!store.isAdminMode" />
       <CasilleroEventoEspecial v-if="store.isAdminMode" />
 
       <AvisoEnvio
@@ -182,7 +139,16 @@ const { terminar: handleGoHome } = useSalidaReserva()
         @reintentar="handleSendRequest"
       />
 
-      <BarraAccionInferior enviar :loading="isSubmitting || sinConexion" :disabled="sinConexion" @click="handleSendRequest">{{ sinConexion ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar Solicitud' }}</BarraAccionInferior>
+      <ModalEstadoReservaAdmin
+        v-if="store.isAdminMode"
+        :abierto="mostrarEstadoAdmin"
+        :deposit-amount="depositAmount"
+        :total-amount="totalWithIva"
+        @confirmar="confirmarEstadoAdmin"
+        @cerrar="mostrarEstadoAdmin = false"
+      />
+
+      <BarraAccionInferior enviar :total="totalWithIva" :abono="depositAmount" :loading="isSubmitting || sinConexion" :disabled="sinConexion" @click="alTocarEnviar">{{ sinConexion ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar solicitud' }}</BarraAccionInferior>
     </div>
 
     <!-- El administrador ve su propia confirmación, sin el texto dirigido al cliente -->
@@ -200,50 +166,56 @@ const { terminar: handleGoHome } = useSalidaReserva()
       </div>
 
       <div class="space-y-2.5">
-        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-black text-brand-dark shadow-2xs">
+        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-bold text-brand-dark shadow-2xs">
           <FileCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           <span>Código: {{ reservationCode }}</span>
         </div>
 
-        <h2 class="text-2xl font-black text-brand-dark tracking-tight">
+        <h2 class="text-2xl font-bold text-brand-dark tracking-tight">
           ¡Solicitud de Camping Registrada!
         </h2>
 
-        <p class="text-sm sm:text-sm font-semibold text-gray-600 leading-relaxed max-w-xs mx-auto">
-          Registramos tu solicitud de camping para tu grupo de <strong class="text-brand-dark font-black">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-black">{{ store.clientPhone }}</strong>. <span class="block mt-2 text-brand-dark font-black">Tu solicitud queda pendiente. La fecha se asegura al confirmar y abonar.</span>
+        <p class="text-sm text-gray-700 leading-relaxed max-w-xs mx-auto">
+          Registramos tu solicitud de camping para tu grupo de <strong class="text-brand-dark font-bold">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-bold">{{ store.clientPhone }}</strong>. <span class="block mt-2 text-brand-dark font-bold">Tu solicitud queda pendiente. La fecha se asegura al confirmar y abonar.</span>
         </p>
       </div>
 
-      <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm font-bold text-gray-700">
+      <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm text-gray-700">
         <div class="flex justify-between items-center">
           <span class="text-gray-500">Servicio:</span>
-          <span class="text-brand-dark font-black">{{ selectedCampingSite?.name }}</span>
+          <span class="text-brand-dark font-bold">{{ selectedCampingSite?.name }}</span>
         </div>
         <div class="flex justify-between items-start gap-2">
           <span class="text-gray-500 shrink-0">Fechas y Modalidad:</span>
-          <span class="text-brand-dark font-black text-right">{{ formattedScheduleDisplay }}</span>
+          <span class="text-brand-dark font-bold text-right">{{ formattedScheduleDisplay }}</span>
         </div>
         <div class="flex justify-between items-center border-t border-gray-200/60 pt-2 mt-1">
           <span class="text-gray-500">Total Estimado:</span>
-          <span class="text-sm font-black text-brand-dark">{{ formatCLP(totalWithIva) }}</span>
+          <span class="text-sm font-bold text-brand-dark">{{ formatCLP(totalWithIva) }}</span>
         </div>
       </div>
 
+      <div v-if="depositAmount > 0" class="bg-white p-4 rounded-2xl border-2 border-brand-border text-left space-y-2.5">
+        <h3 class="text-base font-bold text-brand-dark">Abono para confirmar: {{ formatCLP(depositAmount) }}</h3>
+        <p class="text-sm text-gray-700">Transfiere dentro de {{ settingsStore.depositDeadlineHours }} horas. El saldo se paga al llegar.</p>
+        <DatosTransferencia />
+      </div>
+
       <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl text-left space-y-3">
-        <div class="flex items-center gap-2 text-amber-950 font-black text-sm">
+        <div class="flex items-center gap-2 text-amber-950 font-bold text-sm">
           <Home class="w-5 h-5 text-amber-700 shrink-0 stroke-[2.5]" />
           <span>¿Quieres agregar comida o alojamiento en cabaña?</span>
         </div>
 
-        <p class="text-sm font-semibold text-amber-900 leading-relaxed">
-          Conservamos las fechas y tu grupo de <strong class="text-amber-950 font-black">{{ store.guestsCount }} personas</strong> para que selecciones tus servicios adicionales sin volver a llenar datos.
+        <p class="text-sm font-normal text-amber-900 leading-relaxed">
+          Conservamos las fechas y tu grupo de <strong class="text-amber-950 font-bold">{{ store.guestsCount }} personas</strong> para que selecciones tus servicios adicionales sin volver a llenar datos.
         </p>
 
         <div class="grid grid-cols-2 gap-2 pt-1">
           <button
             type="button"
             @click="handleGoToRestaurant"
-            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
+            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold text-sm py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
           >
             <Utensils class="w-4 h-4 stroke-[2.5]" />
             <span>Restaurante</span>
@@ -252,7 +224,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
           <button
             type="button"
             @click="handleGoToCabana"
-            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-sm py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
+            class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold text-sm py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-xs touch-target active:scale-95 transition-transform"
           >
             <Home class="w-4 h-4 stroke-[2.5]" />
             <span>Cabaña</span>
