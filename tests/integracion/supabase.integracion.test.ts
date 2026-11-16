@@ -18,7 +18,7 @@ import { inicializarAplicacion } from '../../src/lib/arranque'
 import { generateUUID } from '../../src/lib/id'
 import { repositorios, usarRepositorios } from '../../src/lib/repositories'
 import { crearRepositoriosSupabase } from '../../src/lib/repositories/supabase'
-import { supabase, supabaseConfigurado } from '../../src/lib/supabase'
+import { servidorAlcanzable, supabase, supabaseConfigurado } from '../../src/lib/supabase'
 import { useAuthStore } from '../../src/stores/authStore'
 import { useCatalogStore } from '../../src/stores/catalogStore'
 import { useDisponibilidadStore } from '../../src/stores/disponibilidadStore'
@@ -61,6 +61,12 @@ function solicitudDeCabana(nombre: string, entrada: string, salida: string, pers
 }
 
 describe.skipIf(!activo)('Supabase real: lo que ve el público (sin sesión)', () => {
+  it('comprueba que el servidor responde de verdad (SCRUM-274)', async () => {
+    const t0 = Date.now()
+    expect(await servidorAlcanzable()).toBe(true)
+    expect(Date.now() - t0).toBeLessThan(4000)
+  })
+
   it('lee los ajustes públicos con sus valores', async () => {
     const contacto = await repos.settings.get('contact_info', DEFAULT_CONTACT_PLACEHOLDER)
     expect(contacto.phone1).toBe('+56 9 8502 5056')

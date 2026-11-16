@@ -302,6 +302,20 @@ La app ya no carga las solicitudes una sola vez: `src/stores/actualizacionStore.
 - **A mano:** botón de actualizar en el encabezado del panel (rutas con `meta.actualizable`), con "Actualizado hace X min".
 - No se pisa lo que el administrador está guardando: `requestsStore.refrescar` se pospone mientras hay una escritura en curso y no toca la pantalla si no cambió nada.
 
+### Arranque resistente (SCRUM-274)
+
+La app no se monta hasta que cargan los datos, así que el arranque cuida lo que ve el usuario mientras tanto (`src/lib/arranqueConReintentos.ts`, `src/lib/pantallaDeArranque.ts`, pantalla de carga en `index.html`):
+- **Nunca en blanco:** la pantalla de carga (logo y "Cargando…") va dentro de `index.html`, con su estilo, y se ve antes de que cargue ningún script.
+- **La red se mide por lo que responde el servidor, no por `navigator.onLine`** (`src/lib/red.ts`). Esa bandera no es confiable: en iPhone puede quedarse en "sin internet" tras el modo avión hasta cerrar la app, y el aviso de "volvió internet" puede no llegar nunca. La red se marca caída cuando el navegador avisa que se cortó o cuando `/auth/v1/health` no responde (`servidorAlcanzable`, `comprobarRed`), y mientras esté caída se vuelve a comprobar sola cada 3 s: se recupera aunque el navegador no avise. También se comprueba al volver a la app.
+- **Al arrancar** no se carga nada hasta que el servidor responda de verdad. Sin red, el intento falla al instante y se muestra "Sin conexión" (se comprueba cada 2 s); al responder, carga sola.
+- **Por qué:** con una sesión guardada y caducada, cualquier consulta hace que Supabase intente renovarla con reintentos de backoff (200+400+800+… ms, de 12 a 25 s; medido), y todas las consultas esperan detrás. Esa primera falla además queda guardada 60 s (`lastRefreshFailure`): una segunda consulta es instantánea, y al volver internet dentro de ese minuto la sesión parece perdida (se usa la clave anónima y RLS niega los datos del administrador).
+- **Con la red caída no se toca a Supabase:** `supabase()` (`src/lib/supabase.ts`) lanza "sin conexión" al instante, salvo para cerrar sesión (que cierra solo la sesión local). La renovación de sesión en segundo plano se detiene mientras la red está caída y se reanuda al recuperarse; al recuperarse, además, se actualizan los datos (`actualizacionStore`).
+- **Limitación conocida en iPhone (sin resolver, en investigación):** tras cambiar de red (modo avión, Wi-Fi ↔ datos) la app puede quedarse hasta ~2 minutos sin poder hablar con Supabase aunque el resto de internet funcione y Safari cargue; cerrar y abrir la app lo arregla al instante. La explicación más probable es una conexión muerta reutilizada. Detalle, evidencia, mitigación y el experimento pendiente en [`investigacion-red-ios.md`](investigacion-red-ios.md). Mitigación actual: tras 20 s sin respuesta, la pantalla sugiere "cierra la app del todo y vuelve a abrirla".
+- **Si tarda** (6 s): "Está tardando más de lo normal" con botón Reintentar, sin dejar de esperar.
+- **Si falla:** "No pudimos cargar los datos" con Reintentar. Al volver internet se reintenta solo, sin recargar la página.
+- **Tiempo límite de 15 s** en cada consulta a Supabase (`src/lib/fetchConTiempoLimite.ts`).
+- Pendiente (SCRUM-250): abrir con la última copia guardada y esqueletos en las pantallas.
+
 ### Conexión de la app (SCRUM-248)
 
 Con `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` reales en `.env`, `repositorios()` entrega los de `src/lib/repositories/supabase/` (`modo: 'supabase'`); sin ellos, los locales (`modo: 'local'`). En las pruebas siempre son locales, salvo las de integración (`VITE_PROBAR_SUPABASE=1`).

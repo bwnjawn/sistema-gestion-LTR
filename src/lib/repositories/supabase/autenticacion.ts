@@ -4,6 +4,7 @@
 
 import type { AdminUser } from '../../../types/domain'
 import { ErrorDeAlmacenamiento } from '../../errores'
+import { redCaida } from '../../red'
 import { supabase } from '../../supabase'
 import type { AuthRepository } from '../authRepository'
 import { datosOLanzar, traducirError } from './errores'
@@ -74,7 +75,8 @@ export class SupabaseAuthRepository implements AuthRepository {
   }
 
   async cerrarSesion(): Promise<void> {
-    const { error } = await supabase().auth.signOut()
+    // Sin internet solo se cierra la sesión de este dispositivo (no hay a quién avisar) y se puede hacer igual
+    const { error } = await supabase({ permitirSinInternet: true }).auth.signOut(redCaida() ? { scope: 'local' } : undefined)
     if (error) throw traducirError(error, 'No se pudo cerrar la sesión.')
   }
 

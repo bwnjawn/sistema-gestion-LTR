@@ -10,6 +10,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { mensajeDeError } from '../lib/errores'
 import { repositorios } from '../lib/repositories'
+import { alCambiarLaRed, redCaida } from '../lib/red'
 import { useAuthStore } from './authStore'
 import { useCatalogStore } from './catalogStore'
 import { useDisponibilidadStore } from './disponibilidadStore'
@@ -48,7 +49,8 @@ export const useActualizacionStore = defineStore('actualizacion', () => {
    * motivo en `error` y conserva lo que ya estaba cargado.
    */
   async function refrescarTodo(opciones: { minimoSegundos?: number } = {}): Promise<void> {
-    if (!usaSupabase() || actualizando.value) return
+    // Con la red caída no hay nada que pedir: se actualizará solo cuando se recupere (ver `iniciar`)
+    if (!usaSupabase() || actualizando.value || redCaida()) return
     const minimo = (opciones.minimoSegundos ?? 0) * 1000
     if (minimo > 0 && ultimaVez.value !== null && Date.now() - ultimaVez.value < minimo) return
 
@@ -126,7 +128,12 @@ export const useActualizacionStore = defineStore('actualizacion', () => {
     document.addEventListener('visibilitychange', alVolver)
     window.addEventListener('online', alRecuperarInternet)
     window.addEventListener('pageshow', alMostrarPagina)
+    // La red también se recupera sin que el navegador avise (ver src/lib/red.ts): al volver, se actualiza
+    const dejarDeVerLaRed = alCambiarLaRed(caida => {
+      if (!caida) void refrescarTodo()
+    })
     quitarOyentes = () => {
+      dejarDeVerLaRed()
       document.removeEventListener('visibilitychange', alVolver)
       window.removeEventListener('online', alRecuperarInternet)
       window.removeEventListener('pageshow', alMostrarPagina)

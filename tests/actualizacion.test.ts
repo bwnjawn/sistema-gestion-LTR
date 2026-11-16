@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { crearAlmacenamientoEnMemoria } from '../src/lib/persistence'
 import { crearRepositoriosLocales, usarRepositorios, type Repositorios } from '../src/lib/repositories'
+import { marcarRed, reiniciarRed } from '../src/lib/red'
 import { textoHaceCuanto } from '../src/services/actualizacion'
 import { ESPERA_DE_AVISOS_MS, SEGUNDOS_MINIMOS_AL_VOLVER, useActualizacionStore } from '../src/stores/actualizacionStore'
 import { useAuthStore } from '../src/stores/authStore'
@@ -177,6 +178,21 @@ describe('actualizacionStore: actualizar todo', () => {
     expect(store.actualizando).toBe(false)
   })
 
+  it('con la red caída no pide nada ni marca error: se actualizará cuando se recupere', async () => {
+    try {
+      conSesionDeAdministrador()
+      marcarRed(true)
+      const spy = vi.spyOn(repos.requests, 'list')
+      const store = useActualizacionStore()
+      await store.refrescarTodo()
+      expect(spy).not.toHaveBeenCalled()
+      expect(store.error).toBeNull()
+      expect(store.ultimaVez).toBeNull()
+    } finally {
+      reiniciarRed()
+    }
+  })
+
   it('un visitante sin sesión no pide las solicitudes, pero sí el catálogo', async () => {
     const spy = vi.spyOn(repos.requests, 'list')
     await useActualizacionStore().refrescarTodo()
@@ -310,7 +326,22 @@ describe('actualizacionStore: al volver a la app', () => {
     vi.stubGlobal('document', documento)
     vi.stubGlobal('window', ventana)
   })
-  afterEach(() => vi.unstubAllGlobals())
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    reiniciarRed()
+  })
+
+  it('cuando la red se recupera (aunque el navegador no avise) actualiza sola', async () => {
+    const store = useActualizacionStore()
+    store.iniciar()
+    const spy = vi.spyOn(repos.requests, 'list')
+    marcarRed(true)
+    await new Promise(resolver => setTimeout(resolver, 10))
+    expect(spy).not.toHaveBeenCalled()
+    marcarRed(false)
+    await vi.waitFor(() => expect(spy).toHaveBeenCalledTimes(1))
+    store.detener()
+  })
 
   it('al volver a la pestaña actualiza, pero no si ya se actualizó hace poco ni si sigue oculta', async () => {
     const store = useActualizacionStore()

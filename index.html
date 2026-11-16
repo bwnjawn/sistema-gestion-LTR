@@ -7,10 +7,42 @@
     <meta name="theme-color" content="#1E4620" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Los Troncos de Repil - Reservas</title>
-    
+    <!--
+      Pantalla de arranque (SCRUM-274). Va aquí, con su estilo, para verse al instante: antes de que cargue ningún
+      script nunca hay una pantalla en blanco. src/lib/pantallaDeArranque.ts usa estas mismas clases para avisar si
+      tarda, no hay conexión o falla; Vue la reemplaza al montar la app.
+    -->
+    <style>
+      html, body { margin: 0; background: #F9F9F6; }
+      .arranque {
+        min-height: 100vh; min-height: 100dvh; box-sizing: border-box; padding: 1.5rem;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+        font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: #1E4620; text-align: center;
+      }
+      .arranque__logo { width: 5rem; height: 5rem; border-radius: 9999px; border: 1px solid #8E959E; object-fit: cover; }
+      .arranque__giro {
+        width: 1.75rem; height: 1.75rem; border-radius: 9999px;
+        border: 3px solid #D5DBD5; border-top-color: #1E4620; animation: arranque-giro .9s linear infinite;
+      }
+      .arranque__titulo { margin: 0; font-size: 1.25rem; font-weight: 700; }
+      .arranque__texto { margin: 0; max-width: 20rem; font-size: 1rem; line-height: 1.4; color: #1A1D20; }
+      .arranque__boton {
+        min-height: 3rem; padding: 0 1.5rem; border: 0; border-radius: 1rem; cursor: pointer;
+        background: #1E4620; color: #fff; font: inherit; font-size: 1rem; font-weight: 700;
+      }
+      @keyframes arranque-giro { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .arranque__giro { animation: none; } }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="arranque" role="status" aria-live="polite">
+        <img class="arranque__logo" src="/images/logo-negro.png" alt="" />
+        <div class="arranque__giro" aria-hidden="true"></div>
+        <p class="arranque__texto">Cargando…</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
