@@ -118,6 +118,25 @@ Decidido el 8/11 (SCRUM-244) y **corregido el 10/11 (SCRUM-263)**: bloquean solo
 
 **Resolver al confirmar (SCRUM-262).** Al aprobar una solicitud que se cruza, el admin ve siempre un diálogo con las solicitudes que chocan y sus días, precio y cercanía de la fecha, y elige cuál confirmar. Para cada una que no queda confirmada: botones rápidos de **llamar, correo y WhatsApp** con mensaje prearmado, **Modificar fecha** (SCRUM-59) o **Rechazar**. La app nunca envía mensajes sola. El mensaje no propone fechas: el cliente responde y el admin mueve la fecha o rechaza. Una solicitud que chocaría con una ya confirmada **no se puede confirmar** (`puedeConfirmarse` en `services/cruces.ts`). El diálogo muestra el **grupo completo** de solicitudes que compiten (incluidas las cadenas). Al **mover la fecha** de una solicitud, el calendario no deja elegir días con reservas confirmadas (cabaña, cupo de restaurante y de camping) y marca los que solo tienen pendientes; el administrador no puede forzar un día bloqueado. Estado: ✅ implementado en SCRUM-262.
 
+**Cómo se ve la disponibilidad en el calendario del admin (SCRUM-267, decidido el 15/11).** Funciones `getResumenDia` (la casilla), `getDetalleDia` y `reservasDeFranja` (el modal) en `services/availability.ts`. El filtro es de selección única: Todo, Cabañas, Camping, Restaurante o Piscina. Cada casilla del día responde tres preguntas con tres canales distintos, y solo usa dos colores:
+
+| Pregunta del admin | Canal | Regla |
+|---|---|---|
+| ¿Cuánto trabajo tengo? | **Número** en la casilla | Reservas **confirmadas** del día de los servicios del filtro. No cuenta las pendientes ni la piscina (la piscina solo cuenta si es el único servicio visto) |
+| ¿Ya no puedo vender? | **Fondo rojo** | Lleno: ver abajo |
+| ¿Hay algo que resolver? | **Punto ámbar** en la esquina | Hay solicitudes pendientes, o reservas que se topan (la misma cabaña con dos reservas, o personas confirmadas + pendientes sobre la capacidad) |
+
+**Cuándo está lleno:**
+- Cabañas: todas las cabañas reservables (sin las que están en mantención) tienen una confirmada.
+- Restaurante: las tres comidas llegan a la capacidad con lo confirmado.
+- Camping: diario y pernoctar llegan a la capacidad.
+- Piscina: nunca (no tiene tope).
+- **Todo:** solo cuando **todos** los servicios con tope están llenos. Un servicio lleno no pinta el día de rojo.
+
+**Modal del día:** una fila por servicio con su cupo ("Cabañas · con cupo · 1 de 2 cabañas", cada comida y cada modalidad del camping). Al tocar una fila se despliegan las reservas de ese servicio, con el borde de color por estado igual que en Solicitudes (verde confirmada, ámbar pendiente, rojo rechazada, gris cancelada) y la marca "Se cruza". Solo aparecen las solicitudes activas (pendientes y confirmadas): las rechazadas y canceladas no ocupan el día.
+
+**Decisiones de este diseño:** no hay "con cupo" en la grilla (el cupo exacto va en el modal); los pendientes y los que se topan comparten una sola marca; los pendientes no bloquean ni suman al número. Las restaurante sin comida definida no cuentan en ninguna fila. Falta la marca del evento especial: depende de SCRUM-261.
+
 **Eventos especiales (SCRUM-261, bloqueada).** Se tratan como restaurante completo y confirmado. Hay decisiones de diseño pendientes (ver D6).
 
 ## 6. Contacto del negocio

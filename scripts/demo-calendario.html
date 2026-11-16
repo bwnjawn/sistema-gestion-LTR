@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Casos de prueba del calendario</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #f4f7f2; color: #1f3a2a; line-height: 1.4; }
+    h1 { font-size: 1.2rem; margin: 0 0 4px; }
+    p { margin: 6px 0; font-size: .9rem; }
+    button { font: inherit; font-weight: 700; padding: 12px 14px; border-radius: 12px; border: 2px solid #1f3a2a; background: #fff; color: #1f3a2a; width: 100%; margin: 6px 0; }
+    button.principal { background: #1f3a2a; color: #fff; }
+    #estado { padding: 10px 12px; border-radius: 12px; background: #fff; border: 2px solid #c5d7be; font-weight: 700; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; background: #fff; border-radius: 12px; overflow: hidden; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #dfe8da; vertical-align: top; }
+    th { background: #c5d7be; }
+    a { color: #1f3a2a; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>Casos de prueba del calendario</h1>
+  <p>Herramienta de desarrollo (SCRUM-267). Guarda solicitudes de prueba en este navegador. Las tuyas no se tocan: solo se agregan o se quitan las de prueba (código <b>SOL-DEMO-…</b>).</p>
+
+  <button class="principal" id="cargar">Cargar casos de prueba</button>
+  <button id="quitar">Quitar casos de prueba</button>
+  <div id="estado">Listo.</div>
+  <p><a href="/admin/calendario">Ir al calendario del admin</a> (si ya estaba abierto, recárgalo).</p>
+
+  <table>
+    <thead><tr><th>Día</th><th>Caso</th></tr></thead>
+    <tbody id="tabla"></tbody>
+  </table>
+
+  <script>
+    // Misma clave que usa la app: prefijo 'ltr_reserva_' + 'requests' (src/lib/persistence.ts)
+    var CLAVE = 'ltr_reserva_requests'
+    var CABANA_6 = { id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', nombre: 'Cabaña 6' }
+    var CABANA_8 = { id: 'b1fecb99-9c0b-4ef8-bb6d-6bb9bd380a22', nombre: 'Cabaña 8' }
+    // Aforos de fábrica: restaurante 200 por comida, camping 150 por modalidad
+    var REST = 200, CAMP = 150
+
+    function pad(n) { return String(n).padStart(2, '0') }
+    function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) }
+    function mas(dias) { var d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + dias); return d }
+
+    var contador = 0
+    function base(tipo, nombre, personas, estado, dia) {
+      contador++
+      var n = pad(contador)
+      return {
+        id: 'demo-' + n, requestCode: 'SOL-DEMO-' + n,
+        clientName: 'Prueba ' + n, clientPhone: '+56 9 0000 00' + n,
+        type: tipo, resourceName: nombre, date: dia, guestsCount: personas,
+        totalAmount: 100000, depositRequired: estado === 'pending' ? 30000 : 0, payments: [],
+        status: estado, createdAt: new Date().toISOString()
+      }
+    }
+    function cabana(cab, estado, dia) {
+      var salida = iso(mas(dia + 1))
+      var r = base('cabana', cab.nombre, 4, estado, iso(mas(dia)))
+      r.timeOrDuration = salida
+      r.details = { resourceId: cab.id, startDate: iso(mas(dia)), endDate: salida }
+      return r
+    }
+    function comida(comidas, personas, estado, dia) {
+      var r = base('restaurante', 'Restaurante', personas, estado, iso(mas(dia)))
+      r.timeOrDuration = '13:00'
+      r.details = { startDate: iso(mas(dia)), selectedMealTypes: comidas }
+      return r
+    }
+    function camping(modalidad, personas, estado, dia) {
+      var r = base('camping', 'Camping', personas, estado, iso(mas(dia)))
+      var det = { startDate: iso(mas(dia)), campingType: modalidad }
+      if (modalidad === 'pernoctar') { det.endDate = iso(mas(dia + 1)); r.timeOrDuration = det.endDate }
+      r.details = det
+      return r
+    }
+    function piscina(personas, dia) {
+      var r = base('piscina', 'Piscina', personas, 'confirmed', iso(mas(dia)))
+      r.timeOrDuration = '1 día'
+      r.details = { startDate: iso(mas(dia)) }
+      return r
+    }
+
+    // Cada caso: día (desde hoy), qué se espera ver, y las solicitudes que lo arman
+    function casos() {
+      contador = 0
+      return [
+        { dia: 1, texto: 'Cabañas llenas (las 2 confirmadas)', reservas: [cabana(CABANA_6, 'confirmed', 1), cabana(CABANA_8, 'confirmed', 1)] },
+        { dia: 2, texto: 'Cabañas a medias (1 de 2 confirmada)', reservas: [cabana(CABANA_6, 'confirmed', 2)] },
+        { dia: 3, texto: 'Cabañas con solo pendientes: sin número, solo punto ámbar', reservas: [cabana(CABANA_6, 'pending', 3), cabana(CABANA_8, 'pending', 3)] },
+        { dia: 4, texto: 'Cabañas: la misma cabaña con confirmada y pendiente (se topan)', reservas: [cabana(CABANA_6, 'confirmed', 4), cabana(CABANA_6, 'pending', 4)] },
+        { dia: 5, texto: 'Restaurante: almuerzo lleno, desayuno y once libres', reservas: [comida(['almuerzo'], REST, 'confirmed', 5)] },
+        { dia: 6, texto: 'Restaurante a medias en las 3 comidas', reservas: [comida(['desayuno'], 60, 'confirmed', 6), comida(['almuerzo'], 120, 'confirmed', 6), comida(['once'], 30, 'confirmed', 6)] },
+        { dia: 7, texto: 'Restaurante: almuerzo con 150 confirmadas + 100 pendientes (se topan)', reservas: [comida(['almuerzo'], 150, 'confirmed', 7), comida(['almuerzo'], 100, 'pending', 7)] },
+        { dia: 8, texto: 'Camping: diario lleno, pernoctar con 20', reservas: [camping('diario', CAMP, 'confirmed', 8), camping('pernoctar', 20, 'confirmed', 8)] },
+        { dia: 9, texto: 'Camping a medias (diario 40, pernoctar 70)', reservas: [camping('diario', 40, 'confirmed', 9), camping('pernoctar', 70, 'confirmed', 9)] },
+        { dia: 10, texto: 'Piscina: en "Todo" no suma ni marca; con el filtro Piscina sí cuenta', reservas: [piscina(12, 10), piscina(6, 10)] },
+        { dia: 11, texto: 'TODO LLENO: 2 cabañas, 3 comidas, camping diario y pernoctar, piscina', reservas: [
+          cabana(CABANA_6, 'confirmed', 11), cabana(CABANA_8, 'confirmed', 11),
+          comida(['desayuno', 'almuerzo', 'once'], REST, 'confirmed', 11),
+          camping('diario', CAMP, 'confirmed', 11), camping('pernoctar', CAMP, 'confirmed', 11), piscina(20, 11)] },
+        { dia: 12, texto: 'TODO A MEDIAS: 1 cabaña, almuerzo 80, camping 30, piscina 8', reservas: [
+          cabana(CABANA_6, 'confirmed', 12), comida(['almuerzo'], 80, 'confirmed', 12),
+          camping('pernoctar', 30, 'confirmed', 12), piscina(8, 12)] },
+        { dia: 13, texto: 'Todo con solo pendientes: sin número, solo punto ámbar', reservas: [
+          cabana(CABANA_8, 'pending', 13), comida(['almuerzo'], 50, 'pending', 13), camping('diario', 20, 'pending', 13)] },
+        { dia: 14, texto: 'Mezcla: cabañas llenas pero el resto no: en "Todo" NO es rojo, con filtro Cabañas sí', reservas: [
+          cabana(CABANA_6, 'confirmed', 14), cabana(CABANA_8, 'confirmed', 14), camping('diario', 60, 'confirmed', 14)] },
+        { dia: 15, texto: 'Rechazada y cancelada: no cuentan (sin número ni punto)', reservas: [
+          cabana(CABANA_6, 'rejected', 15), comida(['almuerzo'], 90, 'cancelled', 15)] },
+        { dia: 16, texto: 'Restaurante: una sola comida con pendientes (once 40 pend.) y almuerzo a medias', reservas: [
+          comida(['almuerzo'], 100, 'confirmed', 16), comida(['once'], 40, 'pending', 16)] }
+      ]
+    }
+
+    function leer() {
+      try { return JSON.parse(localStorage.getItem(CLAVE) || '[]') } catch (e) { return [] }
+    }
+    function sinDemo(lista) { return lista.filter(function (r) { return String(r.id).indexOf('demo-') !== 0 }) }
+    function mostrar(texto) { document.getElementById('estado').textContent = texto }
+
+    function dibujarTabla() {
+      var filas = casos().map(function (c) {
+        var d = mas(c.dia)
+        var etiqueta = d.toLocaleDateString('es-CL', { weekday: 'short', day: 'numeric', month: 'short' })
+        return '<tr><td>' + etiqueta + '</td><td>' + c.texto + '</td></tr>'
+      })
+      document.getElementById('tabla').innerHTML = filas.join('')
+    }
+
+    document.getElementById('cargar').onclick = function () {
+      var nuevas = []
+      casos().forEach(function (c) { nuevas = nuevas.concat(c.reservas) })
+      var lista = nuevas.concat(sinDemo(leer()))
+      try {
+        localStorage.setItem(CLAVE, JSON.stringify(lista))
+        mostrar('Listo: ' + nuevas.length + ' solicitudes de prueba cargadas. Abre o recarga el calendario del admin.')
+      } catch (e) { mostrar('No se pudo guardar: ' + e.message) }
+    }
+    document.getElementById('quitar').onclick = function () {
+      var lista = leer()
+      var resto = sinDemo(lista)
+      try {
+        localStorage.setItem(CLAVE, JSON.stringify(resto))
+        mostrar('Quitadas ' + (lista.length - resto.length) + ' solicitudes de prueba. Quedan ' + resto.length + '.')
+      } catch (e) { mostrar('No se pudo guardar: ' + e.message) }
+    }
+
+    dibujarTabla()
+    mostrar('Hay ' + leer().filter(function (r) { return String(r.id).indexOf('demo-') === 0 }).length + ' solicitudes de prueba cargadas.')
+  </script>
+</body>
+</html>

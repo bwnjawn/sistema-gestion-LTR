@@ -11,6 +11,17 @@
           <img src="/images/logo-negro.png" alt="" class="w-full h-full object-cover" />
         </button>
         <h1 class="text-xl font-black text-brand-dark leading-tight truncate">{{ titulo }}</h1>
+        <!-- Solo el círculo del "?" se ve; el área de toque de 40 px es transparente -->
+        <button
+          v-if="ayuda"
+          type="button"
+          @click="ayudaAbierta = true"
+          aria-label="Ayuda de esta sección"
+          title="Ayuda de esta sección"
+          class="shrink-0 -ml-1.5 w-10 h-10 flex items-center justify-center text-gray-600 active:scale-90 transition-transform"
+        >
+          <CircleHelp class="w-5 h-5" />
+        </button>
       </div>
 
       <DropdownMenu
@@ -20,6 +31,10 @@
         @select="alElegir"
       />
     </div>
+
+    <ModalAyuda v-if="ayuda" :abierto="ayudaAbierta" :titulo="ayuda.titulo" @cerrar="ayudaAbierta = false">
+      <component :is="ayuda.contenido" />
+    </ModalAyuda>
 
     <!-- Solo aparece cuando no hay internet -->
     <div
@@ -36,12 +51,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CircleUser, LogOut, WifiOff } from 'lucide-vue-next'
+import { CircleHelp, CircleUser, LogOut, WifiOff } from 'lucide-vue-next'
 import { useAuthStore } from '../../stores/authStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import DropdownMenu, { type DropdownItem } from './DropdownMenu.vue'
+import ModalAyuda from './ModalAyuda.vue'
+import { AYUDAS_ADMIN } from '../admin/ayudasAdmin'
 
 const route = useRoute()
 const router = useRouter()
@@ -50,6 +67,11 @@ const settingsStore = useSettingsStore()
 
 // El título lo declara cada ruta en el router (meta.titulo)
 const titulo = computed(() => (route.meta.titulo as string | undefined) ?? 'Administración')
+
+// Ayuda de la sección actual, si su ruta declara `meta.ayuda`
+const ayuda = computed(() => AYUDAS_ADMIN[route.meta.ayuda as string] ?? null)
+const ayudaAbierta = ref(false)
+watch(() => route.fullPath, () => { ayudaAbierta.value = false })
 
 const menuCuenta: DropdownItem[] = [
   { key: 'salir', label: 'Cerrar sesión', icon: LogOut, danger: true }

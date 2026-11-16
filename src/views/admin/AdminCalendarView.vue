@@ -2,14 +2,16 @@
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { 
-  CalendarDays, ChevronLeft, ChevronRight, X, User, Phone, 
+  CalendarDays, ChevronLeft, ChevronRight, X, 
   Layers, Home, Tent, Utensils, Waves
 } from 'lucide-vue-next'
 import AdminCalendarGrid from '../../components/ui/AdminCalendarGrid.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
-import { formatCLP } from '../../lib/format'
-import { getDayOccupancy, getRequestsForDay, getWeekDates } from '../../services/availability'
+import { getDetalleDia, getRequestsForDay, getResumenDia, getWeekDates } from '../../services/availability'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { useCatalogStore } from '../../stores/catalogStore'
+import MarcasDia from '../../components/ui/MarcasDia.vue'
+import DisponibilidadDelDia from '../../components/ui/DisponibilidadDelDia.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
 import { isoToDate } from '../../lib/dates'
 import type { ReservationRequest, ServiceType } from '../../types/domain'
@@ -25,25 +27,22 @@ const viewModes: { id: ViewMode; label: string }[] = [
 
 const requestsStore = useRequestsStore()
 const settingsStore = useSettingsStore()
+const catalogStore = useCatalogStore()
 
-// Filtros Activos por Área
+// Filtro por área: se ve un solo servicio a la vez, o "Todo" (panorama con el servicio más lleno de cada día)
+type FiltroServicio = 'todo' | ServiceType
 const TODOS_LOS_SERVICIOS: ServiceType[] = ['cabana', 'camping', 'restaurante', 'piscina']
-const activeFilters = ref<ServiceType[]>([...TODOS_LOS_SERVICIOS])
-const isAllSelected = computed(() => activeFilters.value.length === TODOS_LOS_SERVICIOS.length)
+const filtroActivo = ref<FiltroServicio>('todo')
+const activeFilters = computed<ServiceType[]>(() =>
+  filtroActivo.value === 'todo' ? [...TODOS_LOS_SERVICIOS] : [filtroActivo.value]
+)
 
-const selectAllFilters = () => {
-  activeFilters.value = [...TODOS_LOS_SERVICIOS]
-}
-
-const toggleFilter = (serviceKey: ServiceType) => {
-  if (activeFilters.value.includes(serviceKey)) {
-    if (activeFilters.value.length > 1) {
-      activeFilters.value = activeFilters.value.filter(id => id !== serviceKey)
-    }
-  } else {
-    activeFilters.value.push(serviceKey)
-  }
-}
+const filtrosDisponibles: { id: FiltroServicio; titulo: string; icono: typeof Layers }[] = [
+  { id: 'cabana', titulo: 'Cabañas', icono: Home },
+  { id: 'camping', titulo: 'Camping', icono: Tent },
+  { id: 'restaurante', titulo: 'Restaurante', icono: Utensils },
+  { id: 'piscina', titulo: 'Piscina', icono: Waves }
+]
 
 // Control de Fecha Activa y Modales
 const selectedDate = ref<Date>(new Date())
@@ -113,34 +112,35 @@ const filteredRequestsForDay = computed(() =>
   getRequestsForDay(selectedDateISO.value, requestsStore.requests, activeFilters.value)
 )
 
+// Detalle de disponibilidad del día seleccionado, de los servicios del filtro (sin resumir)
+const detalleDelDia = computed(() =>
+  getDetalleDia(selectedDateISO.value, requestsStore.requests, activeFilters.value, {
+    cabins: catalogStore.cabins,
+    limites: settingsStore.limitesAforo
+  })
+)
+
 const weekDays = computed(() =>
   getWeekDates(selectedDateISO.value).map(iso => {
     const d = isoToDate(iso) as Date
+    const resumen = getResumenDia(iso, requestsStore.requests, activeFilters.value, {
+      cabins: catalogStore.cabins,
+      limites: settingsStore.limitesAforo
+    })
     return {
       date: d,
       dateStr: iso,
       dayName: d.toLocaleDateString('es-CL', { weekday: 'narrow' }),
       dayNum: d.getDate(),
-      status: getDayOccupancy(iso, requestsStore.requests, activeFilters.value, settingsStore.limitesAforo).status
+      resumen
     }
   })
 )
-
-function getStatusBgClass(status: string) {
-  if (status === 'disponible') return 'bg-status-success'
-  if (status === 'ocupado') return 'bg-status-danger'
-  return 'bg-amber-500'
-}
 
 function hasConflict(id: string): boolean {
   return (requestsStore.conflictsByRequestId[id]?.length ?? 0) > 0
 }
 
-function formatStatusText(status: string): string {
-  if (status === 'confirmed') return 'Confirmada'
-  if (status === 'rejected') return 'Rechazada'
-  return 'Pendiente'
-}
 useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !== 'diario'))
 </script>
 
@@ -150,10 +150,11 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
       <div class="flex items-center justify-center gap-2 flex-wrap">
         <button
           type="button"
-          @click="selectAllFilters"
+          @click="filtroActivo = 'todo'"
+          :aria-pressed="filtroActivo === 'todo'"
           :class="[
             'px-3.5 py-2 rounded-2xl text-xs font-black border transition-all active:scale-95 flex items-center gap-1.5 touch-target shadow-2xs',
-            isAllSelected
+            filtroActivo === 'todo'
               ? 'bg-brand-dark text-white border-brand-dark'
               : 'bg-white text-gray-600 border-brand-border hover:bg-gray-50'
           ]"
@@ -163,74 +164,38 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
         </button>
 
         <button
+          v-for="filtro in filtrosDisponibles"
+          :key="filtro.id"
           type="button"
-          @click="toggleFilter('cabana')"
-          title="Cabañas"
+          @click="filtroActivo = filtro.id"
+          :title="filtro.titulo"
+          :aria-label="filtro.titulo"
+          :aria-pressed="filtroActivo === filtro.id"
           :class="[
             'p-2.5 rounded-2xl border transition-all active:scale-95 flex items-center justify-center touch-target shadow-2xs',
-            activeFilters.includes('cabana')
+            filtroActivo === filtro.id
               ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-black'
               : 'bg-white text-gray-700 border-gray-400'
           ]"
         >
-          <Home class="w-4 h-4 stroke-[2.5]" />
-        </button>
-
-        <button
-          type="button"
-          @click="toggleFilter('camping')"
-          title="Camping"
-          :class="[
-            'p-2.5 rounded-2xl border transition-all active:scale-95 flex items-center justify-center touch-target shadow-2xs',
-            activeFilters.includes('camping')
-              ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-black'
-              : 'bg-white text-gray-700 border-gray-400'
-          ]"
-        >
-          <Tent class="w-4 h-4 stroke-[2.5]" />
-        </button>
-
-        <button
-          type="button"
-          @click="toggleFilter('restaurante')"
-          title="Restaurante"
-          :class="[
-            'p-2.5 rounded-2xl border transition-all active:scale-95 flex items-center justify-center touch-target shadow-2xs',
-            activeFilters.includes('restaurante')
-              ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-black'
-              : 'bg-white text-gray-700 border-gray-400'
-          ]"
-        >
-          <Utensils class="w-4 h-4 stroke-[2.5]" />
-        </button>
-
-        <button
-          type="button"
-          @click="toggleFilter('piscina')"
-          title="Piscina"
-          :class="[
-            'p-2.5 rounded-2xl border transition-all active:scale-95 flex items-center justify-center touch-target shadow-2xs',
-            activeFilters.includes('piscina')
-              ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-black'
-              : 'bg-white text-gray-700 border-gray-400'
-          ]"
-        >
-          <Waves class="w-4 h-4 stroke-[2.5]" />
+          <component :is="filtro.icono" class="w-4 h-4 stroke-[2.5]" />
         </button>
       </div>
 
-      <div class="pt-2.5 border-t-2 border-brand-border/40 flex items-center justify-center gap-6 text-xs font-black">
-        <div class="flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-status-success"></span>
-          <span class="text-gray-700">Disponible</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-status-danger"></span>
-          <span class="text-gray-700">Ocupado</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-          <span class="text-gray-700">Se topan</span>
+      <div class="pt-2.5 border-t-2 border-brand-border/40">
+        <div class="flex items-center justify-center gap-x-4 gap-y-1 flex-wrap text-xs font-black">
+          <div class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded-full bg-brand-dark"></span>
+            <span class="text-gray-700">Confirmadas</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded-md bg-rose-100 border-2 border-rose-300"></span>
+            <span class="text-gray-700">Lleno</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-white border-2 border-amber-600"></span>
+            <span class="text-gray-700">Por resolver</span>
+          </div>
         </div>
       </div>
     </div>
@@ -286,18 +251,17 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
               type="button"
               @click="onDateSelect(day.date)"
               :class="[
-                'p-2 rounded-2xl border-2 text-xs flex flex-col items-center gap-1.5 touch-target active:scale-95 transition-all overflow-hidden',
+                'p-2 min-h-[4.5rem] rounded-2xl border-2 text-xs flex flex-col items-center gap-1 touch-target active:scale-95 transition-all overflow-hidden relative',
                 isSelectedDay(day.date)
-                  ? 'bg-[#c5d7be] border-brand-border font-black text-brand-dark shadow-2xs'
-                  : 'bg-brand-light border-brand-border/60 text-gray-600'
+                  ? ['border-brand-border font-black text-brand-dark shadow-2xs', day.resumen.lleno ? 'bg-rose-200' : 'bg-[#c5d7be]']
+                  : day.resumen.lleno
+                    ? 'bg-rose-100 border-rose-300 text-rose-950'
+                    : 'bg-brand-light border-brand-border/60 text-gray-600'
               ]"
             >
               <span class="text-xs uppercase font-bold text-gray-700">{{ day.dayName }}</span>
               <span class="font-black text-sm">{{ day.dayNum }}</span>
-              <span 
-                class="w-full h-1 rounded-full"
-                :class="getStatusBgClass(day.status)"
-              ></span>
+              <MarcasDia :resumen="day.resumen" />
             </button>
           </div>
         </div>
@@ -325,32 +289,14 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
             </button>
           </div>
 
-          <div class="space-y-2">
-            <div 
-              v-for="req in filteredRequestsForDay" 
-              :key="req.id"
-              @click="selectedRequestDetail = req; openedRequestId = req.id"
-              class="p-3 bg-white rounded-2xl border-2 border-brand-border hover:border-brand-dark cursor-pointer text-xs font-bold space-y-1 shadow-2xs"
-            >
-              <div class="flex justify-between items-center">
-                <span class="font-black text-brand-dark">{{ req.clientName }}</span>
-                <span class="flex items-center gap-1.5">
-                  <span v-if="hasConflict(req.id)" class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-rose-100 border border-status-danger text-rose-950">Se cruza</span>
-                  <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-brand-light border border-brand-border">
-                    {{ formatStatusText(req.status) }}
-                  </span>
-                </span>
-              </div>
-              <div class="flex justify-between text-gray-600 text-xs">
-                <span>{{ req.resourceName }} ({{ req.guestsCount }} pers)</span>
-                <span class="font-black text-brand-dark">{{ formatCLP(req.totalAmount) }}</span>
-              </div>
-            </div>
+          <DisponibilidadDelDia
+            :franjas="detalleDelDia"
+            :reservas="filteredRequestsForDay"
+            :fecha="selectedDateISO"
+            :se-cruza="hasConflict"
+            @abrir="openedRequestId = $event"
+          />
 
-            <div v-if="filteredRequestsForDay.length === 0" class="text-center py-6 text-gray-700 text-xs font-bold bg-brand-light rounded-2xl border border-brand-border">
-              No hay reservas registradas para este día.
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -380,37 +326,13 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
           </button>
         </div>
 
-        <div class="space-y-2">
-          <div 
-            v-for="req in filteredRequestsForDay" 
-            :key="req.id"
-            @click="openedRequestId = req.id"
-            :class="['p-3 bg-brand-light rounded-2xl border text-xs font-bold space-y-1.5 cursor-pointer', hasConflict(req.id) ? 'border-status-danger border-2' : 'border-brand-border']"
-          >
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="font-black text-brand-dark block text-sm">{{ req.clientName }}</span>
-                <span class="text-xs text-gray-700 font-extrabold">{{ req.resourceName }} - {{ req.requestCode }}</span>
-              </div>
-              <span class="flex items-center gap-1.5">
-                <span v-if="hasConflict(req.id)" class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-rose-100 border border-status-danger text-rose-950">Se cruza</span>
-                <span class="text-xs font-black uppercase px-2 py-0.5 rounded-full bg-white border border-brand-border">
-                  {{ formatStatusText(req.status) }}
-                </span>
-              </span>
-            </div>
-
-            <div class="flex items-center gap-3 text-xs text-gray-600 border-t border-gray-200/60 pt-1.5">
-              <span class="flex items-center gap-1"><User class="w-3.5 h-3.5 text-brand-accent" /> {{ req.guestsCount }} pers.</span>
-              <span class="flex items-center gap-1"><Phone class="w-3.5 h-3.5 text-brand-accent" /> {{ req.clientPhone }}</span>
-              <span class="font-black text-brand-dark ml-auto">{{ formatCLP(req.totalAmount) }}</span>
-            </div>
-          </div>
-
-          <div v-if="filteredRequestsForDay.length === 0" class="text-center py-6 text-gray-700 text-xs font-bold">
-            Sin reservas para este día.
-          </div>
-        </div>
+        <DisponibilidadDelDia
+          :franjas="detalleDelDia"
+          :reservas="filteredRequestsForDay"
+          :fecha="selectedDateISO"
+          :se-cruza="hasConflict"
+          @abrir="openedRequestId = $event"
+        />
 
         <button
           type="button"
