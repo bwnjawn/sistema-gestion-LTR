@@ -13,6 +13,12 @@ export interface RequestRepository extends Repositorio<ReservationRequest> {
    * Sirve para pedir solo un mes al calendario en vez de toda la lista.
    */
   listByRange(desde: string, hasta: string): Promise<ReservationRequest[]>
+  /**
+   * Avisa con `alCambiar` cuando otro dispositivo cambia una solicitud, un pago o las comidas, y cada vez que la
+   * conexión en vivo se establece o se recupera (para recuperar lo que pasó durante un corte). Devuelve la función
+   * que deja de escuchar. El almacenamiento local no tiene otros dispositivos: no avisa nunca.
+   */
+  escucharCambios(alCambiar: () => void): () => void
 }
 
 /** Fechas que ocupa una solicitud: de la entrada a la salida, o solo el día si es una visita de un día. */
@@ -26,6 +32,10 @@ export class LocalRequestRepository extends ColeccionLocal<ReservationRequest> i
   constructor(almacenamiento: Almacenamiento = almacenamientoLocal) {
     // La solicitud más reciente va primero
     super('requests', almacenamiento, { insertar: 'al-principio', entidad: 'la solicitud' })
+  }
+
+  escucharCambios(): () => void {
+    return () => {}
   }
 
   async listByRange(desde: string, hasta: string): Promise<ReservationRequest[]> {

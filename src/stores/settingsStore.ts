@@ -91,6 +91,35 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  /**
+   * Vuelve a leer los ajustes (otro administrador pudo cambiarlos). Solo cambia en pantalla lo que cambió, y se
+   * pospone mientras se está guardando algo. Devuelve si los aplicó. Si falla, lanza el error.
+   */
+  async function refrescar(): Promise<boolean> {
+    if (isLoading.value) return false
+    const repo = repositorios().settings
+    repo.invalidar()
+    const [contacto, transferencia, restaurante, camping, cabana, parametros] = await Promise.all([
+      repo.get('contact_info', DEFAULT_CONTACT),
+      repo.get('transfer_info', DEFAULT_TRANSFER),
+      repo.get('restaurant_schedules', DEFAULT_RESTAURANT_SCHEDULES),
+      repo.get('camping_schedules', DEFAULT_CAMPING_SCHEDULES),
+      repo.get('cabin_schedules', DEFAULT_CABIN_SCHEDULES),
+      repo.get('parameters', DEFAULT_PARAMS)
+    ])
+    if (isLoading.value) return false
+    const asignar = <T>(destino: { value: T }, nuevo: T) => {
+      if (JSON.stringify(destino.value) !== JSON.stringify(nuevo)) destino.value = nuevo
+    }
+    asignar(contactInfo, contacto)
+    asignar(transferInfo, { ...DEFAULT_TRANSFER, ...transferencia })
+    asignar(restaurantSchedules, restaurante)
+    asignar(campingSchedules, camping)
+    asignar(cabinSchedules, cabana)
+    asignar(parameters, parametros)
+    return true
+  }
+
   /** Cambia un ajuste en pantalla, lo guarda y, si falla, lo deja como estaba y avisa. */
   async function guardarAjuste<K extends ClaveAjuste>(
     clave: K,
@@ -176,6 +205,7 @@ export const useSettingsStore = defineStore('settings', () => {
     isReady,
     error,
     init,
+    refrescar,
     defaultDepositPercentage: computed(() => parameters.value.defaultDepositPercentage ?? 30),
     depositDeadlineHours: computed(() => parameters.value.depositDeadlineHours || DEFAULT_DEPOSIT_DEADLINE_HOURS),
     ivaPercentage: computed(() => parameters.value.ivaPercentage ?? 19),

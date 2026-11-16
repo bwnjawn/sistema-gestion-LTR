@@ -10,7 +10,10 @@
         >
           <img src="/images/logo-negro.png" alt="" class="w-full h-full object-cover" />
         </button>
-        <h1 class="text-xl font-black text-brand-dark leading-tight truncate">{{ titulo }}</h1>
+        <div class="min-w-0">
+          <h1 class="text-xl font-black text-brand-dark leading-tight truncate">{{ titulo }}</h1>
+          <p v-if="mostrarActualizacion" class="text-xs text-gray-700 leading-tight truncate" aria-live="polite">{{ textoActualizacion }}</p>
+        </div>
         <!-- Solo el círculo del "?" se ve; el área de toque de 40 px es transparente -->
         <button
           v-if="ayuda"
@@ -24,12 +27,27 @@
         </button>
       </div>
 
-      <DropdownMenu
-        :items="menuCuenta"
-        :trigger-icon="CircleUser"
-        aria-label="Cuenta"
-        @select="alElegir"
-      />
+      <div class="flex items-center gap-1 shrink-0">
+        <!-- Vuelve a pedir los datos; los cambios de otros dispositivos también llegan solos (SCRUM-273) -->
+        <button
+          v-if="mostrarActualizacion"
+          type="button"
+          :disabled="actualizacion.actualizando"
+          :aria-label="`Actualizar. ${textoActualizacion}`"
+          title="Actualizar"
+          class="w-10 h-10 flex items-center justify-center text-gray-600 active:scale-90 transition-transform disabled:opacity-60"
+          @click="actualizar"
+        >
+          <RefreshCw :class="['w-5 h-5', actualizacion.actualizando ? 'animate-spin motion-reduce:animate-none' : '']" />
+        </button>
+
+        <DropdownMenu
+          :items="menuCuenta"
+          :trigger-icon="CircleUser"
+          aria-label="Cuenta"
+          @select="alElegir"
+        />
+      </div>
     </div>
 
     <ModalAyuda v-if="ayuda" :abierto="ayudaAbierta" :titulo="ayuda.titulo" @cerrar="ayudaAbierta = false">
@@ -51,14 +69,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CircleHelp, CircleUser, LogOut, WifiOff } from 'lucide-vue-next'
+import { CircleHelp, CircleUser, LogOut, RefreshCw, WifiOff } from 'lucide-vue-next'
+import { useActualizacionStore } from '../../stores/actualizacionStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import DropdownMenu, { type DropdownItem } from './DropdownMenu.vue'
 import ModalAyuda from './ModalAyuda.vue'
 import { AYUDAS_ADMIN } from '../admin/ayudasAdmin'
+import { textoHaceCuanto } from '../../services/actualizacion'
 
 const route = useRoute()
 const router = useRouter()
@@ -72,6 +92,22 @@ const titulo = computed(() => (route.meta.titulo as string | undefined) ?? 'Admi
 const ayuda = computed(() => AYUDAS_ADMIN[route.meta.ayuda as string] ?? null)
 const ayudaAbierta = ref(false)
 watch(() => route.fullPath, () => { ayudaAbierta.value = false })
+
+// Botón "Actualizar" y la hora de la última actualización: solo en las secciones que lo piden (meta.actualizable)
+// y con Supabase, que es cuando hay otros dispositivos que cambian los datos
+const actualizacion = useActualizacionStore()
+const mostrarActualizacion = computed(() => route.meta.actualizable === true && actualizacion.disponible)
+const ahora = ref(Date.now())
+let reloj: ReturnType<typeof setInterval> | undefined
+onMounted(() => { reloj = setInterval(() => { ahora.value = Date.now() }, 30000) })
+onBeforeUnmount(() => clearInterval(reloj))
+const textoActualizacion = computed(() =>
+  actualizacion.error ? 'No se pudo actualizar' : textoHaceCuanto(actualizacion.ultimaVez, ahora.value)
+)
+const actualizar = () => {
+  ahora.value = Date.now()
+  void actualizacion.refrescarTodo()
+}
 
 const menuCuenta: DropdownItem[] = [
   { key: 'salir', label: 'Cerrar sesión', icon: LogOut, danger: true }

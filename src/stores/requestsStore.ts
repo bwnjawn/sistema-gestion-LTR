@@ -30,6 +30,11 @@ export const useRequestsStore = defineStore('requests', () => {
   const isReady = ref(false)
   const error = ref<string | null>(null)
 
+  // Cuántas escrituras del administrador hay en curso. Mientras haya alguna no se actualiza la lista desde el
+  // servidor: el resultado podría ser anterior al cambio y pisarlo en pantalla (SCRUM-273).
+  let escrituras = 0
+  let refrescoPendiente = false
+
   // Solicitudes activas que no caben juntas (SCRUM-60); se recalcula solo al cambiar las solicitudes o los aforos
   const conflicts = computed(() => findConflicts(requests.value, useSettingsStore().limitesAforo))
   const conflictsByRequestId = computed(() => groupConflictsByRequest(conflicts.value))
@@ -55,6 +60,41 @@ export const useRequestsStore = defineStore('requests', () => {
     }
   }
 
+  /** Marca una escritura en curso; al terminar la última, hace la actualización que quedó pendiente. */
+  async function conEscritura<T>(accion: () => Promise<T>): Promise<T> {
+    escrituras++
+    try {
+      return await accion()
+    } finally {
+      escrituras--
+      if (escrituras === 0 && refrescoPendiente) {
+        refrescoPendiente = false
+        void refrescar().catch(e => console.warn('[Solicitudes] No se pudo actualizar:', e))
+      }
+    }
+  }
+
+  /**
+   * Vuelve a pedir las solicitudes al servidor (otro dispositivo pudo cambiarlas). No toca la pantalla si no cambió
+   * nada, y se pospone mientras haya una escritura en curso. Devuelve si pidió y aplicó la lista. Si falla, lanza el
+   * error: quien llama decide si avisa.
+   */
+  async function refrescar(): Promise<boolean> {
+    if (escrituras > 0) {
+      refrescoPendiente = true
+      return false
+    }
+    const nuevas = await repositorios().requests.list()
+    if (escrituras > 0) {
+      // Se empezó a guardar mientras llegaba la respuesta: puede ser anterior al cambio
+      refrescoPendiente = true
+      return false
+    }
+    if (JSON.stringify(nuevas) !== JSON.stringify(requests.value)) requests.value = nuevas
+    isReady.value = true
+    return true
+  }
+
   /** Reemplaza la solicitud `id` por `nueva` en pantalla, la guarda y, si falla, deja la anterior y lanza el error. */
   async function reemplazar(
     id: string,
@@ -64,7 +104,7 @@ export const useRequestsStore = defineStore('requests', () => {
     const indice = requests.value.findIndex(r => r.id === id)
     if (indice === -1) return
     const previa = requests.value[indice]
-    await persistirConReversion({
+    await conEscritura(() => persistirConReversion({
       aplicar: () => { requests.value[indice] = nueva },
       revertir: () => {
         const actual = requests.value.findIndex(r => r.id === id)
@@ -72,7 +112,7 @@ export const useRequestsStore = defineStore('requests', () => {
       },
       persistir: () => repositorios().requests.update(id, nueva),
       mensaje
-    })
+    }))
     // Confirmar, cancelar o mover una reserva cambia lo que ve el cliente en el calendario
     void useDisponibilidadStore().refrescar()
   }
@@ -94,12 +134,12 @@ export const useRequestsStore = defineStore('requests', () => {
     req.depositDueAt = calculateInitialDepositDueAt(req, useSettingsStore().depositDeadlineHours)
     try {
       // Con Supabase el servidor asigna el código y calcula los montos: se queda con lo que devuelve
-      const creada = await persistirConReversion({
+      const creada = await conEscritura(() => persistirConReversion({
         aplicar: () => { requests.value.unshift(req) },
         revertir: () => { requests.value = requests.value.filter(r => r.id !== req.id) },
         persistir: () => repositorios().requests.create(req),
         mensaje: 'No se pudo registrar la solicitud.'
-      })
+      }))
       const indice = requests.value.findIndex(r => r.id === req.id)
       if (indice !== -1) requests.value[indice] = creada
       void useDisponibilidadStore().refrescar()
@@ -144,12 +184,12 @@ export const useRequestsStore = defineStore('requests', () => {
 
     const pago = buildPayment(input)
     try {
-      await persistirConReversion({
+      await conEscritura(() => persistirConReversion({
         aplicar: () => { found.payments.push(pago) },
         revertir: () => { found.payments = found.payments.filter(p => p.id !== pago.id) },
         persistir: () => repositorios().payments.add(id, pago),
         mensaje: 'No se pudo registrar el pago.'
-      })
+      }))
       return { ok: true }
     } catch (e) {
       return { ok: false, message: mensajeDeError(e, 'No se pudo registrar el pago.') }
@@ -161,12 +201,12 @@ export const useRequestsStore = defineStore('requests', () => {
     if (!found) return
     const previos = [...found.payments]
     try {
-      await persistirConReversion({
+      await conEscritura(() => persistirConReversion({
         aplicar: () => { found.payments = previos.filter(p => p.id !== paymentId) },
         revertir: () => { found.payments = previos },
         persistir: () => repositorios().payments.remove(id, paymentId),
         mensaje: 'No se pudo quitar el pago.'
-      })
+      }))
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al quitar el pago.')
     }
@@ -260,6 +300,7 @@ export const useRequestsStore = defineStore('requests', () => {
     porMoverPorId,
     requestCodes,
     init,
+    refrescar,
     addRequest,
     updateRequestStatus,
     updateRequestDetails,

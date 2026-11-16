@@ -58,7 +58,7 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', redirect: { name: 'admin-dashboard' } },
-      { path: 'dashboard', name: 'admin-dashboard', meta: { titulo: 'Inicio' }, component: () => import('../views/admin/AdminDashboardView.vue') },
+      { path: 'dashboard', name: 'admin-dashboard', meta: { titulo: 'Inicio', actualizable: true }, component: () => import('../views/admin/AdminDashboardView.vue') },
       // Reserva cargada por el administrador con el flujo del cliente (SCRUM-56): empieza un borrador
       // vacío en modo administrador y sigue en la pantalla de inicio para elegir el servicio.
       {
@@ -70,8 +70,8 @@ const routes = [
           return { name: 'home' }
         }
       },
-      { path: 'solicitudes', name: 'admin-solicitudes', meta: { titulo: 'Solicitudes', ayuda: 'solicitudes' }, component: () => import('../views/admin/AdminRequestsView.vue') },
-      { path: 'calendario', name: 'admin-calendar', meta: { titulo: 'Calendario', ayuda: 'calendario' }, component: () => import('../views/admin/AdminCalendarView.vue') },
+      { path: 'solicitudes', name: 'admin-solicitudes', meta: { titulo: 'Solicitudes', ayuda: 'solicitudes', actualizable: true }, component: () => import('../views/admin/AdminRequestsView.vue') },
+      { path: 'calendario', name: 'admin-calendar', meta: { titulo: 'Calendario', ayuda: 'calendario', actualizable: true }, component: () => import('../views/admin/AdminCalendarView.vue') },
       { path: 'catalogo', name: 'admin-catalog', meta: { titulo: 'Catálogo' }, component: () => import('../views/admin/AdminCatalogEditView.vue') },
       { path: 'ajustes', name: 'admin-settings', meta: { titulo: 'Ajustes' }, component: () => import('../views/admin/AdminSettingsView.vue') },
       // Rutas antiguas

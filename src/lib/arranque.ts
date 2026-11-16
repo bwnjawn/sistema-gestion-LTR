@@ -7,6 +7,7 @@
 
 import { migrateLegacyData } from './migrarDatosLocales'
 import { repositorios } from './repositories'
+import { useActualizacionStore } from '../stores/actualizacionStore'
 import { useAuthStore } from '../stores/authStore'
 import { useCatalogStore } from '../stores/catalogStore'
 import { useDisponibilidadStore } from '../stores/disponibilidadStore'
@@ -29,15 +30,24 @@ export async function inicializarAplicacion(): Promise<void> {
     // Sin Supabase el cliente y el administrador comparten el navegador, así que siempre se cargan
     repositorios().modo === 'local' || auth.isAuthenticated ? useRequestsStore().init() : Promise.resolve()
   ])
+  const actualizacion = useActualizacionStore()
+  actualizacion.marcarActualizado()
+  // Con la sesión guardada del administrador, el panel se mantiene al día en vivo
+  actualizacion.empezarTiempoReal()
 }
 
 /** Lo que solo ve un administrador: todas las solicitudes y el catálogo completo (también lo dado de baja). */
 export async function cargarDatosDeAdministrador(): Promise<void> {
   await Promise.all([useRequestsStore().init(), useCatalogStore().init()])
+  const actualizacion = useActualizacionStore()
+  actualizacion.marcarActualizado()
+  actualizacion.empezarTiempoReal()
 }
 
 /** Al cerrar la sesión no queda en pantalla nada que el público no pueda ver. */
 export async function descartarDatosDeAdministrador(): Promise<void> {
+  // Se deja de escuchar los cambios de las reservas: sin sesión ya no hay nada que el público pueda ver
+  useActualizacionStore().detenerTiempoReal()
   if (repositorios().modo === 'local') return
   useRequestsStore().requests = []
   await useCatalogStore().init()

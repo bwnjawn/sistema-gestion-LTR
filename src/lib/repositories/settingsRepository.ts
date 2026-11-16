@@ -10,6 +10,8 @@ export interface SettingsRepository {
   /** El valor guardado, o `porDefecto` si el administrador aún no lo cambió. */
   get<K extends ClaveAjuste>(clave: K, porDefecto: AjustesGuardados[K]): Promise<AjustesGuardados[K]>
   save<K extends ClaveAjuste>(clave: K, valor: AjustesGuardados[K]): Promise<void>
+  /** Olvida lo que tenga en memoria para que el próximo `get` vuelva a leer la fuente (sin efecto en el almacenamiento local). */
+  invalidar(): void
 }
 
 export class LocalSettingsRepository implements SettingsRepository {
@@ -26,4 +28,6 @@ export class LocalSettingsRepository implements SettingsRepository {
   async save<K extends ClaveAjuste>(clave: K, valor: AjustesGuardados[K]): Promise<void> {
     this.almacenamiento.escribir(clave, valor)
   }
+
+  invalidar(): void {}
 }

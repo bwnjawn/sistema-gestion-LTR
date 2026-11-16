@@ -48,6 +48,30 @@ export const useCatalogStore = defineStore('catalog', () => {
     }
   }
 
+  /**
+   * Vuelve a leer el catálogo (otro administrador pudo cambiarlo). Solo cambia en pantalla lo que cambió, y se
+   * pospone mientras se está guardando algo. Devuelve si lo aplicó. Si falla, lanza el error.
+   */
+  async function refrescar(): Promise<boolean> {
+    if (isLoading.value) return false
+    const repos = repositorios()
+    const [cabanas, sitios, platos, acompanamientos] = await Promise.all([
+      repos.cabins.list(),
+      repos.campingSites.list(),
+      repos.dishes.list(),
+      repos.globalSides.list()
+    ])
+    if (isLoading.value) return false
+    const asignar = <T>(destino: { value: T }, nuevo: T) => {
+      if (JSON.stringify(destino.value) !== JSON.stringify(nuevo)) destino.value = nuevo
+    }
+    asignar(todasLasCabanas, cabanas)
+    asignar(todosLosSitios, sitios)
+    asignar(todosLosPlatos, platos)
+    asignar(globalSideDishes, acompanamientos)
+    return true
+  }
+
   // ---------------------------------------------------------------------------
   // Cabañas
   // ---------------------------------------------------------------------------
@@ -285,6 +309,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     isReady,
     error,
     init,
+    refrescar,
     addCabin,
     updateCabin,
     deleteCabin,

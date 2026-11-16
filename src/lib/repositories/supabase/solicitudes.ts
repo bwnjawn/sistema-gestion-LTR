@@ -9,6 +9,7 @@ import { ErrorNoEncontrado } from '../../errores'
 import { supabase } from '../../supabase'
 import type { RequestRepository } from '../requestsRepository'
 import { datosOLanzar, traducirError } from './errores'
+import { escucharCambiosDeReservas } from './tiempoReal'
 import {
   payloadCrearSolicitud,
   payloadGuardarReserva,
@@ -90,6 +91,10 @@ export class SupabaseRequestRepository implements RequestRepository {
       'No se pudieron guardar los cambios de la solicitud.'
     )
     return (await this.getById(id)) ?? nueva
+  }
+
+  escucharCambios(alCambiar: () => void): () => void {
+    return escucharCambiosDeReservas(alCambiar)
   }
 
   async remove(id: string): Promise<void> {

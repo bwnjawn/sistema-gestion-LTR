@@ -56,5 +56,5 @@ export const useDisponibilidadStore = defineStore('disponibilidad', () => {
     }
   }
 
-  return { ocupadas, consulta, isLoading, isReady, error, init, refrescar }
+  return { ocupadas, consulta, isLoading, isReady, error, init, cargar, refrescar }
 })

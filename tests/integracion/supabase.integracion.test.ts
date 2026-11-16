@@ -11,7 +11,7 @@
 //   delete from reservas where cliente_nombre like 'PRUEBA-INTEGRACION%';
 
 import { createPinia, setActivePinia } from 'pinia'
-import { afterAll, describe, expect, it } from 'vitest'
+import { afterAll, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_CABINS, DEFAULT_CONTACT_PLACEHOLDER } from './datos'
 import { addDays, todayISO } from '../../src/lib/dates'
 import { inicializarAplicacion } from '../../src/lib/arranque'
@@ -241,6 +241,18 @@ describe.skipIf(!hayAdmin)('Supabase real: el administrador (con sesión)', () =
     expect(creada.requestCode).toMatch(/^ADM-\d{5}$/)
     expect(creada).toMatchObject({ status: 'confirmed', totalAmount: 65000 })
     expect(creada.details?.isSpecialEvent).toBe(true)
+  })
+
+  it('avisa en tiempo real cuando cambia una reserva (SCRUM-273)', async () => {
+    let avisos = 0
+    const parar = repos.requests.escucharCambios(() => { avisos++ })
+    // El primer aviso es la conexión en vivo ya establecida
+    await vi.waitFor(() => expect(avisos).toBeGreaterThanOrEqual(1), { timeout: 10000, interval: 100 })
+    const antes = avisos
+    const entrada = lejos(0)
+    await repos.requests.create(solicitudDeCabana('tiempo real', entrada, addDays(entrada, 1)))
+    await vi.waitFor(() => expect(avisos).toBeGreaterThan(antes), { timeout: 10000, interval: 100 })
+    parar()
   })
 
   it('registra y quita pagos', async () => {
