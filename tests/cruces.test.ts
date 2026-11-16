@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { diasEntre, getCrossedRequests, puedeConfirmarse, puedeConfirmarseNueva } from '../src/services/cruces'
+import { confirmadasQueBloquean, describirBloqueo, diasEntre, getCrossedRequests, puedeConfirmarse, puedeConfirmarseNueva, solicitudesPorMover } from '../src/services/cruces'
 import { buildAsuntoFechaNoDisponible, buildMensajeFechaNoDisponible } from '../src/services/mensajesCliente'
 import { buildMailtoUrl } from '../src/lib/contactLinks'
 import type { ReservationRequest } from '../src/types/domain'
@@ -138,5 +138,58 @@ describe('reserva nueva del admin (SCRUM-264)', () => {
 
   it('no puede confirmarse si choca con una confirmada', () => {
     expect(puedeConfirmarseNueva(sinCreatedAt, [cabana('a', '6', '2026-12-21', '2026-12-23', 'confirmed')], LIMITES)).toBe(false)
+  })
+})
+
+describe('pendientes por mover: la fecha ya la ocupa una confirmada', () => {
+  function almuerzo(id: string, personas: number, status: string): ReservationRequest {
+    return {
+      id, requestCode: `LTR-${id}`, clientName: `Cliente ${id}`, type: 'restaurante', status,
+      resourceName: 'Restaurante', date: '2027-03-10', guestsCount: personas, totalAmount: 100000,
+      details: { startDate: '2027-03-10', selectedMealTypes: ['almuerzo'] }
+    } as ReservationRequest
+  }
+
+  it('una pendiente sobre una confirmada queda por mover y dice quién la bloquea', () => {
+    const lista = [cabana('a', '6', '2027-03-10', '2027-03-13'), cabana('b', '6', '2027-03-12', '2027-03-15', 'confirmed')]
+    const porMover = solicitudesPorMover(lista, LIMITES)
+    expect(Object.keys(porMover)).toEqual(['a'])
+    expect(porMover.a.map(r => r.id)).toEqual(['b'])
+    expect(confirmadasQueBloquean(lista[0], lista, LIMITES).map(r => r.id)).toEqual(['b'])
+  })
+
+  it('dos pendientes que se cruzan no quedan por mover: aún se puede confirmar cualquiera', () => {
+    const lista = [cabana('a', '6', '2027-03-10', '2027-03-13'), cabana('b', '6', '2027-03-12', '2027-03-15')]
+    expect(solicitudesPorMover(lista, LIMITES)).toEqual({})
+  })
+
+  it('una confirmada, una rechazada o una cabaña distinta no cuentan', () => {
+    const lista = [
+      cabana('a', '6', '2027-03-10', '2027-03-13', 'confirmed'),
+      cabana('b', '6', '2027-03-10', '2027-03-13', 'rejected'),
+      cabana('c', '7', '2027-03-10', '2027-03-13')
+    ]
+    expect(solicitudesPorMover(lista, LIMITES)).toEqual({})
+  })
+
+  it('en el restaurante queda por mover cuando lo confirmado más ella pasa el aforo', () => {
+    const lista = [almuerzo('a', 100, 'pending'), almuerzo('b', 150, 'confirmed')]
+    expect(Object.keys(solicitudesPorMover(lista, LIMITES))).toEqual(['a'])
+    // Con 40 personas todavía cabe: se puede aprobar
+    expect(solicitudesPorMover([almuerzo('c', 40, 'pending'), almuerzo('b', 150, 'confirmed')], LIMITES)).toEqual({})
+  })
+
+  it('coincide con puedeConfirmarse: por mover equivale a no poder confirmarse por una confirmada', () => {
+    const lista = [cabana('a', '6', '2027-03-10', '2027-03-13'), cabana('b', '6', '2027-03-12', '2027-03-15', 'confirmed')]
+    expect(puedeConfirmarse(lista[0], lista, LIMITES)).toBe(false)
+    expect(solicitudesPorMover(lista, LIMITES).a).toBeDefined()
+  })
+
+  it('describe quién ocupa la fecha', () => {
+    const b = cabana('b', '6', '2027-03-12', '2027-03-15', 'confirmed')
+    const c = cabana('c', '6', '2027-03-14', '2027-03-16', 'confirmed')
+    expect(describirBloqueo([])).toBe('')
+    expect(describirBloqueo([b])).toMatch(/^Cliente b \(.+\)$/)
+    expect(describirBloqueo([b, c])).toMatch(/ y 1 más$/)
   })
 })

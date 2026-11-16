@@ -18,7 +18,7 @@ Tareas relacionadas, todas en el Sprint 2:
 ## Decisiones (10/11)
 1. Al confirmar una solicitud que se cruza, **se pregunta siempre** y nada se rechaza solo.
 2. El admin decide comparando **días, precio y cercanía de la fecha**; esos datos se muestran en el diálogo.
-3. Una pendiente que se cruza con una confirmada solo avisa y tiene la misma salida que el rechazo.
+3. Una pendiente que se cruza con una confirmada queda "Por mover" (15/11): no se puede aprobar ni se ofrece el botón; la salida principal es **Mover fecha**, y Rechazar queda como secundaria.
 4. Para cada solicitud que no queda confirmada: botones rápidos de **llamar, correo y WhatsApp** (mensaje prearmado), **Modificar fecha** (SCRUM-59) y **Rechazar**. La app no envía nada sola.
 5. Si dos administradores chocan, la app les muestra las opciones y ellos eligen. No hay prioridad automática.
 6. Una confirmación hecha sin conexión queda "Sin sincronizar" y, si choca al reconectar, queda "En conflicto, por resolver" (SCRUM-250).
@@ -47,6 +47,20 @@ Tareas relacionadas, todas en el Sprint 2:
 - **Calendario general (`BaseCalendar.vue`, SCRUM-269):** tocar la llegada otra vez borra las fechas, hay un botón "Borrar fechas", y un día que no sirve de salida pero sí de llegada pasa a ser la nueva llegada (antes la selección podía quedar pegada). Sin texto de ayuda. Los días de un solo día (restaurante y camping diario) usan el modo `single`.
 - **Día de salida sobre una llegada ocupada:** la salida puede ser el día en que empieza otra reserva (se sale en la mañana y la otra llega en la tarde). Solo se ofrece como salida si la estadía completa es válida, y nunca como llegada. Una vez elegido se pinta como cualquier día elegido y se puede tocar para quitarlo.
 - **Rango estilo Airbnb:** llegada y salida son círculos oscuros unidos por una franja continua verde (`emerald-200`) con puntas redondeadas al inicio y fin de cada fila y del mes.
+
+## Cambio del 15/11: "Por mover"
+- Una pendiente cuya fecha ya ocupa una confirmada **nunca se aprueba**. Se calcula en `services/cruces.ts` (`confirmadasQueBloquean`, `solicitudesPorMover`, `describirBloqueo`) y el store lo expone como `porMoverPorId`.
+- En la tarjeta y el detalle, **Mover fecha** reemplaza a Aprobar y abre el formulario de fecha; en el diálogo de cruces desaparece "Confirmar esta" y solo quedan las salidas.
+- La lista de Solicitudes tiene el acceso "Por mover de fecha: N" (aparece solo si hay alguna).
+- Casos de prueba: `scripts/demo-solicitudes.html` carga solicitudes de ejemplo (código `SOL-PRUEBA-…`) para ver cada caso.
+- **Mover fecha** abre una hoja propia (`AdminMoverFechaDialog`), no la edición completa: muestra quién ocupa la fecha, los botones **Llamar, WhatsApp y Correo** con el mensaje prearmado (que no propone fechas; la app no envía nada sola) y solo el calendario para elegir la nueva fecha (`AdminRequestEditForm` con `solo-fecha`, sin nombre, teléfono, personas, correo ni comentarios). Se abre desde la tarjeta, desde el detalle y desde el diálogo de cruces. El lápiz del detalle sigue editando todo.
+- **Rechazar** desde la tarjeta abre directo una confirmación (`AdminConfirmarRechazoDialog`), sin pasar por el detalle. No lleva íconos decorativos que parezcan botones.
+- **Descartada:** rechazada y cancelada se muestran juntas con una sola etiqueta, un solo filtro y el mismo gris, también en el calendario (`etiquetaEstado` en `services/resumenSolicitud.ts`). En los datos siguen siendo dos estados. `?estado=rejected` o `cancelled` abre el filtro Descartadas.
+- **Estado legible de un vistazo** (`EstadoSolicitud.vue`, `tonoDeEstado`): insignia con color, ícono y texto (Pendiente ámbar con reloj, Por mover rojo con calendario, Confirmada verde con check, Descartada gris con X) más una franja de color a la izquierda de la tarjeta. El nombre y el monto van en gris neutro para que ninguna solicitud parezca aprobada solo por el color.
+- **Filtros:** tres de estado (Pendientes, Confirmadas, Descartadas) en una grilla de tres columnas, para que no se sobrepongan. "Por mover" no se combina con el de estado: activar uno quita el otro.
+- **Ayuda:** la sección Solicitudes tiene botón "?" en el encabezado (`AyudaSolicitudes.vue`, registrada en `ayudasAdmin.ts`) que explica cada estado y la franja de color.
+- **Fondo bloqueado:** todos los diálogos usan `useBloqueoScroll`, que ahora también frena el gesto de deslizar en iPhone fuera de la hoja. La barra fija del formulario de fecha queda sobre el calendario.
+- Pendiente a futuro: fechas sugeridas y comparación antes/después al mover.
 
 ## Preguntas abiertas
 - Ninguna por ahora.

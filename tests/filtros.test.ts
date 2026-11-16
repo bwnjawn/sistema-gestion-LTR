@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { countByStatus, filterRequests, parseStatusFilter } from '../src/services/requestFilters'
+import { countByFilter, countByStatus, filterRequests, parseStatusFilter } from '../src/services/requestFilters'
 import type { ReservationRequest } from '../src/types/domain'
 
 function solicitud(datos: Partial<ReservationRequest>): ReservationRequest {
@@ -32,9 +32,15 @@ describe('filtros de solicitudes', () => {
     expect(countByStatus(lista)).toEqual({ pending: 1, confirmed: 1, rejected: 1, cancelled: 0 })
   })
 
+  it('junta rechazadas y canceladas en descartadas', () => {
+    expect(countByFilter(lista)).toEqual({ pending: 1, confirmed: 1, discarded: 1 })
+    expect(filterRequests(lista, { status: 'discarded', type: 'all', query: '' })).toHaveLength(1)
+  })
+
   it('interpreta el estado de la URL', () => {
     expect(parseStatusFilter('pending')).toBe('pending')
-    expect(parseStatusFilter(['rejected'])).toBe('rejected')
+    expect(parseStatusFilter(['rejected'])).toBe('discarded')
+    expect(parseStatusFilter('cancelled')).toBe('discarded')
     expect(parseStatusFilter('otro')).toBeNull()
   })
 })

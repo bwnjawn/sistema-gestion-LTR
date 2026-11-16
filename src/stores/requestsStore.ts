@@ -18,7 +18,7 @@ import {
   type PaymentInput
 } from '../services/payments'
 import { findConflicts, groupConflictsByRequest } from '../services/availability'
-import { getCrossedRequests, puedeConfirmarse, type SolicitudEnCruce } from '../services/cruces'
+import { getCrossedRequests, puedeConfirmarse, solicitudesPorMover, type SolicitudEnCruce } from '../services/cruces'
 
 export type { ReservationRequest }
 
@@ -33,6 +33,9 @@ export const useRequestsStore = defineStore('requests', () => {
   // Solicitudes activas que no caben juntas (SCRUM-60); se recalcula solo al cambiar las solicitudes o los aforos
   const conflicts = computed(() => findConflicts(requests.value, useSettingsStore().limitesAforo))
   const conflictsByRequestId = computed(() => groupConflictsByRequest(conflicts.value))
+
+  // Pendientes "por mover": su fecha ya la ocupa una confirmada, no se pueden aprobar. Id -> confirmadas que la bloquean.
+  const porMoverPorId = computed(() => solicitudesPorMover(requests.value, useSettingsStore().limitesAforo))
 
   /** Códigos ya usados, para que una solicitud nueva no repita ninguno. */
   const requestCodes = computed(() => requests.value.map(r => r.requestCode))
@@ -251,6 +254,7 @@ export const useRequestsStore = defineStore('requests', () => {
     error,
     conflicts,
     conflictsByRequestId,
+    porMoverPorId,
     requestCodes,
     init,
     addRequest,

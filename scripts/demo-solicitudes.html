@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Casos de prueba de solicitudes</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #f4f7f2; color: #1f3a2a; line-height: 1.4; }
+    h1 { font-size: 1.2rem; margin: 0 0 4px; }
+    p { margin: 6px 0; font-size: .9rem; }
+    button { font: inherit; font-weight: 700; padding: 12px 14px; border-radius: 12px; border: 2px solid #1f3a2a; background: #fff; color: #1f3a2a; width: 100%; margin: 6px 0; }
+    button.principal { background: #1f3a2a; color: #fff; }
+    #estado { padding: 10px 12px; border-radius: 12px; background: #fff; border: 2px solid #c5d7be; font-weight: 700; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; background: #fff; border-radius: 12px; overflow: hidden; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #dfe8da; vertical-align: top; }
+    th { background: #c5d7be; }
+    a { color: #1f3a2a; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>Casos de prueba de solicitudes</h1>
+  <p>Herramienta de desarrollo (cruces y "Por mover"). Guarda solicitudes de prueba en este navegador. Las tuyas no se tocan: solo se agregan o se quitan las de prueba (código <b>SOL-PRUEBA-…</b>). No se mezcla con las del calendario (<b>SOL-DEMO-…</b>).</p>
+
+  <button class="principal" id="cargar">Cargar casos de prueba</button>
+  <button id="quitar">Quitar casos de prueba</button>
+  <div id="estado">Listo.</div>
+  <p><a href="/admin/solicitudes">Ir a las solicitudes del admin</a> (si ya estaba abierto, recárgalo).</p>
+
+  <table>
+    <thead><tr><th>Qué buscar</th><th>Qué debería pasar</th></tr></thead>
+    <tbody id="tabla"></tbody>
+  </table>
+
+  <script>
+    // Misma clave que usa la app: prefijo 'ltr_reserva_' + 'requests' (src/lib/persistence.ts)
+    var CLAVE = 'ltr_reserva_requests'
+    var CABANA_6 = { id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', nombre: 'Cabaña 6' }
+    var CABANA_8 = { id: 'b1fecb99-9c0b-4ef8-bb6d-6bb9bd380a22', nombre: 'Cabaña 8' }
+    var HORA = 3600000
+
+    function pad(n) { return String(n).padStart(2, '0') }
+    function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) }
+    function mas(dias) { var d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + dias); return d }
+    function haceHoras(h) { return new Date(Date.now() - h * HORA).toISOString() }
+
+    var contador = 0
+    // opciones: estado, abono (exigido), pagado, creada (horas atrás), plazo (horas desde ahora; negativo = vencido)
+    function base(tipo, nombre, cliente, personas, dia, o) {
+      contador++
+      var n = pad(contador)
+      var r = {
+        id: 'prueba-sol-' + n, requestCode: 'SOL-PRUEBA-' + n,
+        clientName: cliente, clientPhone: '+56 9 5555 00' + n,
+        type: tipo, resourceName: nombre, date: iso(mas(dia)), guestsCount: personas,
+        totalAmount: o.total || 120000, depositRequired: o.abono == null ? 36000 : o.abono,
+        payments: o.pagado ? [{ id: 'pago-prueba-' + n, amount: o.pagado, method: 'transferencia', paidOn: iso(mas(0)), notes: '' }] : [],
+        status: o.estado || 'pending', createdAt: haceHoras(o.creada == null ? 3 : o.creada)
+      }
+      if (r.status === 'pending' && r.depositRequired > 0) {
+        r.depositDueAt = new Date(Date.now() + (o.plazo == null ? 40 : o.plazo) * HORA).toISOString()
+      }
+      return r
+    }
+    function cabana(cab, cliente, dia, noches, o) {
+      var salida = iso(mas(dia + noches))
+      var r = base('cabana', cab.nombre, cliente, 4, dia, o || {})
+      r.timeOrDuration = salida
+      r.details = { resourceId: cab.id, startDate: iso(mas(dia)), endDate: salida }
+      return r
+    }
+    function almuerzo(cliente, personas, dia, o) {
+      var r = base('restaurante', 'Restaurante', cliente, personas, dia, o || {})
+      r.timeOrDuration = '13:00'
+      r.details = { startDate: iso(mas(dia)), selectedMealTypes: ['almuerzo'] }
+      return r
+    }
+
+    // Cada caso: qué buscar, qué debería pasar, y las solicitudes que lo arman (días desde hoy)
+    function casos() {
+      contador = 0
+      return [
+        {
+          buscar: 'Pendiente sobre una confirmada (cabaña 6)',
+          esperado: 'Ana Rojas: tarjeta con "Fecha ocupada por Pedro Soto", sin botón Aprobar, con "Mover fecha". Sale en "Por mover".',
+          reservas: [cabana(CABANA_6, 'Pedro Soto', 20, 3, { estado: 'confirmed', abono: 0, pagado: 120000 }), cabana(CABANA_6, 'Ana Rojas', 21, 2)]
+        },
+        {
+          buscar: 'Dos pendientes que se cruzan (cabaña 8)',
+          esperado: 'Luis y Carla: "Se cruza con 1 solicitud", con Aprobar. Al aprobar una se abre el diálogo para elegir. Al confirmar una, la otra pasa a "Por mover".',
+          reservas: [cabana(CABANA_8, 'Luis Mena', 25, 2), cabana(CABANA_8, 'Carla Díaz', 26, 2, { creada: 30 })]
+        },
+        {
+          buscar: 'Cadena: A choca con B y B con una confirmada',
+          esperado: 'Marta y Tomás pendientes; Rosa confirmada. Tomás queda "Por mover"; Marta sigue con Aprobar, y su diálogo muestra las tres.',
+          reservas: [cabana(CABANA_6, 'Rosa León', 31, 2, { estado: 'confirmed', abono: 0, pagado: 120000 }), cabana(CABANA_6, 'Tomás Vera', 29, 4), cabana(CABANA_6, 'Marta Silva', 28, 2)]
+        },
+        {
+          buscar: 'Restaurante: sobre el aforo de 200 en el almuerzo',
+          esperado: 'Iván (100 personas) queda "Por mover" porque con las 150 confirmadas de Sofía pasa de 200. Gabriel (40) todavía cabe con lo confirmado y conserva Aprobar (su diálogo muestra el cruce).',
+          reservas: [almuerzo('Sofía Pardo', 150, 35, { estado: 'confirmed', abono: 0, pagado: 120000 }), almuerzo('Iván Torres', 100, 35), almuerzo('Gabriel Núñez', 40, 35)]
+        },
+        {
+          buscar: 'Abono vencido',
+          esperado: 'Paula Reyes: aviso "Abono vencido". No se cruza con nada, así que Aprobar abre el aviso de abono.',
+          reservas: [cabana(CABANA_6, 'Paula Reyes', 45, 2, { creada: 70, plazo: -22 })]
+        },
+        {
+          buscar: 'Pendiente sin gestionar hace más de 24 h',
+          esperado: 'Jorge Lagos: aviso "Pendiente hace más de 24 horas sin gestionar".',
+          reservas: [cabana(CABANA_8, 'Jorge Lagos', 50, 2, { creada: 30, plazo: 18 })]
+        },
+        {
+          buscar: 'Solicitud sin problemas, con abono recibido',
+          esperado: 'Elena Ortiz: "Abono recibido: falta aprobar"; Aprobar la confirma directo.',
+          reservas: [cabana(CABANA_6, 'Elena Ortiz', 55, 2, { pagado: 36000 })]
+        }
+      ]
+    }
+
+    function leer() {
+      try { return JSON.parse(localStorage.getItem(CLAVE) || '[]') } catch (e) { return [] }
+    }
+    function sinPrueba(lista) { return lista.filter(function (r) { return String(r.id).indexOf('prueba-sol-') !== 0 }) }
+    function mostrar(texto) { document.getElementById('estado').textContent = texto }
+
+    function dibujarTabla() {
+      var filas = casos().map(function (c) {
+        return '<tr><td><b>' + c.buscar + '</b></td><td>' + c.esperado + '</td></tr>'
+      })
+      document.getElementById('tabla').innerHTML = filas.join('')
+    }
+
+    document.getElementById('cargar').onclick = function () {
+      var nuevas = []
+      casos().forEach(function (c) { nuevas = nuevas.concat(c.reservas) })
+      var lista = nuevas.concat(sinPrueba(leer()))
+      try {
+        localStorage.setItem(CLAVE, JSON.stringify(lista))
+        mostrar('Listo: ' + nuevas.length + ' solicitudes de prueba cargadas. Abre o recarga las solicitudes del admin.')
+      } catch (e) { mostrar('No se pudo guardar: ' + e.message) }
+    }
+    document.getElementById('quitar').onclick = function () {
+      var lista = leer()
+      var resto = sinPrueba(lista)
+      try {
+        localStorage.setItem(CLAVE, JSON.stringify(resto))
+        mostrar('Quitadas ' + (lista.length - resto.length) + ' solicitudes de prueba. Quedan ' + resto.length + '.')
+      } catch (e) { mostrar('No se pudo guardar: ' + e.message) }
+    }
+
+    dibujarTabla()
+    mostrar('Hay ' + leer().filter(function (r) { return String(r.id).indexOf('prueba-sol-') === 0 }).length + ' solicitudes de prueba cargadas.')
+  </script>
+</body>
+</html>
