@@ -279,6 +279,7 @@ Proyecto `sistema-gestion-LTR` (id `shzeaodsshckniadugof`, región us-east-1). L
 4. `semillas`: catálogo y ajustes de fábrica, con los mismos id que `src/data/seed.ts`.
 5. `admin_guardar_reserva`: guarda una reserva con sus comidas e ítems en una sola operación (solo administradores).
 6. `perfiles_admin_correo`: columna `correo` en los perfiles de administrador.
+7. `tiempo_real_reservas`: `reservas`, `pagos` y `reserva_comidas` en la publicación `supabase_realtime` (SCRUM-273).
 
 Diferencias con lo descrito arriba:
 - `reservas.evento_especial boolean` se agregó (SCRUM-261): así `details.isSpecialEvent` ya no se pierde.
@@ -292,6 +293,14 @@ Diferencias con lo descrito arriba:
 - **Avisos de seguridad que se aceptan a propósito:** Supabase marca `crear_solicitud` y `fechas_ocupadas` como funciones `SECURITY DEFINER` ejecutables por el público. Es intencional: son la única puerta del cliente a la base. Las funciones de apoyo viven en el esquema `private` y no son llamables.
 - **`admin_guardar_reserva(p jsonb)`** (solo administradores; corre con sus permisos): crea o reemplaza una reserva con sus comidas e ítems de forma atómica; sin `codigo` la base asigna `ADM-`/`SOL-`. No toca `pagos`.
 - **Pendiente:** Storage de imágenes, crear administradores desde la app (hoy se crean en el panel de Supabase: Authentication > Users, y luego se les da un perfil en `perfiles_admin`), validar en el servidor la regla de variedades de menú (hoy solo la valida la app).
+
+### Actualización del panel (SCRUM-273)
+
+La app ya no carga las solicitudes una sola vez: `src/stores/actualizacionStore.ts` mantiene los datos al día.
+- **Al volver a la app** (pestaña visible otra vez, página restaurada en iPhone) y **al recuperar internet**: vuelve a pedir ajustes, catálogo, disponibilidad y, con sesión, las solicitudes. Al volver no repite si se actualizó hace menos de 20 s.
+- **En tiempo real, solo administrador:** `RequestRepository.escucharCambios` usa Supabase Realtime sobre `reservas`, `pagos` y `reserva_comidas`. Los avisos solo dicen que algo cambió (se juntan en una actualización cada 400 ms) y se vuelve a pedir la lista; también se actualiza cuando la conexión en vivo se restablece. El público no recibe nada (RLS).
+- **A mano:** botón de actualizar en el encabezado del panel (rutas con `meta.actualizable`), con "Actualizado hace X min".
+- No se pisa lo que el administrador está guardando: `requestsStore.refrescar` se pospone mientras hay una escritura en curso y no toca la pantalla si no cambió nada.
 
 ### Conexión de la app (SCRUM-248)
 
