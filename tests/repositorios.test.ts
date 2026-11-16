@@ -137,13 +137,35 @@ describe('repositorio de ajustes y de administradores', () => {
     expect((await repos.settings.get('contact_info', DEFAULT_CONTACT)).phone1).toBe('+56 9 1111 1111')
   })
 
-  it('los administradores parten de la semilla y la sesión se guarda y se borra', async () => {
+  it('los administradores parten de la semilla y se listan sin su contraseña', async () => {
     const repos = crearRepositoriosLocales(crearAlmacenamientoEnMemoria())
-    expect((await repos.auth.admins.list()).map(a => a.email)).toEqual(DEFAULT_ADMINS.map(a => a.email))
+    const lista = await repos.auth.listarAdmins()
+    expect(lista.map(a => a.email)).toEqual(DEFAULT_ADMINS.map(a => a.email))
+    expect(JSON.stringify(lista)).not.toContain('passwordHash')
     expect(await repos.auth.getSession()).toBeNull()
-    await repos.auth.saveSession({ id: 'x', email: 'a@b.cl', role: 'admin' })
-    expect((await repos.auth.getSession())?.id).toBe('x')
-    await repos.auth.clearSession()
+  })
+
+  it('iniciar sesión valida la contraseña, guarda la sesión y cerrarla la borra', async () => {
+    const repos = crearRepositoriosLocales(crearAlmacenamientoEnMemoria())
+    const admin = DEFAULT_ADMINS[0]
+    expect(await repos.auth.iniciarSesion(admin.email, 'contraseña equivocada')).toBeNull()
     expect(await repos.auth.getSession()).toBeNull()
+    const usuario = await repos.auth.iniciarSesion(` ${admin.email.toUpperCase()} `, admin.passwordHash)
+    expect(usuario?.id).toBe(admin.id)
+    expect((await repos.auth.getSession())?.id).toBe(admin.id)
+    await repos.auth.cerrarSesion()
+    expect(await repos.auth.getSession()).toBeNull()
+  })
+
+  it('crear un administrador lo agrega a la lista y le permite entrar', async () => {
+    const repos = crearRepositoriosLocales(crearAlmacenamientoEnMemoria())
+    const nuevo = await repos.auth.crearAdmin('  Ana  ', 'ANA@Troncos.cl', 'una-contraseña-larga')
+    expect(nuevo).toMatchObject({ name: 'Ana', email: 'ana@troncos.cl', role: 'admin' })
+    expect((await repos.auth.listarAdmins()).map(a => a.email)).toContain('ana@troncos.cl')
+    expect((await repos.auth.iniciarSesion('ana@troncos.cl', 'una-contraseña-larga'))?.id).toBe(nuevo.id)
+  })
+
+  it('el modo de los repositorios locales es local', () => {
+    expect(crearRepositoriosLocales(crearAlmacenamientoEnMemoria()).modo).toBe('local')
   })
 })

@@ -270,6 +270,39 @@ Todas las tablas con `enable row level security`. Dos roles: **público** (clave
 
 **Al confirmar** (trigger sobre `estado`): la restricción de exclusión impide dos cabañas confirmadas cruzadas; para restaurante y camping, el trigger suma las personas ya confirmadas del mismo día y comida/modalidad y rechaza si superan el aforo. En la reconexión sin conexión (SCRUM-250), el error de la restricción es lo que marca `en_conflicto = true` en lugar de perder la reserva.
 
+### Estado de la base (2026-11-16)
+
+Proyecto `sistema-gestion-LTR` (id `shzeaodsshckniadugof`, región us-east-1). Los archivos SQL están en `supabase/migrations/` y ya están aplicados:
+1. `tipos_y_catalogo`: enums, catálogo, ajustes, administradores y sus reglas de acceso.
+2. `reservas`: reservas, comidas, ítems, pagos, restricción de cruces, códigos y reglas de acceso.
+3. `funciones_aforo_y_solicitudes`: `fechas_ocupadas`, `crear_solicitud` y el aforo al confirmar.
+4. `semillas`: catálogo y ajustes de fábrica, con los mismos id que `src/data/seed.ts`.
+5. `admin_guardar_reserva`: guarda una reserva con sus comidas e ítems en una sola operación (solo administradores).
+6. `perfiles_admin_correo`: columna `correo` en los perfiles de administrador.
+
+Diferencias con lo descrito arriba:
+- `reservas.evento_especial boolean` se agregó (SCRUM-261): así `details.isSpecialEvent` ya no se pierde.
+- `ajustes`: el público también lee `limites_aforo`, porque el flujo del cliente (camping) lo usa.
+- Las funciones de apoyo de las políticas (`es_admin`, `es_owner`) viven en el esquema `private`, que la API no expone.
+- Probado en la base: el público no puede leer `reservas`; una pendiente convive con una confirmada; dos confirmadas cruzadas se rechazan; salida y entrada el mismo día no cruzan.
+- **Aforo:** sale de `ajustes.parametros.capacityRules` (suma de `restaurantSpaces` y `maxCampingPeopleCapacity`), lo mismo que usa la app. La tabla `espacios_restaurante` no se usa por ahora.
+- **`crear_solicitud(p jsonb)`** (la llama el público con `supabase.rpc`): el cliente genera el `id` (reenviar no duplica); el servidor valida, recalcula precio, IVA, abono y plazo con el catálogo y la configuración vigentes, y devuelve `{ id, codigo, estado, total, abono_exigido, abono_vence_en }`. Claves del payload: `id`, `tipo`, `cliente_nombre`, `cliente_telefono`, `cliente_correo`, `tipo_cliente`, `fecha_inicio`, `fecha_fin`, `personas`, `comentarios`, `cabana_id`, `sitio_id`, `modalidad_camping`, `comidas: [{comida, hora}]`, `items: [{comida, plato_id, cantidad, acompanamiento_fijo, acompanamientos}]`. Los errores empiezan con un código estable: `fecha_no_disponible`, `sin_cupo`, `capacidad_excedida`, `recurso_no_disponible`, `fecha_pasada`, `fechas_invalidas`, `dato_invalido`, `demasiadas_solicitudes` (más de 8 por hora desde el mismo teléfono).
+- **`fechas_ocupadas(desde, hasta)`** devuelve `{ cabanas: [{cabinId, noche}], restaurante: [{dia, tipo, personas}], camping: [{dia, tipo, personas}] }`, solo confirmadas y sin datos personales (máximo 800 días).
+- **Aforo al confirmar:** un trigger rechaza (`aforo_excedido`, mismo código de error que el cruce de cabañas) confirmar más personas que el aforo por comida en el restaurante o por modalidad y día en el camping.
+- **Avisos de seguridad que se aceptan a propósito:** Supabase marca `crear_solicitud` y `fechas_ocupadas` como funciones `SECURITY DEFINER` ejecutables por el público. Es intencional: son la única puerta del cliente a la base. Las funciones de apoyo viven en el esquema `private` y no son llamables.
+- **`admin_guardar_reserva(p jsonb)`** (solo administradores; corre con sus permisos): crea o reemplaza una reserva con sus comidas e ítems de forma atómica; sin `codigo` la base asigna `ADM-`/`SOL-`. No toca `pagos`.
+- **Pendiente:** Storage de imágenes, crear administradores desde la app (hoy se crean en el panel de Supabase: Authentication > Users, y luego se les da un perfil en `perfiles_admin`), validar en el servidor la regla de variedades de menú (hoy solo la valida la app).
+
+### Conexión de la app (SCRUM-248)
+
+Con `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` reales en `.env`, `repositorios()` entrega los de `src/lib/repositories/supabase/` (`modo: 'supabase'`); sin ellos, los locales (`modo: 'local'`). En las pruebas siempre son locales, salvo las de integración (`VITE_PROBAR_SUPABASE=1`).
+
+- El público carga ajustes, catálogo activo y `fechas_ocupadas`. Las solicitudes y el catálogo completo (con lo dado de baja) solo se cargan con sesión de administrador (`cargarDatosDeAdministrador` en `src/lib/arranque.ts`) y se descartan al cerrarla.
+- El cliente envía con `crear_solicitud`: la app se queda con el código, el estado, el total y el plazo que devuelve el servidor, no con los calculados en el navegador.
+- Claves de ajustes: `contact_info`→`contacto`, `transfer_info`→`transferencia`, `parameters`→`parametros`, `*_schedules`→`horarios_*`.
+- Los errores de la base (`sin_cupo`, `fecha_no_disponible`…) se muestran como mensajes en español (`src/lib/repositories/supabase/errores.ts`).
+- Pruebas: `tests/mapeosSupabase.test.ts` (traducciones, sin red) y `tests/integracion/` (contra la base real: `VITE_PROBAR_SUPABASE=1 npx vitest run tests/integracion`; las de administrador piden además `PRUEBA_ADMIN_CORREO` y `PRUEBA_ADMIN_CLAVE`). Las 17 pasan contra la base real (16/11). Las de administrador se limpian solas al terminar; las de público dejan solicitudes `PRUEBA-INTEGRACION…` que esa limpieza también borra si corre con la cuenta de administrador (si no, `delete from reservas where cliente_nombre like 'PRUEBA-INTEGRACION%'`). Conviene reiniciar las secuencias de códigos después (`alter sequence codigo_solicitud_seq restart with 1`). Los ítems de una reserva cuelgan de la comida (clave foránea `(reserva_id, comida)`), por eso `SELECT_RESERVA` los anida dentro de `reserva_comidas`.
+
 ## 7. Qué queda fuera de este esquema
 
 - Eventos especiales (SCRUM-261, bloqueada por decisiones de diseño, D6).
