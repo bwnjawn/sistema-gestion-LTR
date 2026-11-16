@@ -93,14 +93,17 @@ export const useRequestsStore = defineStore('requests', () => {
     // Las pendientes tienen plazo para el abono desde que se envían; las confirmadas no
     req.depositDueAt = calculateInitialDepositDueAt(req, useSettingsStore().depositDeadlineHours)
     try {
-      await persistirConReversion({
+      // Con Supabase el servidor asigna el código y calcula los montos: se queda con lo que devuelve
+      const creada = await persistirConReversion({
         aplicar: () => { requests.value.unshift(req) },
         revertir: () => { requests.value = requests.value.filter(r => r.id !== req.id) },
         persistir: () => repositorios().requests.create(req),
         mensaje: 'No se pudo registrar la solicitud.'
       })
+      const indice = requests.value.findIndex(r => r.id === req.id)
+      if (indice !== -1) requests.value[indice] = creada
       void useDisponibilidadStore().refrescar()
-      return req
+      return creada
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al registrar la solicitud de reserva.')
       throw e

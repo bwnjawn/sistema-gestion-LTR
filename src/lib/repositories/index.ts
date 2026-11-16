@@ -1,8 +1,11 @@
 // src/lib/repositories/index.ts
-// Punto único donde los stores obtienen sus repositorios. Hoy son los locales (`localStorage`); con Supabase
-// (SCRUM-248) se cambia aquí por los de Supabase y nada más. Las pruebas los reemplazan con `usarRepositorios`.
+// Punto único donde los stores obtienen sus repositorios. Con la URL y la clave de Supabase en `.env` son los de
+// Supabase; sin ellas (desarrollo sin configurar, pruebas) son los locales (`localStorage`). Las pruebas los
+// reemplazan con `usarRepositorios`.
 
 import { almacenamientoLocal, type Almacenamiento } from '../persistence'
+import { supabaseConfigurado } from '../supabase'
+import { crearRepositoriosSupabase } from './supabase'
 import type { AuthRepository } from './authRepository'
 import type { AvailabilityRepository } from './availabilityRepository'
 import { LocalAvailabilityRepository } from './availabilityRepository'
@@ -17,6 +20,8 @@ import type { SettingsRepository } from './settingsRepository'
 import { LocalSettingsRepository } from './settingsRepository'
 
 export interface Repositorios {
+  /** De dónde salen los datos: `local` (el navegador) o `supabase` (compartidos entre dispositivos). */
+  modo: 'local' | 'supabase'
   cabins: CabinRepository
   campingSites: CampingSiteRepository
   dishes: DishRepository
@@ -32,6 +37,7 @@ export interface Repositorios {
 export function crearRepositoriosLocales(almacenamiento: Almacenamiento = almacenamientoLocal): Repositorios {
   const requests = new LocalRequestRepository(almacenamiento)
   return {
+    modo: 'local',
     ...crearRepositoriosCatalogoLocales(almacenamiento),
     requests,
     payments: new LocalPaymentRepository(requests),
@@ -45,7 +51,7 @@ let actuales: Repositorios | null = null
 
 /** Los repositorios en uso. Se crean la primera vez que se piden. */
 export function repositorios(): Repositorios {
-  if (!actuales) actuales = crearRepositoriosLocales()
+  if (!actuales) actuales = supabaseConfigurado ? crearRepositoriosSupabase() : crearRepositoriosLocales()
   return actuales
 }
 

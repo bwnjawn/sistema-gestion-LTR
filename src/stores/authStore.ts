@@ -3,81 +3,56 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { AdminUser, AdminUserWithPassword } from '../types/domain'
-import { generateUUID } from '../lib/id'
-import { todayISO } from '../lib/dates'
 import { repositorios } from '../lib/repositories'
-import { persistirConReversion } from '../lib/persistirConReversion'
 import { mensajeDeError } from '../lib/errores'
+import { cargarDatosDeAdministrador, descartarDatosDeAdministrador } from '../lib/arranque'
 
 export type { AdminUser, AdminUserWithPassword }
 
 export const MIN_CONTRASENA = 8
 
-// AUTENTICACIÓN DE PROTOTIPO: las contraseñas se guardan en texto plano en el navegador y
-// viajan dentro del código. Sirve para una demo cerrada; la autenticación real llega con
-// Supabase Auth (SCRUM-248), que reemplaza este store. No reutilices aquí una contraseña
-// que uses en otro sitio.
+// Con Supabase las contraseñas las guarda Supabase Auth y la sesión se mantiene sola entre visitas. Sin Supabase
+// (desarrollo sin configurar y pruebas) queda la AUTENTICACIÓN DE PROTOTIPO: contraseñas en texto plano en el
+// navegador, solo para una demo cerrada.
 
 export const useAuthStore = defineStore('auth', () => {
-  const adminsList = ref<AdminUserWithPassword[]>([])
+  const adminsList = ref<AdminUser[]>([])
   const currentUser = ref<AdminUser | null>(null)
 
   const isLoading = ref(false)
   const authError = ref<string | null>(null)
   const isAuthenticated = computed(() => !!currentUser.value)
 
-  /** Carga los administradores y la sesión guardada. Se llama una vez al arrancar la app. */
+  /** Carga a los administradores y la sesión guardada. Se llama una vez al arrancar la app. */
   async function init(): Promise<void> {
     const repo = repositorios().auth
-    adminsList.value = await repo.admins.list()
-    const sesion = await repo.getSession()
-    // La sesión de un administrador que ya no existe se cierra.
-    if (sesion && !adminsList.value.some(a => a.id === sesion.id)) {
-      currentUser.value = null
-      await repo.clearSession()
-    } else {
-      currentUser.value = sesion
-    }
+    currentUser.value = await repo.getSession()
+    adminsList.value = await repo.listarAdmins()
   }
 
   /**
    * Inicio de sesión asíncrono
    */
-  async function login(email: string, passwordHash: string): Promise<boolean> {
+  async function login(email: string, contrasena: string): Promise<boolean> {
     isLoading.value = true
     authError.value = null
-    await new Promise(resolve => setTimeout(resolve, 300))
 
     try {
-      const foundUser = adminsList.value.find(
-        u => u.email.toLowerCase() === email.toLowerCase().trim() && u.passwordHash === passwordHash
-      )
-
-      if (foundUser) {
-        const sessionUser: AdminUser = {
-          id: foundUser.id,
-          name: foundUser.name,
-          email: foundUser.email,
-          role: foundUser.role,
-          createdAt: foundUser.createdAt
-        }
-        await persistirConReversion({
-          aplicar: () => { currentUser.value = sessionUser },
-          revertir: () => { currentUser.value = null },
-          persistir: () => repositorios().auth.saveSession(sessionUser),
-          mensaje: 'No se pudo guardar la sesión.'
-        })
-        isLoading.value = false
-        return true
-      } else {
+      const usuario = await repositorios().auth.iniciarSesion(email, contrasena)
+      if (!usuario) {
         authError.value = 'Correo o contraseña incorrectos. Revisa las credenciales.'
-        isLoading.value = false
         return false
       }
+      currentUser.value = usuario
+      adminsList.value = await repositorios().auth.listarAdmins()
+      // El administrador ve lo que el público no: todas las solicitudes y el catálogo completo
+      await cargarDatosDeAdministrador()
+      return true
     } catch (e) {
       authError.value = mensajeDeError(e, 'Ocurrió un error inesperado al intentar iniciar sesión.')
-      isLoading.value = false
       return false
+    } finally {
+      isLoading.value = false
     }
   }
 
@@ -88,7 +63,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function register(
     name: string,
     email: string,
-    passwordHash: string
+    contrasena: string
   ): Promise<boolean> {
     isLoading.value = true
     authError.value = null
@@ -98,46 +73,26 @@ export const useAuthStore = defineStore('auth', () => {
       isLoading.value = false
       return false
     }
-    if (passwordHash.length < MIN_CONTRASENA) {
+    if (contrasena.length < MIN_CONTRASENA) {
       authError.value = `La contraseña debe tener al menos ${MIN_CONTRASENA} caracteres.`
       isLoading.value = false
       return false
     }
 
-    await new Promise(resolve => setTimeout(resolve, 400))
-
     try {
       const normalizedEmail = email.toLowerCase().trim()
-      const exists = adminsList.value.some(u => u.email.toLowerCase() === normalizedEmail)
-
-      if (exists) {
+      if (adminsList.value.some(u => u.email.toLowerCase() === normalizedEmail)) {
         authError.value = 'Ya existe un administrador registrado con este correo electrónico.'
-        isLoading.value = false
         return false
       }
-
-      const todayDate: string = todayISO()
-      const newAdmin: AdminUserWithPassword = {
-        id: generateUUID(),
-        name: name.trim(),
-        email: normalizedEmail,
-        passwordHash,
-        role: 'admin',
-        createdAt: todayDate
-      }
-
-      await persistirConReversion({
-        aplicar: () => { adminsList.value.push(newAdmin) },
-        revertir: () => { adminsList.value = adminsList.value.filter(a => a.id !== newAdmin.id) },
-        persistir: () => repositorios().auth.admins.create(newAdmin),
-        mensaje: 'No se pudo registrar al administrador.'
-      })
-      isLoading.value = false
+      const nuevo = await repositorios().auth.crearAdmin(name, normalizedEmail, contrasena)
+      adminsList.value = [...adminsList.value, nuevo]
       return true
     } catch (e) {
       authError.value = mensajeDeError(e, 'Error al registrar el nuevo usuario administrador.')
-      isLoading.value = false
       return false
+    } finally {
+      isLoading.value = false
     }
   }
 
@@ -145,8 +100,13 @@ export const useAuthStore = defineStore('auth', () => {
    * Cierre de sesión
    */
   async function logout(): Promise<void> {
-    currentUser.value = null
-    await repositorios().auth.clearSession()
+    try {
+      await repositorios().auth.cerrarSesion()
+    } finally {
+      currentUser.value = null
+      adminsList.value = []
+      await descartarDatosDeAdministrador()
+    }
   }
 
   return {

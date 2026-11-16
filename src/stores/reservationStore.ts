@@ -370,13 +370,14 @@ export const useReservationStore = defineStore('reservation', () => {
         throw new Error('No se puede cargar como confirmada: ya hay una reserva confirmada en esas fechas o cupos. Cárgala como pendiente.')
       }
     }
-    await requestsStore.addRequest(solicitud, estadoInicial)
+    // El código definitivo lo asigna quien guarda (con Supabase, la base de datos)
+    const creada = await requestsStore.addRequest(solicitud, estadoInicial)
     if (isAdminMode.value) estadoUltimaReservaAdmin.value = estadoInicial
 
     // Limpia el borrador de sessionStorage una vez enviada la solicitud
     clearDraftFromSession()
     solicitudEnviada.value = true
-    return code
+    return creada.requestCode
   }
 
   return {
