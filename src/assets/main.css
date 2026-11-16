@@ -33,6 +33,9 @@
 .bottom-sobre-nav {
   bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
 }
+.pb-contenido-precio {
+  padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+}
 .pb-contenido-nav {
   padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
 }

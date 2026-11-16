@@ -32,44 +32,44 @@ function cargarOtra() {
     </div>
 
     <div class="space-y-2.5">
-      <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-black text-brand-dark">
+      <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-bold text-brand-dark">
         <FileCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" aria-hidden="true" />
         <span>Código: {{ codigo }}</span>
       </div>
-      <h2 class="text-2xl font-black text-brand-dark tracking-tight">Reserva registrada</h2>
-      <p class="text-base font-bold text-gray-700">
+      <h2 class="text-2xl font-bold text-brand-dark tracking-tight">Reserva registrada</h2>
+      <p class="text-base text-gray-700">
         <template v-if="store.estadoUltimaReservaAdmin === 'pending'">
-          Quedó <strong class="font-black text-brand-dark">pendiente de abono</strong> en la lista de solicitudes. No retiene fechas hasta que la confirmes.
+          Quedó <strong class="font-bold text-brand-dark">pendiente de abono</strong> en la lista de solicitudes. No retiene fechas hasta que la confirmes.
         </template>
         <template v-else>
-          Quedó <strong class="font-black text-brand-dark">confirmada</strong> en la lista de solicitudes.
+          Quedó <strong class="font-bold text-brand-dark">confirmada</strong> en la lista de solicitudes.
         </template>
         <template v-if="store.isSpecialEvent"> Marcada como evento especial.</template>
       </p>
     </div>
 
-    <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm font-bold text-gray-700">
+    <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm text-gray-700">
       <div class="flex justify-between gap-2">
         <span class="text-gray-500">Cliente:</span>
-        <span class="text-brand-dark font-black text-right">{{ store.clientName || 'Sin nombre' }}</span>
+        <span class="text-brand-dark font-bold text-right">{{ store.clientName || 'Sin nombre' }}</span>
       </div>
       <div class="flex justify-between gap-2">
         <span class="text-gray-500">Teléfono:</span>
-        <span class="text-brand-dark font-black text-right">{{ store.clientPhone }}</span>
+        <span class="text-brand-dark font-bold text-right">{{ store.clientPhone }}</span>
       </div>
       <div class="flex justify-between gap-2">
         <span class="text-gray-500">Servicio:</span>
-        <span class="text-brand-dark font-black text-right">{{ servicio }}</span>
+        <span class="text-brand-dark font-bold text-right">{{ servicio }}</span>
       </div>
       <div class="flex justify-between gap-2">
         <span class="text-gray-500">Fechas:</span>
-        <span class="text-brand-dark font-black text-right">{{ fechas }}</span>
+        <span class="text-brand-dark font-bold text-right">{{ fechas }}</span>
       </div>
       <div class="flex justify-between border-t border-gray-200/60 pt-2 mt-1">
         <span class="text-gray-500">Total:</span>
-        <span class="text-brand-dark font-black">{{ formatCLP(total) }}</span>
+        <span class="text-brand-dark font-bold">{{ formatCLP(total) }}</span>
       </div>
-      <p class="text-sm font-bold text-gray-600 pt-1">
+      <p class="text-sm text-gray-700 pt-1">
         {{ store.adminAbonoMonto ? 'El abono recibido quedó registrado. Puedes anotar más pagos desde el detalle.' : 'Aún no tiene pagos registrados. Anota el abono desde el detalle de la reserva.' }}
       </p>
     </div>

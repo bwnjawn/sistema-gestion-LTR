@@ -15,8 +15,8 @@ const store = useReservationStore()
       class="mt-0.5 w-6 h-6 shrink-0 accent-brand-dark"
     />
     <span class="space-y-0.5">
-      <span class="block text-base font-black text-brand-dark">Evento especial</span>
-      <span class="block text-sm font-bold text-gray-600">
+      <span class="block text-base font-bold text-brand-dark">Evento especial</span>
+      <span class="block text-sm text-gray-700">
         Marca la reserva como evento especial. Por ahora solo queda registrada en la lista.
       </span>
     </span>
