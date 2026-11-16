@@ -12,6 +12,8 @@ import type { ReservationRequest } from '../../types/domain'
 
 const props = defineProps<{
   request: ReservationRequest
+  /** Solo muestra el calendario para mover la fecha; los datos de contacto no se tocan. */
+  soloFecha?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -129,40 +131,42 @@ async function save() {
 </script>
 
 <template>
-  <form @submit.prevent="requestSave" class="border-2 border-brand-dark rounded-2xl p-3 space-y-3">
-    <h3 class="text-lg font-black text-brand-dark">Modificar la solicitud</h3>
+  <form @submit.prevent="requestSave" class="border-2 border-brand-border rounded-2xl p-3 space-y-3">
+    <h3 class="text-base font-bold text-brand-dark">{{ soloFecha ? 'Elige la nueva fecha' : 'Modificar la solicitud' }}</h3>
 
-    <label class="space-y-1 text-sm font-black text-gray-800 block">
+    <template v-if="!soloFecha">
+    <label class="space-y-1 text-sm font-normal text-gray-800 block">
       Nombre
-      <input v-model="form.clientName" type="text" class="w-full p-3 rounded-xl border-2 border-gray-500 bg-white font-bold text-base" />
+      <input v-model="form.clientName" type="text" class="w-full p-3 rounded-xl border-2 border-brand-border bg-white text-base font-normal" />
     </label>
 
     <div class="grid grid-cols-2 gap-2">
-      <label class="space-y-1 text-sm font-black text-gray-800">
+      <label class="space-y-1 text-sm font-normal text-gray-800">
         Teléfono
-        <input v-model="form.clientPhone" type="tel" inputmode="tel" class="w-full p-3 rounded-xl border-2 border-gray-500 bg-white font-bold text-base" />
+        <input v-model="form.clientPhone" type="tel" inputmode="tel" class="w-full p-3 rounded-xl border-2 border-brand-border bg-white text-base font-normal" />
       </label>
-      <label class="space-y-1 text-sm font-black text-gray-800">
+      <label class="space-y-1 text-sm font-normal text-gray-800">
         {{ guestsLabel }}
-        <input v-model.number="form.guestsCount" type="number" inputmode="numeric" min="1" class="w-full p-3 rounded-xl border-2 border-gray-500 bg-white font-bold text-base" />
+        <input v-model.number="form.guestsCount" type="number" inputmode="numeric" min="1" class="w-full p-3 rounded-xl border-2 border-brand-border bg-white text-base font-normal" />
       </label>
     </div>
 
-    <label class="space-y-1 text-sm font-black text-gray-800 block">
+    <label class="space-y-1 text-sm font-normal text-gray-800 block">
       Correo (opcional)
-      <input v-model="form.clientEmail" type="email" class="w-full p-3 rounded-xl border-2 border-gray-500 bg-white font-bold text-base" />
+      <input v-model="form.clientEmail" type="email" class="w-full p-3 rounded-xl border-2 border-brand-border bg-white text-base font-normal" />
     </label>
 
-    <label class="space-y-1 text-sm font-black text-gray-800 block">
+    <label class="space-y-1 text-sm font-normal text-gray-800 block">
       Comentarios
-      <textarea v-model="form.comments" rows="2" class="w-full p-3 rounded-xl border-2 border-gray-500 bg-white font-bold text-base"></textarea>
+      <textarea v-model="form.comments" rows="2" class="w-full p-3 rounded-xl border-2 border-brand-border bg-white text-base font-normal"></textarea>
     </label>
+    </template>
 
     <div class="space-y-2">
-      <p class="text-sm font-black text-gray-800">
+      <p class="text-sm font-normal text-gray-800">
         {{ isSingleDay ? 'Fecha de la visita' : 'Fechas de llegada y salida' }}
       </p>
-      <p class="text-base font-black text-brand-dark bg-gray-100 border-2 border-gray-300 rounded-xl p-2.5">
+      <p class="text-sm font-normal text-brand-dark bg-brand-light border border-brand-border rounded-xl p-2.5">
         <template v-if="isSingleDay">{{ formatDateLong(form.startDate) }}</template>
         <template v-else>
           {{ formatDateLong(form.startDate) }} → {{ form.endDate ? formatDateLong(form.endDate) : 'elige la salida' }}
@@ -181,40 +185,40 @@ async function save() {
       />
     </div>
 
-    <p v-if="request.type === 'piscina'" class="text-sm font-bold text-gray-700">
+    <p v-if="request.type === 'piscina'" class="text-xs text-gray-700">
       Si cambias las personas, el total se recalcula con el mismo valor por persona.
     </p>
-    <p v-else-if="request.type !== 'restaurante'" class="text-sm font-bold text-gray-700">
+    <p v-else-if="request.type !== 'restaurante'" class="text-xs text-gray-700">
       Si cambias las fechas o las personas, el total y el abono exigido se recalculan. Los pagos ya registrados se conservan.
     </p>
 
-    <p v-if="error" class="text-sm font-black text-rose-950 bg-rose-50 border-2 border-status-danger rounded-xl p-2" role="alert">{{ error }}</p>
+    <p v-if="error" class="text-sm font-bold text-rose-950 bg-rose-50 border border-status-danger rounded-xl p-2" role="alert">{{ error }}</p>
 
     <!-- Barra fija: siempre a la vista, con el resumen de lo que se guardará -->
-    <div class="sticky bottom-0 -mx-3 -mb-3 px-3 py-3 bg-white border-t-2 border-gray-300 rounded-b-2xl space-y-2">
+    <div class="sticky bottom-0 z-20 -mx-3 -mb-3 px-3 py-3 bg-white border-t-2 border-brand-border/60 rounded-b-2xl space-y-2">
       <div v-if="confirmingDates" class="border-2 border-amber-500 bg-amber-50 rounded-2xl p-3 space-y-2" role="alertdialog">
-        <p class="text-base font-black text-amber-950">{{ datesChangeMessage }}</p>
+        <p class="text-sm font-bold text-amber-950">{{ datesChangeMessage }}</p>
         <div class="grid grid-cols-2 gap-2">
-          <BaseButton type="button" variant="primary" @click="save">Sí, cambiar</BaseButton>
-          <BaseButton type="button" variant="outline" @click="confirmingDates = false">No, volver</BaseButton>
+          <BaseButton type="button" variant="primary" size="md" class="!text-sm" @click="save">Sí, cambiar</BaseButton>
+          <BaseButton type="button" variant="outline" size="md" class="!text-sm" @click="confirmingDates = false">No, volver</BaseButton>
         </div>
       </div>
 
       <div v-else-if="confirmingDiscard" class="border-2 border-status-danger bg-rose-50 rounded-2xl p-3 space-y-2" role="alertdialog">
-        <p class="text-base font-black text-rose-950">Hay cambios sin guardar. ¿Salir sin guardarlos?</p>
+        <p class="text-sm font-bold text-rose-950">Hay cambios sin guardar. ¿Salir sin guardarlos?</p>
         <div class="grid grid-cols-2 gap-2">
-          <BaseButton type="button" variant="danger" @click="emit('cancel')">Sí, descartar</BaseButton>
-          <BaseButton type="button" variant="outline" @click="confirmingDiscard = false">No, seguir</BaseButton>
+          <BaseButton type="button" variant="danger" size="md" class="!text-sm" @click="emit('cancel')">Sí, descartar</BaseButton>
+          <BaseButton type="button" variant="outline" size="md" class="!text-sm" @click="confirmingDiscard = false">No, seguir</BaseButton>
         </div>
       </div>
 
       <template v-else>
-        <p :class="['text-sm font-black', hasChanges ? 'text-brand-dark' : 'text-gray-700']">{{ changeSummary }}</p>
+        <p :class="['text-sm font-bold', hasChanges ? 'text-brand-dark' : 'text-gray-700']">{{ changeSummary }}</p>
         <div class="grid grid-cols-2 gap-2">
-          <BaseButton type="submit" variant="primary" :disabled="!hasChanges">
+          <BaseButton type="submit" variant="primary" size="md" class="!text-sm" :disabled="!hasChanges">
             <Save class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Guardar cambios
           </BaseButton>
-          <BaseButton type="button" variant="outline" @click="requestCancel">
+          <BaseButton type="button" variant="outline" size="md" class="!text-sm" @click="requestCancel">
             <X class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Cancelar
           </BaseButton>
         </div>

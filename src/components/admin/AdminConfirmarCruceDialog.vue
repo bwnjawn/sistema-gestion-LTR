@@ -5,8 +5,10 @@
 import { computed, ref, watch } from 'vue'
 import { AlertTriangle, Calendar, Check, Mail, MessageCircle, Phone, X } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
+import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import AdminRequestEditForm from './AdminRequestEditForm.vue'
 import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
+import EstadoSolicitud from './EstadoSolicitud.vue'
 import { getPaymentSummary } from '../../services/payments'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { buildMailtoUrl, buildTelUrl, buildWhatsappUrl, hasUsablePhone } from '../../lib/contactLinks'
@@ -92,7 +94,9 @@ async function rechazar(id: string) {
   rechazandoId.value = null
 }
 
-const claseSalida = 'py-3 rounded-xl text-sm font-black flex items-center justify-center gap-1 border-2 touch-target'
+useBloqueoScroll(computed(() => !!props.requestId))
+
+const claseSalida = 'py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1 border-2 touch-target'
 const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-events-none'
 </script>
 
@@ -104,16 +108,17 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
     aria-modal="true"
     aria-label="Solicitudes que se cruzan"
   >
-    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full border-2 border-gray-500 shadow-2xl max-h-[92dvh] flex flex-col">
+    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full border-2 border-brand-border shadow-2xl max-h-[92dvh] flex flex-col">
       <!-- Mover la fecha: es un paso aparte, con su propio botón de guardar -->
       <template v-if="filaEnEdicion">
-        <div class="p-4 border-b-2 border-gray-300">
-          <h2 class="text-xl font-black text-brand-dark leading-tight">Mover la fecha de {{ filaEnEdicion.solicitud.clientName }}</h2>
-          <p class="text-sm font-bold text-gray-700">Los días ocupados por reservas confirmadas no se pueden elegir.</p>
+        <div class="p-4 border-b-2 border-brand-border/60">
+          <h2 class="text-lg font-bold text-brand-dark leading-tight">Mover la fecha de {{ filaEnEdicion.solicitud.clientName }}</h2>
+          <p class="text-xs text-gray-700 mt-0.5">Los días ocupados por reservas confirmadas no se pueden elegir.</p>
         </div>
         <div class="overflow-y-auto p-4">
           <AdminRequestEditForm
             :request="filaEnEdicion.solicitud"
+            solo-fecha
             @saved="editandoId = null"
             @cancel="editandoId = null"
           />
@@ -121,109 +126,97 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
       </template>
 
       <template v-else>
-        <div class="flex items-start justify-between gap-3 p-4 border-b-2 border-gray-300">
+        <div class="flex items-start justify-between gap-3 p-4 border-b-2 border-brand-border/60">
           <div class="min-w-0">
-            <h2 class="text-xl font-black text-brand-dark leading-tight flex items-center gap-1.5">
+            <h2 class="text-lg font-bold text-brand-dark leading-tight flex items-center gap-1.5">
               <AlertTriangle class="w-5 h-5 text-status-danger stroke-[2.5] shrink-0" aria-hidden="true" /> Solicitudes que se cruzan
             </h2>
-            <p class="text-sm font-bold text-gray-700">Elige cuál confirmar. Nada se rechaza solo.</p>
+            <p class="text-xs text-gray-700 mt-0.5">Elige cuál se queda con la fecha. Nada se rechaza solo.</p>
           </div>
-          <button type="button" @click="emit('close')" aria-label="Cerrar" class="p-2 rounded-full hover:bg-gray-100 text-gray-800 touch-target shrink-0">
-            <X class="w-6 h-6 stroke-[2.5]" />
+          <button
+            type="button"
+            @click="emit('close')"
+            aria-label="Cerrar"
+            class="w-10 h-10 rounded-full bg-brand-light border-2 border-brand-border text-brand-dark active:scale-95 transition-transform flex items-center justify-center shrink-0"
+          >
+            <X class="w-5 h-5 stroke-[2.5]" aria-hidden="true" />
           </button>
         </div>
 
-        <div class="overflow-y-auto p-4 space-y-4">
-          <p v-if="filas.length === 0" class="text-base font-black text-emerald-950 bg-emerald-50 border-2 border-status-success rounded-2xl p-3">
+        <div class="overflow-y-auto p-4 space-y-3">
+          <p v-if="filas.length === 0" class="text-sm font-bold text-emerald-950 bg-emerald-50 border border-status-success rounded-2xl p-3">
             Ya no hay cruces. Cierra este aviso y aprueba la solicitud con normalidad.
           </p>
 
           <article
             v-for="fila in filas"
             :key="fila.solicitud.id"
-            :class="['border-2 rounded-2xl p-3 space-y-3', fila.confirmada ? 'border-status-success bg-emerald-50' : 'border-gray-400 bg-white']"
+            :class="['border rounded-2xl p-3 space-y-2.5', fila.confirmada ? 'border-brand-dark bg-emerald-50' : 'border-brand-border bg-brand-light']"
           >
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
-                <p class="text-sm font-black text-gray-700">
-                  {{ fila.datos.servicio }} · {{ fila.solicitud.requestCode }}
-                  <span v-if="fila.esLaPropia" class="ml-1 px-2 py-0.5 rounded-full bg-brand-dark text-white text-xs uppercase">La que apruebas</span>
-                </p>
-                <p class="text-lg font-black text-brand-dark leading-tight">{{ fila.solicitud.clientName }}</p>
+                <p v-if="fila.esLaPropia" class="text-xs font-bold text-brand-accent uppercase tracking-wider">La que apruebas</p>
+                <h3 class="text-base font-bold text-brand-dark leading-tight truncate">{{ fila.solicitud.clientName }}</h3>
               </div>
-              <span
-                :class="['shrink-0 px-3 py-1 rounded-full text-sm font-black', fila.confirmada ? 'bg-status-success text-white' : 'bg-amber-200 text-amber-950 border border-amber-500']"
-              >
-                {{ fila.confirmada ? 'Confirmada' : 'Pendiente' }}
-              </span>
+              <EstadoSolicitud :status="fila.solicitud.status" class="mt-0.5" />
             </div>
 
-            <dl class="grid grid-cols-2 gap-2 text-sm">
-              <div class="bg-gray-100 rounded-xl p-2">
-                <dt class="font-bold text-gray-700">Fechas</dt>
-                <dd class="font-black text-brand-dark">{{ fila.datos.fechas }}</dd>
-              </div>
-              <div class="bg-gray-100 rounded-xl p-2">
-                <dt class="font-bold text-gray-700">Precio</dt>
-                <dd class="font-black text-brand-dark">{{ formatCLP(fila.solicitud.totalAmount) }}</dd>
-              </div>
-              <div class="bg-gray-100 rounded-xl p-2">
-                <dt class="font-bold text-gray-700">Cercanía</dt>
-                <dd class="font-black text-brand-dark">{{ fila.datos.cercania }}</dd>
-              </div>
-              <div class="bg-gray-100 rounded-xl p-2">
-                <dt class="font-bold text-gray-700">Días que se topan</dt>
-                <dd class="font-black text-brand-dark">{{ fila.datos.dias }}</dd>
-              </div>
-            </dl>
-
-            <p class="text-sm font-bold text-gray-700">{{ fila.solicitud.resourceName }} · {{ fila.solicitud.guestsCount }} personas</p>
-            <p v-if="fila.seCruzaCon" class="text-sm font-black text-rose-950">Se cruza con: {{ fila.seCruzaCon }}</p>
+            <div class="bg-white border border-brand-border rounded-xl px-3 py-2 space-y-0.5">
+              <p class="text-sm text-gray-800">
+                {{ fila.datos.servicio }} · {{ fila.solicitud.resourceName }} · <span class="font-bold">{{ fila.datos.fechas }}</span>
+              </p>
+              <p class="text-xs text-gray-700">
+                {{ fila.solicitud.guestsCount }} personas · {{ formatCLP(fila.solicitud.totalAmount) }} · {{ fila.datos.cercania }}
+              </p>
+              <p class="text-xs font-bold text-rose-950">Se topan: {{ fila.datos.dias }}</p>
+              <p v-if="fila.seCruzaCon" class="text-xs text-rose-950">Se cruza con {{ fila.seCruzaCon }}</p>
+            </div>
 
             <template v-if="!fila.confirmada">
-              <BaseButton variant="success" fullWidth :disabled="!fila.puedeConfirmarse" @click="confirmar(fila.solicitud.id)">
-                <Check class="w-5 h-5 mr-1 stroke-[3]" aria-hidden="true" /> Confirmar esta
+              <!-- Si la fecha ya la ocupa una confirmada, no se ofrece confirmar: solo mover la fecha o rechazar -->
+              <BaseButton v-if="fila.puedeConfirmarse" variant="success" size="md" fullWidth class="!text-sm" @click="confirmar(fila.solicitud.id)">
+                <Check class="w-4 h-4 mr-1 stroke-[3]" aria-hidden="true" /> Confirmar esta
               </BaseButton>
-              <p v-if="!fila.puedeConfirmarse" class="text-sm font-black text-rose-950 bg-rose-50 border-2 border-status-danger rounded-xl p-2">
-                Ya hay una reserva confirmada en esas fechas. Avisa al cliente, mueve la fecha o rechaza.
+              <p v-else class="text-sm text-rose-950 bg-rose-50 border border-status-danger rounded-xl px-3 py-2">
+                <span class="font-bold">La fecha ya la ocupa una reserva confirmada.</span> No se puede aprobar: mueve la fecha o rechaza.
               </p>
             </template>
 
             <!-- Salidas para quien no queda confirmada -->
-            <section v-if="mostrarSalidas(fila)" class="space-y-2 border-t-2 border-gray-300 pt-3">
-              <h3 class="text-sm font-black text-brand-dark">Avisar al cliente (la app no envía nada sola)</h3>
-              <p v-if="!fila.datos.telefonoUtil" class="text-sm font-black text-amber-950 bg-amber-100 border border-amber-500 rounded-xl p-2">
+            <section v-if="mostrarSalidas(fila)" class="space-y-2 border-t border-brand-border/60 pt-2.5">
+              <h4 class="text-xs font-bold text-gray-800">Avisar al cliente (la app no envía nada sola)</h4>
+              <p v-if="!fila.datos.telefonoUtil" class="text-xs font-bold text-amber-950 bg-amber-50 border border-amber-500 rounded-xl p-2">
                 El teléfono parece incompleto. Revísalo antes de llamar.
               </p>
               <div class="grid grid-cols-3 gap-2">
-                <a :href="fila.datos.tel" :class="[claseSalida, fila.datos.telefonoUtil ? 'bg-white border-brand-dark text-brand-dark' : claseSalidaInactiva]">
+                <a :href="fila.datos.tel" :class="[claseSalida, fila.datos.telefonoUtil ? 'bg-white border-brand-border text-brand-dark' : claseSalidaInactiva]">
                   <Phone class="w-4 h-4 stroke-[2.5]" aria-hidden="true" /> Llamar
                 </a>
                 <a
                   :href="fila.datos.whatsapp"
                   target="_blank"
                   rel="noopener"
-                  :class="[claseSalida, fila.datos.telefonoUtil ? 'bg-status-success border-status-success text-white' : claseSalidaInactiva]"
+                  :class="[claseSalida, fila.datos.telefonoUtil ? 'bg-brand-dark border-brand-dark text-white' : claseSalidaInactiva]"
                 >
                   <MessageCircle class="w-4 h-4 stroke-[2.5]" aria-hidden="true" /> WhatsApp
                 </a>
-                <a :href="fila.datos.correo" :class="[claseSalida, fila.solicitud.clientEmail ? 'bg-white border-brand-dark text-brand-dark' : claseSalidaInactiva]">
+                <a :href="fila.datos.correo" :class="[claseSalida, fila.solicitud.clientEmail ? 'bg-white border-brand-border text-brand-dark' : claseSalidaInactiva]">
                   <Mail class="w-4 h-4 stroke-[2.5]" aria-hidden="true" /> Correo
                 </a>
               </div>
 
-              <div v-if="rechazandoId === fila.solicitud.id" class="border-2 border-status-danger bg-rose-50 rounded-2xl p-3 space-y-2">
-                <p class="text-base font-black text-rose-950">¿Rechazar la solicitud de {{ fila.solicitud.clientName }}? El cliente tendrá que volver a solicitarla.</p>
+              <div v-if="rechazandoId === fila.solicitud.id" class="border border-status-danger bg-rose-50 rounded-2xl p-3 space-y-2">
+                <p class="text-sm font-bold text-rose-950">¿Rechazar la solicitud de {{ fila.solicitud.clientName }}? El cliente tendrá que volver a solicitarla.</p>
                 <div class="grid grid-cols-2 gap-2">
-                  <BaseButton variant="danger" @click="rechazar(fila.solicitud.id)">Sí, rechazar</BaseButton>
-                  <BaseButton variant="outline" @click="rechazandoId = null">No, volver</BaseButton>
+                  <BaseButton variant="danger" size="md" class="!text-sm" @click="rechazar(fila.solicitud.id)">Sí, rechazar</BaseButton>
+                  <BaseButton variant="outline" size="md" class="!text-sm" @click="rechazandoId = null">No, volver</BaseButton>
                 </div>
               </div>
               <div v-else class="grid grid-cols-2 gap-2">
-                <BaseButton variant="outline" @click="editandoId = fila.solicitud.id">
-                  <Calendar class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Modificar fecha
+                <BaseButton variant="primary" size="md" class="!text-sm" @click="editandoId = fila.solicitud.id">
+                  <Calendar class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Mover fecha
                 </BaseButton>
-                <BaseButton variant="outline" class="!border-status-danger !text-status-danger" @click="rechazandoId = fila.solicitud.id">
+                <BaseButton variant="outline" size="md" class="!text-sm !border-status-danger !text-status-danger" @click="rechazandoId = fila.solicitud.id">
                   <X class="w-4 h-4 mr-1.5 stroke-[3]" aria-hidden="true" /> Rechazar
                 </BaseButton>
               </div>
@@ -231,8 +224,8 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
           </article>
         </div>
 
-        <div class="p-4 border-t-2 border-gray-300 bg-white rounded-b-3xl">
-          <BaseButton variant="outline" fullWidth @click="emit('close')">
+        <div class="p-4 border-t-2 border-brand-border/60 bg-white rounded-b-3xl">
+          <BaseButton variant="outline" size="md" fullWidth class="!text-sm" @click="emit('close')">
             {{ hayConfirmada ? 'Cerrar' : 'Cerrar sin confirmar' }}
           </BaseButton>
         </div>

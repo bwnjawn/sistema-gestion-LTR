@@ -12,6 +12,7 @@ import {
   isRequestConfirmed,
   LIMITES_AFORO_POR_DEFECTO
 } from './availability'
+import { describirFechasSolicitud } from './mensajesCliente'
 
 /** Una solicitud del grupo que se cruza, con lo que el administrador compara para elegir cuál confirmar. */
 export interface SolicitudEnCruce {
@@ -46,6 +47,25 @@ export function describirCercania(diasParaLaFecha: number): string {
 }
 
 /**
+ * Reservas ya confirmadas que impiden confirmar la solicitud: las que se topan con ella
+ * (misma cabaña y fechas, o cupo de restaurante y camping agotado). Vacío si se puede confirmar.
+ */
+export function confirmadasQueBloquean(
+  solicitud: ReservationRequest,
+  existentes: ReservationRequest[],
+  limites: LimitesAforo = LIMITES_AFORO_POR_DEFECTO
+): ReservationRequest[] {
+  const confirmadas = existentes.filter(r => r.id !== solicitud.id && isRequestConfirmed(r))
+  const candidata = { ...solicitud, status: 'confirmed' } as ReservationRequest
+  const ids = new Set<string>()
+  for (const conflicto of findConflicts([...confirmadas, candidata], limites)) {
+    if (!conflicto.solicitudIds.includes(solicitud.id)) continue
+    conflicto.solicitudIds.filter(id => id !== solicitud.id).forEach(id => ids.add(id))
+  }
+  return confirmadas.filter(r => ids.has(r.id))
+}
+
+/**
  * Una solicitud se puede confirmar si, junto a las ya confirmadas, no se topa con ninguna.
  * Así nunca quedan dos confirmadas cruzadas (decisión del 10/11).
  */
@@ -58,6 +78,32 @@ export function puedeConfirmarse(
   const confirmadas = existentes.filter(r => r.id !== solicitud.id && isRequestConfirmed(r))
   const candidata = { ...solicitud, status: 'confirmed' } as ReservationRequest
   return !findConflicts([...confirmadas, candidata], limites).some(c => c.solicitudIds.includes(solicitud.id))
+}
+
+/**
+ * Pendientes "por mover" (15/11): su fecha ya la ocupa una reserva confirmada, así que no se pueden aprobar
+ * y la única salida es moverlas de fecha (o rechazarlas). Devuelve, por id, las confirmadas que las bloquean.
+ */
+export function solicitudesPorMover(
+  solicitudes: ReservationRequest[],
+  limites: LimitesAforo = LIMITES_AFORO_POR_DEFECTO
+): Record<string, ReservationRequest[]> {
+  const porMover: Record<string, ReservationRequest[]> = {}
+  for (const solicitud of solicitudes) {
+    if (solicitud.status !== 'pending') continue
+    const bloqueantes = confirmadasQueBloquean(solicitud, solicitudes, limites)
+    if (bloqueantes.length > 0) porMover[solicitud.id] = bloqueantes
+  }
+  return porMover
+}
+
+/** Quién ocupa la fecha, en una frase: "Pedro Soto (12 al 14 oct)" o "Pedro Soto (…) y 2 más". */
+export function describirBloqueo(bloqueantes: ReservationRequest[]): string {
+  if (bloqueantes.length === 0) return ''
+  const primera = bloqueantes[0]
+  const base = `${primera.clientName} (${describirFechasSolicitud(primera)})`
+  const otras = bloqueantes.length - 1
+  return otras > 0 ? `${base} y ${otras} más` : base
 }
 
 /**
