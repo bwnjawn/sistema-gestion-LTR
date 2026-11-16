@@ -3,10 +3,10 @@ import { ref, computed, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { useSettingsStore } from '../../stores/settingsStore'
-import { getDayOccupancy } from '../../services/availability'
+import { useCatalogStore } from '../../stores/catalogStore'
+import { getResumenDia } from '../../services/availability'
+import MarcasDia from './MarcasDia.vue'
 import type { ServiceType } from '../../types/domain'
-
-type EstadoOcupacion = 'disponible' | 'ocupado' | 'sobrecupo'
 
 const props = withDefaults(defineProps<{
   modelValue?: Date
@@ -23,6 +23,7 @@ const emit = defineEmits<{
 
 const requestsStore = useRequestsStore()
 const settingsStore = useSettingsStore()
+const catalogStore = useCatalogStore()
 const viewDate = ref<Date>(new Date(props.modelValue))
 
 watch(() => props.modelValue, (newVal) => {
@@ -62,13 +63,16 @@ const monthDays = computed(() => {
     const dd = String(i).padStart(2, '0')
     const dateStr = `${yyyy}-${mm}-${dd}`
 
-    const occupancy = getDayOccupancy(dateStr, requestsStore.requests, props.services, settingsStore.limitesAforo)
+    const resumen = getResumenDia(dateStr, requestsStore.requests, props.services, {
+      cabins: catalogStore.cabins,
+      limites: settingsStore.limitesAforo
+    })
 
     days.push({
       date: d,
       dateStr,
       dayNum: i,
-      status: occupancy.status as EstadoOcupacion
+      resumen
     })
   }
   return days
@@ -97,11 +101,6 @@ const handleDayClick = (date: Date) => {
   emit('select-day', date)
 }
 
-const getStatusBgClass = (status: EstadoOcupacion) => {
-  if (status === 'disponible') return 'bg-status-success'
-  if (status === 'ocupado') return 'bg-status-danger'
-  return 'bg-amber-500'
-}
 </script>
 
 <template>
@@ -149,7 +148,7 @@ const getStatusBgClass = (status: EstadoOcupacion) => {
       <div 
         v-for="blank in blankDaysAtStart" 
         :key="'blank-' + blank" 
-        class="h-11 rounded-2xl bg-transparent opacity-0 pointer-events-none"
+        class="h-12 rounded-2xl bg-transparent opacity-0 pointer-events-none"
       ></div>
 
       <button
@@ -158,31 +157,25 @@ const getStatusBgClass = (status: EstadoOcupacion) => {
         type="button"
         @click="handleDayClick(dayObj.date)"
         :class="[
-          'h-11 rounded-2xl border-2 flex flex-col items-center justify-between p-1 relative transition-all active:scale-95 touch-target overflow-hidden',
+          'h-12 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 p-1 relative transition-all active:scale-95 touch-target overflow-hidden',
           isSameDay(dayObj.date, modelValue)
-            ? 'bg-[#c5d7be] border-brand-border font-black text-brand-dark shadow-2xs'
+            ? ['border-brand-border font-black text-brand-dark shadow-2xs', dayObj.resumen.lleno ? 'bg-rose-200' : 'bg-[#c5d7be]']
             : isToday(dayObj.date)
-              ? 'bg-emerald-50/90 border-brand-accent font-black text-brand-dark'
-              : 'bg-white border-brand-border/40 hover:bg-brand-light text-gray-700 font-bold'
+              ? ['border-brand-accent font-black text-brand-dark', dayObj.resumen.lleno ? 'bg-rose-100' : 'bg-emerald-50/90']
+              : dayObj.resumen.lleno
+                ? 'bg-rose-100 border-rose-300 text-rose-950 font-bold'
+                : 'bg-white border-brand-border/40 hover:bg-brand-light text-gray-700 font-bold'
         ]"
       >
-        <div class="flex items-center justify-center w-full h-full">
-          <span 
-            :class="[
-              'text-xs leading-none',
-              isToday(dayObj.date) && !isSameDay(dayObj.date, modelValue) ? 'text-brand-accent font-black' : ''
-            ]"
-          >
-            {{ dayObj.dayNum }}
-          </span>
-        </div>
-
-        <div class="w-full h-1 rounded-full overflow-hidden flex gap-0.5 mt-auto">
-          <span 
-            class="h-full flex-1 rounded-full"
-            :class="getStatusBgClass(dayObj.status)"
-          ></span>
-        </div>
+        <span
+          :class="[
+            'text-xs leading-none',
+            isToday(dayObj.date) && !isSameDay(dayObj.date, modelValue) ? 'text-brand-accent font-black' : ''
+          ]"
+        >
+          {{ dayObj.dayNum }}
+        </span>
+        <MarcasDia :resumen="dayObj.resumen" />
       </button>
     </div>
   </div>

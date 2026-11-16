@@ -360,6 +360,200 @@ export function getDayOccupancy(
 
   return { confirmedCount, pendingCount, status }
 }
+
+// ---------------------------------------------------------------------------
+// Disponibilidad real por servicio en el calendario del administrador (SCRUM-267)
+// ---------------------------------------------------------------------------
+
+/**
+ * Estado de una franja del día. `libre`, `parcial` y `completo` miden lo CONFIRMADO (lo que bloquea al cliente);
+ * `sobrecupo` mide la demanda (pendientes + confirmadas) y avisa que las reservas se topan;
+ * `informativa` es la piscina, que no tiene cupo ni bloquea fechas.
+ */
+export type EstadoFranja = 'libre' | 'parcial' | 'completo' | 'sobrecupo' | 'informativa'
+
+export interface FranjaDisponibilidad {
+  servicio: ServiceType
+  /** 'cabanas', 'desayuno', 'almuerzo', 'once', 'diario', 'pernoctar', 'piscina' o 'todo' (resumen de varios). */
+  clave: string
+  etiqueta: string
+  estado: EstadoFranja
+  unidad: 'cabañas' | 'personas'
+  /** Cabañas o personas con reserva confirmada. */
+  ocupado: number
+  /** Cabañas reservables o personas que admite el servicio (0 en la piscina, que no tiene tope). */
+  capacidad: number
+  /** Cabañas con solicitudes pendientes, o personas pendientes. */
+  pendientes: number
+}
+
+export interface ContextoDisponibilidad {
+  /** Cabañas activas del catálogo; las que están en mantención se descuentan del total. */
+  cabins: Cabin[]
+  limites: LimitesAforo
+}
+
+/** Libre sin confirmadas, parcial si queda cupo y completo cuando lo confirmado ya llena la capacidad. */
+function estadoPorCupo(confirmado: number, capacidad: number, demanda: number): EstadoFranja {
+  if (demanda > capacidad) return 'sobrecupo'
+  if (confirmado <= 0) return 'libre'
+  return confirmado >= capacidad ? 'completo' : 'parcial'
+}
+
+function franjaCabanas(delDia: ReservationRequest[], cabins: Cabin[]): FranjaDisponibilidad {
+  const reservables = new Set(getBookableCabins(cabins).map(c => c.id))
+  const confirmadas = delDia.filter(isRequestConfirmed)
+  const pendientes = delDia.filter(r => !isRequestConfirmed(r))
+  const idsConfirmadas = new Set(
+    confirmadas.map(r => r.details?.resourceId).filter((id): id is string => !!id && reservables.has(id))
+  )
+  const recursos = delDia.map(r => r.details?.resourceId).filter(Boolean)
+  const seTopan = new Set(recursos).size !== recursos.length
+  const total = reservables.size
+  let estado: EstadoFranja
+  if (seTopan) estado = 'sobrecupo'
+  else if (idsConfirmadas.size === 0) estado = total === 0 ? 'completo' : 'libre'
+  else estado = idsConfirmadas.size >= total ? 'completo' : 'parcial'
+  return {
+    servicio: 'cabana',
+    clave: 'cabanas',
+    etiqueta: 'Cabañas',
+    estado,
+    unidad: 'cabañas',
+    ocupado: idsConfirmadas.size,
+    capacidad: total,
+    pendientes: new Set(pendientes.map(r => r.details?.resourceId).filter(Boolean)).size
+  }
+}
+
+function franjaPersonas(
+  servicio: ServiceType,
+  clave: string,
+  etiqueta: string,
+  delDia: ReservationRequest[],
+  capacidad: number
+): FranjaDisponibilidad {
+  const confirmado = delDia.filter(isRequestConfirmed).reduce((t, r) => t + r.guestsCount, 0)
+  const demanda = delDia.reduce((t, r) => t + r.guestsCount, 0)
+  return {
+    servicio,
+    clave,
+    etiqueta,
+    estado: estadoPorCupo(confirmado, capacidad, demanda),
+    unidad: 'personas',
+    ocupado: confirmado,
+    capacidad,
+    pendientes: demanda - confirmado
+  }
+}
+
+const TODOS_LOS_SERVICIOS: ServiceType[] = ['cabana', 'restaurante', 'camping', 'piscina']
+
+/** Franjas de un servicio, a partir de sus solicitudes activas del día. */
+function franjasDeServicio(
+  servicio: ServiceType,
+  delDia: ReservationRequest[],
+  contexto: ContextoDisponibilidad
+): FranjaDisponibilidad[] {
+  if (servicio === 'cabana') return [franjaCabanas(delDia, contexto.cabins)]
+
+  if (servicio === 'restaurante') {
+    return COMIDAS_RESTAURANTE.map(comida => franjaPersonas(
+      'restaurante',
+      comida,
+      comida.charAt(0).toUpperCase() + comida.slice(1),
+      delDia.filter(r => r.details?.selectedMealTypes?.includes(comida)),
+      contexto.limites.restaurantePersonas
+    ))
+  }
+
+  if (servicio === 'camping') {
+    return (['diario', 'pernoctar'] as CampingModality[]).map(m => franjaPersonas(
+      'camping',
+      m,
+      m === 'diario' ? 'Diario' : 'Pernoctar',
+      delDia.filter(r => modalidadCamping(r) === m),
+      contexto.limites.campingPersonas
+    ))
+  }
+
+  return [{
+    servicio: 'piscina',
+    clave: 'piscina',
+    etiqueta: 'Piscina',
+    estado: delDia.length > 0 ? 'informativa' : 'libre',
+    unidad: 'personas',
+    ocupado: delDia.reduce((t, r) => t + r.guestsCount, 0),
+    capacidad: 0,
+    pendientes: 0
+  }]
+}
+
+/**
+ * Detalle de un día por servicio, sin resumir: cabañas confirmadas sobre el total, cada comida del
+ * restaurante, diario y pernoctar del camping, y la piscina. Es lo que muestra el modal del día.
+ * Lo confirmado define libre/con cupo/completo; las pendientes se cuentan aparte y no bloquean;
+ * "se topan" cuenta pendientes y confirmadas.
+ */
+export function getDetalleDia(
+  dateStr: string,
+  solicitudes: ReservationRequest[],
+  servicios: ServiceType[] | undefined,
+  contexto: ContextoDisponibilidad
+): FranjaDisponibilidad[] {
+  return (servicios ?? TODOS_LOS_SERVICIOS).flatMap(s =>
+    franjasDeServicio(s, getRequestsForDay(dateStr, solicitudes, [s]), contexto)
+  )
+}
+
+/** Solicitudes activas del día que pertenecen a una franja (la comida, la modalidad o el servicio entero). */
+export function reservasDeFranja(franja: FranjaDisponibilidad, delDia: ReservationRequest[]): ReservationRequest[] {
+  const deServicio = delDia.filter(r => r.type === franja.servicio)
+  if (franja.servicio === 'restaurante') {
+    return deServicio.filter(r => r.details?.selectedMealTypes?.includes(franja.clave))
+  }
+  if (franja.servicio === 'camping') return deServicio.filter(r => modalidadCamping(r) === franja.clave)
+  return deServicio
+}
+
+/** Lo que muestra la casilla de un día del calendario del admin (SCRUM-267). */
+export interface ResumenDia {
+  /** Reservas confirmadas del día: cuánto trabajo hay. No cuenta la piscina, salvo que sea el único servicio visto. */
+  confirmadas: number
+  /** Hay pendientes, o reservas que se topan: algo que el admin debe revisar. */
+  hayPorResolver: boolean
+  /** Ya no se puede vender: todos los servicios con tope están llenos con lo confirmado. */
+  lleno: boolean
+}
+
+/** Una franja con tope está llena cuando lo confirmado alcanza la capacidad (la piscina no tiene tope). */
+function franjaLlena(f: FranjaDisponibilidad): boolean {
+  return f.servicio !== 'piscina' && f.ocupado >= f.capacidad
+}
+
+/**
+ * Resumen del día para la casilla del calendario. Con un servicio, "lleno" es que ese servicio no admite
+ * más (cabañas todas confirmadas, las tres comidas llenas, o diario y pernoctar llenos). Con varios, solo
+ * cuando todos los servicios con tope están llenos; la piscina no cuenta.
+ */
+export function getResumenDia(
+  dateStr: string,
+  solicitudes: ReservationRequest[],
+  servicios: ServiceType[] | undefined,
+  contexto: ContextoDisponibilidad
+): ResumenDia {
+  const activos = servicios ?? TODOS_LOS_SERVICIOS
+  const soloPiscina = activos.length === 1 && activos[0] === 'piscina'
+  const cuentan = getRequestsForDay(dateStr, solicitudes, activos).filter(r => soloPiscina || r.type !== 'piscina')
+  const franjas = getDetalleDia(dateStr, solicitudes, activos, contexto)
+  const conTope = franjas.filter(f => f.servicio !== 'piscina')
+  return {
+    confirmadas: cuentan.filter(isRequestConfirmed).length,
+    hayPorResolver: cuentan.some(r => !isRequestConfirmed(r)) || franjas.some(f => f.estado === 'sobrecupo'),
+    lleno: conTope.length > 0 && conTope.every(franjaLlena)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Bloqueo de fechas en el calendario del cliente (SCRUM-244)
 // ---------------------------------------------------------------------------
