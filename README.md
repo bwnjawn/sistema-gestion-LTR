@@ -101,7 +101,7 @@ Añade las credenciales de Supabase:
 
 ```env
 VITE_SUPABASE_URL=tu_url_de_supabase_aqui
-VITE_SUPABASE_ANON_KEY=tu_anon_key_de_supabase_aqui
+VITE_SUPABASE_PUBLISHABLE_KEY=tu_clave_publica_de_supabase_aqui
 ```
 
 ### 5. Iniciar el servidor de desarrollo
