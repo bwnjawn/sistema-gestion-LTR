@@ -7,6 +7,7 @@ import { generateUUID } from '../lib/id'
 import { repositorios } from '../lib/repositories'
 import { persistirConReversion } from '../lib/persistirConReversion'
 import { mensajeDeError } from '../lib/errores'
+import { aplicarReglaDeAcompanamiento, platosQueUsanAcompanamiento, validarNombreAcompanamiento } from '../services/menus'
 
 export const useCatalogStore = defineStore('catalog', () => {
   // Las listas completas incluyen lo dado de baja (borrado lógico). Las vistas leen solo lo activo
@@ -207,7 +208,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     isLoading.value = true
     error.value = null
     const modo = dishData.sideMode ?? 'none'
-    const newDish: Dish = {
+    const newDish: Dish = aplicarReglaDeAcompanamiento({
       id: generateUUID(),
       name: dishData.name || 'Nuevo Plato',
       price: dishData.price || 0,
@@ -218,7 +219,7 @@ export const useCatalogStore = defineStore('catalog', () => {
       fixedSide: modo === 'fixed' ? dishData.fixedSide ?? '' : '',
       image: dishData.image || '',
       isActive: true
-    }
+    })
     try {
       await persistirConReversion({
         aplicar: () => { todosLosPlatos.value.push(newDish) },
@@ -244,11 +245,18 @@ export const useCatalogStore = defineStore('catalog', () => {
       return
     }
     const previo = todosLosPlatos.value[idx]
+    // Si el plato queda en una comida sin acompañamiento (desayuno u once), se limpia lo que tenía.
+    const combinado: Dish = { ...previo, ...updated }
+    const resultado = aplicarReglaDeAcompanamiento(combinado)
+    const cambios: Partial<Dish> =
+      resultado === combinado
+        ? updated
+        : { ...updated, sideMode: 'none', availableSides: [], fixedSide: '', description: resultado.description }
     try {
       await persistirConReversion({
-        aplicar: () => { todosLosPlatos.value[idx] = { ...previo, ...updated } },
+        aplicar: () => { todosLosPlatos.value[idx] = resultado },
         revertir: () => { todosLosPlatos.value[idx] = previo },
-        persistir: () => repositorios().dishes.update(id, updated),
+        persistir: () => repositorios().dishes.update(id, cambios),
         mensaje: 'No se pudo guardar el cambio del plato.'
       })
     } catch (e) {
@@ -266,9 +274,11 @@ export const useCatalogStore = defineStore('catalog', () => {
   // Acompañamientos globales
   // ---------------------------------------------------------------------------
 
-  async function addGlobalSideDish(name: string): Promise<void> {
+  /** Agrega un acompañamiento. Devuelve el mensaje de error si el nombre no es válido, o `null` si quedó guardado. */
+  async function addGlobalSideDish(name: string): Promise<string | null> {
     const trimmed = name.trim()
-    if (!trimmed || globalSideDishes.value.includes(trimmed)) return
+    const invalido = validarNombreAcompanamiento(trimmed, globalSideDishes.value)
+    if (invalido) return invalido
     const previa = [...globalSideDishes.value]
     try {
       await persistirConReversion({
@@ -279,10 +289,61 @@ export const useCatalogStore = defineStore('catalog', () => {
       })
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al agregar el acompañamiento.')
+      return error.value
     }
+    return null
   }
 
-  async function deleteGlobalSideDish(name: string): Promise<void> {
+  /**
+   * Cambia el nombre de un acompañamiento y de paso en los platos que lo ofrecen. Devuelve el mensaje de error
+   * si el nombre no es válido o no se pudo guardar, o `null` si quedó guardado.
+   */
+  async function renameGlobalSideDish(anterior: string, nuevo: string): Promise<string | null> {
+    const limpio = nuevo.trim()
+    const invalido = validarNombreAcompanamiento(limpio, globalSideDishes.value, anterior)
+    if (invalido) return invalido
+    if (limpio === anterior) return null
+    const previaLista = [...globalSideDishes.value]
+    const previosPlatos = todosLosPlatos.value
+    // Se actualizan todos los platos (también los dados de baja) para que no queden con el nombre viejo.
+    const cambiar = (p: Dish): Dish =>
+      p.availableSides.includes(anterior)
+        ? { ...p, availableSides: p.availableSides.map(s => (s === anterior ? limpio : s)) }
+        : p
+    try {
+      await persistirConReversion({
+        aplicar: () => {
+          globalSideDishes.value = previaLista.map(s => (s === anterior ? limpio : s))
+          todosLosPlatos.value = previosPlatos.map(cambiar)
+        },
+        revertir: () => {
+          globalSideDishes.value = previaLista
+          todosLosPlatos.value = previosPlatos
+        },
+        persistir: async () => {
+          const repos = repositorios()
+          await repos.globalSides.rename(anterior, limpio)
+          // Los platos guardan los nombres: se actualizan también en el repositorio.
+          for (const plato of previosPlatos.filter(p => p.availableSides.includes(anterior))) {
+            await repos.dishes.update(plato.id, { availableSides: cambiar(plato).availableSides })
+          }
+        },
+        mensaje: 'No se pudo cambiar el nombre del acompañamiento.'
+      })
+    } catch (e) {
+      error.value = mensajeDeError(e, 'Error al cambiar el nombre del acompañamiento.')
+      return error.value
+    }
+    return null
+  }
+
+  /**
+   * Quita un acompañamiento. Si algún plato activo lo ofrece, no lo quita y devuelve los nombres de esos platos
+   * (más seguro que borrarlo en silencio de la carta). Si se quitó, devuelve una lista vacía.
+   */
+  async function deleteGlobalSideDish(name: string): Promise<string[]> {
+    const enUso = platosQueUsanAcompanamiento(name, todosLosPlatos.value)
+    if (enUso.length > 0) return enUso.map(p => p.name)
     const previa = [...globalSideDishes.value]
     try {
       await persistirConReversion({
@@ -294,6 +355,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al quitar el acompañamiento.')
     }
+    return []
   }
 
   return {
@@ -320,6 +382,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     updateDish,
     deleteDish,
     addGlobalSideDish,
+    renameGlobalSideDish,
     deleteGlobalSideDish
   }
 })

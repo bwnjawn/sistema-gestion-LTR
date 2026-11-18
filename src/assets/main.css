@@ -21,6 +21,20 @@
   }
 }
 
+/* Formularios de edición del catálogo: etiqueta pequeña sobre un campo de 16 px (en iPhone, menos de 16 px
+   hace zoom al tocar) con un solo borde fino. Solo peso normal. */
+@layer components {
+  .campo-etiqueta {
+    @apply block text-sm text-gray-600 mb-1.5;
+  }
+  .campo-entrada {
+    @apply w-full p-3 text-base text-brand-text bg-white border border-gray-400 rounded-xl focus:outline-none focus:border-brand-dark focus:ring-1 focus:ring-brand-dark;
+  }
+  .campo-ayuda {
+    @apply text-sm text-gray-600 mt-1.5;
+  }
+}
+
 .touch-target {
   min-height: 48px;
   min-width: 48px;

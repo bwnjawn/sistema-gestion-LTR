@@ -1,25 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Utensils, CheckCircle2 } from 'lucide-vue-next'
 import type { Dish } from '../../types/catalog'
 import { formatCLP } from '../../lib/format'
 import { ETIQUETAS_COMIDA } from '../../services/menus'
 
-const props = withDefaults(defineProps<{
-  dish: Dish
-  showCounter?: boolean
-  count?: number
-  availableSides?: string[]
-  sideSelections?: Record<string, string>
-}>(), {
-  showCounter: false,
-  count: 0
-})
-
-const emit = defineEmits<{
-  (e: 'update-count', delta: number): void
-  (e: 'select-side', sideName: string): void
-}>()
+const props = defineProps<{ dish: Dish }>()
 
 const formattedPrice = computed(() => formatCLP(props.dish.price))
 
@@ -29,56 +14,34 @@ const displayImage = computed(() => {
 
 const categoryLabel = computed(() => ETIQUETAS_COMIDA[props.dish.mealType])
 
-const isChoiceSide = computed(() => props.dish.sideMode === 'choice')
-
-const isFixedSide = computed(() => props.dish.sideMode === 'fixed')
+/** Línea con los acompañamientos del plato; vacía si no lleva. */
+const lineaAcompanamiento = computed(() => {
+  if (props.dish.sideMode === 'choice' && props.dish.availableSides.length > 0) {
+    return `A elección: ${props.dish.availableSides.join(', ')}`
+  }
+  if (props.dish.sideMode === 'fixed' && props.dish.fixedSide) return `Incluye: ${props.dish.fixedSide}`
+  return ''
+})
 </script>
 
 <template>
-  <div class="bg-white rounded-3xl border-2 border-brand-border shadow-xs overflow-hidden flex flex-col">
-    <div class="flex items-start p-3.5 sm:p-4 gap-3.5">
-      <!-- Imagen -->
-      <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-brand-border bg-gray-100">
-        <img :src="displayImage" :alt="dish.name" class="w-full h-full object-cover" />
-        <span class="absolute bottom-1 left-1 bg-brand-dark/90 text-white text-xs font-black px-1.5 py-0.5 rounded-md uppercase">
-          {{ categoryLabel }}
-        </span>
-      </div>
+  <article class="bg-white rounded-2xl border border-gray-300 p-3 flex gap-3">
+    <img :src="displayImage" :alt="dish.name" class="w-20 h-20 rounded-xl object-cover shrink-0 bg-gray-100" />
 
-      <!-- Información -->
-      <div class="flex-1 min-w-0 space-y-1">
-        <div class="flex items-start justify-between gap-2">
-          <h3 class="text-sm font-black text-brand-dark leading-tight">{{ dish.name }}</h3>
-          <span class="text-xs font-black text-brand-accent shrink-0">{{ formattedPrice }}</span>
+    <div class="flex-1 min-w-0">
+      <!-- Nombre y datos a la izquierda; el menú de opciones, arriba a la derecha (sin ocupar una fila propia) -->
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <h3 class="text-base font-bold text-brand-dark leading-snug">{{ dish.name }}</h3>
+          <p class="text-sm text-gray-600">{{ categoryLabel }} · {{ formattedPrice }}</p>
         </div>
-
-        <p v-if="dish.description" class="text-xs font-medium text-gray-600 line-clamp-2 leading-relaxed">
-          {{ dish.description }}
-        </p>
-
-        <!-- Acompañamientos -->
-        <div class="pt-1">
-          <span v-if="isChoiceSide" class="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-            <CheckCircle2 class="w-3 h-3 stroke-[2.5]" />
-            Acompañamiento a elección
-          </span>
-          <span v-else-if="isFixedSide" class="inline-flex items-center gap-1 text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
-            <Utensils class="w-3 h-3 stroke-[2.5]" />
-            {{ dish.fixedSide }}
-          </span>
+        <div class="-mt-1 -mr-1 shrink-0">
+          <slot name="menu" :dish="dish" />
         </div>
       </div>
-    </div>
 
-    <!-- Slot de Acciones / Contadores -->
-    <div class="px-3.5 pb-3.5 pt-1 border-t border-gray-100">
-      <slot name="actions" :dish="dish">
-        <div v-if="showCounter" class="flex items-center justify-end gap-2">
-          <button type="button" @click="emit('update-count', -1)" class="w-8 h-8 rounded-xl bg-brand-light border border-brand-border text-brand-dark font-black text-sm flex items-center justify-center">-</button>
-          <span class="text-xs font-black text-brand-dark w-6 text-center">{{ count }}</span>
-          <button type="button" @click="emit('update-count', 1)" class="w-8 h-8 rounded-xl bg-brand-dark text-white font-black text-sm flex items-center justify-center">+</button>
-        </div>
-      </slot>
+      <p v-if="dish.description" class="mt-1 text-sm text-gray-700 line-clamp-2">{{ dish.description }}</p>
+      <p v-if="lineaAcompanamiento" class="mt-1 text-sm text-gray-600 line-clamp-2">{{ lineaAcompanamiento }}</p>
     </div>
-  </div>
+  </article>
 </template>

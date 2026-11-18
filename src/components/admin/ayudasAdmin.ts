@@ -9,6 +9,10 @@ export const AYUDAS_ADMIN: Record<string, { titulo: string; contenido: Component
     titulo: 'Marcas del calendario',
     contenido: defineAsyncComponent(() => import('./AyudaCalendario.vue'))
   },
+  catalogo: {
+    titulo: 'Cómo editar el catálogo',
+    contenido: defineAsyncComponent(() => import('./AyudaCatalogo.vue'))
+  },
   solicitudes: {
     titulo: 'Estados de las solicitudes',
     contenido: defineAsyncComponent(() => import('./AyudaSolicitudes.vue'))

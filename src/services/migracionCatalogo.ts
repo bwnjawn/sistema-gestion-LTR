@@ -4,6 +4,7 @@
 // `hasSelectableSides` además de `sideMode`), la comida del plato como texto libre ('Almuerzo') y no tiene
 // `isActive`. Cada función devuelve el elemento ya normalizado y es idempotente.
 
+import { aplicarReglaDeAcompanamiento } from './menus'
 import type { Cabin, CabinFeature, CampingSite, CampingSiteModality, Dish, MealType, SideDishMode } from '../types/domain'
 
 const COMIDAS: readonly MealType[] = ['desayuno', 'almuerzo', 'once']
@@ -76,7 +77,7 @@ function modoAcompanamiento(p: any, opciones: string[]): SideDishMode {
 export function normalizarPlato(p: any): Dish {
   const opciones = textos(p.availableSides).length > 0 ? textos(p.availableSides) : textos(p.availableSideDishes)
   const modo = modoAcompanamiento(p, opciones)
-  return {
+  return aplicarReglaDeAcompanamiento({
     id: p.id,
     name: p.name,
     price: p.price,
@@ -88,7 +89,7 @@ export function normalizarPlato(p: any): Dish {
     ...(modo === 'fixed' ? { fixedSide: p.fixedSide || '' } : {}),
     image: p.image || p.mainImage || '',
     isActive: p.isActive !== false
-  }
+  })
 }
 
 /**

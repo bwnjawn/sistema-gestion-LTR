@@ -150,6 +150,13 @@ export class SupabaseGlobalSideRepository implements GlobalSideRepository {
     if (resultado.error) throw traducirError(resultado.error, 'No se pudo quitar el acompañamiento.')
     return this.list()
   }
+
+  /** Los platos se vinculan por id, así que conservan el acompañamiento con su nombre nuevo. */
+  async rename(anterior: string, nuevo: string): Promise<string[]> {
+    const resultado = await supabase().from('acompanamientos').update({ nombre: nuevo }).eq('nombre', anterior)
+    if (resultado.error) throw traducirError(resultado.error, 'No se pudo cambiar el nombre del acompañamiento.')
+    return this.list()
+  }
 }
 
 export function crearRepositoriosCatalogoSupabase() {

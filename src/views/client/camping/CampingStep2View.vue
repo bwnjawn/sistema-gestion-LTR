@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { CheckCircle2, Sparkles, Clock, Eye } from 'lucide-vue-next'
+import { CheckCircle2, Clock, Eye } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
@@ -90,7 +90,6 @@ function handleNext() {
     <div v-if="selectedCampingOption" class="bg-white rounded-3xl border-2 border-brand-border p-5 shadow-sm space-y-4">
       <div class="flex items-center justify-between">
         <span class="inline-flex items-center gap-1 bg-brand-light text-brand-dark px-3 py-1 rounded-full text-sm font-black border border-brand-border">
-          <Sparkles class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
           {{ selectedCampingOption?.isSpecial ? 'Espacio para Grupos Grandes' : 'Camping Estándar' }}
         </span>
         <span class="text-sm font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-200">

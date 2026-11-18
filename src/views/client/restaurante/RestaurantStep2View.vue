@@ -2,7 +2,7 @@
 import { useBloqueoScroll } from '../../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Minus, Plus, Sparkles, Check, AlertTriangle, AlertCircle, CheckCircle2, X } from 'lucide-vue-next'
+import { Minus, Plus, Check, AlertTriangle, AlertCircle, CheckCircle2, X } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
@@ -453,10 +453,7 @@ useBloqueoScroll(computed(() => showIncompleteModal.value))
           class="pt-3 border-t-2 border-gray-100 space-y-2.5"
         >
           <div class="flex items-center justify-between">
-            <span class="text-sm font-extrabold text-gray-600 flex items-center gap-1">
-              <Sparkles class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-              Acompañamientos:
-            </span>
+            <span class="text-sm font-extrabold text-gray-600">Acompañamientos:</span>
 
             <span 
               :class="[

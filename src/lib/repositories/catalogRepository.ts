@@ -19,6 +19,8 @@ export interface GlobalSideRepository {
   add(nombre: string): Promise<string[]>
   /** Quita un acompañamiento y devuelve la lista completa. */
   remove(nombre: string): Promise<string[]>
+  /** Cambia el nombre de un acompañamiento y devuelve la lista completa. */
+  rename(anterior: string, nuevo: string): Promise<string[]>
 }
 
 export class LocalGlobalSideRepository implements GlobalSideRepository {
@@ -46,6 +48,12 @@ export class LocalGlobalSideRepository implements GlobalSideRepository {
 
   async remove(nombre: string): Promise<string[]> {
     const lista = (await this.list()).filter(s => s !== nombre)
+    this.almacenamiento.escribir(this.clave, lista)
+    return lista
+  }
+
+  async rename(anterior: string, nuevo: string): Promise<string[]> {
+    const lista = (await this.list()).map(s => (s === anterior ? nuevo : s))
     this.almacenamiento.escribir(this.clave, lista)
     return lista
   }

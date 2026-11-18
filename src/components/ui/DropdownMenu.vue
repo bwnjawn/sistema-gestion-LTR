@@ -18,6 +18,8 @@ defineProps<{
   /** Ícono del botón cuando no tiene texto (por defecto, tres puntos). */
   triggerIcon?: Component
   ariaLabel?: string
+  /** Botón de tres puntos sin borde ni fondo, para esquinas de tarjetas (el área de toque sigue siendo de 44 px). */
+  discreto?: boolean
 }>()
 
 const emit = defineEmits<{ (e: 'select', key: string): void }>()
@@ -96,8 +98,11 @@ onBeforeUnmount(close)
     :aria-label="ariaLabel || label || 'Opciones'"
     @click.stop="toggle"
     :class="[
-      'touch-target inline-flex items-center justify-center gap-1.5 border border-brand-border bg-brand-light text-brand-dark font-black text-xs active:scale-95 hover:bg-gray-100 transition-all',
-      label ? 'py-2.5 px-3 rounded-2xl w-full' : 'p-2.5 rounded-xl'
+      'inline-flex items-center justify-center gap-1.5 text-brand-dark font-black text-xs transition-all',
+      discreto
+        ? 'w-11 h-11 rounded-full text-gray-600 active:bg-gray-100'
+        : 'touch-target border border-brand-border bg-brand-light active:scale-95 hover:bg-gray-100',
+      !discreto && (label ? 'py-2.5 px-3 rounded-2xl w-full' : 'p-2.5 rounded-xl')
     ]"
   >
     <template v-if="label">
@@ -106,7 +111,7 @@ onBeforeUnmount(close)
       <ChevronDown :class="['w-4 h-4 stroke-[2.5] transition-transform', isOpen ? 'rotate-180' : '']" />
     </template>
     <component :is="triggerIcon" v-else-if="triggerIcon" class="w-6 h-6 stroke-[2.5]" aria-hidden="true" />
-    <MoreVertical v-else class="w-4 h-4 stroke-[2.5]" />
+    <MoreVertical v-else :class="discreto ? 'w-5 h-5 stroke-2' : 'w-4 h-4 stroke-[2.5]'" />
   </button>
 
   <Teleport to="body">

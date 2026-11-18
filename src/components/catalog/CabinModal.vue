@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, watch, computed } from 'vue'
-import { X, Save, Plus, Trash2, ChevronLeft, ChevronRight, Users, BedDouble, Check } from 'lucide-vue-next'
+import { X, ChevronLeft, ChevronRight, Users, BedDouble, Check } from 'lucide-vue-next'
 import type { Cabin } from '../../types/catalog'
 import ImageGalleryEditor from '../ui/ImageGalleryEditor.vue'
+import ListaEtiquetas from '../ui/ListaEtiquetas.vue'
+import ModalEdicion from '../ui/ModalEdicion.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import { formatCLP } from '../../lib/format'
 
@@ -72,8 +74,6 @@ const form = ref<Partial<Cabin>>({
   enMantencion: false
 })
 
-const newFeatureInput = ref('')
-
 watch(() => props.cabin, (newCabin) => {
   currentImageIndex.value = 0
   if (newCabin) {
@@ -105,24 +105,6 @@ watch(() => props.cabin, (newCabin) => {
     }
   }
 }, { immediate: true })
-
-function addFeature() {
-  const trimmed = newFeatureInput.value.trim()
-  if (trimmed) {
-    if (!form.value.features) form.value.features = []
-    const currentList = form.value.features as string[]
-    if (!currentList.includes(trimmed)) {
-      currentList.push(trimmed)
-    }
-    newFeatureInput.value = ''
-  }
-}
-
-function removeFeature(idx: number) {
-  if (form.value.features) {
-    (form.value.features as string[]).splice(idx, 1)
-  }
-}
 
 function handleSave() {
   const images = form.value.images || []
@@ -259,98 +241,66 @@ useBloqueoScroll(computed(() => props.isOpen))
       <!-- =================================================== -->
       <!-- 2. MODO ADMINISTRADOR (FORMULARIO EDITABLE)        -->
       <!-- =================================================== -->
-      <template v-else>
-        <!-- Header -->
-        <div class="p-4 sm:p-5 border-b-2 border-brand-border bg-brand-light flex items-center justify-between">
-          <div>
-            <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">
-              Catálogo de Cabañas
-            </span>
-            <h3 class="text-lg font-black text-brand-dark leading-tight">
-              {{ isEditing ? 'Editar ' + form.name : 'Nueva Cabaña' }}
-            </h3>
-          </div>
-          <button aria-label="Cerrar" type="button" @click="close" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark hover:bg-gray-100">
-            <X class="w-5 h-5 stroke-[2.5]" />
-          </button>
+      <ModalEdicion
+        v-else
+        :titulo="isEditing ? 'Editar cabaña' : 'Nueva cabaña'"
+        :subtitulo="isEditing ? form.name : undefined"
+        texto-guardar="Guardar cabaña"
+        @cerrar="close"
+        @guardar="handleSave"
+      >
+        <div>
+          <label class="campo-etiqueta" for="cabana-nombre">Nombre de la cabaña</label>
+          <input id="cabana-nombre" v-model="form.name" required type="text" placeholder="Ej: Cabaña 6" class="campo-entrada" />
         </div>
 
-        <!-- Formulario -->
-        <form @submit.prevent="handleSave" class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs font-bold grow">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-gray-700 mb-1">Nombre de la cabaña *</label>
-            <input v-model="form.name" required type="text" placeholder="Ej: Cabaña 6" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-sm" />
+            <label class="campo-etiqueta" for="cabana-capacidad">Capacidad máxima</label>
+            <input id="cabana-capacidad" v-model.number="form.capacity" required type="number" inputmode="numeric" min="1" max="20" class="campo-entrada" />
           </div>
-
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="block text-gray-700 mb-1">Capacidad Máxima *</label>
-              <input v-model.number="form.capacity" required type="number" min="1" max="20" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-sm" />
-            </div>
-            <div>
-              <label class="block text-gray-700 mb-1">Precio por Noche (\$) *</label>
-              <input v-model.number="form.pricePerNight" required type="number" min="0" step="1000" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-sm" />
-            </div>
-          </div>
-
           <div>
-            <label class="block text-gray-700 mb-1">Distribución de Camas</label>
-            <input v-model="form.bedsDescription" type="text" placeholder="Ej: 1 Cama Matrimonial + 2 Literas" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs" />
+            <label class="campo-etiqueta" for="cabana-precio">Precio por noche</label>
+            <input id="cabana-precio" v-model.number="form.pricePerNight" required type="number" inputmode="numeric" min="0" step="1000" class="campo-entrada" />
           </div>
+        </div>
 
-          <div>
-            <label class="block text-gray-700 mb-1">Descripción General</label>
-            <textarea v-model="form.description" rows="2" placeholder="Cabaña totalmente equipada..." class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs"></textarea>
-          </div>
+        <div>
+          <label class="campo-etiqueta" for="cabana-camas">Distribución de camas</label>
+          <input id="cabana-camas" v-model="form.bedsDescription" type="text" placeholder="Ej: 1 cama matrimonial + 2 literas" class="campo-entrada" />
+        </div>
 
-          <!-- Marca de servicio o mantención (SCRUM-266) -->
-          <label class="flex items-start gap-3 bg-amber-50 p-3 rounded-2xl border-2 border-amber-500 cursor-pointer touch-target">
-            <input type="checkbox" v-model="form.enMantencion" class="mt-0.5 w-6 h-6 shrink-0 accent-brand-dark" />
-            <span class="space-y-0.5">
-              <span class="block text-sm font-black text-amber-950">En mantención</span>
-              <span class="block text-xs font-bold text-amber-950">
-                Mientras esté activa, la cabaña no se ofrece para nuevas reservas (ni al cliente ni a ti). Las reservas que ya tiene no cambian. Desactívala cuando vuelva a estar lista.
-              </span>
+        <div>
+          <label class="campo-etiqueta" for="cabana-descripcion">Descripción</label>
+          <textarea id="cabana-descripcion" v-model="form.description" rows="3" placeholder="Cabaña totalmente equipada…" class="campo-entrada"></textarea>
+        </div>
+
+        <!-- Marca de servicio o mantención (SCRUM-266) -->
+        <label class="flex items-start gap-3 bg-amber-50 p-4 rounded-2xl border border-amber-400 cursor-pointer">
+          <input type="checkbox" v-model="form.enMantencion" class="mt-0.5 w-6 h-6 shrink-0 accent-brand-dark" />
+          <span class="space-y-1">
+            <span class="block font-bold text-amber-950">En mantención</span>
+            <span class="block text-sm text-amber-950">
+              No se ofrece para nuevas reservas. Las que ya tiene no cambian.
             </span>
-          </label>
+          </span>
+        </label>
 
-          <!-- Galería de Fotos (hasta 8) -->
-          <ImageGalleryEditor
-            v-model:images="form.images!"
-            v-model:mainImage="form.mainImage"
-            :max-images="8"
-            label="Fotografías de la Cabaña"
-          />
+        <!-- Galería de fotos (hasta 8) -->
+        <ImageGalleryEditor
+          v-model:images="form.images!"
+          v-model:mainImage="form.mainImage"
+          :max-images="8"
+          label="Fotografías"
+        />
 
-          <!-- Equipamientos / Servicios -->
-          <div class="space-y-2 pt-1">
-            <label class="block text-gray-700">Servicios incluidos:</label>
-            <div class="flex gap-2">
-              <input v-model="newFeatureInput" type="text" placeholder="Ej: Estufa a leña" class="flex-1 p-2.5 rounded-xl border-2 border-brand-border bg-brand-light text-xs font-bold" @keyup.enter.prevent="addFeature" />
-              <button type="button" @click="addFeature" class="px-3.5 bg-brand-dark text-white rounded-xl font-black text-xs flex items-center gap-1">
-                <Plus class="w-3.5 h-3.5 stroke-[2.5]" /> Agregar
-              </button>
-            </div>
-
-            <div v-if="form.features && form.features.length > 0" class="flex flex-wrap gap-1.5 pt-1">
-              <span v-for="(feat, idx) in (form.features as string[])" :key="idx" class="px-2.5 py-1 bg-brand-light border border-brand-border rounded-lg text-xs font-bold flex items-center gap-1 text-brand-dark">
-                {{ feat }}
-                <button aria-label="Quitar característica" type="button" @click="removeFeature(idx)" class="text-rose-600 hover:text-rose-800 ml-1">
-                  <Trash2 class="w-3 h-3 stroke-[2.5]" />
-                </button>
-              </span>
-            </div>
-          </div>
-
-          <!-- Botones de Acción -->
-          <div class="pt-2 flex gap-2">
-            <button type="button" @click="close" class="flex-1 py-3 bg-brand-light border-2 border-brand-border rounded-2xl font-black text-brand-dark">Cancelar</button>
-            <button type="submit" class="flex-1 py-3 bg-brand-dark text-white rounded-2xl font-black border-2 border-brand-dark flex items-center justify-center gap-1.5">
-              <Save class="w-4 h-4 stroke-[2.5]" /> Guardar Cabaña
-            </button>
-          </div>
-        </form>
-      </template>
+        <ListaEtiquetas
+          :model-value="(form.features as string[] | undefined) ?? []"
+          etiqueta="Servicios incluidos"
+          placeholder="Ej: Estufa a leña"
+          @update:model-value="form.features = $event"
+        />
+      </ModalEdicion>
 
     </div>
   </div>

@@ -56,11 +56,18 @@ describe('normalizarPlato', () => {
     expect(p).not.toHaveProperty('mainImage')
   })
 
-  it('un plato con acompañamiento fijo y sin sideMode queda en modo fixed', () => {
-    const p = normalizarPlato({ id: 'p2', name: 'Once', price: 1, mealCategory: 'Once', hasSelectableSides: false, fixedSide: 'Kuchen' })
+  it('un plato de almuerzo con acompañamiento fijo y sin sideMode queda en modo fixed', () => {
+    const p = normalizarPlato({ id: 'p2', name: 'Cazuela', price: 1, mealCategory: 'Almuerzo', hasSelectableSides: false, fixedSide: 'Pan amasado' })
     expect(p.sideMode).toBe('fixed')
-    expect(p.fixedSide).toBe('Kuchen')
+    expect(p.fixedSide).toBe('Pan amasado')
     expect(p.availableSides).toEqual([])
+  })
+
+  it('un plato de once o desayuno pierde el acompañamiento y lo fijo pasa a la descripción', () => {
+    const p = normalizarPlato({ id: 'p4', name: 'Once', price: 1, mealCategory: 'Once', hasSelectableSides: false, fixedSide: 'Kuchen' })
+    expect(p.sideMode).toBe('none')
+    expect(p).not.toHaveProperty('fixedSide')
+    expect(p.description).toBe('Kuchen')
   })
 
   it('un plato sin acompañamiento queda en modo none', () => {

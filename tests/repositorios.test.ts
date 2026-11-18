@@ -97,6 +97,15 @@ describe('repositorio local por entidad (SCRUM-246)', () => {
     expect(mem.existe('global_side_dishes')).toBe(false)
     expect(await repos.globalSides.remove('Quinoa')).not.toContain('Quinoa')
   })
+
+  it('renombrar un acompañamiento global cambia el nombre sin mover su lugar', async () => {
+    const repos = crearRepositoriosLocales(crearAlmacenamientoEnMemoria())
+    const antes = await repos.globalSides.list()
+    const lista = await repos.globalSides.rename(antes[0], 'Nombre nuevo')
+    expect(lista[0]).toBe('Nombre nuevo')
+    expect(lista).toHaveLength(antes.length)
+    expect(lista).not.toContain(antes[0])
+  })
 })
 
 describe('repositorio de solicitudes y pagos', () => {
