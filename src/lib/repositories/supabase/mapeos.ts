@@ -5,6 +5,7 @@
 // `ReservationRequest`.
 
 import { bookingToRequest, requestToBooking } from '../../../services/adaptadoresReserva'
+import { aplicarReglaDeAcompanamiento } from '../../../services/menus'
 import type {
   Booking,
   BookingItem,
@@ -162,7 +163,8 @@ export interface FilaPlato {
 
 export function platoDeFila(f: FilaPlato): Dish {
   const lados = (f.plato_acompanamientos ?? []).map(v => v.acompanamientos?.nombre).filter((n): n is string => !!n)
-  return {
+  // El desayuno y la once no llevan acompañamiento: si la base aún los tiene, se leen ya sin él.
+  return aplicarReglaDeAcompanamiento({
     id: f.id,
     name: f.nombre,
     price: f.precio,
@@ -173,7 +175,7 @@ export function platoDeFila(f: FilaPlato): Dish {
     ...(f.modo_acompanamiento === 'fixed' && f.acompanamiento_fijo ? { fixedSide: f.acompanamiento_fijo } : {}),
     ...(f.imagen ? { image: f.imagen } : {}),
     isActive: f.activo
-  }
+  })
 }
 
 /** Columnas de `platos`; los acompañamientos disponibles van aparte (tabla `plato_acompanamientos`). */

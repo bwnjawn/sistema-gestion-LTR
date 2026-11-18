@@ -1,6 +1,6 @@
 # SCRUM-229 — CRUD de acompañamientos (sin, fijo o elegible)
 
-Estado: borrador
+Estado: hecho (pendiente de verificar a mano)
 Fase: 2 (16 al 20/11)
 
 ## Contexto
@@ -9,7 +9,15 @@ SCRUM-62 (platos) y SCRUM-35 (acompañamiento fijo) quedaron finalizadas, pero f
 ## Descripción (Jira)
 "Considerar que falta agregar operación CRUD de con o sin acompañamiento de elección."
 
-## Situación actual en el código
+## Resultado (18/11)
+Al revisar el código, los campos duplicados y la migración de datos antiguos ya estaban resueltos (`services/migracionCatalogo.ts`). Lo que faltaba y se hizo:
+- **Renombrar** un acompañamiento (`globalSides.rename`, `catalogStore.renameGlobalSideDish`); el cambio se aplica también a los platos que lo ofrecen.
+- **Bloquear la eliminación** de un acompañamiento en uso por platos activos y listar cuáles lo usan (`platosQueUsanAcompanamiento`).
+- **Validar nombres** (vacío o repetido, sin distinguir mayúsculas) y **platos** (`fixed` exige acompañamiento; `choice` exige al menos una opción) en `services/menus.ts`.
+- Mensajes en la pestaña "Acompañamientos generales" y en el formulario del plato.
+- Preguntas abiertas resueltas con lo que ya hacía la app: la lista es **global**, y el cliente puede repartir cantidades entre varias opciones (`sides: Record<string, number>`).
+
+## Situación actual en el código (antes del 18/11)
 `types/domain.ts` ya modela el comportamiento:
 - `Dish.sideMode`: `'none' | 'fixed' | 'choice'`.
 - `Dish.fixedSide`, `Dish.availableSides` y `Dish.availableSideDishes`.

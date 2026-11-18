@@ -2,7 +2,7 @@
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, computed } from 'vue'
 import { 
-  Home, Tent, Utensils, Plus, Sparkles, Trash2, AlertTriangle, Pencil, Wrench, X 
+  Home, Tent, Utensils, Plus, Trash2, AlertTriangle, Pencil, Wrench, X, Check
 } from 'lucide-vue-next'
 import DropdownMenu from '../../components/ui/DropdownMenu.vue'
 import CabinCard from '../../components/catalog/CabinCard.vue'
@@ -16,7 +16,7 @@ import { useRequestsStore } from '../../stores/requestsStore'
 import { getUpcomingCabinRequests } from '../../services/availability'
 import { formatDateShort, todayISO } from '../../lib/dates'
 import type { MealType, ReservationRequest } from '../../types/domain'
-import { ETIQUETAS_COMIDA, ORDEN_COMIDAS } from '../../services/menus'
+import { ETIQUETAS_COMIDA, ORDEN_COMIDAS, platosQueUsanAcompanamiento } from '../../services/menus'
 import type { Cabin, CampingSite, Dish } from '../../types/catalog'
 
 const catalogStore = useCatalogStore()
@@ -100,16 +100,44 @@ function handleCardAction(key: string, kind: 'cabin' | 'camping' | 'dish', item:
 
 // Acompañamiento Global Entrada Directa
 const newSideInput = ref('')
+/** Mensaje de la pestaña de acompañamientos: nombre repetido, o acompañamiento en uso que no se puede eliminar. */
+const avisoAcompanamientos = ref<string | null>(null)
+/** Acompañamiento que se está renombrando y el nombre que se va escribiendo. */
+const sideEnEdicion = ref<string | null>(null)
+const sideNuevoNombre = ref('')
 
-function addSideDirectly() {
-  if (newSideInput.value.trim()) {
-    catalogStore.addGlobalSideDish(newSideInput.value.trim())
-    newSideInput.value = ''
+async function addSideDirectly() {
+  if (!newSideInput.value.trim()) return
+  avisoAcompanamientos.value = await catalogStore.addGlobalSideDish(newSideInput.value)
+  if (!avisoAcompanamientos.value) newSideInput.value = ''
+}
+
+function startRenameSide(side: string) {
+  sideEnEdicion.value = side
+  sideNuevoNombre.value = side
+  avisoAcompanamientos.value = null
+}
+
+async function saveRenameSide() {
+  if (sideEnEdicion.value === null) return
+  const error = await catalogStore.renameGlobalSideDish(sideEnEdicion.value, sideNuevoNombre.value)
+  avisoAcompanamientos.value = error
+  if (!error) sideEnEdicion.value = null
+}
+
+async function deleteSideDish(side: string) {
+  avisoAcompanamientos.value = null
+  const enUso = await catalogStore.deleteGlobalSideDish(side)
+  if (enUso.length > 0) {
+    avisoAcompanamientos.value =
+      `No se puede eliminar "${side}": lo ofrece ${enUso.length === 1 ? 'el plato' : 'los platos'} ${enUso.join(', ')}. ` +
+      'Quítalo de ' + (enUso.length === 1 ? 'ese plato' : 'esos platos') + ' y vuelve a intentarlo.'
   }
 }
 
-function deleteSideDish(side: string) {
-  catalogStore.deleteGlobalSideDish(side)
+/** Cuántos platos activos ofrecen el acompañamiento (se muestra en la lista). */
+function cantidadDePlatosConSide(side: string): number {
+  return platosQueUsanAcompanamiento(side, catalogStore.todosLosPlatos).length
 }
 
 function handleGlobalSideAdded(sideName: string) {
@@ -310,10 +338,8 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
           :key="dish.id" 
           :dish="dish"
         >
-          <template #actions="{ dish: item }">
-            <div class="flex items-center justify-end pt-2 border-t border-gray-100">
-            <DropdownMenu :items="cardMenuItems" :aria-label="`Opciones de ${item.name}`" @select="key => handleCardAction(key, 'dish', item)" />
-          </div>
+          <template #menu="{ dish: item }">
+            <DropdownMenu discreto :items="cardMenuItems" :aria-label="`Opciones de ${item.name}`" @select="key => handleCardAction(key, 'dish', item)" />
           </template>
         </DishCard>
       </div>
@@ -328,14 +354,33 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
         </div>
 
         <div class="space-y-2">
+          <p v-if="avisoAcompanamientos" role="alert" class="p-3 rounded-2xl bg-amber-50 border-2 border-amber-600 text-amber-950 text-sm font-black">{{ avisoAcompanamientos }}</p>
           <div v-for="side in catalogStore.sideDishes" :key="side" class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <Sparkles class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-              <span class="text-sm font-black text-brand-dark">{{ side }}</span>
-            </div>
-            <button aria-label="Eliminar acompañamiento" type="button" @click="deleteSideDish(side)" class="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 active:scale-95 touch-target">
-              <Trash2 class="w-3.5 h-3.5 stroke-[2.5]" />
-            </button>
+            <form v-if="sideEnEdicion === side" class="flex items-center gap-2 grow" @submit.prevent="saveRenameSide">
+              <input v-model="sideNuevoNombre" type="text" aria-label="Nuevo nombre del acompañamiento" class="flex-1 min-w-0 p-2.5 rounded-xl border-2 border-brand-border bg-brand-light text-base" @keyup.esc="sideEnEdicion = null" />
+              <button type="submit" aria-label="Guardar nombre" class="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 active:scale-95">
+                <Check class="w-5 h-5 stroke-2" />
+              </button>
+              <button type="button" aria-label="Cancelar" @click="sideEnEdicion = null" class="w-11 h-11 shrink-0 flex items-center justify-center rounded-xl bg-brand-light border border-brand-border text-brand-dark active:scale-95">
+                <X class="w-5 h-5 stroke-2" />
+              </button>
+            </form>
+            <template v-else>
+              <div class="min-w-0">
+                <p class="text-base text-brand-dark truncate">{{ side }}</p>
+                <p class="text-sm text-gray-600">
+                  {{ cantidadDePlatosConSide(side) === 0 ? 'Sin platos' : cantidadDePlatosConSide(side) === 1 ? 'En 1 plato' : `En ${cantidadDePlatosConSide(side)} platos` }}
+                </p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button aria-label="Cambiar nombre" type="button" @click="startRenameSide(side)" class="w-11 h-11 flex items-center justify-center rounded-xl bg-brand-light border border-brand-border text-brand-dark active:scale-95">
+                  <Pencil class="w-5 h-5 stroke-2" />
+                </button>
+                <button aria-label="Eliminar acompañamiento" type="button" @click="deleteSideDish(side)" class="w-11 h-11 flex items-center justify-center rounded-xl bg-rose-50 border border-rose-200 text-rose-700 active:scale-95">
+                  <Trash2 class="w-5 h-5 stroke-2" />
+                </button>
+              </div>
+            </template>
           </div>
         </div>
       </div>

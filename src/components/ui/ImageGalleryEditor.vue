@@ -67,10 +67,10 @@ function setAsMain(imgUrl: string) {
 </script>
 
 <template>
-  <div class="space-y-2">
-    <div class="flex items-center justify-between">
-      <label class="block text-xs font-bold text-gray-700">{{ label }} (máx. {{ maxImages }})</label>
-      <span class="text-xs font-black text-gray-400">{{ images.length }} / {{ maxImages }}</span>
+  <div>
+    <div class="flex items-baseline justify-between">
+      <label class="campo-etiqueta">{{ label }}</label>
+      <span class="text-sm text-gray-600 mb-1.5">{{ images.length }} de {{ maxImages }}</span>
     </div>
 
     <!-- Grid de imágenes -->
@@ -78,42 +78,42 @@ function setAsMain(imgUrl: string) {
       <div
         v-for="(img, idx) in images"
         :key="idx"
-        class="relative aspect-square rounded-xl overflow-hidden border-2 border-brand-border group bg-gray-100"
+        class="relative aspect-square rounded-xl overflow-hidden border border-gray-300 bg-gray-100"
       >
-        <img :src="img" class="w-full h-full object-cover" />
+        <img :src="img" alt="" class="w-full h-full object-cover" />
 
-        <!-- Badge Foto Principal -->
+        <!-- Foto principal: la estrella rellena indica cuál es -->
         <button
           type="button"
+          :aria-label="mainImage === img ? 'Foto principal' : 'Marcar como foto principal'"
+          :aria-pressed="mainImage === img"
           @click="setAsMain(img)"
-          :title="mainImage === img ? 'Foto Principal' : 'Marcar como Principal'"
           :class="[
-            'absolute top-1 left-1 p-1 rounded-lg backdrop-blur-xs transition-all',
-            mainImage === img ? 'bg-amber-400 text-slate-900 font-black' : 'bg-black/40 text-white hover:bg-black/60'
+            'absolute top-1 left-1 w-8 h-8 flex items-center justify-center rounded-full transition-all',
+            mainImage === img ? 'bg-amber-400 text-slate-900' : 'bg-black/50 text-white'
           ]"
         >
-          <Star class="w-3 h-3 fill-current stroke-[2.5]" />
+          <Star :class="['w-4 h-4 stroke-2', mainImage === img ? 'fill-current' : '']" />
         </button>
 
         <!-- Botón Eliminar -->
-        <button aria-label="Quitar imagen"
+        <button
+          aria-label="Quitar imagen"
           type="button"
           @click="removeImage(idx)"
-          class="absolute top-1 right-1 p-1 rounded-lg bg-rose-600/90 text-white hover:bg-rose-700 transition-all"
+          class="absolute top-1 right-1 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white active:scale-95"
         >
-          <X class="w-3 h-3 stroke-[2.5]" />
+          <X class="w-4 h-4 stroke-2" />
         </button>
       </div>
 
       <!-- Botón Subir -->
       <label
         v-if="images.length < maxImages"
-        class="aspect-square rounded-xl border-2 border-dashed border-brand-border bg-brand-light hover:bg-gray-100 flex flex-col items-center justify-center cursor-pointer p-2 text-center transition-all"
+        class="aspect-square rounded-xl border border-dashed border-gray-400 bg-white flex flex-col items-center justify-center gap-1 cursor-pointer p-2 text-center text-gray-600 active:bg-gray-50"
       >
-        <Upload class="w-5 h-5 text-brand-accent stroke-[2.5] mb-1" />
-        <span class="text-xs font-black text-brand-dark">
-          {{ isUploading ? 'Procesando...' : 'Subir Foto' }}
-        </span>
+        <Upload class="w-5 h-5 stroke-2" />
+        <span class="text-sm">{{ isUploading ? 'Procesando…' : 'Agregar foto' }}</span>
         <input
           type="file"
           accept="image/*"
@@ -124,5 +124,6 @@ function setAsMain(imgUrl: string) {
         />
       </label>
     </div>
+    <p class="campo-ayuda">Toca la estrella de una foto para elegirla como principal.</p>
   </div>
 </template>

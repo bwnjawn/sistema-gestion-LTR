@@ -87,6 +87,77 @@ describe('catalogStore con repositorio (SCRUM-246)', () => {
   })
 })
 
+describe('acompañamientos del catálogo (SCRUM-229)', () => {
+  beforeEach(() => preparar())
+
+  async function conPlatoQueUsa(nombre: string) {
+    const store = useCatalogStore()
+    await store.init()
+    await store.addGlobalSideDish(nombre)
+    const plato = await store.addDish({ name: 'Plato de prueba', sideMode: 'choice', availableSides: [nombre, 'Otro'] })
+    return { store, plato }
+  }
+
+  it('agregar un acompañamiento repetido devuelve el motivo y no lo guarda dos veces', async () => {
+    const store = useCatalogStore()
+    await store.init()
+    expect(await store.addGlobalSideDish('Quinoa')).toBeNull()
+    expect(await store.addGlobalSideDish('quinoa')).toContain('Ya existe')
+    expect(store.sideDishes.filter(s => s.toLowerCase() === 'quinoa')).toHaveLength(1)
+  })
+
+  it('renombrar un acompañamiento actualiza también los platos que lo ofrecen', async () => {
+    const { store, plato } = await conPlatoQueUsa('Quinoa')
+    expect(await store.renameGlobalSideDish('Quinoa', 'Quinoa con verduras')).toBeNull()
+    expect(store.sideDishes).toContain('Quinoa con verduras')
+    expect(store.sideDishes).not.toContain('Quinoa')
+    expect(store.dishes.find(d => d.id === plato.id)!.availableSides).toEqual(['Quinoa con verduras', 'Otro'])
+    expect(mem.leer<any[]>('dishes', []).find(d => d.id === plato.id).availableSides).toEqual(['Quinoa con verduras', 'Otro'])
+  })
+
+  it('no se puede renombrar con el nombre de otro acompañamiento', async () => {
+    const store = useCatalogStore()
+    await store.init()
+    const [a, b] = store.sideDishes
+    expect(await store.renameGlobalSideDish(a, b)).toContain('Ya existe')
+    expect(store.sideDishes).toContain(a)
+  })
+
+  it('un acompañamiento en uso no se elimina y se informan los platos que lo usan', async () => {
+    const { store } = await conPlatoQueUsa('Quinoa')
+    expect(await store.deleteGlobalSideDish('Quinoa')).toEqual(['Plato de prueba'])
+    expect(store.sideDishes).toContain('Quinoa')
+  })
+
+  it('un acompañamiento que nadie usa se elimina', async () => {
+    const store = useCatalogStore()
+    await store.init()
+    await store.addGlobalSideDish('Quinoa')
+    expect(await store.deleteGlobalSideDish('Quinoa')).toEqual([])
+    expect(store.sideDishes).not.toContain('Quinoa')
+  })
+
+  it('un plato de once se guarda sin acompañamiento aunque se intente configurarlo', async () => {
+    const store = useCatalogStore()
+    await store.init()
+    const once = await store.addDish({ name: 'Once', mealType: 'once', sideMode: 'choice', availableSides: ['Papas'] })
+    expect(once.sideMode).toBe('none')
+    expect(once.availableSides).toEqual([])
+    const almuerzo = await store.addDish({ name: 'Cazuela', mealType: 'almuerzo', sideMode: 'choice', availableSides: ['Papas'] })
+    await store.updateDish(almuerzo.id, { mealType: 'desayuno' })
+    expect(store.dishes.find(d => d.id === almuerzo.id)!.sideMode).toBe('none')
+    expect(mem.leer<any[]>('dishes', []).find(d => d.id === almuerzo.id).availableSides).toEqual([])
+  })
+
+  it('si no se puede guardar el cambio de nombre, todo vuelve a como estaba', async () => {
+    const { store, plato } = await conPlatoQueUsa('Quinoa')
+    mem.estado.fallar = true
+    expect(await store.renameGlobalSideDish('Quinoa', 'Otra cosa')).toBeTruthy()
+    expect(store.sideDishes).toContain('Quinoa')
+    expect(store.dishes.find(d => d.id === plato.id)!.availableSides).toContain('Quinoa')
+  })
+})
+
 describe('requestsStore con repositorio', () => {
   beforeEach(() => preparar())
 

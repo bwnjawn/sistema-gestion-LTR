@@ -118,9 +118,8 @@ export const DEFAULT_DISHES: Dish[] = [
     price: 10800,
     description: 'Pan amasado, mermelada casera, mantequilla, huevos de campo y té/café.',
     mealType: 'desayuno',
-    sideMode: 'fixed',
+    sideMode: 'none',
     availableSides: [],
-    fixedSide: 'Pan amasado y mermeladas',
     image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=800&q=80',
     isActive: true
   },
@@ -130,9 +129,8 @@ export const DEFAULT_DISHES: Dish[] = [
     price: 12000,
     description: 'Sopaipillas pasadas, kuchen casero, queso fresco y café/té/mate.',
     mealType: 'once',
-    sideMode: 'fixed',
+    sideMode: 'none',
     availableSides: [],
-    fixedSide: 'Sopaipillas y kuchen',
     image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
     isActive: true
   }

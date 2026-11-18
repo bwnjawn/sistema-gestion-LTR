@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, watch, computed } from 'vue'
-import { X, Save, Plus, Check } from 'lucide-vue-next'
 import type { Dish, MealType, SideDishMode } from '../../types/domain'
-import { ETIQUETAS_COMIDA, ORDEN_COMIDAS } from '../../services/menus'
+import { ETIQUETAS_COMIDA, ORDEN_COMIDAS, comidaAdmiteAcompanamiento, validarNombreAcompanamiento, validarPlato } from '../../services/menus'
 import ImageGalleryEditor from '../ui/ImageGalleryEditor.vue'
+import ListaFilas from '../ui/ListaFilas.vue'
+import ModalEdicion from '../ui/ModalEdicion.vue'
 
 const props = defineProps<{
   isOpen: boolean
@@ -45,6 +46,16 @@ const form = ref<{
 
 const newSideInput = ref('')
 
+const MODOS: Array<{ valor: SideDishMode; etiqueta: string }> = [
+  { valor: 'choice', etiqueta: 'A elección' },
+  { valor: 'fixed', etiqueta: 'Fijo' },
+  { valor: 'none', etiqueta: 'Ninguno' }
+]
+/** Mensaje de error del formulario (nombre repetido, configuración incompleta). */
+const errorForm = ref<string | null>(null)
+
+watch(() => [props.dish, props.isOpen], () => { errorForm.value = null })
+
 watch(() => props.dish, (newDish) => {
   if (newDish) {
     isEditing.value = true
@@ -79,36 +90,61 @@ watch(() => props.dish, (newDish) => {
   }
 }, { immediate: true })
 
-function toggleSideSelection(side: string) {
-  const idx = form.value.availableSides.indexOf(side)
-  if (idx !== -1) {
-    form.value.availableSides.splice(idx, 1)
-  } else {
-    form.value.availableSides.push(side)
-  }
+/** Desayuno y once no llevan acompañamiento: la sección se oculta. */
+const admiteAcompanamiento = computed(() => comidaAdmiteAcompanamiento(form.value.mealType))
+
+/** Acompañamientos del catálogo que aún no se ofrecen en este plato (opciones del selector). */
+const sidesPorAgregar = computed(() => (props.globalSideDishes ?? []).filter(s => !form.value.availableSides.includes(s)))
+
+/** Se elige en el selector del teléfono y pasa a la lista de opciones del plato. */
+function agregarSide(event: Event) {
+  const select = event.target as HTMLSelectElement
+  if (select.value && !form.value.availableSides.includes(select.value)) form.value.availableSides.push(select.value)
+  select.value = ''
+}
+
+function quitarSide(side: string) {
+  form.value.availableSides = form.value.availableSides.filter(s => s !== side)
 }
 
 function handleAddGlobalSide() {
   const trimmed = newSideInput.value.trim()
-  if (trimmed) {
-    emit('add-global-side', trimmed)
-    if (!form.value.availableSides.includes(trimmed)) {
-      form.value.availableSides.push(trimmed)
-    }
-    newSideInput.value = ''
+  if (!trimmed) return
+  const invalido = validarNombreAcompanamiento(trimmed, props.globalSideDishes ?? [])
+  if (invalido) {
+    errorForm.value = invalido
+    return
   }
+  errorForm.value = null
+  emit('add-global-side', trimmed)
+  if (!form.value.availableSides.includes(trimmed)) {
+    form.value.availableSides.push(trimmed)
+  }
+  newSideInput.value = ''
 }
 
 function handleSave() {
+  const invalido = validarPlato({
+    name: form.value.name,
+    mealType: form.value.mealType,
+    sideMode: form.value.sideMode,
+    fixedSide: form.value.fixedSide,
+    availableSides: form.value.availableSides
+  })
+  if (invalido) {
+    errorForm.value = invalido
+    return
+  }
+  errorForm.value = null
   const imgUrl = form.value.mainImage || (form.value.images && form.value.images[0]) || ''
   emit('save', {
     name: form.value.name,
     price: form.value.price,
     description: form.value.description,
     mealType: form.value.mealType,
-    sideMode: form.value.sideMode,
-    fixedSide: form.value.sideMode === 'fixed' ? form.value.fixedSide : '',
-    availableSides: form.value.sideMode === 'choice' ? form.value.availableSides : [],
+    sideMode: admiteAcompanamiento.value ? form.value.sideMode : 'none',
+    fixedSide: admiteAcompanamiento.value && form.value.sideMode === 'fixed' ? form.value.fixedSide : '',
+    availableSides: admiteAcompanamiento.value && form.value.sideMode === 'choice' ? form.value.availableSides : [],
     image: imgUrl
   })
   emit('close')
@@ -122,46 +158,35 @@ useBloqueoScroll(computed(() => props.isOpen))
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl border-2 border-brand-border shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-      <!-- Header -->
-      <div class="p-4 sm:p-5 border-b-2 border-brand-border bg-brand-light flex items-center justify-between">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+      <ModalEdicion
+        :titulo="isEditing ? 'Editar plato' : 'Nuevo plato'"
+        :subtitulo="isEditing ? form.name : undefined"
+        texto-guardar="Guardar plato"
+        @cerrar="close"
+        @guardar="handleSave"
+      >
         <div>
-          <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">
-            Menú de Restaurante
-          </span>
-          <h3 class="text-lg font-black text-brand-dark leading-tight">
-            {{ isEditing ? 'Editar ' + form.name : 'Nuevo Plato' }}
-          </h3>
-        </div>
-        <button aria-label="Cerrar" type="button" @click="close" class="p-2 rounded-full bg-white border border-brand-border text-brand-dark hover:bg-gray-100">
-          <X class="w-5 h-5 stroke-[2.5]" />
-        </button>
-      </div>
-
-      <!-- Formulario -->
-      <form @submit.prevent="handleSave" class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs font-bold grow">
-        <div>
-          <label class="block text-gray-700 mb-1">Nombre del Plato *</label>
-          <input v-model="form.name" required type="text" placeholder="Ej: Asado de Cordero" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-sm" />
+          <label class="campo-etiqueta" for="plato-nombre">Nombre del plato</label>
+          <input id="plato-nombre" v-model="form.name" required type="text" placeholder="Ej: Asado de cordero" class="campo-entrada" />
         </div>
 
-        <div class="grid grid-cols-2 gap-2.5">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-gray-700 mb-1">Precio (\$) *</label>
-            <input v-model.number="form.price" required type="number" min="0" step="500" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-sm" />
+            <label class="campo-etiqueta" for="plato-precio">Precio</label>
+            <input id="plato-precio" v-model.number="form.price" required type="number" inputmode="numeric" min="0" step="500" class="campo-entrada" />
           </div>
-
           <div>
-            <label class="block text-gray-700 mb-1">Categoría de Comida *</label>
-            <select v-model="form.mealType" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-black text-xs">
+            <label class="campo-etiqueta" for="plato-comida">Comida</label>
+            <select id="plato-comida" v-model="form.mealType" class="campo-entrada">
               <option v-for="comida in ORDEN_COMIDAS" :key="comida" :value="comida">{{ ETIQUETAS_COMIDA[comida] }}</option>
             </select>
           </div>
         </div>
 
         <div>
-          <label class="block text-gray-700 mb-1">Descripción</label>
-          <textarea v-model="form.description" rows="2" placeholder="Acompañado de papas al vapor y ensaladas..." class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs"></textarea>
+          <label class="campo-etiqueta" for="plato-descripcion">Descripción</label>
+          <textarea id="plato-descripcion" v-model="form.description" rows="3" placeholder="Qué incluye el plato…" class="campo-entrada"></textarea>
         </div>
 
         <!-- Fotografía -->
@@ -169,82 +194,76 @@ useBloqueoScroll(computed(() => props.isOpen))
           v-model:images="form.images"
           v-model:mainImage="form.mainImage"
           :max-images="1"
-          label="Fotografía del Plato"
+          label="Fotografía"
         />
 
-        <!-- Configuración de Acompañamientos -->
-        <div class="space-y-2 pt-2 border-t border-gray-100">
-          <label class="block text-gray-700 font-black">Configuración de Acompañamientos</label>
-          <div class="grid grid-cols-3 gap-1.5 p-1 bg-brand-light rounded-xl border border-brand-border">
-            <button
-              type="button"
-              @click="form.sideMode = 'choice'"
-              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'choice' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-700']"
-            >
-              A Elección
-            </button>
-            <button
-              type="button"
-              @click="form.sideMode = 'fixed'"
-              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'fixed' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-700']"
-            >
-              Fijo
-            </button>
-            <button
-              type="button"
-              @click="form.sideMode = 'none'"
-              :class="['py-2 px-1 text-xs font-black rounded-lg', form.sideMode === 'none' ? 'bg-[#c5d7be] text-brand-dark' : 'text-gray-700']"
-            >
-              Sin Acompañamiento
-            </button>
-          </div>
+        <!-- Acompañamientos: solo el almuerzo los lleva -->
+        <div>
+          <h4 class="font-bold text-brand-dark mb-3">Acompañamientos</h4>
 
-          <!-- Caso Acompañamiento Fijo -->
-          <div v-if="form.sideMode === 'fixed'" class="pt-1">
-            <input v-model="form.fixedSide" type="text" placeholder="Ej: Incluye Pan amasado y Sopaipillas" class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs" />
-          </div>
+          <p v-if="!admiteAcompanamiento" class="campo-ayuda mt-0">
+            El desayuno y la once se sirven completos: no llevan acompañamiento. Lo que incluyen va en la descripción.
+          </p>
 
-          <!-- Caso Acompañamiento a Elección -->
-          <div v-else-if="form.sideMode === 'choice'" class="space-y-2 pt-1">
-            <span class="text-xs text-gray-600 block">Selecciona las opciones disponibles para este plato:</span>
-            <div class="flex flex-wrap gap-1.5">
+          <template v-else>
+            <div class="grid grid-cols-3 gap-1 p-1 bg-gray-100 rounded-xl" role="group" aria-label="Tipo de acompañamiento">
               <button
-                v-for="side in globalSideDishes"
-                :key="side"
+                v-for="opcion in MODOS"
+                :key="opcion.valor"
                 type="button"
-                @click="toggleSideSelection(side)"
+                :aria-pressed="form.sideMode === opcion.valor"
                 :class="[
-                  'px-2.5 py-1 rounded-xl text-xs font-bold border transition-all',
-                  form.availableSides.includes(side)
-                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300 font-black'
-                    : 'bg-white text-gray-600 border-brand-border'
+                  'py-2.5 px-1 rounded-lg text-sm',
+                  form.sideMode === opcion.valor ? 'bg-white text-brand-dark font-bold shadow-sm' : 'text-gray-600'
                 ]"
+                @click="form.sideMode = opcion.valor"
               >
-                <span class="inline-flex items-center gap-1">
-                  <Check v-if="form.availableSides.includes(side)" class="w-3 h-3 stroke-[3]" />
-                  {{ side }}
-                </span>
+                {{ opcion.etiqueta }}
               </button>
             </div>
 
-            <!-- Crear Acompañamiento Global sobre la marcha -->
-            <div class="flex gap-2 pt-1">
-              <input v-model="newSideInput" type="text" placeholder="Crear nuevo acompañamiento..." class="flex-1 p-2 rounded-xl border border-brand-border bg-brand-light text-xs font-bold" @keyup.enter.prevent="handleAddGlobalSide" />
-              <button type="button" @click="handleAddGlobalSide" class="px-3 bg-brand-dark text-white rounded-xl font-black text-xs flex items-center gap-1">
-                <Plus class="w-3.5 h-3.5 stroke-[2.5]" /> Crear
-              </button>
+            <!-- Acompañamiento fijo -->
+            <div v-if="form.sideMode === 'fixed'" class="mt-4">
+              <label class="campo-etiqueta" for="plato-fijo">Acompañamiento incluido</label>
+              <input id="plato-fijo" v-model="form.fixedSide" type="text" placeholder="Ej: Pan amasado y sopaipillas" class="campo-entrada" />
             </div>
-          </div>
+
+            <!-- Acompañamiento a elección: se agrega con el selector del teléfono -->
+            <div v-else-if="form.sideMode === 'choice'" class="mt-4 space-y-4">
+              <div class="space-y-3">
+                <label class="campo-etiqueta !mb-0" for="plato-agregar-side">
+                  Opciones entre las que elegirá el cliente<span v-if="form.availableSides.length > 0"> ({{ form.availableSides.length }})</span>
+                </label>
+                <ListaFilas
+                  :items="form.availableSides"
+                  vacio="Aún no hay opciones. Agrega al menos una."
+                  @quitar="quitarSide"
+                />
+                <select
+                  v-if="sidesPorAgregar.length > 0"
+                  id="plato-agregar-side"
+                  class="campo-entrada"
+                  @change="agregarSide"
+                >
+                  <option value="">Agregar acompañamiento…</option>
+                  <option v-for="side in sidesPorAgregar" :key="side" :value="side">{{ side }}</option>
+                </select>
+                <p v-else-if="form.availableSides.length > 0" class="campo-ayuda mt-0">Ya agregaste todos los acompañamientos disponibles.</p>
+              </div>
+
+              <div>
+                <label class="campo-etiqueta" for="plato-nuevo-side">¿Falta uno? Créalo aquí</label>
+                <div class="flex gap-2">
+                  <input id="plato-nuevo-side" v-model="newSideInput" type="text" placeholder="Ej: Puré de papas" class="campo-entrada min-w-0 flex-1" @keydown.enter.prevent="handleAddGlobalSide" />
+                  <button type="button" class="px-4 rounded-xl border border-brand-dark text-brand-dark font-bold active:scale-95" @click="handleAddGlobalSide">Crear</button>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
-        <!-- Botones de Acción -->
-        <div class="pt-2 flex gap-2">
-          <button type="button" @click="close" class="flex-1 py-3 bg-brand-light border-2 border-brand-border rounded-2xl font-black text-brand-dark">Cancelar</button>
-          <button type="submit" class="flex-1 py-3 bg-brand-dark text-white rounded-2xl font-black border-2 border-brand-dark flex items-center justify-center gap-1.5">
-            <Save class="w-4 h-4 stroke-[2.5]" /> Guardar Plato
-          </button>
-        </div>
-      </form>
+        <p v-if="errorForm" role="alert" class="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-sm">{{ errorForm }}</p>
+      </ModalEdicion>
     </div>
   </div>
 </template>
