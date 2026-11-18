@@ -10,6 +10,8 @@ import AdminConfirmarCruceDialog from './AdminConfirmarCruceDialog.vue'
 import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
 import AdminMoverFechaDialog from './AdminMoverFechaDialog.vue'
 import EstadoSolicitud from './EstadoSolicitud.vue'
+import CotizacionAcciones from './CotizacionAcciones.vue'
+import { puedeCotizarse } from '../../services/cotizacion'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { buildMailtoUrl, buildTelUrl, buildWhatsappUrl, hasUsablePhone } from '../../lib/contactLinks'
@@ -396,6 +398,9 @@ useBloqueoScroll(computed(() => !!request.value))
               </div>
             </div>
           </section>
+
+          <!-- Cotización en PDF (SCRUM-71): solo de solicitudes vivas -->
+          <CotizacionAcciones v-if="puedeCotizarse(request)" :request="request" />
 
           <!-- Comentarios -->
           <section v-if="request.details?.comments" class="space-y-2">

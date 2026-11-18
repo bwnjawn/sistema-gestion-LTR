@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { CheckCircle2, FileCheck, Plus, ListChecks } from 'lucide-vue-next'
 import BaseButton from './BaseButton.vue'
+import CotizacionAcciones from '../admin/CotizacionAcciones.vue'
 import { useReservationStore } from '../../stores/reservationStore'
+import { useRequestsStore } from '../../stores/requestsStore'
 import { useSalidaReserva } from '../../composables/useSalidaReserva'
+import { puedeCotizarse } from '../../services/cotizacion'
 import { formatCLP } from '../../lib/format'
 
 // Pantalla final del administrador (SCRUM-56): confirma que la reserva quedó cargada.
-// No habla con el cliente: eso es solo para el flujo público.
-defineProps<{
+// No habla con el cliente por sí sola: solo ofrece la cotización (SCRUM-71) para que el admin la mande.
+const props = defineProps<{
   codigo: string
   servicio: string
   fechas: string
@@ -17,6 +21,10 @@ defineProps<{
 
 const router = useRouter()
 const store = useReservationStore()
+const requestsStore = useRequestsStore()
+
+// La solicitud recién creada, para cotizarla desde aquí
+const solicitudCreada = computed(() => requestsStore.requests.find(r => r.requestCode === props.codigo) ?? null)
 const { terminar } = useSalidaReserva()
 
 function cargarOtra() {
@@ -72,6 +80,10 @@ function cargarOtra() {
       <p class="text-sm text-gray-700 pt-1">
         {{ store.adminAbonoMonto ? 'El abono recibido quedó registrado. Puedes anotar más pagos desde el detalle.' : 'Aún no tiene pagos registrados. Anota el abono desde el detalle de la reserva.' }}
       </p>
+    </div>
+
+    <div v-if="solicitudCreada && puedeCotizarse(solicitudCreada)" class="text-left">
+      <CotizacionAcciones :request="solicitudCreada" />
     </div>
 
     <div class="space-y-2.5">
