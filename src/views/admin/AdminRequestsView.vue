@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Inbox, Search, Layers, Home, Tent, Utensils, Waves } from 'lucide-vue-next'
+import { FileSpreadsheet, Inbox, Search, Layers, Home, Tent, Utensils, Waves } from 'lucide-vue-next'
 import BaseButton from '../../components/ui/BaseButton.vue'
+import AdminExportarExcelDialog from '../../components/admin/AdminExportarExcelDialog.vue'
 import AdminRequestCard from '../../components/admin/AdminRequestCard.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
 import AdminConfirmarCruceDialog from '../../components/admin/AdminConfirmarCruceDialog.vue'
@@ -23,6 +24,8 @@ const requestsStore = useRequestsStore()
 const filterStatus = ref<FiltroEstado | null>(parseStatusFilter(route.query.estado) ?? 'pending')
 const filterType = ref<ServiceType | 'all'>('all')
 const searchQuery = ref('')
+// Hoja para exportar a Excel (SCRUM-275)
+const exportando = ref(false)
 
 const openedRequestId = ref<string | null>(null)
 // "Mover fecha" abre su propia hoja (solo calendario y contacto); "Rechazar" pregunta directo, sin abrir el detalle
@@ -207,6 +210,18 @@ function verTodas() {
       </div>
     </div>
 
+    <!-- Cuántas se ven y exportar a Excel (SCRUM-275) -->
+    <div class="flex items-center justify-between gap-2 px-1">
+      <span class="text-sm text-gray-700">{{ filteredRequests.length }} {{ filteredRequests.length === 1 ? 'solicitud' : 'solicitudes' }}</span>
+      <button
+        type="button"
+        @click="exportando = true"
+        class="px-3 py-2 rounded-2xl border border-gray-400 bg-white text-sm font-bold text-gray-800 flex items-center gap-1.5 active:scale-95 transition-all touch-target shadow-2xs"
+      >
+        <FileSpreadsheet class="w-4 h-4 stroke-[2.5]" aria-hidden="true" /> Exportar a Excel
+      </button>
+    </div>
+
     <!-- Por mover: pendientes cuya fecha ya ocupa una confirmada. Solo aparece si hay alguna. -->
     <button
       v-if="cantidadPorMover > 0 || soloPorMover"
@@ -253,6 +268,7 @@ function verTodas() {
     <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="continuarAprobacion" @close="sinAbonoId = null" />
     <AdminConfirmarCruceDialog :request-id="cruceId" @close="cruceId = null" />
     <AdminMoverFechaDialog :request-id="moverId" @close="moverId = null" />
+    <AdminExportarExcelDialog :abierto="exportando" :visibles="filteredRequests" @close="exportando = false" />
     <AdminConfirmarRechazoDialog :request-id="rechazoId" @close="rechazoId = null" />
   </div>
 </template>

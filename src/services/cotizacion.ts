@@ -141,15 +141,31 @@ export interface ContextoCotizacion {
   hoy?: string
 }
 
-/** Arma la cotización de una solicitud. No modifica nada. */
-export function buildCotizacion(req: ReservationRequest, ctx: ContextoCotizacion): Cotizacion {
-  const vista = describeRequest(req)
+export interface MontosSolicitud {
+  subtotal: number
+  ivaPorcentaje: number
+  iva: number
+  total: number
+}
+
+/**
+ * Subtotal, IVA y total de una solicitud, tal como los guardó al enviarse. Las solicitudes antiguas sin desglose
+ * deducen el subtotal con el IVA vigente; la piscina nunca lleva IVA aparte. Lo usan la cotización y la exportación a Excel.
+ */
+export function desglosarMontos(req: ReservationRequest, ivaVigente: number): MontosSolicitud {
   const guardado = req.details?.pricing
   const esPiscina = req.type === 'piscina'
-  const ivaPorcentaje = esPiscina ? 0 : guardado?.ivaPercentage ?? ctx.ivaVigente
+  const ivaPorcentaje = esPiscina ? 0 : guardado?.ivaPercentage ?? ivaVigente
   const total = req.totalAmount
   const subtotal = esPiscina ? total : guardado?.subtotal ?? Math.round(total / (1 + ivaPorcentaje / 100))
   const iva = esPiscina ? 0 : guardado?.ivaAmount ?? total - subtotal
+  return { subtotal, ivaPorcentaje, iva, total }
+}
+
+/** Arma la cotización de una solicitud. No modifica nada. */
+export function buildCotizacion(req: ReservationRequest, ctx: ContextoCotizacion): Cotizacion {
+  const vista = describeRequest(req)
+  const { subtotal, ivaPorcentaje, iva, total } = desglosarMontos(req, ctx.ivaVigente)
 
   const cliente: FilaDato[] = [
     { etiqueta: 'Cliente', valor: req.clientName },
