@@ -18,6 +18,7 @@ Un spec describe **cómo** se construye una historia. Jira sigue siendo la fuent
 | [SCRUM-246](../supabase-esquema.md#9-capa-de-datos-en-la-app-scrum-246) | Capa de datos: repositorios por entidad, `init()` asíncrono, reversión de errores y migración local (se documenta en el esquema de Supabase) | Fase 3 |
 | [SCRUM-44](SCRUM-44.md) | Piscina: solicitud solo informativa, sin abono ni aprobación | Fase 2 |
 | [SCRUM-71](SCRUM-71.md) | Cotización en PDF de una solicitud, con envío al cliente | Fase 2 |
+| [SCRUM-275](SCRUM-275.md) | Exportar las solicitudes a Excel, con año y mes y hojas de resumen | Fase 2 |
 | [SCRUM-27](SCRUM-27.md) | Spike: varias cabañas por solicitud | Aplazada (Sprint 3) |
 
 Documentos relacionados: [`../reglas-negocio.md`](../reglas-negocio.md) y [`../plan-entrega.md`](../plan-entrega.md).
