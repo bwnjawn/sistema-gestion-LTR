@@ -70,9 +70,6 @@ function handleNext() {
     <BaseAlert v-if="!selectedCampingOption" variant="warning" title="No hay un espacio para tu grupo">
       {{ noSiteMessage }}
     </BaseAlert>
-    <BaseAlert v-else variant="info" title="Espacio Asignado según tu Grupo">
-      Para tu grupo de <strong>{{ guests }} personas</strong> ({{ isDiario ? 'Paseo por el día' : nightsCount + ' noche(s)' }}), se ha asignado automáticamente la opción correspondiente.
-    </BaseAlert>
 
     <div class="bg-brand-light border-2 border-brand-border p-4 rounded-2xl flex items-center justify-between text-sm font-bold text-gray-800">
       <div class="flex items-center gap-2">

@@ -29,12 +29,21 @@ Formato único para las instrucciones de cada pantalla. Las instrucciones no van
 - **Flujo del cliente:** componente en `src/components/ui/` (hoy `AyudaPasoFinal.vue`) que `ReservaLayout` muestra dentro de `ModalAyuda` cuando el paso lo pide.
 - El administrador no ve las ayudas del cliente (por ejemplo, la política de abono).
 
-## Estado
+## Estado (SCRUM-272, 19/11)
 | Pantalla | Ayuda |
 |---|---|
 | Admin · Solicitudes | Hecha |
 | Admin · Calendario | Hecha |
-| Cliente · último paso (cabaña, camping, restaurante, piscina) | Hecha |
 | Admin · Catálogo | Hecha (SCRUM-229) |
-| Admin · Inicio, Ajustes | Pendiente (ver tarea de Jira) |
-| Cliente · pasos 1 a 3 de cada flujo | Pendiente (ver tarea de Jira) |
+| Admin · Ajustes | Hecha: "Qué se ajusta aquí" |
+| Admin · Inicio | No lleva: es solo un resumen, sin textos que explicar |
+| Cliente · último paso de cada flujo | Hecha: "Antes de enviar" |
+| Cliente · camping, paso 1 | Hecha: "Modalidad y fecha" |
+| Cliente · restaurante, paso 1 | Hecha: "Fecha, comidas y hora" |
+| Cliente · restaurante, paso 2 | Hecha: "Elegir el menú" |
+| Cliente · piscina, paso 1 | Hecha: "Cuándo reservar la piscina" |
+| Cliente · cabaña pasos 1 a 3, camping pasos 2 y 3, restaurante paso 3, piscina paso 2 | No llevan: son autoexplicativos. Se retiraron los avisos que repetían lo que la pantalla ya dice ("Selecciona las fechas…", "Tus datos de contacto") |
+| Cliente · inicio y Contacto | No llevan |
+| Nueva reserva del admin | No lleva ayuda propia: la franja "modo administrador" ya lo explica y el admin no ve las ayudas del cliente |
+
+Las ayudas del cliente se registran en `src/components/ui/ayudasCliente.ts` (clave `<servicio>-<paso>`); el último paso de cada flujo usa siempre "Antes de enviar".

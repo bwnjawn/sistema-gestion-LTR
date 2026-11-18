@@ -342,9 +342,6 @@ useBloqueoScroll(computed(() => showIncompleteModal.value))
     </BaseAlert>
 
     <!-- Alerta Guiada (Sin contador acumulado global) -->
-    <BaseAlert variant="info" title="Selección de Menú por Servicio">
-      Asigna las cantidades de platos para tu grupo de {{ totalGuests }} comensales en cada servicio seleccionado.
-    </BaseAlert>
 
     <!-- Pestañas por Servicio Activo (En orden Fijo) -->
     <div v-if="activeMealTypes.length > 1" class="flex gap-2 p-1 bg-brand-light rounded-2xl border-2 border-brand-border">
