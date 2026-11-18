@@ -8,6 +8,7 @@ import './assets/main.css'
 import { evitarZoomDobleToque } from './lib/sinZoomDobleToque'
 import { corregirViewportTeclado } from './lib/corregirViewportTeclado'
 import { inicializarAplicacion } from './lib/arranque'
+import { useActualizacionStore } from './stores/actualizacionStore'
 
 /** Si los datos no se pudieron cargar no se monta la app: se explica y se deja reintentar. */
 function mostrarErrorDeArranque(): void {
@@ -50,6 +51,8 @@ async function iniciar() {
   app.mount('#app')
   evitarZoomDobleToque()
   corregirViewportTeclado()
+  // Al volver a la app o recuperar internet, los datos se actualizan solos (SCRUM-273)
+  useActualizacionStore(pinia).iniciar()
 }
 
 void iniciar()

@@ -27,6 +27,10 @@ export class SupabaseSettingsRepository implements SettingsRepository {
     return this.cache
   }
 
+  invalidar(): void {
+    this.cache = null
+  }
+
   async get<K extends ClaveAjuste>(clave: K, porDefecto: AjustesGuardados[K]): Promise<AjustesGuardados[K]> {
     const valor = (await this.cargar()).get(CLAVE_DE_AJUSTE[clave])
     if (valor === undefined || valor === null) return porDefecto
