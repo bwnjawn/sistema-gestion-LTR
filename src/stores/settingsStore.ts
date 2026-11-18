@@ -12,6 +12,7 @@ import type {
   ClaveAjuste,
   LimiteVariedades,
   LimitesAforo,
+  ReglamentoCamping,
   RestaurantSchedules
 } from '../types/settings'
 import { getRestaurantCapacity } from '../services/availability'
@@ -23,11 +24,13 @@ import {
   DEFAULT_PARAMS,
   DEFAULT_RESTAURANT_SCHEDULES,
   DEFAULT_TRANSFER,
-  PRECIO_PISCINA_POR_DEFECTO
+  PRECIO_PISCINA_POR_DEFECTO,
+  REGLAMENTO_CAMPING_VACIO
 } from '../data/ajustesPorDefecto'
 import { repositorios } from '../lib/repositories'
 import { persistirConReversion } from '../lib/persistirConReversion'
 import { mensajeDeError } from '../lib/errores'
+import { rutaDeReglamentoCamping, validarPdf } from '../services/documentos'
 
 export type { BusinessParametersExtended, CapacityRules }
 
@@ -39,6 +42,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const campingSchedules = ref<CampingSchedules>(structuredClone(DEFAULT_CAMPING_SCHEDULES))
   const cabinSchedules = ref<CabinSchedules>({ ...DEFAULT_CABIN_SCHEDULES })
   const parameters = ref<BusinessParametersExtended>(structuredClone(DEFAULT_PARAMS))
+  const campingRules = ref<ReglamentoCamping>({ ...REGLAMENTO_CAMPING_VACIO })
 
   const isLoading = ref(false)
   const isReady = ref(false)
@@ -67,14 +71,16 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null
     try {
       const repo = repositorios().settings
-      const [contacto, transferencia, restaurante, camping, cabana, parametros] = await Promise.all([
+      const [contacto, transferencia, restaurante, camping, cabana, parametros, reglamento] = await Promise.all([
         repo.get('contact_info', DEFAULT_CONTACT),
         repo.get('transfer_info', DEFAULT_TRANSFER),
         repo.get('restaurant_schedules', DEFAULT_RESTAURANT_SCHEDULES),
         repo.get('camping_schedules', DEFAULT_CAMPING_SCHEDULES),
         repo.get('cabin_schedules', DEFAULT_CABIN_SCHEDULES),
-        repo.get('parameters', DEFAULT_PARAMS)
+        repo.get('parameters', DEFAULT_PARAMS),
+        repo.get('camping_rules', REGLAMENTO_CAMPING_VACIO)
       ])
+      campingRules.value = reglamento
       contactInfo.value = contacto
       // Lo guardado antes de que existieran campos nuevos se completa con los de fábrica
       transferInfo.value = { ...DEFAULT_TRANSFER, ...transferencia }
@@ -99,13 +105,14 @@ export const useSettingsStore = defineStore('settings', () => {
     if (isLoading.value) return false
     const repo = repositorios().settings
     repo.invalidar()
-    const [contacto, transferencia, restaurante, camping, cabana, parametros] = await Promise.all([
+    const [contacto, transferencia, restaurante, camping, cabana, parametros, reglamento] = await Promise.all([
       repo.get('contact_info', DEFAULT_CONTACT),
       repo.get('transfer_info', DEFAULT_TRANSFER),
       repo.get('restaurant_schedules', DEFAULT_RESTAURANT_SCHEDULES),
       repo.get('camping_schedules', DEFAULT_CAMPING_SCHEDULES),
       repo.get('cabin_schedules', DEFAULT_CABIN_SCHEDULES),
-      repo.get('parameters', DEFAULT_PARAMS)
+      repo.get('parameters', DEFAULT_PARAMS),
+      repo.get('camping_rules', REGLAMENTO_CAMPING_VACIO)
     ])
     if (isLoading.value) return false
     const asignar = <T>(destino: { value: T }, nuevo: T) => {
@@ -117,6 +124,7 @@ export const useSettingsStore = defineStore('settings', () => {
     asignar(campingSchedules, camping)
     asignar(cabinSchedules, cabana)
     asignar(parameters, parametros)
+    asignar(campingRules, reglamento)
     return true
   }
 
@@ -144,6 +152,50 @@ export const useSettingsStore = defineStore('settings', () => {
     } finally {
       isLoading.value = false
     }
+  }
+
+  /** Hay un reglamento del camping para mostrar al cliente. */
+  const tieneReglamentoCamping = computed(() => campingRules.value.url !== '')
+
+  /**
+   * Sube el PDF del reglamento del camping y reemplaza el anterior. Devuelve el mensaje de error si algo falla
+   * (archivo inválido, sin conexión…), o `null` si quedó guardado.
+   */
+  async function subirReglamentoCamping(archivo: File): Promise<string | null> {
+    const invalido = validarPdf(archivo)
+    if (invalido) return invalido
+    const docs = repositorios().documents
+    const anterior = campingRules.value
+    let subido
+    try {
+      subido = await docs.subir(archivo, rutaDeReglamentoCamping())
+    } catch (e) {
+      error.value = mensajeDeError(e, 'No se pudo subir el archivo.')
+      return error.value
+    }
+    const nuevo: ReglamentoCamping = {
+      nombre: archivo.name,
+      url: subido.url,
+      ruta: subido.ruta,
+      actualizadoEn: new Date().toISOString()
+    }
+    const guardado = await guardarAjuste('camping_rules', campingRules, nuevo, 'No se pudo guardar el reglamento.')
+    if (!guardado) {
+      // No quedó referenciado: se borra para no dejar archivos sueltos
+      await docs.eliminar(subido.ruta).catch(() => {})
+      return error.value ?? 'No se pudo guardar el reglamento.'
+    }
+    if (anterior.ruta) await docs.eliminar(anterior.ruta).catch(() => {})
+    return null
+  }
+
+  /** Quita el reglamento del camping: el cliente deja de verlo. Devuelve el mensaje de error, o `null` si se quitó. */
+  async function quitarReglamentoCamping(): Promise<string | null> {
+    const anterior = campingRules.value
+    const guardado = await guardarAjuste('camping_rules', campingRules, { ...REGLAMENTO_CAMPING_VACIO }, 'No se pudo quitar el reglamento.')
+    if (!guardado) return error.value ?? 'No se pudo quitar el reglamento.'
+    if (anterior.ruta) await repositorios().documents.eliminar(anterior.ruta).catch(() => {})
+    return null
   }
 
   const capacityRulesActuales = computed<CapacityRules>(() => ({ ...DEFAULT_PARAMS.capacityRules, ...parameters.value.capacityRules }))
@@ -201,6 +253,8 @@ export const useSettingsStore = defineStore('settings', () => {
     campingSchedules,
     cabinSchedules,
     parameters,
+    campingRules,
+    tieneReglamentoCamping,
     isLoading,
     isReady,
     error,
@@ -226,6 +280,8 @@ export const useSettingsStore = defineStore('settings', () => {
     updateCapacityRules,
     updateCampingSchedules,
     updateRestaurantSchedules,
-    updateCabinSchedules
+    updateCabinSchedules,
+    subirReglamentoCamping,
+    quitarReglamentoCamping
   }
 })

@@ -12,6 +12,7 @@ import ModalEstadoReservaAdmin from '../../../components/ui/ModalEstadoReservaAd
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import DatosTransferencia from '../../../components/ui/DatosTransferencia.vue'
 import DepositInfoCard from '../../../components/ui/DepositInfoCard.vue'
+import ReglamentoCampingCard from '../../../components/ui/ReglamentoCampingCard.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
@@ -130,6 +131,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
       </div>
 
       <DepositInfoCard v-if="!store.isAdminMode" />
+      <ReglamentoCampingCard v-if="!store.isAdminMode" />
       <CasilleroEventoEspecial v-if="store.isAdminMode" />
 
       <AvisoEnvio
@@ -200,6 +202,8 @@ const { terminar: handleGoHome } = useSalidaReserva()
         <p class="text-sm text-gray-700">Transfiere dentro de {{ settingsStore.depositDeadlineHours }} horas. El saldo se paga al llegar.</p>
         <DatosTransferencia />
       </div>
+
+      <ReglamentoCampingCard />
 
       <div class="bg-amber-50/90 border-2 border-amber-200 p-4 rounded-2xl text-left space-y-3">
         <div class="flex items-center gap-2 text-amber-950 font-bold text-sm">
