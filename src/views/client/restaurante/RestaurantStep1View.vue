@@ -157,9 +157,6 @@ function handleNext() {
       <StepIndicator :current-step="1" />
     </div>
 
-    <BaseAlert variant="info" title="Reserva de Restaurante">
-      Selecciona la fecha, el número de comensales y el servicio/horario de comida.
-    </BaseAlert>
 
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       
@@ -260,13 +257,6 @@ function handleNext() {
           Para {{ store.guestsCount }} personas ya no queda cupo en: {{ selectedFullMeals.map(id => mealOptions.find(m => m.id === id)?.label).join(', ') }}. Quita esa comida, cambia la fecha o la cantidad de personas.
         </BaseAlert>
 
-        <div 
-          v-if="store.selectedMealTypes.length === 0" 
-          class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-sm font-bold text-amber-900 flex items-center gap-2"
-        >
-          <AlertCircle class="w-4 h-4 text-amber-700 shrink-0 stroke-[2.5]" />
-          <span>Haz clic en Desayuno, Almuerzo o Once para seleccionar los horarios permitidos.</span>
-        </div>
       </div>
 
       <div 

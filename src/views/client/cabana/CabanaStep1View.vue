@@ -115,9 +115,6 @@ function handleNext() {
     </div>
 
     <!-- Alerta Informativa -->
-    <BaseAlert variant="info" title="Alojamiento en Cabaña">
-      Selecciona las fechas de llegada y salida (mínimo 1 noche) y la cantidad de huéspedes.
-    </BaseAlert>
 
     <!-- Contenedor del Calendario y Huéspedes -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">

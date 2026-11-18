@@ -136,9 +136,6 @@ function handleNext() {
       <StepIndicator :current-step="1" />
     </div>
 
-    <BaseAlert variant="info" title="Reserva de Camping">
-      Selecciona la modalidad (Paseo por el día o Pernoctar con carpa), la fecha y la cantidad de visitantes.
-    </BaseAlert>
 
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       

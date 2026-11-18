@@ -7,7 +7,6 @@ import { Users, Receipt } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseCalendar from '../../../components/ui/BaseCalendar.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
 import { dateToISO, isoToDate, isPastDate } from '../../../lib/dates'
@@ -66,9 +65,6 @@ function handleNext() {
       <StepIndicator :current-step="1" />
     </div>
 
-    <BaseAlert variant="info" title="Solo para quienes vienen a la piscina">
-      Si reservas una cabaña, camping o restaurante, la piscina es gratis y no necesitas esta opción.
-    </BaseAlert>
 
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       <div class="space-y-2">

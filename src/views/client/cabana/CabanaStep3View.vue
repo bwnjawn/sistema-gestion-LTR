@@ -7,7 +7,6 @@ import {
 } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { isClientContactValid, isClientPhoneIncomplete } from '../../../services/wizard'
 import { useCatalogStore } from '../../../stores/catalogStore'
@@ -47,9 +46,6 @@ function handleNext() {
     </div>
 
     <!-- Alerta Guiada -->
-    <BaseAlert variant="info" title="Tus datos de contacto">
-      Ingresa tu información para que los dueños puedan confirmar tu solicitud de reserva por teléfono.
-    </BaseAlert>
 
     <!-- Formulario "Tus Datos" -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-5">

@@ -5,7 +5,7 @@ import ClientHeader from '../components/ui/ClientHeader.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import FranjaModoAdmin from '../components/ui/FranjaModoAdmin.vue'
 import ModalAyuda from '../components/ui/ModalAyuda.vue'
-import AyudaPasoFinal from '../components/ui/AyudaPasoFinal.vue'
+import { ayudaDelPaso } from '../components/ui/ayudasCliente'
 import { useSalidaReserva } from '../composables/useSalidaReserva'
 import { useReservationStore } from '../stores/reservationStore'
 import { useBloqueoScroll } from '../composables/useBloqueoScroll'
@@ -57,9 +57,12 @@ function volver() {
   router.push({ name: PREFIJO_RUTA[servicio.value] + (paso.value - 1) })
 }
 
-// La ayuda del último paso explica qué pasa al enviar; el administrador no la necesita
+// Ayuda del paso actual (ver `ayudasCliente.ts`). El administrador no ve las ayudas del cliente.
 const ayudaAbierta = ref(false)
-const conAyuda = computed(() => paso.value === pasos.value.length && !store.isAdminMode && !store.solicitudEnviada)
+const ayuda = computed(() =>
+  store.isAdminMode || store.solicitudEnviada ? null : ayudaDelPaso(servicio.value, paso.value, pasos.value.length)
+)
+const conAyuda = computed(() => ayuda.value !== null)
 
 // Salir: si ya hay datos se pregunta si guardarlos o borrarlos
 const confirmando = ref(false)
@@ -112,8 +115,8 @@ function salirBorrando() {
       <RouterView />
     </main>
 
-    <ModalAyuda :abierto="ayudaAbierta && conAyuda" titulo="Antes de enviar" @cerrar="ayudaAbierta = false">
-      <AyudaPasoFinal />
+    <ModalAyuda v-if="ayuda" :abierto="ayudaAbierta" :titulo="ayuda.titulo" @cerrar="ayudaAbierta = false">
+      <component :is="ayuda.contenido" />
     </ModalAyuda>
 
     <!-- Confirmación al salir con datos escritos -->

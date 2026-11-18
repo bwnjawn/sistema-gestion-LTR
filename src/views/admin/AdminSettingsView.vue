@@ -143,7 +143,6 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
         <p>{{ settingsStore.transferInfo.holderName }} · {{ settingsStore.transferInfo.holderRut }}</p>
         <p class="text-gray-700">{{ settingsStore.transferInfo.email }}</p>
       </div>
-      <p class="text-xs font-semibold text-gray-700">El cliente ve estos datos en el paso 4 de su solicitud.</p>
     </div>
 
     <div class="bg-white p-4 sm:p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
