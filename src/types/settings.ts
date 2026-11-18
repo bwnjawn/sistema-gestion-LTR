@@ -85,6 +85,17 @@ export interface BusinessParametersExtended {
   capacityRules: CapacityRules
 }
 
+/** Reglamento del camping en PDF (SCRUM-51). Sin archivo, `url` va vacía. */
+export interface ReglamentoCamping {
+  /** Nombre del archivo que subió el administrador. */
+  nombre: string
+  url: string
+  /** Ruta dentro del almacenamiento de archivos; sirve para reemplazarlo o quitarlo. */
+  ruta: string
+  /** Cuándo se subió (ISO). */
+  actualizadoEn: string
+}
+
 /** Los ajustes que se guardan, por clave. Es lo que lee y escribe `SettingsRepository`. */
 export interface AjustesGuardados {
   contact_info: BusinessInfo
@@ -93,6 +104,7 @@ export interface AjustesGuardados {
   restaurant_schedules: RestaurantSchedules
   camping_schedules: CampingSchedules
   cabin_schedules: CabinSchedules
+  camping_rules: ReglamentoCamping
 }
 
 export type ClaveAjuste = keyof AjustesGuardados

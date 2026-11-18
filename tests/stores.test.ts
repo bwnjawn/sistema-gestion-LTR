@@ -158,6 +158,66 @@ describe('acompañamientos del catálogo (SCRUM-229)', () => {
   })
 })
 
+describe('reglamento del camping (SCRUM-51)', () => {
+  beforeEach(() => preparar())
+
+  const archivoPdf = (nombre = 'reglamento.pdf') =>
+    new File([new Uint8Array([37, 80, 68, 70, 45])], nombre, { type: 'application/pdf' })
+
+  it('sin reglamento, el cliente no ve nada', async () => {
+    const store = useSettingsStore()
+    await store.init()
+    expect(store.tieneReglamentoCamping).toBe(false)
+  })
+
+  it('subir un PDF lo guarda y el cliente puede abrirlo', async () => {
+    const store = useSettingsStore()
+    await store.init()
+    expect(await store.subirReglamentoCamping(archivoPdf())).toBeNull()
+    expect(store.tieneReglamentoCamping).toBe(true)
+    expect(store.campingRules.nombre).toBe('reglamento.pdf')
+    expect(store.campingRules.url.startsWith('data:application/pdf;base64,')).toBe(true)
+    // queda guardado: otra carga lo encuentra
+    const otra = useSettingsStore()
+    await otra.refrescar()
+    expect(otra.tieneReglamentoCamping).toBe(true)
+  })
+
+  it('reemplazarlo deja solo el nuevo', async () => {
+    const store = useSettingsStore()
+    await store.init()
+    await store.subirReglamentoCamping(archivoPdf('uno.pdf'))
+    await store.subirReglamentoCamping(archivoPdf('dos.pdf'))
+    expect(store.campingRules.nombre).toBe('dos.pdf')
+  })
+
+  it('un archivo que no es PDF no se sube y no cambia nada', async () => {
+    const store = useSettingsStore()
+    await store.init()
+    const mensaje = await store.subirReglamentoCamping(new File(['x'], 'foto.png', { type: 'image/png' }))
+    expect(mensaje).toBe('El archivo debe ser un PDF.')
+    expect(store.tieneReglamentoCamping).toBe(false)
+  })
+
+  it('quitarlo hace que el cliente deje de verlo', async () => {
+    const store = useSettingsStore()
+    await store.init()
+    await store.subirReglamentoCamping(archivoPdf())
+    expect(await store.quitarReglamentoCamping()).toBeNull()
+    expect(store.tieneReglamentoCamping).toBe(false)
+  })
+
+  it('si no se puede guardar, el reglamento anterior sigue y se avisa', async () => {
+    const store = useSettingsStore()
+    await store.init()
+    await store.subirReglamentoCamping(archivoPdf('uno.pdf'))
+    mem.estado.fallar = true
+    const mensaje = await store.subirReglamentoCamping(archivoPdf('dos.pdf'))
+    expect(mensaje).toBeTruthy()
+    expect(store.campingRules.nombre).toBe('uno.pdf')
+  })
+})
+
 describe('requestsStore con repositorio', () => {
   beforeEach(() => preparar())
 

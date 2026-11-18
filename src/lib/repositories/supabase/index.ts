@@ -7,6 +7,7 @@ import { SupabaseSettingsRepository } from './ajustes'
 import { SupabaseAuthRepository } from './autenticacion'
 import { crearRepositoriosCatalogoSupabase } from './catalogo'
 import { SupabaseAvailabilityRepository } from './disponibilidad'
+import { SupabaseDocumentosRepository } from './documentos'
 import { SupabasePaymentRepository } from './pagos'
 import { SupabaseRequestRepository } from './solicitudes'
 
@@ -18,6 +19,7 @@ export function crearRepositoriosSupabase(): Repositorios {
     payments: new SupabasePaymentRepository(),
     availability: new SupabaseAvailabilityRepository(),
     settings: new SupabaseSettingsRepository(),
+    documents: new SupabaseDocumentosRepository(),
     auth: new SupabaseAuthRepository()
   }
 }

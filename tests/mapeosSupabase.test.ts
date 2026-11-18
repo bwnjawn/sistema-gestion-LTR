@@ -158,7 +158,8 @@ describe('catálogo: filas y datos de la app', () => {
       parameters: 'parametros',
       restaurant_schedules: 'horarios_restaurante',
       camping_schedules: 'horarios_camping',
-      cabin_schedules: 'horarios_cabana'
+      cabin_schedules: 'horarios_cabana',
+      camping_rules: 'reglamento_camping'
     })
   })
 })

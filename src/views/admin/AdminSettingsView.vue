@@ -9,6 +9,7 @@ import { useAuthStore } from '../../stores/authStore'
 import AdminContactEditModal from '../../components/admin/AdminContactEditModal.vue'
 import AdminTransferEditModal from '../../components/admin/AdminTransferEditModal.vue'
 import CategorySchedulesModal from '../../components/admin/CategorySchedulesModal.vue'
+import AdminReglamentoCard from '../../components/admin/AdminReglamentoCard.vue'
 
 const settingsStore = useSettingsStore()
 const authStore = useAuthStore()
@@ -144,6 +145,8 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
         <p class="text-gray-700">{{ settingsStore.transferInfo.email }}</p>
       </div>
     </div>
+
+    <AdminReglamentoCard />
 
     <div class="bg-white p-4 sm:p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center justify-between">

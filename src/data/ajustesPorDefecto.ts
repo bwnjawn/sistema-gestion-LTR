@@ -7,9 +7,13 @@ import type {
   BusinessParametersExtended,
   CabinSchedules,
   CampingSchedules,
+  ReglamentoCamping,
   RestaurantSchedules
 } from '../types/settings'
 import { DEFAULT_DEPOSIT_DEADLINE_HOURS } from '../services/payments'
+
+/** Sin reglamento del camping todavía (SCRUM-51). */
+export const REGLAMENTO_CAMPING_VACIO: ReglamentoCamping = { nombre: '', url: '', ruta: '', actualizadoEn: '' }
 
 /** Valor de ejemplo de la entrada a la piscina (CLP por persona): el real está por confirmar con el cliente. */
 export const PRECIO_PISCINA_POR_DEFECTO = 3000

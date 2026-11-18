@@ -12,6 +12,8 @@ import { LocalAvailabilityRepository } from './availabilityRepository'
 import { LocalAuthRepository } from './authRepository'
 import type { CabinRepository, CampingSiteRepository, DishRepository, GlobalSideRepository } from './catalogRepository'
 import { crearRepositoriosCatalogoLocales } from './catalogRepository'
+import type { DocumentosRepository } from './documentosRepository'
+import { LocalDocumentosRepository } from './documentosRepository'
 import type { PaymentRepository } from './paymentsRepository'
 import { LocalPaymentRepository } from './paymentsRepository'
 import type { RequestRepository } from './requestsRepository'
@@ -30,6 +32,7 @@ export interface Repositorios {
   payments: PaymentRepository
   availability: AvailabilityRepository
   settings: SettingsRepository
+  documents: DocumentosRepository
   auth: AuthRepository
 }
 
@@ -43,6 +46,7 @@ export function crearRepositoriosLocales(almacenamiento: Almacenamiento = almace
     payments: new LocalPaymentRepository(requests),
     availability: new LocalAvailabilityRepository(requests),
     settings: new LocalSettingsRepository(almacenamiento),
+    documents: new LocalDocumentosRepository(),
     auth: new LocalAuthRepository(almacenamiento)
   }
 }
