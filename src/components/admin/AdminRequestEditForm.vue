@@ -8,6 +8,8 @@ import { useSettingsStore } from '../../stores/settingsStore'
 import { hasPendingOnMoveDay, isMoveDayBlocked, isMoveStayBlocked } from '../../services/cambioFecha'
 import { dateToISO, formatDateLong, isoToDate, nightsBetween } from '../../lib/dates'
 import { isSingleDayRequest, toRequestEdit } from '../../services/requests'
+import type { ComparacionDeCambio } from '../../services/comparacionCambio'
+import { formatCLP } from '../../lib/format'
 import type { ReservationRequest } from '../../types/domain'
 
 const props = defineProps<{
@@ -103,12 +105,38 @@ const changeSummary = computed(() => {
   return 'Hay cambios sin guardar.'
 })
 
-const datesChangeMessage = computed(() =>
-  `¿Cambiar la reserva de ${describeRange(originalStart, originalEnd)} a ${describeRange(form.value.startDate, form.value.endDate)}?`
-)
+// El antes y el después que se muestra al confirmar; sale del mismo cálculo que el guardado (SCRUM-285)
+const comparacion = ref<ComparacionDeCambio | null>(null)
+
+const columnasComparacion = computed(() => {
+  const c = comparacion.value
+  if (!c) return []
+  const montoAhora = c.precio === 'baja' ? 'text-green-800' : c.precio === 'sube' ? 'text-orange-800' : ''
+  return [
+    { titulo: 'Antes', datos: c.antes, clase: 'bg-stone-100 border-2 border-stone-300', claseTitulo: 'text-stone-700', claseMonto: '' },
+    { titulo: 'Ahora', datos: c.ahora, clase: 'bg-white border-2 border-amber-700', claseTitulo: 'text-amber-800', claseMonto: montoAhora }
+  ]
+})
+
+const claseDiferencia = computed(() => {
+  const precio = comparacion.value?.precio
+  if (precio === 'baja') return 'bg-green-100 text-green-900'
+  if (precio === 'sube') return 'bg-orange-100 text-orange-900'
+  return 'bg-stone-200 text-stone-900'
+})
 
 function requestSave() {
   if (datesChanged.value) {
+    const vista = requestsStore.previsualizarEdicion(props.request.id, {
+      ...form.value,
+      guestsCount: Number(form.value.guestsCount)
+    })
+    if (!vista.ok) {
+      error.value = vista.message || 'No se pudieron guardar los cambios.'
+      return
+    }
+    error.value = ''
+    comparacion.value = vista.comparacion
     confirmingDates.value = true
     return
   }
@@ -197,7 +225,19 @@ async function save() {
     <!-- Barra fija: siempre a la vista, con el resumen de lo que se guardará -->
     <div class="sticky bottom-0 z-20 -mx-3 -mb-3 px-3 py-3 bg-white border-t-2 border-brand-border/60 rounded-b-2xl space-y-2">
       <div v-if="confirmingDates" class="border-2 border-amber-500 bg-amber-50 rounded-2xl p-3 space-y-2" role="alertdialog">
-        <p class="text-base font-bold text-amber-950">{{ datesChangeMessage }}</p>
+        <p class="text-base font-bold text-amber-950">¿Cambiar la reserva?</p>
+        <div v-if="comparacion" class="grid grid-cols-2 gap-2">
+          <div v-for="col in columnasComparacion" :key="col.titulo" :class="['rounded-xl p-2.5 text-base leading-snug', col.clase]">
+            <h4 :class="['text-sm font-bold uppercase tracking-wide', col.claseTitulo]">{{ col.titulo }}</h4>
+            <p class="font-bold">{{ col.datos.fechas }}</p>
+            <p v-if="col.datos.noches !== null">{{ col.datos.noches }} {{ col.datos.noches === 1 ? 'noche' : 'noches' }}</p>
+            <p class="text-sm text-gray-700 mt-1.5">Total</p>
+            <p :class="['font-bold', col.claseMonto]">{{ formatCLP(col.datos.total) }}</p>
+            <p class="text-sm text-gray-700 mt-1.5">Abono exigido</p>
+            <p :class="['font-bold', col.claseMonto]">{{ formatCLP(col.datos.abono) }}</p>
+          </div>
+        </div>
+        <p v-if="comparacion" :class="['rounded-xl px-2.5 py-2 text-base font-bold', claseDiferencia]" role="status">{{ comparacion.mensajePrecio }}</p>
         <div class="grid grid-cols-2 gap-2">
           <BaseButton type="button" variant="primary" size="md" class="!text-base" @click="save">Sí, cambiar</BaseButton>
           <BaseButton type="button" variant="outline" size="md" class="!text-base" @click="confirmingDates = false">No, volver</BaseButton>
