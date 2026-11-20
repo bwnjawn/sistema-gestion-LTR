@@ -62,7 +62,7 @@
     >
       <p class="max-w-md mx-auto px-4 py-2 flex items-center gap-2 text-sm font-black">
         <WifiOff class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
-        Sin conexión a internet. Los cambios se guardan solo en este dispositivo.
+        Sin conexión a internet. Ves los últimos datos guardados; para hacer cambios necesitas conexión.
       </p>
     </div>
   </header>

@@ -7,10 +7,25 @@
     <meta name="theme-color" content="#1E4620" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Los Troncos de Repil - Reservas</title>
-    
+    <style>
+      /* Pantalla de carga del arranque: se ve al instante y Vue la reemplaza al montar la app */
+      body { margin: 0; background: #F1F2EE; }
+      .arranque { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem; font-family: system-ui, sans-serif; color: #1E4620; }
+      .arranque img { width: 5rem; height: 5rem; object-fit: contain; background: #fff; border-radius: 1.25rem; padding: .5rem; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+      .arranque-rueda { width: 2rem; height: 2rem; border: 4px solid #cfd8cc; border-top-color: #1E4620; border-radius: 50%; animation: arranque-giro .9s linear infinite; }
+      .arranque p { margin: 0; font-size: 1rem; font-weight: 700; }
+      @keyframes arranque-giro { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .arranque-rueda { animation-duration: 3s; } }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="arranque" role="status" aria-live="polite">
+        <img src="/images/logo.png" alt="" />
+        <div class="arranque-rueda" aria-hidden="true"></div>
+        <p>Cargando…</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

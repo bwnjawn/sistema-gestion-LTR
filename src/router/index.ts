@@ -11,6 +11,8 @@ const routes = [
   // ==========================================
   { path: '/', name: 'home', component: () => import('../views/client/HomeView.vue') },
   { path: '/contacto', name: 'contact', component: () => import('../views/client/ContactView.vue') },
+  // Solicitudes guardadas en el teléfono por falta de señal (SCRUM-250)
+  { path: '/pendientes', name: 'pending-send', component: () => import('../views/client/PendientesView.vue') },
 
   // Flujo de reserva: comparten el encabezado con atrás, título del servicio, paso y salir
   {

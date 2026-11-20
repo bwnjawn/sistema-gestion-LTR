@@ -10,6 +10,7 @@ import { SupabaseAvailabilityRepository } from './disponibilidad'
 import { SupabaseDocumentosRepository } from './documentos'
 import { SupabasePaymentRepository } from './pagos'
 import { SupabaseRequestRepository } from './solicitudes'
+import { ColaEnvioIndexedDb } from '../colaEnvioRepository'
 
 export function crearRepositoriosSupabase(): Repositorios {
   return {
@@ -20,6 +21,7 @@ export function crearRepositoriosSupabase(): Repositorios {
     availability: new SupabaseAvailabilityRepository(),
     settings: new SupabaseSettingsRepository(),
     documents: new SupabaseDocumentosRepository(),
-    auth: new SupabaseAuthRepository()
+    auth: new SupabaseAuthRepository(),
+    colaEnvio: new ColaEnvioIndexedDb()
   }
 }

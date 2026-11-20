@@ -11,6 +11,7 @@ import FondoFotoTarjeta from '../../components/ui/FondoFotoTarjeta.vue'
 import TarjetaServicioExtra from '../../components/ui/TarjetaServicioExtra.vue'
 import HojaContactoEvento from '../../components/ui/HojaContactoEvento.vue'
 import FranjaModoAdmin from '../../components/ui/FranjaModoAdmin.vue'
+import AvisoPendientesEnvio from '../../components/ui/AvisoPendientesEnvio.vue'
 import { useSalidaReserva } from '../../composables/useSalidaReserva'
 
 const router = useRouter()
@@ -63,6 +64,9 @@ function selectService(service: ServiceType) {
           </span>
         </div>
       </div>
+
+      <!-- Solicitudes guardadas por falta de señal que aún no se enviaron (SCRUM-250) -->
+      <AvisoPendientesEnvio />
 
       <!-- Título de Sección -->
       <div class="space-y-1">

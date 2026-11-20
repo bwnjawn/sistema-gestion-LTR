@@ -3,9 +3,10 @@
 // ni plazo ni aprobación: sirve para que el administrador sepa quién viene.
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { CheckCircle2, FileCheck, RotateCcw } from 'lucide-vue-next'
+import { CheckCircle2, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import AvisoEnvio from '../../../components/ui/AvisoEnvio.vue'
+import CodigoSolicitud from '../../../components/ui/CodigoSolicitud.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import ConfirmacionReservaAdmin from '../../../components/ui/ConfirmacionReservaAdmin.vue'
 import { useEnvioSolicitud } from '../../../composables/useEnvioSolicitud'
@@ -25,7 +26,7 @@ const reservationCode = ref('')
 const total = computed(() => store.priceBreakdown?.totalWithIva ?? 0)
 const personas = computed(() => `${store.guestsCount} ${store.guestsCount === 1 ? 'persona' : 'personas'}`)
 
-const { isSubmitting, errorEnvio, sinConexion, enviar } = useEnvioSolicitud()
+const { isSubmitting, errorEnvio, sinConexion, seGuardaParaDespues, bloqueado, enviar } = useEnvioSolicitud()
 
 function handleSendRequest() {
   return enviar(async () => {
@@ -66,12 +67,13 @@ const { terminar: handleGoHome } = useSalidaReserva()
 
       <AvisoEnvio
         :sin-conexion="sinConexion"
+        :se-guarda="seGuardaParaDespues"
         :error="errorEnvio"
         :enviando="isSubmitting"
         @reintentar="handleSendRequest"
       />
 
-      <BarraAccionInferior enviar :total="total" :abono="0" sin-abono :loading="isSubmitting || sinConexion" :disabled="sinConexion" @click="handleSendRequest">{{ sinConexion ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar' }}</BarraAccionInferior>
+      <BarraAccionInferior enviar :total="total" :abono="0" sin-abono :loading="isSubmitting || bloqueado" :disabled="bloqueado" @click="handleSendRequest">{{ bloqueado ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar' }}</BarraAccionInferior>
     </div>
 
     <!-- El administrador ve su propia confirmación, sin el texto dirigido al cliente -->
@@ -89,10 +91,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
       </div>
 
       <div class="space-y-2.5">
-        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-bold text-brand-dark">
-          <FileCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <span>Código: {{ reservationCode }}</span>
-        </div>
+        <CodigoSolicitud :codigo="reservationCode" />
         <h2 class="text-2xl font-bold text-brand-dark tracking-tight">¡Visita registrada!</h2>
         <p class="text-sm text-gray-700 leading-relaxed max-w-xs mx-auto">
           Te esperamos el <strong class="text-brand-dark font-bold">{{ formatDateShort(store.checkInDate) }}</strong> con

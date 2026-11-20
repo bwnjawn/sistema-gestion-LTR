@@ -4,7 +4,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { AdminUser, AdminUserWithPassword } from '../types/domain'
 import { repositorios } from '../lib/repositories'
-import { mensajeDeError } from '../lib/errores'
+import { mensajeDeError, esErrorDeRed } from '../lib/errores'
 import { cargarDatosDeAdministrador, descartarDatosDeAdministrador } from '../lib/arranque'
 
 export type { AdminUser, AdminUserWithPassword }
@@ -26,8 +26,15 @@ export const useAuthStore = defineStore('auth', () => {
   /** Carga a los administradores y la sesión guardada. Se llama una vez al arrancar la app. */
   async function init(): Promise<void> {
     const repo = repositorios().auth
-    currentUser.value = await repo.getSession()
-    adminsList.value = await repo.listarAdmins()
+    try {
+      currentUser.value = await repo.getSession()
+      adminsList.value = await repo.listarAdmins()
+    } catch (e) {
+      // Sin señal al abrir la app no se puede verificar la sesión: se sigue como público y el cliente puede usar
+      // la copia guardada y enviar solicitudes (SCRUM-250). Cualquier otro error sigue siendo grave.
+      if (!esErrorDeRed(e)) throw e
+      console.warn('[Auth] Sin conexión al abrir: no se pudo verificar la sesión.', e)
+    }
   }
 
   /**

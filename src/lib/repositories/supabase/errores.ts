@@ -51,7 +51,7 @@ export function traducirError(error: unknown, respaldo: string): ErrorDeAlmacena
   }
   if (e.code === '23505') return new ErrorDeAlmacenamiento('desconocida', 'Ya existe un registro con esos datos.')
   if (error instanceof TypeError || /fetch|network|failed to|load failed/i.test(mensaje)) {
-    return new ErrorDeAlmacenamiento('desconocida', MENSAJE_SIN_CONEXION)
+    return new ErrorDeAlmacenamiento('red', MENSAJE_SIN_CONEXION)
   }
   return new ErrorDeAlmacenamiento('desconocida', respaldo)
 }

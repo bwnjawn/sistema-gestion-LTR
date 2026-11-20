@@ -6,9 +6,13 @@ import type { ReservationRequest, BookingStatus } from '../types/domain'
 import { generateUUID } from '../lib/id'
 import { repositorios } from '../lib/repositories'
 import { persistirConReversion } from '../lib/persistirConReversion'
-import { mensajeDeError } from '../lib/errores'
+import { mensajeDeError, esErrorDeRed } from '../lib/errores'
+import { conTiempoLimite } from '../lib/conTiempoLimite'
+import { marcarServidorCaido } from '../lib/estadoDeRed'
+import { requestToBooking } from '../services/adaptadoresReserva'
 import { applyRequestEdit, type RequestEdit } from '../services/requests'
 import { useCatalogStore } from './catalogStore'
+import { TIEMPO_ENVIO_MS, useColaEnvioStore } from './colaEnvioStore'
 import { useDisponibilidadStore } from './disponibilidadStore'
 import { useSettingsStore } from './settingsStore'
 import {
@@ -117,6 +121,27 @@ export const useRequestsStore = defineStore('requests', () => {
     void useDisponibilidadStore().refrescar()
   }
 
+  /**
+   * Crea la solicitud en el servidor. Si es del cliente y no hay señal (o el servidor no responde), la deja en la
+   * cola de envío para mandarla cuando vuelva la conexión (SCRUM-250). La del administrador no se encola todavía:
+   * falla con el aviso de siempre. Si no se puede ni guardar en el teléfono, lanza el error original.
+   */
+  async function crearOEncolar(req: ReservationRequest): Promise<ReservationRequest> {
+    try {
+      return await conTiempoLimite(repositorios().requests.create(req), TIEMPO_ENVIO_MS)
+    } catch (e) {
+      if (!esErrorDeRed(e) || requestToBooking(req).origin !== 'cliente') throw e
+      marcarServidorCaido()
+      try {
+        await useColaEnvioStore().encolar(req)
+      } catch (errorAlGuardar) {
+        console.error('[Solicitudes] No se pudo guardar la solicitud en el teléfono:', errorAlGuardar)
+        throw e
+      }
+      return req
+    }
+  }
+
   // `status` solo se indica al cargar una reserva como administrador; el cliente siempre entra como pendiente.
   async function addRequest(
     newReq: Omit<ReservationRequest, 'id' | 'status' | 'createdAt'>,
@@ -137,9 +162,15 @@ export const useRequestsStore = defineStore('requests', () => {
       const creada = await conEscritura(() => persistirConReversion({
         aplicar: () => { requests.value.unshift(req) },
         revertir: () => { requests.value = requests.value.filter(r => r.id !== req.id) },
-        persistir: () => repositorios().requests.create(req),
+        persistir: () => crearOEncolar(req),
         mensaje: 'No se pudo registrar la solicitud.'
       }))
+      // Sin señal, la solicitud del cliente quedó guardada en el teléfono (SCRUM-250): no es una solicitud del
+      // panel todavía y los datos del servidor (código, montos) llegan al enviarse
+      if (useColaEnvioStore().estaEnCola(req.id)) {
+        requests.value = requests.value.filter(r => r.id !== req.id)
+        return creada
+      }
       const indice = requests.value.findIndex(r => r.id === req.id)
       if (indice !== -1) requests.value[indice] = creada
       void useDisponibilidadStore().refrescar()
