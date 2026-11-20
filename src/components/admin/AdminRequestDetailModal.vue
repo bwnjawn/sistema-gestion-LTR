@@ -5,6 +5,7 @@ import {
 } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
 import HojaModal from '../ui/HojaModal.vue'
+import PanelDetalle from '../ui/PanelDetalle.vue'
 import AdminRequestEditForm from './AdminRequestEditForm.vue'
 import AdminConfirmarCruceDialog from './AdminConfirmarCruceDialog.vue'
 import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
@@ -29,6 +30,8 @@ import type { PaymentMethod } from '../../types/domain'
 
 const props = defineProps<{
   requestId: string | null
+  /** En PC se muestra dentro de la página, al lado de la lista, en vez de en una hoja (SCRUM-278). */
+  enPanel?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -43,6 +46,12 @@ const settingsStore = useSettingsStore()
 // La solicitud se lee siempre del store, así el detalle se actualiza solo al aprobar o registrar pagos.
 const request = computed(() => requestsStore.requests.find(r => r.id === props.requestId) ?? null)
 const view = computed(() => (request.value ? describeRequest(request.value) : null))
+// Lo que se le pasa a la hoja; el panel no recibe nada
+const propsHoja = computed(() =>
+  props.enPanel || !request.value
+    ? {}
+    : { abierto: true, ancho: 'amplio', titulo: `Detalle de la solicitud ${request.value.requestCode}`, sinRelleno: true, cerrarAlTocarFuera: !isEditing.value }
+)
 const payment = computed(() => (request.value ? getPaymentSummary(request.value) : null))
 const isPending = computed(() => request.value?.status === 'pending')
 // Una confirmada no se rechaza: se cancela, y eso libera sus fechas (SCRUM-284)
@@ -242,7 +251,7 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
 
 <template>
   <template v-if="request && view && payment">
-    <HojaModal :abierto="true" :titulo="`Detalle de la solicitud ${request.requestCode}`" sin-relleno :cerrar-al-tocar-fuera="!isEditing" @cerrar="emit('close')">
+    <component :is="enPanel ? PanelDetalle : HojaModal" v-bind="propsHoja" @cerrar="emit('close')">
       <!-- Encabezado: quién es, en qué estado está, y modificar / cerrar -->
       <template #cabecera>
       <div class="flex items-start gap-3 p-4 border-b-2 border-brand-border/60">
@@ -266,6 +275,7 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
           <Pencil class="w-4 h-4 stroke-[2.5]" aria-hidden="true" />
         </button>
         <button
+          v-if="!enPanel"
           type="button"
           @click="emit('close')"
           aria-label="Cerrar detalle"
@@ -285,15 +295,18 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
           @cancel="isEditing = false"
         />
 
-        <template v-else>
+        <div v-else :class="['space-y-4', enPanel ? '2xl:grid 2xl:grid-cols-2 2xl:gap-x-6 2xl:gap-y-4 2xl:space-y-0 2xl:items-start' : 'lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-4 lg:space-y-0 lg:items-start']">
           <!-- Se cruza con otras solicitudes: el aviso más importante va primero -->
           <AvisoCruceSolicitud
             v-if="resumenCruce"
+            class="lg:col-span-2"
             :key="request.id"
             :resumen="resumenCruce"
             @open-request="id => emit('open-request', id)"
           />
 
+          <!-- En PC, a la izquierda lo que reservó y quién es; a la derecha lo del dinero -->
+          <div class="space-y-4">
           <!-- Fechas: llegada y salida en grande, como en un calendario -->
           <section class="space-y-2">
             <h3 class="text-base font-bold text-brand-dark">{{ view.stayTitle }}</h3>
@@ -400,6 +413,9 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
             </div>
           </section>
 
+          </div>
+
+          <div class="space-y-4">
           <!-- Cotización en PDF (SCRUM-71): solo de solicitudes vivas -->
           <CotizacionAcciones v-if="puedeCotizarse(request)" :request="request" />
 
@@ -525,7 +541,8 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
               </details>
             </div>
           </section>
-        </template>
+          </div>
+        </div>
       </div>
 
       <!-- Acciones: solo las pendientes tienen decisión que tomar; para el resto basta la X de arriba -->
@@ -556,7 +573,7 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
         </div>
       </div>
       </template>
-    </HojaModal>
+    </component>
 
     <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="continueApproval" @close="sinAbonoId = null" />
     <AdminConfirmarCruceDialog :request-id="cruceId" @close="cerrarCruce" />

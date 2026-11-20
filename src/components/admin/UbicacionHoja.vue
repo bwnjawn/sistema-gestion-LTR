@@ -78,6 +78,7 @@ function usarMiUbicacion() {
 <template>
   <HojaModal
     :abierto="abierto"
+    ancho="amplio"
     titulo="Ubicación del local"
     texto-guardar="Usar esta ubicación"
     sin-relleno

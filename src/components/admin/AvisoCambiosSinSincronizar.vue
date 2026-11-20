@@ -23,7 +23,7 @@ const texto = computed(() => {
     role="status"
     class="block bg-sky-100 border-t-2 border-sky-700 text-sky-950"
   >
-    <span class="max-w-md mx-auto px-4 py-2 flex items-center gap-2 text-base font-bold">
+    <span class="max-w-md lg:max-w-[1680px] lg:px-10 mx-auto px-4 py-2 flex items-center gap-2 text-base font-bold">
       <RefreshCw :class="['w-4 h-4 stroke-[2.5] shrink-0', cambios.sincronizando ? 'animate-spin motion-reduce:animate-none' : '']" aria-hidden="true" />
       <span class="grow min-w-0">{{ texto }}</span>
       <span class="underline shrink-0">Ver</span>

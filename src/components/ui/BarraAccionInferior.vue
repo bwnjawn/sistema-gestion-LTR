@@ -5,6 +5,8 @@ import { formatCLP } from '../../lib/format'
 
 // Barra fija inferior de los pasos de reserva: una sola acción, la de avanzar.
 // Volver atrás se hace desde el encabezado.
+// En el último paso (el que lleva `total`), en PC deja de ser una barra y pasa a ser una tarjeta con el total
+// y el botón de enviar, que cada paso ubica a la derecha del resumen (SCRUM-278).
 defineProps<{
   disabled?: boolean
   /** Trabajando: muestra el spinner y no deja tocar de nuevo. */
@@ -22,12 +24,24 @@ defineEmits<{ (e: 'click', ev: MouseEvent): void }>()
 </script>
 
 <template>
-  <div class="barra-fija-inferior fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-3.5 pt-3.5 pb-seguro-nav shadow-2xl">
-    <div class="max-w-md mx-auto space-y-2.5">
-      <div v-if="total !== undefined" class="flex items-end justify-between gap-3 px-1">
+  <div
+    :class="[
+      'barra-fija-inferior fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-3.5 pt-3.5 pb-seguro-nav shadow-2xl',
+      total !== undefined ? 'lg:static lg:order-first lg:z-auto lg:rounded-3xl lg:border lg:border-gray-200 lg:bg-white lg:shadow-sm lg:px-6 lg:pt-6 lg:!pb-6 lg:after:hidden' : ''
+    ]"
+  >
+    <div
+      :class="[
+        'max-w-md mx-auto space-y-2.5',
+        total !== undefined
+          ? 'lg:max-w-none lg:space-y-5'
+          : 'lg:max-w-5xl lg:space-y-0 lg:flex lg:items-center lg:justify-end lg:gap-10'
+      ]"
+    >
+      <div v-if="total !== undefined" class="flex items-end justify-between gap-3 px-1 lg:px-0">
         <div>
           <p class="text-sm text-gray-700">Total</p>
-          <p class="text-2xl font-bold text-brand-dark leading-none">{{ formatCLP(total) }}</p>
+          <p class="text-2xl lg:text-3xl font-bold text-brand-dark leading-none">{{ formatCLP(total) }}</p>
         </div>
         <div v-if="abono || sinAbono" class="text-right">
           <p class="text-sm text-gray-700">{{ abono ? 'Abono para confirmar' : 'Abono' }}</p>
@@ -38,6 +52,7 @@ defineEmits<{ (e: 'click', ev: MouseEvent): void }>()
         variant="primary"
         size="lg"
         full-width
+        :class="total !== undefined ? '' : 'lg:!w-80 lg:shrink-0'"
         :disabled="disabled"
         :loading="loading"
         @click="$emit('click', $event)"

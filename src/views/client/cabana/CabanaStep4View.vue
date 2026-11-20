@@ -80,10 +80,10 @@ function confirmarEstadoAdmin() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-precio">
+  <div class="space-y-4 max-w-md lg:max-w-none mx-auto w-full pb-contenido-precio">
     
-    <div v-if="!isSubmitted" class="space-y-4">
-      <h2 class="text-2xl font-bold text-brand-dark leading-tight">Revisa tu reserva</h2>
+    <div v-if="!isSubmitted" class="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-x-8 lg:gap-y-5 lg:items-start">
+      <h2 class="lg:col-span-2 text-2xl lg:text-3xl font-bold text-brand-dark leading-tight">Revisa tu reserva</h2>
 
       <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-4">
         <div class="space-y-0.5">
@@ -121,6 +121,8 @@ function confirmarEstadoAdmin() {
         </div>
       </div>
 
+      <!-- En PC: a la derecha el total, el envío y los avisos -->
+      <div class="flex flex-col gap-4 lg:sticky lg:top-24">
       <DepositInfoCard v-if="!store.isAdminMode" />
       <CasilleroEventoEspecial v-if="store.isAdminMode" />
 
@@ -142,6 +144,7 @@ function confirmarEstadoAdmin() {
       />
 
       <BarraAccionInferior enviar :total="totalWithIva" :abono="depositAmount" :loading="isSubmitting || bloqueado" :disabled="bloqueado" @click="alTocarEnviar">{{ bloqueado ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar solicitud' }}</BarraAccionInferior>
+      </div>
     </div>
 
     <!-- El administrador ve su propia confirmación, sin el texto dirigido al cliente -->
@@ -153,7 +156,7 @@ function confirmarEstadoAdmin() {
       :total="totalWithIva"
     />
 
-    <div v-else class="bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
+    <div v-else class="lg:max-w-2xl lg:mx-auto bg-white p-6 sm:p-7 rounded-3xl border-2 border-brand-border shadow-md space-y-6 text-center">
       <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-xs border-2 border-emerald-300">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
       </div>

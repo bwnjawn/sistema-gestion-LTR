@@ -122,10 +122,10 @@ function close() {
 
 <template>
   <!-- Detalle para el cliente: foto arriba, ficha con scroll y botones fijos -->
-  <HojaModal v-if="cabin" :abierto="isOpen && !isEditable" :titulo="cabin.name" sin-manija sin-relleno @cerrar="close">
+  <HojaModal v-if="cabin" :abierto="isOpen && !isEditable" ancho="amplio" :titulo="cabin.name" sin-manija sin-relleno @cerrar="close">
     <template #cabecera>
         <!-- Carrusel de Fotografías -->
-        <div class="relative h-60 sm:h-64 w-full bg-black shrink-0 overflow-hidden">
+        <div class="relative h-60 sm:h-64 lg:h-96 w-full bg-black shrink-0 overflow-hidden">
           <img 
             :src="activeImage" 
             :alt="cabin.name"
@@ -174,7 +174,7 @@ function close() {
     </template>
 
         <!-- Ficha de Información de Cabaña -->
-        <div class="p-5 space-y-4">
+        <div class="p-5 lg:p-7 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-x-8 lg:gap-y-5 lg:items-start">
           <div>
             <div class="flex items-center justify-between">
               <h3 class="text-xl font-bold text-brand-dark leading-tight">{{ cabin.name }}</h3>
@@ -244,6 +244,7 @@ function close() {
   <!-- Formulario de edición (administrador) -->
   <HojaModal
         :abierto="isOpen && (isEditable || !cabin)"
+        ancho="amplio"
         :titulo="isEditing ? 'Editar cabaña' : 'Nueva cabaña'"
         :subtitulo="isEditing ? form.name : undefined"
         texto-guardar="Guardar cabaña"
@@ -289,6 +290,7 @@ function close() {
 
         <!-- Galería de fotos (hasta 8) -->
         <ImageGalleryEditor
+          class="lg:col-span-2"
           v-model:images="form.images!"
           v-model:mainImage="form.mainImage"
           :max-images="8"
@@ -296,6 +298,7 @@ function close() {
         />
 
         <ListaEtiquetas
+          class="lg:col-span-2"
           :model-value="(form.features as string[] | undefined) ?? []"
           etiqueta="Servicios incluidos"
           placeholder="Ej: Estufa a leña"

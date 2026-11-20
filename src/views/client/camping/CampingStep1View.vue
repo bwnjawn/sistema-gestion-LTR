@@ -131,7 +131,7 @@ function handleNext() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
+  <div class="space-y-4 max-w-md lg:max-w-none mx-auto w-full pb-contenido-nav">
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="1" />
     </div>

@@ -27,7 +27,7 @@ const imagesList = computed(() => {
 </script>
 
 <template>
-  <HojaModal v-if="site" :abierto="isOpen" :titulo="diaDeCampo ? NOMBRE_DIA_DE_CAMPO : site.name" :subtitulo="diaDeCampo ? 'Detalle del camping' : 'Detalle del espacio'" @cerrar="emit('close')">
+  <HojaModal v-if="site" :abierto="isOpen" ancho="amplio" :titulo="diaDeCampo ? NOMBRE_DIA_DE_CAMPO : site.name" :subtitulo="diaDeCampo ? 'Detalle del camping' : 'Detalle del espacio'" @cerrar="emit('close')">
     <!-- Galería de Fotos -->
     <div class="grid grid-cols-2 gap-2">
       <img v-for="(img, idx) in imagesList" :key="idx" :src="img" alt="" class="w-full h-32 object-cover rounded-2xl border border-brand-border" />

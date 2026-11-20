@@ -1,6 +1,6 @@
 <template>
   <!-- Mismo estilo que la barra del admin: ícono relleno y oscuro cuando está activo, más una etiqueta -->
-  <nav class="barra-fija-inferior fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-[#e3eae1]/95 backdrop-blur-md border-t-2 border-brand-border px-2.5 pt-2.5 pb-seguro-nav shadow-2xl">
+  <nav class="lg:hidden barra-fija-inferior fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-[#e3eae1]/95 backdrop-blur-md border-t-2 border-brand-border px-2.5 pt-2.5 pb-seguro-nav shadow-2xl">
     <div class="grid grid-cols-2 gap-2">
       <button
         v-for="item in items"

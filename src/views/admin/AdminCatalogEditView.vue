@@ -242,7 +242,7 @@ function executeDelete() {
 <template>
   <CargaDatosAdmin>
     <template #esqueleto><EsqueletoCatalogoAdmin /></template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+  <div class="space-y-4 max-w-md lg:max-w-none mx-auto w-full pb-28">
     
     <!-- PESTAÑAS PRINCIPALES -->
     <div class="bg-white p-2 rounded-3xl border-2 border-brand-border shadow-2xs">
@@ -293,8 +293,8 @@ function executeDelete() {
     </div>
 
     <!-- CABAÑAS -->
-    <div v-if="activeCategory === 'cabana'" class="space-y-4">
-      <div v-if="avisoMantencion" class="bg-amber-50 border-2 border-amber-600 rounded-2xl p-3 space-y-2" role="status">
+    <div v-if="activeCategory === 'cabana'" class="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 2xl:grid-cols-3 lg:gap-5 lg:items-start">
+      <div v-if="avisoMantencion" class="lg:col-span-full bg-amber-50 border-2 border-amber-600 rounded-2xl p-3 space-y-2" role="status">
         <div class="flex items-start justify-between gap-2">
           <p class="text-sm font-bold text-amber-950 flex items-start gap-1.5">
             <AlertTriangle class="w-5 h-5 stroke-[2.5] shrink-0" aria-hidden="true" />
@@ -324,7 +324,7 @@ function executeDelete() {
     </div>
 
     <!-- CAMPING -->
-    <div v-else-if="activeCategory === 'camping'" class="space-y-4">
+    <div v-else-if="activeCategory === 'camping'" class="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 2xl:grid-cols-3 lg:gap-5 lg:items-start">
       <CampingCard v-for="site in catalogStore.campingSites" :key="site.id" :site="site">
         <template #actions="{ site: item }">
           <div class="flex items-center justify-end pt-2 border-t border-gray-100">
@@ -341,8 +341,8 @@ function executeDelete() {
         <button type="button" @click="restaurantTab = 'sides'" :class="['flex-1 py-2 text-sm font-bold rounded-xl transition-all', restaurantTab === 'sides' ? 'bg-[#c5d7be] text-brand-dark shadow-2xs' : 'text-gray-500']">Acompañamientos generales</button>
       </div>
 
-      <div v-if="restaurantTab === 'dishes'" class="space-y-3">
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+      <div v-if="restaurantTab === 'dishes'" class="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 2xl:grid-cols-3 lg:gap-5 lg:items-start">
+        <div class="lg:col-span-full flex items-center gap-1.5 overflow-x-auto pb-1">
           <button v-for="cat in dishCategories" :key="cat.valor" type="button" @click="selectedDishCategoryFilter = cat.valor" :class="['px-3.5 py-1.5 rounded-2xl text-sm font-bold border transition-all shrink-0', selectedDishCategoryFilter === cat.valor ? 'bg-brand-dark text-white border-brand-dark shadow-2xs' : 'bg-white text-gray-600 border-brand-border hover:bg-gray-50']">
             {{ cat.etiqueta }}
           </button>

@@ -1,17 +1,17 @@
 <template>
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-gray-300 shadow-sm pt-[env(safe-area-inset-top,0px)]">
-    <div class="max-w-md mx-auto w-full px-4 min-h-14 py-1 flex items-center justify-between gap-3">
+    <div class="max-w-md lg:max-w-[1680px] lg:px-10 lg:min-h-16 mx-auto w-full px-4 min-h-14 py-1 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3 min-w-0">
         <button
           type="button"
           @click="goDashboard"
-          class="shrink-0 w-9 h-9 rounded-full overflow-hidden border border-brand-border active:scale-95 transition-transform"
+          class="lg:hidden shrink-0 w-9 h-9 rounded-full overflow-hidden border border-brand-border active:scale-95 transition-transform"
           aria-label="Ir al inicio del panel"
         >
           <img src="/images/logo-negro.png" alt="" class="w-full h-full object-cover" />
         </button>
         <div class="min-w-0">
-          <h1 class="text-xl font-bold text-brand-dark leading-tight line-clamp-2">{{ titulo }}</h1>
+          <h1 class="text-xl lg:text-2xl font-bold text-brand-dark leading-tight line-clamp-2">{{ titulo }}</h1>
           <p v-if="mostrarActualizacion" class="text-sm text-gray-700 leading-tight truncate" aria-live="polite">{{ textoActualizacion }}</p>
         </div>
         <!-- Solo el círculo del "?" se ve; el área de toque de 40 px es transparente -->
@@ -60,7 +60,7 @@
       role="status"
       class="bg-amber-100 border-t-2 border-amber-500 text-amber-950"
     >
-      <p class="max-w-md mx-auto px-4 py-2 flex items-center gap-2 text-base font-bold">
+      <p class="max-w-md lg:max-w-[1680px] lg:px-10 mx-auto px-4 py-2 flex items-center gap-2 text-base font-bold">
         <WifiOff class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
         Sin conexión a internet. Ves los últimos datos guardados; para hacer cambios necesitas conexión.
       </p>

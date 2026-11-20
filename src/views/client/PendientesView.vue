@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { CloudOff, RotateCw, Phone, Trash2 } from 'lucide-vue-next'
 import ClientHeader from '../../components/ui/ClientHeader.vue'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
+import ClientBarraSuperior from '../../components/ui/ClientBarraSuperior.vue'
 import BaseButton from '../../components/ui/BaseButton.vue'
 import BaseAlert from '../../components/ui/BaseAlert.vue'
 import HojaModal from '../../components/ui/HojaModal.vue'
@@ -35,9 +36,10 @@ async function descartar() {
 
 <template>
   <div class="min-h-screen bg-brand-light">
-    <ClientHeader titulo="Por enviar" subtitulo="Solicitudes guardadas en este teléfono" con-volver @volver="router.push('/')" />
+    <ClientBarraSuperior />
+    <ClientHeader class="lg:hidden" titulo="Por enviar" subtitulo="Solicitudes guardadas en este teléfono" con-volver @volver="router.push('/')" />
 
-    <main class="space-y-4 max-w-md mx-auto w-full px-4 pt-4 pb-contenido-nav">
+    <main class="space-y-4 max-w-md lg:max-w-3xl mx-auto w-full px-4 lg:px-10 pt-4 lg:pt-8 pb-contenido-nav lg:pb-12">
       <div v-if="cola.entradas.length === 0" class="bg-white p-5 rounded-3xl border-2 border-brand-border text-center space-y-2">
         <p class="text-base font-bold text-brand-dark">No tienes solicitudes por enviar</p>
         <p class="text-base text-gray-700">Las que hagas sin señal aparecerán aquí hasta que lleguen.</p>

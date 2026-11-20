@@ -39,9 +39,9 @@ const { terminar: handleGoHome } = useSalidaReserva()
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-precio">
-    <div v-if="!isSubmitted" class="space-y-4">
-      <h2 class="text-2xl font-bold text-brand-dark leading-tight">Revisa tu visita</h2>
+  <div class="space-y-4 max-w-md lg:max-w-none mx-auto w-full pb-contenido-precio">
+    <div v-if="!isSubmitted" class="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-x-8 lg:gap-y-5 lg:items-start">
+      <h2 class="lg:col-span-2 text-2xl lg:text-3xl font-bold text-brand-dark leading-tight">Revisa tu visita</h2>
 
       <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-4">
         <div class="space-y-0.5">
@@ -65,6 +65,8 @@ const { terminar: handleGoHome } = useSalidaReserva()
         </div>
       </div>
 
+      <!-- En PC: a la derecha el total, el envío y los avisos -->
+      <div class="flex flex-col gap-4 lg:sticky lg:top-24">
       <AvisoEnvio
         :sin-conexion="sinConexion"
         :se-guarda="seGuardaParaDespues"
@@ -74,6 +76,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
       />
 
       <BarraAccionInferior enviar :total="total" :abono="0" sin-abono :loading="isSubmitting || bloqueado" :disabled="bloqueado" @click="handleSendRequest">{{ bloqueado ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar' }}</BarraAccionInferior>
+      </div>
     </div>
 
     <!-- El administrador ve su propia confirmación, sin el texto dirigido al cliente -->
@@ -85,7 +88,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
       :total="total"
     />
 
-    <div v-else class="bg-white p-6 rounded-3xl border-2 border-brand-border shadow-md space-y-5 text-center">
+    <div v-else class="lg:max-w-2xl lg:mx-auto bg-white p-6 rounded-3xl border-2 border-brand-border shadow-md space-y-5 text-center">
       <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-xs border-2 border-emerald-300">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
       </div>

@@ -246,7 +246,7 @@ function proceedToStep3() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
+  <div class="space-y-4 max-w-md lg:max-w-none mx-auto w-full pb-contenido-nav">
     
     <!-- Menús incompletos: aviso antes de continuar -->
     <HojaModal :abierto="showIncompleteModal" titulo="Menús incompletos" ocultar-cierre @cerrar="showIncompleteModal = false">

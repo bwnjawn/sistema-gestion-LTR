@@ -157,6 +157,7 @@ function close() {
 <template>
   <HojaModal
     :abierto="isOpen"
+    ancho="amplio"
         :titulo="isEditing ? 'Editar plato' : 'Nuevo plato'"
         :subtitulo="isEditing ? form.name : undefined"
         texto-guardar="Guardar plato"

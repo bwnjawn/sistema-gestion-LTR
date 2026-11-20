@@ -20,7 +20,7 @@ const settingsStore = useSettingsStore()
 
 <template>
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-brand-border shadow-2xs pt-[env(safe-area-inset-top,0px)]">
-    <div class="max-w-md mx-auto w-full px-2 h-14 flex items-center gap-1">
+    <div class="max-w-md lg:max-w-5xl lg:px-0 lg:h-16 mx-auto w-full px-2 h-14 flex items-center gap-1">
       <button
         v-if="conVolver"
         type="button"
@@ -70,7 +70,7 @@ const settingsStore = useSettingsStore()
       role="status"
       class="bg-amber-100 border-t-2 border-amber-500 text-amber-950"
     >
-      <p class="max-w-md mx-auto px-4 py-2 flex items-center gap-2 text-sm font-bold">
+      <p class="max-w-md lg:max-w-5xl mx-auto px-4 py-2 flex items-center gap-2 text-sm font-bold">
         <WifiOff class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
         Sin conexión. Puedes enviar: se guardará y se mandará al volver la señal.
       </p>
