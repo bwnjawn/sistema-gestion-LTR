@@ -9,6 +9,7 @@ import AdminRequestEditForm from './AdminRequestEditForm.vue'
 import AdminConfirmarCruceDialog from './AdminConfirmarCruceDialog.vue'
 import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
 import AdminMoverFechaDialog from './AdminMoverFechaDialog.vue'
+import AdminCancelarReservaDialog from './AdminCancelarReservaDialog.vue'
 import EstadoSolicitud from './EstadoSolicitud.vue'
 import EtiquetaSinSincronizar from './EtiquetaSinSincronizar.vue'
 import CotizacionAcciones from './CotizacionAcciones.vue'
@@ -19,7 +20,7 @@ import { buildMailtoUrl, buildTelUrl, buildWhatsappUrl, hasUsablePhone } from '.
 import { formatDateShort, formatDateTime, todayISO } from '../../lib/dates'
 import { formatCLP } from '../../lib/format'
 import { PAYMENT_METHOD_LABELS, getPaymentSummary, isConfirmedWithoutDeposit, isDepositOverdue } from '../../services/payments'
-import { canEditRequest, describeRequest } from '../../services/requests'
+import { canEditRequest, describeRequest, puedeCancelarse } from '../../services/requests'
 import { describirBloqueo } from '../../services/cruces'
 import { partesDeFecha, resumirSolicitud } from '../../services/resumenSolicitud'
 import type { PaymentMethod } from '../../types/domain'
@@ -42,6 +43,15 @@ const request = computed(() => requestsStore.requests.find(r => r.id === props.r
 const view = computed(() => (request.value ? describeRequest(request.value) : null))
 const payment = computed(() => (request.value ? getPaymentSummary(request.value) : null))
 const isPending = computed(() => request.value?.status === 'pending')
+// Una confirmada no se rechaza: se cancela, y eso libera sus fechas (SCRUM-284)
+const puedeCancelar = computed(() => !!request.value && puedeCancelarse(request.value))
+const cancelandoReserva = ref(false)
+
+/** Al cerrar la hoja de cancelación: si ya quedó cancelada, el detalle también se cierra. */
+function cerrarCancelacion() {
+  cancelandoReserva.value = false
+  if (request.value?.status === 'cancelled') emit('close')
+}
 
 // Pendiente cuya fecha ya ocupa una confirmada: no se aprueba, solo se mueve de fecha o se rechaza
 const bloqueo = computed(() => (request.value ? describirBloqueo(requestsStore.porMoverPorId[request.value.id] ?? []) : ''))
@@ -87,6 +97,7 @@ watch(() => props.requestId, () => {
   cruceId.value = null
   confirmingReject.value = false
   confirmingCancel.value = false
+  cancelandoReserva.value = false
   sinAbonoId.value = null
   isEditing.value = false
   moviendo.value = false
@@ -526,8 +537,13 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
       </div>
 
       <!-- Acciones: solo las pendientes tienen decisión que tomar; para el resto basta la X de arriba -->
-      <template v-if="!isEditing && isPending" #pie>
-      <div>
+      <template v-if="!isEditing && (isPending || puedeCancelar)" #pie>
+      <div v-if="puedeCancelar">
+        <BaseButton variant="outline" size="md" full-width class="!text-base !border-status-danger !text-status-danger" @click="cancelandoReserva = true">
+          <X class="w-4 h-4 mr-1 stroke-[3]" aria-hidden="true" /> Cancelar reserva
+        </BaseButton>
+      </div>
+      <div v-else>
         <div v-if="!confirmingReject" class="grid grid-cols-2 gap-2">
           <BaseButton variant="outline" size="md" class="!text-base !border-status-danger !text-status-danger" @click="confirmingReject = true">
             <X class="w-4 h-4 mr-1 stroke-[3]" aria-hidden="true" /> Rechazar
@@ -553,5 +569,6 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
     <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="continueApproval" @close="sinAbonoId = null" />
     <AdminConfirmarCruceDialog :request-id="cruceId" @close="cruceId = null" />
     <AdminMoverFechaDialog :request-id="moviendo ? request.id : null" @close="moviendo = false" />
+    <AdminCancelarReservaDialog :request-id="cancelandoReserva ? request.id : null" @close="cerrarCancelacion" />
   </template>
 </template>

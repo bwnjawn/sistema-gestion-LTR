@@ -22,6 +22,25 @@ export function buildMensajeFechaNoDisponible(solicitud: ReservationRequest): st
   )
 }
 
+/**
+ * Mensaje para el cliente cuya reserva confirmada se cancela (SCRUM-284). No promete devoluciones: si hubo abono,
+ * solo ofrece conversarlo. El administrador puede editar el texto antes de enviarlo.
+ */
+export function buildMensajeCancelacion(solicitud: ReservationRequest): string {
+  const abono = solicitud.payments.length > 0
+    ? ' Como ya habías hecho un abono, conversemos cómo seguimos.'
+    : ''
+  return (
+    `Hola ${solicitud.clientName}, te escribimos de Los Troncos de Repil por tu reserva ${solicitud.requestCode}. ` +
+    `Se canceló la reserva de ${describirFechasSolicitud(solicitud)}.${abono} Quedamos atentos.`
+  )
+}
+
+/** Asunto del correo para avisar que la reserva se canceló. */
+export function buildAsuntoCancelacion(solicitud: ReservationRequest): string {
+  return `Reserva ${solicitud.requestCode} cancelada - Los Troncos de Repil`
+}
+
 /** Asunto del correo para avisar que la fecha ya no está disponible. */
 export function buildAsuntoFechaNoDisponible(solicitud: ReservationRequest): string {
   return `Tu solicitud ${solicitud.requestCode} - Los Troncos de Repil`
