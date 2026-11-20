@@ -5,7 +5,7 @@ import { User, Phone, Mail, FileText, Tent, Clock } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
-import { isClientContactValid, isClientPhoneIncomplete } from '../../../services/wizard'
+import { isClientContactValid, isClientPhoneIncomplete, NOMBRE_DIA_DE_CAMPO } from '../../../services/wizard'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
@@ -121,7 +121,7 @@ function handleNext() {
           <span>Servicio:</span>
           <span class="text-brand-dark font-extrabold flex items-center gap-1">
             <Tent class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Camping ({{ selectedCampingSite?.name || 'Camping' }})
+            Camping ({{ isDiario ? NOMBRE_DIA_DE_CAMPO : selectedCampingSite?.name || 'Camping' }})
           </span>
         </div>
         <div class="flex justify-between items-center">

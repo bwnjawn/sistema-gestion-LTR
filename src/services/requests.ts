@@ -400,7 +400,8 @@ export function applyRequestEdit(
       const check = validateGuestCapacity(edit.guestsCount, 1, cabin.capacity)
       if (!check.isValid) return { ok: false, message: check.message! }
     }
-    if (site) {
+    // Por el día no hay espacios grandes ni pequeños: el rango de personas del espacio solo vale al pernoctar
+    if (site && req.details?.campingType !== 'diario') {
       const check = validateGuestCapacity(edit.guestsCount, site.minCapacity, site.maxCapacity)
       if (!check.isValid) return { ok: false, message: check.message! }
     }

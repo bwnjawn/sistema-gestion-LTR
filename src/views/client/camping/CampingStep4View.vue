@@ -19,6 +19,7 @@ import { useCatalogStore } from '../../../stores/catalogStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
 import { formatCLP } from '../../../lib/format'
 import { formatDateShort, nightsBetween } from '../../../lib/dates'
+import { NOMBRE_DIA_DE_CAMPO } from '../../../services/wizard'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -33,6 +34,8 @@ const selectedCampingSite = computed(() => {
 })
 
 const isDiario = computed(() => store.campingType === 'diario')
+// Por el día no hay espacios grandes ni pequeños: no se nombra el espacio (SCRUM-277)
+const nombreEspacio = computed(() => (isDiario.value ? NOMBRE_DIA_DE_CAMPO : selectedCampingSite.value?.name))
 
 const nightsCount = computed(() => (isDiario.value ? 1 : nightsBetween(store.checkInDate, store.checkOutDate)))
 
@@ -101,7 +104,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
             <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Espacio</p>
             <button type="button" @click="router.push('/camping/paso2')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
-          <p class="text-xl font-bold text-brand-dark">{{ selectedCampingSite?.name }}</p>
+          <p class="text-xl font-bold text-brand-dark">{{ nombreEspacio }}</p>
           <p class="text-sm text-gray-700">{{ store.guestsCount }} personas</p>
         </div>
         <div class="space-y-0.5 pt-4 border-t border-gray-200">
@@ -159,7 +162,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
     <ConfirmacionReservaAdmin
       v-else-if="store.isAdminMode"
       :codigo="reservationCode"
-      :servicio="String(selectedCampingSite?.name ?? '')"
+      :servicio="String(nombreEspacio ?? '')"
       :fechas="String(formattedScheduleDisplay)"
       :total="totalWithIva"
     />
@@ -184,7 +187,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
       <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm text-gray-700">
         <div class="flex justify-between items-center">
           <span class="text-gray-500">Servicio:</span>
-          <span class="text-brand-dark font-bold">{{ selectedCampingSite?.name }}</span>
+          <span class="text-brand-dark font-bold">{{ nombreEspacio }}</span>
         </div>
         <div class="flex justify-between items-start gap-2">
           <span class="text-gray-500 shrink-0">Fechas y Modalidad:</span>

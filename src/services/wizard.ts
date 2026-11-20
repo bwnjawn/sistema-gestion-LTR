@@ -12,13 +12,24 @@ import { hasUsablePhone, normalizePhoneDigits } from '../lib/contactLinks'
 /** Un espacio con modalidad 'ambos' admite tanto el día de campo como pernoctar. */
 export const MODALIDAD_AMBAS = 'ambos'
 
+/** Cómo se llama en pantalla la modalidad de un espacio. */
+export const ETIQUETA_MODALIDAD_ESPACIO: Record<CampingSite['modality'], string> = {
+  ambos: 'Día y noche',
+  diario: 'Solo de día'
+}
+
 export function siteSupportsModality(site: CampingSite, type: CampingModality): boolean {
   return site.modality === type || site.modality === MODALIDAD_AMBAS
 }
 
+/** Cómo se llama el camping por el día: no hay espacios grandes ni pequeños, todos son iguales (SCRUM-277). */
+export const NOMBRE_DIA_DE_CAMPO = 'Día de campo'
+
 /**
- * Espacio de camping que corresponde a un grupo: cubre la cantidad de personas y admite la
- * modalidad elegida. Si hay varios, se prefiere el de menor capacidad máxima (el más ajustado).
+ * Espacio de camping que corresponde a un grupo. Pernoctando cubre la cantidad de personas y admite la
+ * modalidad; si hay varios, se prefiere el de menor capacidad máxima (el más ajustado). Por el día los espacios
+ * son todos iguales: sirve cualquier grupo, y solo se usa el rango de personas para elegir cuál se anota
+ * (el que cubre al grupo; si ninguno, el más grande).
  * Devuelve undefined si ninguno sirve: no se asigna uno "por defecto".
  */
 export function findCampingSite(
@@ -26,9 +37,12 @@ export function findCampingSite(
   guestsCount: number,
   type: CampingModality
 ): CampingSite | undefined {
-  return sites
-    .filter(s => guestsCount >= s.minCapacity && guestsCount <= s.maxCapacity && siteSupportsModality(s, type))
+  const admiten = sites.filter(s => siteSupportsModality(s, type))
+  const cubren = admiten
+    .filter(s => guestsCount >= s.minCapacity && guestsCount <= s.maxCapacity)
     .sort((a, b) => a.maxCapacity - b.maxCapacity)[0]
+  if (type !== 'diario') return cubren
+  return cubren ?? [...admiten].sort((a, b) => b.maxCapacity - a.maxCapacity)[0]
 }
 
 /** Mensaje para el cliente cuando no hay un espacio disponible para su grupo. */

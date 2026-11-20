@@ -24,8 +24,7 @@ const form = ref<Partial<CampingSite>>({
   pricePerPerson: 10000,
   minCapacity: 1,
   maxCapacity: 10,
-  isSpecial: false,
-  modality: 'pernoctar',
+  modality: 'ambos',
   image: '',
   images: [],
   features: []
@@ -40,8 +39,7 @@ watch(() => props.site, (newSite) => {
       pricePerPerson: newSite.pricePerPerson || 10000,
       minCapacity: newSite.minCapacity ?? 1,
       maxCapacity: newSite.maxCapacity ?? 10,
-      isSpecial: newSite.isSpecial ?? false,
-      modality: newSite.modality || 'pernoctar',
+      modality: newSite.modality || 'ambos',
       image: newSite.image || '',
       images: newSite.images ? [...newSite.images] : (newSite.image ? [newSite.image] : []),
       features: newSite.features ? [...newSite.features] : []
@@ -54,8 +52,7 @@ watch(() => props.site, (newSite) => {
       pricePerPerson: 10000,
       minCapacity: 1,
       maxCapacity: 10,
-      isSpecial: false,
-      modality: 'pernoctar',
+      modality: 'ambos',
       image: '',
       images: [],
       features: []
@@ -98,9 +95,8 @@ function close() {
           <div>
             <label class="campo-etiqueta" for="camping-modalidad">Modalidad</label>
             <select id="camping-modalidad" v-model="form.modality" class="campo-entrada">
-              <option value="pernoctar">Con noche</option>
-              <option value="diario">Por el día</option>
               <option value="ambos">Día y noche</option>
+              <option value="diario">Solo de día</option>
             </select>
           </div>
         </div>
@@ -115,11 +111,6 @@ function close() {
             <input id="camping-max" v-model.number="form.maxCapacity" required type="number" inputmode="numeric" min="1" class="campo-entrada" />
           </div>
         </div>
-
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input v-model="form.isSpecial" type="checkbox" class="w-6 h-6 shrink-0 accent-brand-dark" />
-          <span>Espacio especial para grupos grandes</span>
-        </label>
 
         <div>
           <label class="campo-etiqueta" for="camping-descripcion">Descripción</label>

@@ -130,7 +130,9 @@ describe('catálogo: filas y datos de la app', () => {
     expect(sitioAFila({ modality: 'diario' }).modalidades).toEqual(['diario'])
     const fila = { ...sitioAFila(sitio) } as Parameters<typeof sitioDeFila>[0]
     expect(sitioDeFila(fila)).toEqual(sitio)
-    expect(sitioDeFila({ ...fila, modalidades: ['pernoctar'] }).modality).toBe('pernoctar')
+    // Un espacio antiguo solo para pernoctar pasa a servir de día y de noche (SCRUM-277)
+    expect(sitioDeFila({ ...fila, modalidades: ['pernoctar'] }).modality).toBe('ambos')
+    expect(sitioDeFila({ ...fila, modalidades: ['diario'] }).modality).toBe('diario')
   })
 
   it('un plato con acompañamientos a elegir los toma de la tabla de vínculos', () => {

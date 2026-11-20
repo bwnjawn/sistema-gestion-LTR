@@ -23,10 +23,11 @@ describe('normalizarComida (SCRUM-245)', () => {
 })
 
 describe('normalizarModalidadSitio', () => {
-  it('acepta solo diario, pernoctar o ambos', () => {
+  it('solo existen "solo de día" y "día y noche": lo demás (también el antiguo pernoctar) es día y noche', () => {
     expect(normalizarModalidadSitio('ambos')).toBe('ambos')
     expect(normalizarModalidadSitio('Diario')).toBe('diario')
-    expect(normalizarModalidadSitio('cualquier cosa')).toBe('pernoctar')
+    expect(normalizarModalidadSitio('cualquier cosa')).toBe('ambos')
+    expect(normalizarModalidadSitio('pernoctar')).toBe('ambos')
   })
 })
 
@@ -105,7 +106,7 @@ describe('normalizarCabana', () => {
 describe('normalizarSitio', () => {
   it('cierra la modalidad y marca el espacio como activo', () => {
     const s = normalizarSitio({ id: 's1', name: 'x', pricePerPerson: 1, minCapacity: 1, maxCapacity: 9, modality: 'otra' })
-    expect(s.modality).toBe('pernoctar')
+    expect(s.modality).toBe('ambos')
     expect(s.isActive).toBe(true)
   })
 })

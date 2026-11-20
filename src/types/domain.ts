@@ -9,7 +9,11 @@ export type ServiceType = 'cabana' | 'camping' | 'restaurante' | 'piscina'
 export type BookingStatus = 'pending' | 'confirmed' | 'rejected' | 'cancelled'
 export type CampingModality = 'diario' | 'pernoctar'
 /** Modalidades que admite un espacio de camping: una de las dos o ambas. */
-export type CampingSiteModality = CampingModality | 'ambos'
+/**
+ * Para qué sirve un espacio de camping (SCRUM-277): solo de día, o de día y de noche. No hay espacios solo para
+ * pernoctar: por el día todos son iguales, así que cualquiera sirve para el día de campo.
+ */
+export type CampingSiteModality = 'diario' | 'ambos'
 /** Las tres comidas del restaurante. Siempre en minúscula; la etiqueta para mostrar sale de `ETIQUETAS_COMIDA`. */
 export type MealType = 'desayuno' | 'almuerzo' | 'once'
 export type SideDishMode = 'none' | 'fixed' | 'choice'
@@ -53,7 +57,6 @@ export interface CampingSite {
   pricePerPerson: number
   minCapacity: number
   maxCapacity: number
-  isSpecial: boolean
   modality: CampingSiteModality
   image?: string
   images?: string[]
