@@ -35,7 +35,7 @@ async function crearArchivo(): Promise<File | null> {
   error.value = ''
   try {
     const cotizacion = buildCotizacion(props.request, {
-      negocio: settingsStore.contactInfo,
+      negocio: { ...settingsStore.contactInfo, address: settingsStore.direccionDelLocal },
       transferencia: settingsStore.transferInfo,
       ivaVigente: settingsStore.ivaPercentage
     })

@@ -3,6 +3,7 @@
 // repositorio local entrega mientras el administrador no haya guardado nada. Con Supabase (SCRUM-248) viven en la base.
 
 import type { BusinessInfo, TransferInfo } from '../types/domain'
+import { DIRECCION_POR_DEFECTO } from '../services/ubicacion'
 import type {
   BusinessParametersExtended,
   CabinSchedules,
@@ -26,10 +27,12 @@ export const DEFAULT_CONTACT: BusinessInfo = {
   websiteUrl: 'https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html',
   instagramUser: '@lostroncosderepil',
   instagramUrl: 'https://instagram.com/lostroncosderepil',
-  address: 'Sector Repil s/n, Comuna de Fresia, Región de Los Lagos, Chile',
+  address: DIRECCION_POR_DEFECTO,
   // Ubicación real de "Turismo Los Troncos de Repil" (-41.0616375, -73.647016)
   mapsUrl: 'https://www.google.com/maps/place/Turismo+Los+Troncos+de+Repil/@-41.0616375,-73.647016,17z',
-  iframeMapUrl: 'https://maps.google.com/maps?q=-41.0616375,-73.647016&z=17&output=embed'
+  iframeMapUrl: 'https://maps.google.com/maps?q=-41.0616375,-73.647016&z=17&output=embed',
+  latitude: -41.0616375,
+  longitude: -73.647016
 }
 
 // Datos de ejemplo hasta que el cliente entregue los reales (D3); el admin los edita en Ajustes.

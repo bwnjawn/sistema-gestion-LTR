@@ -143,7 +143,7 @@ Decidido el 8/11 (SCRUM-244) y **corregido el 10/11 (SCRUM-263)**: bloquean solo
 ## 6. Contacto del negocio
 
 Los datos de `ContactView` salen de `settingsStore.contactInfo` y se editan desde `AdminContactEditModal` (SCRUM-231).
-Los enlaces (mapa, Instagram, web) se generan en `lib/contactLinks.ts` a partir de lo que escribe el admin.
+Los enlaces de Instagram y web se generan en `lib/contactLinks.ts` a partir de lo que escribe el admin. **El mapa y el enlace "Cómo llegar" salen de un punto exacto** que el admin marca en Ajustes → Datos del negocio → Contacto → "Marcar en el mapa" (SCRUM-281): mapa de OpenStreetMap con Leaflet, sin clave; toca el mapa o arrastra el pin, busca una dirección o usa su ubicación actual. Se guardan `latitude` y `longitude` en el ajuste `contacto` (sin migración: es JSON) y de ahí salen `mapsUrl` e `iframeMapUrl` (`services/ubicacion.ts`). La dirección escrita es solo una **referencia opcional** ("Referencia de la dirección"): cambiarla no mueve el mapa, y si el admin la deja vacía el cliente ve la de siempre (`DIRECCION_POR_DEFECTO`: "Sector Repil s/n, Comuna de Fresia, Región de Los Lagos, Chile"; `direccionParaMostrar` y `settingsStore.direccionDelLocal`). Si aún no hay punto guardado, el mapa parte del lugar del local.
 
 - Teléfonos por defecto: +56 9 8502 5056 y +56 9 5883 3853 (el segundo se corrigió el 8/11 según la reunión con el cliente; antes decía +56 9 9588 3385). `settingsStore.ts` reemplaza solo el número antiguo si el navegador lo tenía guardado.
 - Ubicación del mapa (corregida el 8/11): "Turismo Los Troncos de Repil", coordenadas -41.0616375, -73.647016. Los valores anteriores tenían el signo positivo y apuntaban a otro lugar; `settingsStore.ts` los reemplaza solos si el navegador los tenía guardados.

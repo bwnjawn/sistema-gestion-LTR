@@ -47,7 +47,7 @@ const showTransferModal = ref(false)
         </div>
         <div class="flex items-start gap-2 pt-1 border-t border-brand-border/60">
           <MapPin class="w-3.5 h-3.5 text-gray-700 shrink-0 mt-0.5" />
-          <span class="leading-tight">{{ settingsStore.contactInfo.address }}</span>
+          <span class="leading-tight">{{ settingsStore.direccionDelLocal }}</span>
         </div>
       </div>
     </div>
