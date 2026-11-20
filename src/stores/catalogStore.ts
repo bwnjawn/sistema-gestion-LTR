@@ -7,6 +7,7 @@ import { generateUUID } from '../lib/id'
 import { repositorios } from '../lib/repositories'
 import { persistirConReversion } from '../lib/persistirConReversion'
 import { mensajeDeError } from '../lib/errores'
+import { avisoAcompanamiento, avisoCatalogoAgregado, avisoCatalogoCambiado } from '../services/mensajesAvisos'
 import { aplicarReglaDeAcompanamiento, platosQueUsanAcompanamiento, validarNombreAcompanamiento } from '../services/menus'
 
 export const useCatalogStore = defineStore('catalog', () => {
@@ -98,7 +99,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         aplicar: () => { todasLasCabanas.value.push(newCabin) },
         revertir: () => { todasLasCabanas.value = todasLasCabanas.value.filter(c => c.id !== newCabin.id) },
         persistir: () => repositorios().cabins.create(newCabin),
-        mensaje: 'No se pudo agregar la cabaña.'
+        mensaje: 'No se pudo agregar la cabaña.',
+        exito: avisoCatalogoAgregado('cabana', newCabin.name)
       })
       return newCabin
     } catch (e) {
@@ -123,7 +125,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         aplicar: () => { todasLasCabanas.value[idx] = { ...previa, ...updated } },
         revertir: () => { todasLasCabanas.value[idx] = previa },
         persistir: () => repositorios().cabins.update(id, updated),
-        mensaje: 'No se pudo guardar el cambio de la cabaña.'
+        mensaje: 'No se pudo guardar el cambio de la cabaña.',
+        exito: avisoCatalogoCambiado('cabana', updated.name ?? previa.name, updated)
       })
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al actualizar la cabaña.')
@@ -161,7 +164,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         aplicar: () => { todosLosSitios.value.push(newSite) },
         revertir: () => { todosLosSitios.value = todosLosSitios.value.filter(s => s.id !== newSite.id) },
         persistir: () => repositorios().campingSites.create(newSite),
-        mensaje: 'No se pudo agregar el espacio de camping.'
+        mensaje: 'No se pudo agregar el espacio de camping.',
+        exito: avisoCatalogoAgregado('camping', newSite.name)
       })
       return newSite
     } catch (e) {
@@ -186,7 +190,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         aplicar: () => { todosLosSitios.value[idx] = { ...previo, ...updated } },
         revertir: () => { todosLosSitios.value[idx] = previo },
         persistir: () => repositorios().campingSites.update(id, updated),
-        mensaje: 'No se pudo guardar el cambio del espacio de camping.'
+        mensaje: 'No se pudo guardar el cambio del espacio de camping.',
+        exito: avisoCatalogoCambiado('camping', updated.name ?? previo.name, updated)
       })
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al actualizar sitio de camping.')
@@ -224,7 +229,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         aplicar: () => { todosLosPlatos.value.push(newDish) },
         revertir: () => { todosLosPlatos.value = todosLosPlatos.value.filter(d => d.id !== newDish.id) },
         persistir: () => repositorios().dishes.create(newDish),
-        mensaje: 'No se pudo agregar el plato.'
+        mensaje: 'No se pudo agregar el plato.',
+        exito: avisoCatalogoAgregado('plato', newDish.name)
       })
       return newDish
     } catch (e) {
@@ -256,7 +262,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         aplicar: () => { todosLosPlatos.value[idx] = resultado },
         revertir: () => { todosLosPlatos.value[idx] = previo },
         persistir: () => repositorios().dishes.update(id, cambios),
-        mensaje: 'No se pudo guardar el cambio del plato.'
+        mensaje: 'No se pudo guardar el cambio del plato.',
+        exito: avisoCatalogoCambiado('plato', updated.name ?? previo.name, updated)
       })
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al actualizar el plato.')
@@ -284,7 +291,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         aplicar: () => { globalSideDishes.value = [...previa, trimmed] },
         revertir: () => { globalSideDishes.value = previa },
         persistir: () => repositorios().globalSides.add(trimmed),
-        mensaje: 'No se pudo agregar el acompañamiento.'
+        mensaje: 'No se pudo agregar el acompañamiento.',
+        exito: avisoAcompanamiento('agregado', trimmed)
       })
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al agregar el acompañamiento.')
@@ -327,7 +335,8 @@ export const useCatalogStore = defineStore('catalog', () => {
             await repos.dishes.update(plato.id, { availableSides: cambiar(plato).availableSides })
           }
         },
-        mensaje: 'No se pudo cambiar el nombre del acompañamiento.'
+        mensaje: 'No se pudo cambiar el nombre del acompañamiento.',
+        exito: avisoAcompanamiento('renombrado', limpio)
       })
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al cambiar el nombre del acompañamiento.')
@@ -349,7 +358,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         aplicar: () => { globalSideDishes.value = previa.filter(s => s !== name) },
         revertir: () => { globalSideDishes.value = previa },
         persistir: () => repositorios().globalSides.remove(name),
-        mensaje: 'No se pudo quitar el acompañamiento.'
+        mensaje: 'No se pudo quitar el acompañamiento.',
+        exito: avisoAcompanamiento('quitado', name)
       })
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al quitar el acompañamiento.')

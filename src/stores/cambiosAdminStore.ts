@@ -9,6 +9,8 @@ import { computed, ref } from 'vue'
 import { conTiempoLimite } from '../lib/conTiempoLimite'
 import { generateUUID } from '../lib/id'
 import { marcarServidorActivo, marcarServidorCaido, servidorInalcanzable } from '../lib/estadoDeRed'
+import { avisarExito } from '../lib/avisos'
+import { avisoSincronizacion } from '../services/mensajesAvisos'
 import { repositorios } from '../lib/repositories'
 import {
   aplicarResultadoDeCambio,
@@ -102,6 +104,7 @@ export const useCambiosAdminStore = defineStore('cambiosAdmin', () => {
     if (sincronizando.value || pendientes.value.length === 0) return { enviados: 0 }
     sincronizando.value = true
     let enviados = 0
+    let conflictosEstaVez = 0
     try {
       for (const entrada of [...pendientes.value]) {
         let resultado = await intentar(entrada.cambio)
@@ -111,7 +114,10 @@ export const useCambiosAdminStore = defineStore('cambiosAdmin', () => {
           await persistir(aplicarResultadoDeCambio(entradas.value, entrada.id, resultado))
           const enConflicto: CambioAdmin = { ...entrada.cambio, solicitud: comoEnConflicto(entrada.cambio.solicitud) }
           resultado = await intentar(enConflicto)
-          if (resultado.tipo === 'enviado') conflictosNuevos.value++
+          if (resultado.tipo === 'enviado') {
+            conflictosNuevos.value++
+            conflictosEstaVez++
+          }
           // Una pendiente no puede chocar: si aun así lo rechaza, queda como cambio rechazado
           if (resultado.tipo === 'conflicto') resultado = { tipo: 'rechazado', motivo: 'Ya hay una reserva confirmada en esas fechas o cupos.' }
         }
@@ -121,6 +127,11 @@ export const useCambiosAdminStore = defineStore('cambiosAdmin', () => {
       }
     } finally {
       sincronizando.value = false
+    }
+    if (enviados > 0) {
+      // Lo que quedó guardado en el teléfono ya llegó al servidor: el aviso azul de antes ahora es verde
+      const aviso = avisoSincronizacion(enviados, conflictosEstaVez)
+      avisarExito(aviso.titulo, aviso.detalle, aviso.tono)
     }
     if (enviados > 0 || (rechazados.value.length > 0 && !servidorInalcanzable.value)) {
       // Lo que ve el administrador pasa a ser lo que dice el servidor

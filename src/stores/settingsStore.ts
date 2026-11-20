@@ -32,6 +32,8 @@ import {
 } from '../data/ajustesPorDefecto'
 import { repositorios } from '../lib/repositories'
 import { persistirConReversion } from '../lib/persistirConReversion'
+import type { MensajeAviso } from '../lib/avisos'
+import { AVISOS_DE_AJUSTES, avisoReglamentoSubido } from '../services/mensajesAvisos'
 import { mensajeDeError } from '../lib/errores'
 import { rutaDeReglamentoCamping, validarPdf } from '../services/documentos'
 import { direccionParaMostrar } from '../services/ubicacion'
@@ -147,7 +149,9 @@ export const useSettingsStore = defineStore('settings', () => {
     clave: K,
     destino: { value: AjustesGuardados[K] },
     nuevo: AjustesGuardados[K],
-    mensaje: string
+    mensaje: string,
+    /** Aviso verde de arriba cuando queda guardado (SCRUM-288). */
+    exito?: MensajeAviso
   ): Promise<boolean> {
     const previo = destino.value
     isLoading.value = true
@@ -157,7 +161,8 @@ export const useSettingsStore = defineStore('settings', () => {
         aplicar: () => { destino.value = nuevo },
         revertir: () => { destino.value = previo },
         persistir: () => repositorios().settings.save(clave, nuevo),
-        mensaje
+        mensaje,
+        exito
       })
       return true
     } catch (e) {
@@ -193,7 +198,7 @@ export const useSettingsStore = defineStore('settings', () => {
       ruta: subido.ruta,
       actualizadoEn: new Date().toISOString()
     }
-    const guardado = await guardarAjuste('camping_rules', campingRules, nuevo, 'No se pudo guardar el reglamento.')
+    const guardado = await guardarAjuste('camping_rules', campingRules, nuevo, 'No se pudo guardar el reglamento.', avisoReglamentoSubido(archivo.name))
     if (!guardado) {
       // No quedó referenciado: se borra para no dejar archivos sueltos
       await docs.eliminar(subido.ruta).catch(() => {})
@@ -206,7 +211,7 @@ export const useSettingsStore = defineStore('settings', () => {
   /** Quita el reglamento del camping: el cliente deja de verlo. Devuelve el mensaje de error, o `null` si se quitó. */
   async function quitarReglamentoCamping(): Promise<string | null> {
     const anterior = campingRules.value
-    const guardado = await guardarAjuste('camping_rules', campingRules, { ...REGLAMENTO_CAMPING_VACIO }, 'No se pudo quitar el reglamento.')
+    const guardado = await guardarAjuste('camping_rules', campingRules, { ...REGLAMENTO_CAMPING_VACIO }, 'No se pudo quitar el reglamento.', AVISOS_DE_AJUSTES.reglamentoQuitado)
     if (!guardado) return error.value ?? 'No se pudo quitar el reglamento.'
     if (anterior.ruta) await repositorios().documents.eliminar(anterior.ruta).catch(() => {})
     return null
@@ -220,7 +225,7 @@ export const useSettingsStore = defineStore('settings', () => {
   /** Cambia la foto de una tarjeta del inicio (`''` vuelve a la provisoria). Devuelve el mensaje de error, o `null` si quedó guardada. */
   async function cambiarFotoInicio(clave: ClaveFotoInicio, foto: string): Promise<string | null> {
     const mensaje = 'No se pudo guardar la foto.'
-    const guardado = await guardarAjuste('fotos_inicio', fotosInicio, { ...fotosInicio.value, [clave]: foto }, mensaje)
+    const guardado = await guardarAjuste('fotos_inicio', fotosInicio, { ...fotosInicio.value, [clave]: foto }, mensaje, foto === '' ? AVISOS_DE_AJUSTES.fotoRestaurada : AVISOS_DE_AJUSTES.fotoGuardada)
     return guardado ? null : error.value ?? mensaje
   }
 
@@ -242,15 +247,15 @@ export const useSettingsStore = defineStore('settings', () => {
   const phone2Clean = computed(() => contactInfo.value.phone2.replace(/\s+/g, ''))
 
   async function updateContactInfo(info: Partial<BusinessInfo>): Promise<boolean> {
-    return guardarAjuste('contact_info', contactInfo, { ...contactInfo.value, ...info }, 'No se pudo guardar la información de contacto.')
+    return guardarAjuste('contact_info', contactInfo, { ...contactInfo.value, ...info }, 'No se pudo guardar la información de contacto.', AVISOS_DE_AJUSTES.contacto)
   }
 
   async function updateTransferInfo(info: Partial<TransferInfo>): Promise<boolean> {
-    return guardarAjuste('transfer_info', transferInfo, { ...transferInfo.value, ...info }, 'No se pudieron guardar los datos de transferencia.')
+    return guardarAjuste('transfer_info', transferInfo, { ...transferInfo.value, ...info }, 'No se pudieron guardar los datos de transferencia.', AVISOS_DE_AJUSTES.transferencia)
   }
 
   async function updateParameters(params: Partial<BusinessParametersExtended>): Promise<boolean> {
-    return guardarAjuste('parameters', parameters, { ...parameters.value, ...params }, 'No se pudieron guardar los parámetros del negocio.')
+    return guardarAjuste('parameters', parameters, { ...parameters.value, ...params }, 'No se pudieron guardar los parámetros del negocio.', AVISOS_DE_AJUSTES.parametros)
   }
 
   async function updateCapacityRules(rules: Partial<CapacityRules>): Promise<boolean> {
@@ -258,20 +263,21 @@ export const useSettingsStore = defineStore('settings', () => {
       'parameters',
       parameters,
       { ...parameters.value, capacityRules: { ...parameters.value.capacityRules, ...rules } },
-      'No se pudieron guardar las reglas de aforo.'
+      'No se pudieron guardar las reglas de aforo.',
+      AVISOS_DE_AJUSTES.cupos
     )
   }
 
   async function updateCampingSchedules(horarios: CampingSchedules): Promise<boolean> {
-    return guardarAjuste('camping_schedules', campingSchedules, horarios, 'No se pudieron guardar los horarios de camping.')
+    return guardarAjuste('camping_schedules', campingSchedules, horarios, 'No se pudieron guardar los horarios de camping.', AVISOS_DE_AJUSTES.horariosCamping)
   }
 
   async function updateRestaurantSchedules(horarios: RestaurantSchedules): Promise<boolean> {
-    return guardarAjuste('restaurant_schedules', restaurantSchedules, horarios, 'No se pudieron guardar los horarios del restaurante.')
+    return guardarAjuste('restaurant_schedules', restaurantSchedules, horarios, 'No se pudieron guardar los horarios del restaurante.', AVISOS_DE_AJUSTES.horariosRestaurante)
   }
 
   async function updateCabinSchedules(horarios: CabinSchedules): Promise<boolean> {
-    return guardarAjuste('cabin_schedules', cabinSchedules, horarios, 'No se pudieron guardar los horarios de las cabañas.')
+    return guardarAjuste('cabin_schedules', cabinSchedules, horarios, 'No se pudieron guardar los horarios de las cabañas.', AVISOS_DE_AJUSTES.horariosCabanas)
   }
 
   return {
