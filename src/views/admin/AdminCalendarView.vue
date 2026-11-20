@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import HojaModal from '../../components/ui/HojaModal.vue'
 import { ref, computed } from 'vue'
+import { usePantallaAncha } from '../../composables/usePantallaAncha'
 import { 
   CalendarDays, ChevronLeft, ChevronRight, 
   Layers, Home, Tent, Utensils, Waves
@@ -47,6 +48,8 @@ const filtrosDisponibles: { id: FiltroServicio; titulo: string; icono: typeof La
 ]
 
 // Control de Fecha Activa y Modales
+// En PC el detalle del día se ve al lado; en teléfono se abre en una hoja
+const { esAncha } = usePantallaAncha()
 const selectedDate = ref<Date>(new Date())
 const showDayDetail = ref(false)
 const selectedRequestDetail = ref<ReservationRequest | null>(null)
@@ -148,8 +151,8 @@ function hasConflict(id: string): boolean {
 <template>
   <CargaDatosAdmin>
     <template #esqueleto><EsqueletoCalendarioAdmin /></template>
-  <div class="space-y-4 pb-6">
-    <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
+  <div class="space-y-4 pb-6 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:grid-rows-[auto_auto_1fr] lg:gap-6 lg:items-start">
+    <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-3 lg:col-start-2 lg:row-start-1">
       <div class="flex items-center justify-center gap-2 flex-wrap">
         <button
           type="button"
@@ -203,7 +206,7 @@ function hasConflict(id: string): boolean {
       </div>
     </div>
 
-    <div class="bg-white rounded-3xl border-2 border-brand-border shadow-xs overflow-hidden">
+    <div class="bg-white rounded-3xl border-2 border-brand-border shadow-xs overflow-hidden lg:col-start-1 lg:row-start-1 lg:row-span-3">
       <div class="bg-brand-light border-b-2 border-brand-border p-1.5 flex items-center gap-1.5">
         <button
           type="button"
@@ -304,9 +307,27 @@ function hasConflict(id: string): boolean {
       </div>
     </div>
 
-    <!-- Detalle del día -->
+    <!-- Detalle del día en PC: siempre a la vista, al lado del calendario -->
+    <section
+      v-if="esAncha && currentViewMode !== 'diario'"
+      class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3 lg:col-start-2 lg:row-start-2"
+    >
+      <div>
+        <h2 class="text-lg font-bold text-brand-dark capitalize leading-tight">{{ selectedDateFullFormatted }}</h2>
+        <p class="text-sm text-gray-600">Resumen de reservas</p>
+      </div>
+      <DisponibilidadDelDia
+        :franjas="detalleDelDia"
+        :reservas="filteredRequestsForDay"
+        :fecha="selectedDateISO"
+        :se-cruza="hasConflict"
+        @abrir="openedRequestId = $event"
+      />
+    </section>
+
+    <!-- Detalle del día en teléfono -->
     <HojaModal
-      :abierto="showDayDetail && currentViewMode !== 'diario'"
+      :abierto="showDayDetail && currentViewMode !== 'diario' && !esAncha"
       :titulo="selectedDateFullFormatted"
       subtitulo="Resumen de reservas"
       @cerrar="closeDayDetail"

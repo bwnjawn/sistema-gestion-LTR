@@ -5,6 +5,7 @@ import ClientHeader from '../components/ui/ClientHeader.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import FranjaModoAdmin from '../components/ui/FranjaModoAdmin.vue'
 import ModalAyuda from '../components/ui/ModalAyuda.vue'
+import ResumenReservaLateral from '../components/ui/ResumenReservaLateral.vue'
 import { ayudaDelPaso } from '../components/ui/ayudasCliente'
 import { useSalidaReserva } from '../composables/useSalidaReserva'
 import { useReservationStore } from '../stores/reservationStore'
@@ -34,6 +35,9 @@ const PREFIJO_RUTA: Record<ServiceType, string> = {
 const servicio = computed(() => (route.meta.servicio as ServiceType | undefined) ?? 'cabana')
 const paso = computed(() => (route.meta.paso as number | undefined) ?? 1)
 const pasos = computed(() => WIZARD_STEPS[servicio.value])
+
+// El último paso ya es el resumen completo: ahí no va el panel lateral
+const sinResumen = computed(() => store.solicitudEnviada || paso.value >= pasos.value.length)
 
 const titulo = computed(() => (store.solicitudEnviada ? 'Solicitud enviada' : NOMBRE_SERVICIO[servicio.value]))
 const subtitulo = computed(() => {
@@ -110,8 +114,12 @@ function salirBorrando() {
 
     <FranjaModoAdmin v-if="store.isAdminMode && !store.solicitudEnviada" />
 
-    <main class="px-4 pt-4">
-      <RouterView />
+    <!-- En PC, el resumen de la reserva va fijo a la derecha del paso -->
+    <main class="px-4 lg:px-8 pt-4 lg:pt-8">
+      <div :class="['lg:max-w-5xl lg:mx-auto', sinResumen ? '' : 'lg:grid lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-8 lg:items-start']">
+        <RouterView />
+        <ResumenReservaLateral v-if="!sinResumen" />
+      </div>
     </main>
 
     <ModalAyuda v-if="ayuda" :abierto="ayudaAbierta" :titulo="ayuda.titulo" @cerrar="ayudaAbierta = false">

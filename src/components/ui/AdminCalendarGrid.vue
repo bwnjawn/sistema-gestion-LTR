@@ -148,7 +148,7 @@ const handleDayClick = (date: Date) => {
       <div 
         v-for="blank in blankDaysAtStart" 
         :key="'blank-' + blank" 
-        class="h-12 rounded-2xl bg-transparent opacity-0 pointer-events-none"
+        class="h-12 lg:h-[4.5rem] rounded-2xl bg-transparent opacity-0 pointer-events-none"
       ></div>
 
       <button
@@ -157,7 +157,7 @@ const handleDayClick = (date: Date) => {
         type="button"
         @click="handleDayClick(dayObj.date)"
         :class="[
-          'h-12 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 p-1 relative transition-all active:scale-95 touch-target overflow-hidden',
+          'h-12 lg:h-[4.5rem] rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 p-1 relative transition-all active:scale-95 touch-target overflow-hidden',
           isSameDay(dayObj.date, modelValue)
             ? ['border-brand-border font-bold text-brand-dark shadow-2xs', dayObj.resumen.lleno ? 'bg-rose-200' : 'bg-[#c5d7be]']
             : isToday(dayObj.date)

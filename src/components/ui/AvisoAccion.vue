@@ -6,10 +6,14 @@
 // con `lib/avisos.ts`.
 // Va por encima de las hojas (z-60) para que se vea aunque haya una abierta.
 import { computed, nextTick, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { AlertTriangle, CheckCircle2, Clock, CloudOff, X, XCircle } from 'lucide-vue-next'
 import { aviso, descartarAviso } from '../../lib/avisos'
 
 const arriba = ref(0)
+// En el panel, desde 1024 px hay un menú lateral de 16 rem: el aviso empieza a su derecha
+const route = useRoute()
+const enPanel = computed(() => route.path.startsWith('/admin'))
 
 // Se pega justo debajo del encabezado de la pantalla (el del cliente o el del administrador); sin encabezado, arriba de todo
 watch(() => aviso.value?.id, async () => {
@@ -37,10 +41,10 @@ const estilo = computed(() => {
       :key="aviso.id"
       :role="aviso.tipo === 'error' ? 'alert' : 'status'"
       :aria-live="aviso.tipo === 'error' ? 'assertive' : 'polite'"
-      :class="['fixed left-0 right-0 z-[60] border-y-2 shadow-lg', estilo.clase, arriba === 0 ? 'pt-[env(safe-area-inset-top)]' : '']"
+      :class="['fixed left-0 right-0 z-[60] border-y-2 shadow-lg', enPanel ? 'lg:left-64' : '', estilo.clase, arriba === 0 ? 'pt-[env(safe-area-inset-top)]' : '']"
       :style="{ top: arriba + 'px' }"
     >
-      <div class="max-w-md mx-auto px-4 py-2.5 flex items-start gap-3">
+      <div :class="['max-w-md mx-auto px-4 py-2.5 flex items-start gap-3', enPanel ? 'lg:max-w-[1680px] lg:px-10' : '']">
         <component :is="estilo.icono" class="w-6 h-6 shrink-0 mt-0.5 stroke-[2.5]" aria-hidden="true" />
         <div class="grow min-w-0">
           <p class="text-base font-bold leading-snug">{{ aviso.titulo }}</p>

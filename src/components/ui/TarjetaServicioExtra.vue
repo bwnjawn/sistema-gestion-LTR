@@ -23,7 +23,7 @@ defineEmits<{ (e: 'click'): void }>()
 <template>
   <button
     type="button"
-    class="relative h-40 w-full rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm text-left group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
+    class="relative h-40 lg:h-52 w-full rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm text-left group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
     @click="$emit('click')"
   >
     <component

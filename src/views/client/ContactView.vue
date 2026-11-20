@@ -3,18 +3,20 @@ import { Phone, Mail, Globe, Instagram, MapPin, Clock } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 import ClientHeader from '../../components/ui/ClientHeader.vue'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
+import ClientBarraSuperior from '../../components/ui/ClientBarraSuperior.vue'
 
 const settingsStore = useSettingsStore()
 </script>
 
 <template>
   <div class="min-h-screen bg-brand-light">
-    <ClientHeader titulo="Contacto" subtitulo="Los Troncos de Repil" />
+    <ClientBarraSuperior />
+    <ClientHeader class="lg:hidden" titulo="Contacto" subtitulo="Los Troncos de Repil" />
 
-  <div class="space-y-4 max-w-md mx-auto w-full px-4 pt-4 pb-contenido-nav">
+  <div class="space-y-4 max-w-md lg:max-w-7xl mx-auto w-full px-4 lg:px-10 pt-4 lg:pt-8 pb-contenido-nav lg:pb-12 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-6 lg:items-start">
     <!-- Canales de Contacto Directo -->
-    <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
-      <h2 class="text-sm font-bold text-brand-dark border-b border-gray-100 pb-2">
+    <div class="bg-white p-5 lg:p-7 rounded-3xl border-2 border-brand-border shadow-xs space-y-3 lg:col-start-1 lg:row-start-1">
+      <h2 class="text-sm lg:text-xl font-bold text-brand-dark border-b border-gray-100 pb-2">
         Atención y Consultas
       </h2>
 
@@ -98,10 +100,10 @@ const settingsStore = useSettingsStore()
     </div>
 
     <!-- Horarios de Atención -->
-    <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
+    <div class="bg-white p-5 lg:p-7 rounded-3xl border-2 border-brand-border shadow-xs space-y-3 lg:col-start-1 lg:row-start-2">
       <div class="flex items-center gap-2 text-brand-dark">
         <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-        <h2 class="text-sm font-bold">Horarios de Atención y Servicios</h2>
+        <h2 class="text-sm lg:text-xl font-bold">Horarios de Atención y Servicios</h2>
       </div>
 
       <div class="space-y-2 text-base text-gray-700 bg-brand-light p-3.5 rounded-2xl border border-brand-border">
@@ -121,10 +123,10 @@ const settingsStore = useSettingsStore()
     </div>
 
     <!-- Ubicación y Mapa -->
-    <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
+    <div class="bg-white p-5 lg:p-7 rounded-3xl border-2 border-brand-border shadow-xs space-y-3 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-stretch lg:flex lg:flex-col lg:space-y-0 lg:gap-4">
       <div class="flex items-center gap-2 text-brand-dark">
         <MapPin class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-        <h2 class="text-sm font-bold">Cómo Llegar</h2>
+        <h2 class="text-sm lg:text-xl font-bold">Cómo Llegar</h2>
       </div>
 
       <p class="text-base text-gray-600">
@@ -132,7 +134,7 @@ const settingsStore = useSettingsStore()
       </p>
 
       <!-- Iframe Google Maps -->
-      <div v-if="settingsStore.contactInfo.iframeMapUrl" class="rounded-2xl overflow-hidden border-2 border-brand-border h-48 bg-gray-100">
+      <div v-if="settingsStore.contactInfo.iframeMapUrl" class="rounded-2xl overflow-hidden border-2 border-brand-border h-48 lg:h-auto lg:flex-1 lg:min-h-[22rem] bg-gray-100">
         <iframe
           :src="settingsStore.contactInfo.iframeMapUrl"
           width="100%"

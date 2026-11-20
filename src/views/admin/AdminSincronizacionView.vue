@@ -21,7 +21,7 @@ async function descartar() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+  <div class="space-y-4 max-w-md lg:max-w-4xl mx-auto w-full pb-28">
     <div v-if="cambios.entradas.length === 0" class="bg-white p-5 rounded-3xl border-2 border-brand-border text-center space-y-2">
       <p class="text-lg font-bold text-brand-dark">Todo está sincronizado</p>
       <p class="text-sm font-bold text-gray-700">Lo que hagas sin conexión aparecerá aquí hasta que llegue al servidor.</p>

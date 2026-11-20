@@ -47,6 +47,7 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
   <HojaModal
     v-if="request && contacto"
     :abierto="true"
+    ancho="amplio"
     titulo="Mover la fecha"
     :subtitulo="`${request.clientName} · ${request.resourceName}`"
     :nivel="60"

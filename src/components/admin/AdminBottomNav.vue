@@ -1,40 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useRequestsStore } from '../../stores/requestsStore'
-import IconoBarra, { type NombreIconoBarra } from '../ui/IconoBarra.vue'
+import { useMenuAdmin } from '../../composables/useMenuAdmin'
+import IconoBarra from '../ui/IconoBarra.vue'
 
-const route = useRoute()
-const router = useRouter()
-const requestsStore = useRequestsStore()
-
-// Solicitudes pendientes por resolver: el número que se muestra sobre el ícono de Solicitudes
-const pendientes = computed(() => requestsStore.requests.filter(r => r.status === 'pending').length)
-const textoPendientes = computed(() => (pendientes.value > 99 ? '99+' : String(pendientes.value)))
-
-const navItems: { name: string; path: string; icono: NombreIconoBarra }[] = [
-  { name: 'Inicio', path: '/admin', icono: 'inicio' },
-  { name: 'Solicitudes', path: '/admin/solicitudes', icono: 'solicitudes' },
-  { name: 'Calendario', path: '/admin/calendario', icono: 'calendario' },
-  { name: 'Catálogo', path: '/admin/catalogo', icono: 'catalogo' },
-  { name: 'Ajustes', path: '/admin/ajustes', icono: 'ajustes' }
-]
-
-function isActive(path: string) {
-  if (path === '/admin') {
-    return route.path === '/admin' || route.path === '/admin/' || route.path === '/admin/dashboard'
-  }
-  return route.path.startsWith(path)
-}
-
-function navigate(path: string) {
-  router.push(path)
-}
+const { secciones: navItems, pendientes, textoPendientes, estaActiva: isActive, ir: navigate } = useMenuAdmin()
 </script>
 
 <template>
-  <!-- El ícono activo se rellena y se oscurece; los demás quedan en contorno gris -->
-  <nav class="barra-fija-inferior fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-2 pt-2.5 pb-seguro-nav shadow-2xl">
+  <!-- Solo en teléfono y tablet: en PC se usa el menú lateral (AdminMenuLateral).
+       El ícono activo se rellena y se oscurece; los demás quedan en contorno gris -->
+  <nav class="lg:hidden barra-fija-inferior fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-2 pt-2.5 pb-seguro-nav shadow-2xl">
     <div class="max-w-md mx-auto grid grid-cols-5 gap-1">
       <button
         v-for="item in navItems"

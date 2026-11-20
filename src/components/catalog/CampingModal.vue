@@ -76,6 +76,7 @@ function close() {
 <template>
   <HojaModal
     :abierto="isOpen"
+    ancho="amplio"
         :titulo="isEditing ? 'Editar espacio de camping' : 'Nuevo espacio de camping'"
         :subtitulo="isEditing ? form.name : undefined"
         texto-guardar="Guardar espacio"

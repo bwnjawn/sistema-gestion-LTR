@@ -66,7 +66,7 @@ function nextStep() {
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
+  <div class="space-y-4 max-w-md lg:max-w-none mx-auto w-full pb-contenido-nav">
     <StepIndicator :current-step="2" />
 
     <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-1">

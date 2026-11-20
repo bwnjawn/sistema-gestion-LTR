@@ -7,6 +7,7 @@ import { useSettingsStore } from '../../stores/settingsStore'
 import { formatCLP } from '../../lib/format'
 import type { ServiceType } from '../../types/domain'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
+import ClientBarraSuperior from '../../components/ui/ClientBarraSuperior.vue'
 import FondoFotoTarjeta from '../../components/ui/FondoFotoTarjeta.vue'
 import TarjetaServicioExtra from '../../components/ui/TarjetaServicioExtra.vue'
 import HojaContactoEvento from '../../components/ui/HojaContactoEvento.vue'
@@ -39,10 +40,13 @@ function selectService(service: ServiceType) {
     <!-- Modo administrador (SCRUM-56): la misma franja de los pasos, con botón para salir al panel -->
     <FranjaModoAdmin v-if="reservationStore.isAdminMode" con-salir @salir="salirAlPanel" />
 
-    <main class="p-4 space-y-4 grow max-w-md mx-auto w-full pb-contenido-nav">
+    <!-- En PC la navegación va arriba -->
+    <ClientBarraSuperior v-if="!reservationStore.isAdminMode" />
+
+    <main class="p-4 space-y-4 grow max-w-md lg:max-w-7xl lg:px-10 mx-auto w-full pb-contenido-nav lg:pb-12">
       
       <!-- Encabezado con Logo y Título Institucional Reincorporado -->
-      <div class="flex items-center gap-3.5 px-1 pt-2">
+      <div class="flex items-center gap-3.5 px-1 pt-2 lg:hidden">
         <div class="w-16 h-16 bg-white rounded-2xl p-2 shrink-0 flex items-center justify-center shadow-xs border border-brand-border">
           <img 
             src="/images/logo.png" 
@@ -70,23 +74,24 @@ function selectService(service: ServiceType) {
 
       <!-- Título de Sección -->
       <div class="space-y-1">
-        <h2 class="text-xl font-bold text-brand-dark tracking-tight">
+        <h2 class="text-xl lg:text-4xl lg:pt-6 font-bold text-brand-dark tracking-tight">
           ¿Qué quieres reservar?
         </h2>
+        <p class="hidden lg:block text-lg text-gray-600">Elige un servicio para empezar tu solicitud.</p>
       </div>
 
       <!-- Tarjetas de Servicio -->
-      <div class="space-y-3.5">
+      <div class="space-y-3.5 lg:space-y-0 lg:grid lg:grid-cols-6 lg:gap-6">
         <!-- CARD 1: CABAÑA -->
         <div 
           @click="selectService('cabana')"
-          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
+          class="relative h-36 lg:h-80 lg:col-span-2 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
         >
           <FondoFotoTarjeta :imagen="settingsStore.fotoInicio('cabana')" />
 
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
-              <h3 class="text-2xl font-bold leading-tight drop-shadow-sm">
+              <h3 class="text-2xl lg:text-3xl font-bold leading-tight drop-shadow-sm">
                 Cabaña
               </h3>
               <p class="text-sm font-bold text-gray-200 mt-0.5">
@@ -102,13 +107,13 @@ function selectService(service: ServiceType) {
         <!-- CARD 2: ACAMPAR -->
         <div 
           @click="selectService('camping')"
-          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
+          class="relative h-36 lg:h-80 lg:col-span-2 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
         >
           <FondoFotoTarjeta :imagen="settingsStore.fotoInicio('camping')" />
 
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
-              <h3 class="text-2xl font-bold leading-tight drop-shadow-sm">
+              <h3 class="text-2xl lg:text-3xl font-bold leading-tight drop-shadow-sm">
                 Camping
               </h3>
               <p class="text-sm font-bold text-gray-200 mt-0.5">
@@ -124,13 +129,13 @@ function selectService(service: ServiceType) {
         <!-- CARD 3: COMER -->
         <div 
           @click="selectService('restaurante')"
-          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
+          class="relative h-36 lg:h-80 lg:col-span-2 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
         >
           <FondoFotoTarjeta :imagen="settingsStore.fotoInicio('restaurante')" />
 
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
-              <h3 class="text-2xl font-bold leading-tight drop-shadow-sm">
+              <h3 class="text-2xl lg:text-3xl font-bold leading-tight drop-shadow-sm">
                 Restaurante
               </h3>
               <p class="text-sm font-bold text-gray-200 mt-0.5">
@@ -144,7 +149,7 @@ function selectService(service: ServiceType) {
         </div>
 
         <!-- Servicios extra, más bajos y lado a lado (el administrador solo ve Piscina, a lo ancho) -->
-        <div class="grid grid-cols-2 gap-3.5">
+        <div class="grid grid-cols-2 gap-3.5 lg:col-span-6 lg:gap-6">
           <!-- Piscina (SCRUM-44): solo para quien no contrata otro servicio; es una solicitud informativa -->
           <TarjetaServicioExtra
             :class="{ 'col-span-2': reservationStore.isAdminMode }"

@@ -35,9 +35,12 @@ const props = withDefaults(defineProps<{
   sinManija?: boolean
   nivel?: number
   cerrarAlTocarFuera?: boolean
+  /** `amplio`: ventana ancha en PC y el contenido en dos columnas (los hijos que deban ocupar todo el ancho llevan `lg:col-span-2`). */
+  ancho?: 'normal' | 'amplio'
 }>(), {
   nivel: 50,
-  cerrarAlTocarFuera: true
+  cerrarAlTocarFuera: true,
+  ancho: 'normal'
 })
 
 const emit = defineEmits<{
@@ -91,7 +94,7 @@ function alTocarFondo() {
           role="dialog"
           aria-modal="true"
           :aria-label="titulo"
-          class="hoja-panel bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden"
+          :class="['hoja-panel bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden', ancho === 'amplio' ? 'sm:max-w-2xl lg:max-w-4xl' : 'sm:max-w-lg lg:max-w-xl']"
         >
           <!-- Con `texto-guardar` es un formulario (Enter envía); si no, un contenedor, porque el contenido puede traer sus propios formularios -->
           <component :is="textoGuardar ? 'form' : 'div'" class="flex flex-col min-h-0 grow" @submit.prevent="emit('guardar')">
@@ -101,7 +104,7 @@ function alTocarFondo() {
             </div>
 
             <slot name="cabecera">
-              <header class="flex items-center justify-between gap-3 px-5 py-3 border-b border-gray-200 shrink-0">
+              <header class="flex items-center justify-between gap-3 px-5 lg:px-7 py-3 border-b border-gray-200 shrink-0">
                 <div class="min-w-0">
                   <h2 class="text-xl font-bold text-brand-dark leading-tight">{{ titulo }}</h2>
                   <p v-if="subtitulo" class="text-sm text-gray-600 truncate">{{ subtitulo }}</p>
@@ -118,17 +121,17 @@ function alTocarFondo() {
               </header>
             </slot>
 
-            <div :class="['overflow-y-auto grow min-h-0', sinRelleno ? '' : 'px-5 py-5 space-y-5']">
+            <div :class="['overflow-y-auto grow min-h-0', sinRelleno ? '' : 'px-5 lg:px-7 py-5 space-y-5', ancho === 'amplio' && !sinRelleno ? 'lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-5 lg:space-y-0 lg:items-start' : '']">
               <slot />
             </div>
 
-            <footer v-if="textoGuardar || $slots.pie" class="px-5 pt-4 pb-seguro-nav border-t border-gray-200 bg-white shrink-0">
+            <footer v-if="textoGuardar || $slots.pie" class="px-5 lg:px-7 pt-4 pb-seguro-nav border-t border-gray-200 bg-white shrink-0">
               <slot name="pie">
-                <div class="flex gap-3">
-                  <button type="button" class="flex-1 py-3.5 rounded-2xl border border-brand-dark bg-white text-brand-dark font-bold" @click="emit('cerrar')">
+                <div class="flex gap-3 lg:justify-end">
+                  <button type="button" class="flex-1 lg:flex-none lg:min-w-40 py-3.5 rounded-2xl border border-brand-dark bg-white text-brand-dark font-bold" @click="emit('cerrar')">
                     Cancelar
                   </button>
-                  <button type="submit" :disabled="guardando" class="flex-1 py-3.5 rounded-2xl border border-brand-dark bg-brand-dark text-white font-bold disabled:opacity-60">
+                  <button type="submit" :disabled="guardando" class="flex-1 lg:flex-none lg:min-w-40 py-3.5 rounded-2xl border border-brand-dark bg-brand-dark text-white font-bold disabled:opacity-60">
                     {{ guardando ? 'Guardando…' : textoGuardar }}
                   </button>
                 </div>

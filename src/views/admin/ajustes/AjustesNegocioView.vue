@@ -14,8 +14,8 @@ const showTransferModal = ref(false)
 </script>
 
 <template>
-  <div class="space-y-4 max-w-md mx-auto w-full pb-20">
-    <AjustesVolver />
+  <div class="space-y-4 max-w-md lg:max-w-none mx-auto w-full pb-20 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start">
+    <AjustesVolver class="lg:col-span-full" />
 
     <div class="bg-white p-4 sm:p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center justify-between">

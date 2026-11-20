@@ -11,10 +11,10 @@ const secciones = [
 </script>
 
 <template>
-  <div class="max-w-md mx-auto w-full pb-20">
-    <ul class="bg-white rounded-3xl border-2 border-brand-border shadow-xs overflow-hidden divide-y divide-brand-border/60">
-      <li v-for="seccion in secciones" :key="seccion.ruta">
-        <router-link :to="{ name: seccion.ruta }" class="flex items-center gap-3 px-4 py-3.5 min-h-14 active:bg-brand-light">
+  <div class="max-w-md lg:max-w-none mx-auto w-full pb-20">
+    <ul class="bg-white rounded-3xl border-2 border-brand-border shadow-xs overflow-hidden divide-y divide-brand-border/60 lg:bg-transparent lg:border-0 lg:shadow-none lg:overflow-visible lg:divide-y-0 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-5">
+      <li v-for="seccion in secciones" :key="seccion.ruta" class="lg:bg-white lg:rounded-3xl lg:border-2 lg:border-brand-border lg:shadow-xs lg:overflow-hidden lg:hover:border-brand-dark">
+        <router-link :to="{ name: seccion.ruta }" class="flex items-center gap-3 px-4 py-3.5 min-h-14 lg:py-6 active:bg-brand-light">
           <span class="shrink-0 w-9 h-9 rounded-full bg-brand-light border border-brand-border flex items-center justify-center">
             <component :is="seccion.icono" class="w-4 h-4 text-brand-accent stroke-[2.5]" aria-hidden="true" />
           </span>
