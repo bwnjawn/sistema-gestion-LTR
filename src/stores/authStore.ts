@@ -13,6 +13,9 @@ export type { AdminUser, AdminUserWithPassword }
 
 export const MIN_CONTRASENA = 8
 
+/** Estado de la carga de lo que solo ve el administrador (solicitudes y catálogo completo) tras iniciar sesión. */
+export type EstadoDatosAdmin = 'listo' | 'cargando' | 'error'
+
 // Con Supabase las contraseñas las guarda Supabase Auth y la sesión se mantiene sola entre visitas. Sin Supabase
 // (desarrollo sin configurar y pruebas) queda la AUTENTICACIÓN DE PROTOTIPO: contraseñas en texto plano en el
 // navegador, solo para una demo cerrada.
@@ -23,6 +26,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoading = ref(false)
   const authError = ref<string | null>(null)
+  /** Tras el inicio de sesión el panel se abre de inmediato y estos datos llegan por detrás (SCRUM-258). */
+  const datosAdmin = ref<EstadoDatosAdmin>('listo')
+  const errorDatosAdmin = ref<string | null>(null)
   const isAuthenticated = computed(() => !!currentUser.value)
 
   /** Carga a los administradores y la sesión guardada. Se llama una vez al arrancar la app. */
@@ -54,14 +60,28 @@ export const useAuthStore = defineStore('auth', () => {
       }
       currentUser.value = usuario
       adminsList.value = await repositorios().auth.listarAdmins()
-      // El administrador ve lo que el público no: todas las solicitudes y el catálogo completo
-      await cargarDatosDeAdministrador()
+      // El administrador ve lo que el público no: todas las solicitudes y el catálogo completo. No se espera:
+      // el panel se abre con esqueletos y los datos llegan por detrás
+      void cargarDatosAdmin()
       return true
     } catch (e) {
       authError.value = mensajeDeError(e, 'Ocurrió un error inesperado al intentar iniciar sesión.')
       return false
     } finally {
       isLoading.value = false
+    }
+  }
+
+  /** Carga lo que solo ve el administrador. Si falla, el panel lo dice y deja reintentar con esta misma función. */
+  async function cargarDatosAdmin(): Promise<void> {
+    datosAdmin.value = 'cargando'
+    errorDatosAdmin.value = null
+    try {
+      await cargarDatosDeAdministrador()
+      datosAdmin.value = 'listo'
+    } catch (e) {
+      errorDatosAdmin.value = mensajeDeError(e, 'No se pudieron cargar las solicitudes.')
+      datosAdmin.value = 'error'
     }
   }
 
@@ -120,6 +140,8 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       currentUser.value = null
       adminsList.value = []
+      datosAdmin.value = 'listo'
+      errorDatosAdmin.value = null
       await descartarDatosDeAdministrador()
     }
     return true
@@ -130,8 +152,11 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser,
     isLoading,
     authError,
+    datosAdmin,
+    errorDatosAdmin,
     isAuthenticated,
     init,
+    cargarDatosAdmin,
     login,
     register,
     logout

@@ -7,6 +7,8 @@ import {
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
 import AvisoConflictos from '../../components/admin/AvisoConflictos.vue'
+import CargaDatosAdmin from '../../components/admin/CargaDatosAdmin.vue'
+import EsqueletoInicioAdmin from '../../components/admin/EsqueletoInicioAdmin.vue'
 
 const router = useRouter()
 const requestsStore = useRequestsStore()
@@ -24,6 +26,8 @@ function navigateTo(path: string) {
 </script>
 
 <template>
+  <CargaDatosAdmin>
+    <template #esqueleto><EsqueletoInicioAdmin /></template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
     <!-- Confirmaciones hechas sin conexión que chocaron con otra reserva al sincronizar (SCRUM-250) -->
     <AvisoConflictos />
@@ -114,4 +118,5 @@ function navigateTo(path: string) {
     </div>
 
   </div>
+  </CargaDatosAdmin>
 </template>

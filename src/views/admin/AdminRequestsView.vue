@@ -5,6 +5,8 @@ import { FileSpreadsheet, Inbox, Search, Layers, Home, Tent, Utensils, Waves } f
 import BaseButton from '../../components/ui/BaseButton.vue'
 import AdminExportarExcelDialog from '../../components/admin/AdminExportarExcelDialog.vue'
 import AdminRequestCard from '../../components/admin/AdminRequestCard.vue'
+import CargaDatosAdmin from '../../components/admin/CargaDatosAdmin.vue'
+import EsqueletoSolicitudes from '../../components/admin/EsqueletoSolicitudes.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
 import AdminConfirmarCruceDialog from '../../components/admin/AdminConfirmarCruceDialog.vue'
 import AdminMoverFechaDialog from '../../components/admin/AdminMoverFechaDialog.vue'
@@ -144,6 +146,8 @@ function verTodas() {
 </script>
 
 <template>
+  <CargaDatosAdmin>
+    <template #esqueleto><EsqueletoSolicitudes /></template>
   <div class="space-y-3 max-w-md mx-auto w-full pb-28">
     <!-- Filtros: mismo estilo que el calendario. Tocar el estado activo otra vez muestra todas. -->
     <div class="bg-white p-3 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
@@ -271,4 +275,5 @@ function verTodas() {
     <AdminExportarExcelDialog :abierto="exportando" :visibles="filteredRequests" @close="exportando = false" />
     <AdminConfirmarRechazoDialog :request-id="rechazoId" @close="rechazoId = null" />
   </div>
+  </CargaDatosAdmin>
 </template>

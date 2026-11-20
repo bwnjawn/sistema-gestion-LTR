@@ -14,6 +14,8 @@ import CampingCard from '../../components/catalog/CampingCard.vue'
 import DishCard from '../../components/catalog/DishCard.vue'
 import CabinModal from '../../components/catalog/CabinModal.vue'
 import CampingModal from '../../components/catalog/CampingModal.vue'
+import CargaDatosAdmin from '../../components/admin/CargaDatosAdmin.vue'
+import EsqueletoCatalogoAdmin from '../../components/admin/EsqueletoCatalogoAdmin.vue'
 import DishModal from '../../components/catalog/DishModal.vue'
 import { useCatalogStore } from '../../stores/catalogStore'
 import { useRequestsStore } from '../../stores/requestsStore'
@@ -238,6 +240,8 @@ function executeDelete() {
 </script>
 
 <template>
+  <CargaDatosAdmin>
+    <template #esqueleto><EsqueletoCatalogoAdmin /></template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
     
     <!-- PESTAÑAS PRINCIPALES -->
@@ -413,4 +417,5 @@ function executeDelete() {
       </template>
     </HojaModal>
   </div>
+  </CargaDatosAdmin>
 </template>

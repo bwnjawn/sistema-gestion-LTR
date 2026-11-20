@@ -92,6 +92,7 @@ const paymentMethod = ref<PaymentMethod>('transferencia')
 const paymentDate = ref(todayISO())
 const paymentNotes = ref('')
 const paymentError = ref('')
+const guardandoPago = ref(false)
 
 watch(() => props.requestId, () => {
   cruceId.value = null
@@ -147,13 +148,14 @@ function fillPendingDeposit() {
 }
 
 async function submitPayment() {
-  if (!request.value) return
+  if (!request.value || guardandoPago.value) return
+  guardandoPago.value = true
   const result = await requestsStore.registerPayment(request.value.id, {
     amount: Number(paymentAmount.value),
     method: paymentMethod.value,
     paidOn: paymentDate.value,
     notes: paymentNotes.value
-  })
+  }).finally(() => { guardandoPago.value = false })
   if (!result.ok) {
     paymentError.value = result.message || 'No se pudo registrar el pago.'
     return
@@ -526,7 +528,7 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
                     ({{ formatCLP(payment.depositPending > 0 ? payment.depositPending : payment.balance) }})
                   </button>
                   <p v-if="paymentError" class="text-sm font-bold text-rose-950 bg-rose-50 border border-status-danger rounded-xl p-2">{{ paymentError }}</p>
-                  <BaseButton type="submit" variant="primary" size="md" fullWidth class="!text-base" :disabled="!paymentAmount || paymentAmount <= 0">
+                  <BaseButton type="submit" variant="primary" size="md" fullWidth class="!text-base" :loading="guardandoPago" :disabled="!paymentAmount || paymentAmount <= 0">
                     <CreditCard class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Guardar pago
                   </BaseButton>
                 </form>
