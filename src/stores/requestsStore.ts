@@ -10,7 +10,7 @@ import { mensajeDeError, esErrorDeRed } from '../lib/errores'
 import { conTiempoLimite } from '../lib/conTiempoLimite'
 import { marcarServidorCaido, servidorInalcanzable } from '../lib/estadoDeRed'
 import { requestToBooking } from '../services/adaptadoresReserva'
-import { applyRequestEdit, type RequestEdit } from '../services/requests'
+import { applyRequestEdit, puedeCancelarse, type RequestEdit } from '../services/requests'
 import { useCatalogStore } from './catalogStore'
 import { TIEMPO_ENVIO_MS, useColaEnvioStore } from './colaEnvioStore'
 import { TIEMPO_CAMBIO_MS, TIEMPO_CAMBIO_SIN_SENAL_MS, useCambiosAdminStore } from './cambiosAdminStore'
@@ -364,6 +364,17 @@ export const useRequestsStore = defineStore('requests', () => {
     return updateRequestStatus(id, 'confirmed')
   }
 
+  /**
+   * Cancela una reserva confirmada (SCRUM-284): pasa a "Cancelada", libera sus fechas y cupos y queda en el
+   * historial con sus pagos. Devuelve si se pudo guardar. Una solicitud que no está confirmada no se cancela:
+   * las pendientes se rechazan.
+   */
+  async function cancelConfirmedRequest(id: string): Promise<boolean> {
+    const found = requests.value.find(r => r.id === id)
+    if (!found || !puedeCancelarse(found)) return false
+    return updateRequestStatus(id, 'cancelled')
+  }
+
   async function rejectRequest(id: string): Promise<void> {
     await updateRequestStatus(id, 'rejected')
   }
@@ -411,6 +422,7 @@ export const useRequestsStore = defineStore('requests', () => {
     removePayment,
     crossedRequestsFor,
     confirmRequest,
+    cancelConfirmedRequest,
     rejectRequest,
     cancelOverdueRequest,
     extendDepositDeadline

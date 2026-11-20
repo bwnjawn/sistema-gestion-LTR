@@ -331,6 +331,14 @@ export function canEditRequest(req: Pick<ReservationRequest, 'status'>): boolean
   return req.status === 'pending' || req.status === 'confirmed'
 }
 
+/**
+ * Solo una solicitud confirmada se cancela (SCRUM-284): una pendiente se rechaza y una descartada ya no tiene nada
+ * que hacer. Al cancelarla pasa a `cancelled`: libera sus fechas y cupos y queda en el historial.
+ */
+export function puedeCancelarse(req: Pick<ReservationRequest, 'status'>): boolean {
+  return req.status === 'confirmed'
+}
+
 /** True si la solicitud es de un solo día (restaurante o camping sin pernoctar). */
 export function isSingleDayRequest(req: Pick<ReservationRequest, 'type' | 'details'>): boolean {
   return req.type === 'restaurante' || req.type === 'piscina' || (req.type === 'camping' && req.details?.campingType === 'diario')

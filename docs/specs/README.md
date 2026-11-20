@@ -19,6 +19,7 @@ Un spec describe **cómo** se construye una historia. Jira sigue siendo la fuent
 | [SCRUM-44](SCRUM-44.md) | Piscina: solicitud solo informativa, sin abono ni aprobación | Fase 2 |
 | [SCRUM-71](SCRUM-71.md) | Cotización en PDF de una solicitud, con envío al cliente | Fase 2 |
 | [SCRUM-275](SCRUM-275.md) | Exportar las solicitudes a Excel, con año y mes y hojas de resumen | Fase 2 |
+| [SCRUM-284](SCRUM-284.md) | Cancelar una reserva confirmada: libera fechas y cupos, queda en el historial y se avisa al cliente | Fase 2 |
 | [SCRUM-27](SCRUM-27.md) | Spike: varias cabañas por solicitud | Aplazada (Sprint 3) |
 
 Documentos relacionados: [`../reglas-negocio.md`](../reglas-negocio.md) y [`../plan-entrega.md`](../plan-entrega.md).
