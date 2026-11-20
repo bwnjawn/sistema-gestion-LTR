@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useBloqueoScroll } from '../../../composables/useBloqueoScroll'
+import HojaModal from '../../../components/ui/HojaModal.vue'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Minus, Plus, Check, AlertTriangle, AlertCircle, CheckCircle2, X } from 'lucide-vue-next'
+import { Minus, Plus, Check, AlertTriangle, CheckCircle2, X } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
@@ -243,74 +243,52 @@ function proceedToStep3() {
   store.nextStep()
   router.push('/restaurante/paso3')
 }
-useBloqueoScroll(computed(() => showIncompleteModal.value))
 </script>
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-contenido-nav">
     
-    <!-- Modal Incompleto Específico por Categoría -->
-    <div 
-      v-if="showIncompleteModal" 
-      class="fixed inset-0 z-50 bg-brand-dark/60 backdrop-blur-xs flex items-center justify-center p-4"
-    >
-      <div class="bg-white rounded-3xl p-6 max-w-sm w-full border-2 border-brand-border shadow-2xl space-y-5">
-        <div class="w-12 h-12 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto">
-          <AlertCircle class="w-7 h-7 stroke-[2.5]" />
-        </div>
+    <!-- Menús incompletos: aviso antes de continuar -->
+    <HojaModal :abierto="showIncompleteModal" titulo="Menús incompletos" ocultar-cierre @cerrar="showIncompleteModal = false">
+    <p class="text-sm font-semibold text-gray-600 leading-relaxed">
+      Tienes categorías con menos platos asignados que la cantidad de comensales ({{ totalGuests }} personas):
+    </p>
 
-        <div class="text-center space-y-3">
-          <h3 class="text-lg font-black text-brand-dark">Menús Incompletos</h3>
-          <p class="text-sm font-semibold text-gray-600 leading-relaxed">
-            Tienes categorías con menos platos asignados que la cantidad de comensales ({{ totalGuests }} personas):
-          </p>
-
-          <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 text-left space-y-1.5 text-sm font-bold text-amber-950">
-            <div 
-              v-for="mId in activeMealTypes" 
-              :key="mId"
-              class="flex justify-between items-center"
-            >
-              <span>{{ mealLabels[mId] }}:</span>
-              <span 
-                :class="[
-                  'font-black px-2 py-0.5 rounded-md text-sm',
-                  getMealSelectedCount(mId) === totalGuests
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-amber-200 text-amber-900'
-                ]"
-              >
-                {{ getMealSelectedCount(mId) }} de {{ totalGuests }}
-              </span>
-            </div>
-          </div>
-
-          <p class="text-sm font-semibold text-gray-500">
-            ¿Deseas continuar de todos modos o prefieres ajustar las cantidades antes de avanzar?
-          </p>
-        </div>
-
-        <div class="space-y-2 pt-1">
-          <BaseButton 
-            variant="primary" 
-            size="lg" 
-            fullWidth 
-            @click="proceedToStep3"
-          >
-            Continuar de todos modos
-          </BaseButton>
-
-          <BaseButton 
-            variant="outline" 
-            size="lg" 
-            fullWidth 
-            @click="showIncompleteModal = false"
-          >
-            Ajustar Menús
-          </BaseButton>
-        </div>
+    <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 text-left space-y-1.5 text-sm font-bold text-amber-950">
+      <div 
+        v-for="mId in activeMealTypes" 
+        :key="mId"
+        class="flex justify-between items-center"
+      >
+        <span>{{ mealLabels[mId] }}:</span>
+        <span 
+          :class="[
+            'font-black px-2 py-0.5 rounded-md text-sm',
+            getMealSelectedCount(mId) === totalGuests
+              ? 'bg-emerald-100 text-emerald-800'
+              : 'bg-amber-200 text-amber-900'
+          ]"
+        >
+          {{ getMealSelectedCount(mId) }} de {{ totalGuests }}
+        </span>
       </div>
     </div>
+
+    <p class="text-sm font-semibold text-gray-500">
+      ¿Deseas continuar de todos modos o prefieres ajustar las cantidades antes de avanzar?
+    </p>
+
+      <template #pie>
+        <div class="space-y-2">
+          <BaseButton variant="primary" size="lg" fullWidth @click="proceedToStep3">
+            Continuar de todos modos
+          </BaseButton>
+          <BaseButton variant="outline" size="lg" fullWidth @click="showIncompleteModal = false">
+            Ajustar menús
+          </BaseButton>
+        </div>
+      </template>
+    </HojaModal>
 
     <!-- Aviso Flotante para Límite de 3 Variedades -->
     <div 

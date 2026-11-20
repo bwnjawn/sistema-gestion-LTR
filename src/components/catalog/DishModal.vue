@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, watch, computed } from 'vue'
 import type { Dish, MealType, SideDishMode } from '../../types/domain'
 import { ETIQUETAS_COMIDA, ORDEN_COMIDAS, comidaAdmiteAcompanamiento, validarNombreAcompanamiento, validarPlato } from '../../services/menus'
 import ImageGalleryEditor from '../ui/ImageGalleryEditor.vue'
 import ListaFilas from '../ui/ListaFilas.vue'
-import ModalEdicion from '../ui/ModalEdicion.vue'
+import HojaModal from '../ui/HojaModal.vue'
 
 const props = defineProps<{
   isOpen: boolean
@@ -153,13 +152,11 @@ function handleSave() {
 function close() {
   emit('close')
 }
-useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-      <ModalEdicion
+  <HojaModal
+    :abierto="isOpen"
         :titulo="isEditing ? 'Editar plato' : 'Nuevo plato'"
         :subtitulo="isEditing ? form.name : undefined"
         texto-guardar="Guardar plato"
@@ -263,7 +260,5 @@ useBloqueoScroll(computed(() => props.isOpen))
         </div>
 
         <p v-if="errorForm" role="alert" class="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-sm">{{ errorForm }}</p>
-      </ModalEdicion>
-    </div>
-  </div>
+  </HojaModal>
 </template>

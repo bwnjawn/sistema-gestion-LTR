@@ -1,22 +1,20 @@
 <script setup lang="ts">
 // Fotos del inicio (SCRUM-271): resumen con miniaturas de las cinco tarjetas del inicio. "Editar" abre un modal
 // con la vista previa de cada tarjeta y su texto, donde se cambia la foto o se vuelve a la provisoria.
-import { computed, ref } from 'vue'
-import { Image as IconoFoto, X } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { Image as IconoFoto } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { compressAndReadFile } from '../../lib/images'
 import { TARJETAS_INICIO } from '../../services/fotosInicio'
 import type { ClaveFotoInicio } from '../../types/settings'
 import FondoFotoTarjeta from '../ui/FondoFotoTarjeta.vue'
+import HojaModal from '../ui/HojaModal.vue'
 
 const settingsStore = useSettingsStore()
 
 const abierto = ref(false)
 const procesando = ref<ClaveFotoInicio | null>(null)
 const mensaje = ref<{ tipo: 'ok' | 'error'; texto: string } | null>(null)
-
-useBloqueoScroll(computed(() => abierto.value))
 
 function abrir() {
   mensaje.value = null
@@ -72,54 +70,45 @@ async function volverALaOriginal(clave: ClaveFotoInicio) {
       </li>
     </ul>
 
-    <!-- Modal con la vista previa de cada tarjeta -->
-    <div v-if="abierto" class="fixed inset-0 z-50 bg-brand-dark/60 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-fotos">
-      <div class="bg-white rounded-3xl p-5 max-w-sm w-full border-2 border-brand-border shadow-2xl space-y-4 max-h-[90dvh] overflow-y-auto">
-        <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-          <h3 id="titulo-modal-fotos" class="text-base font-black text-brand-dark">Fotos del inicio</h3>
-          <button type="button" aria-label="Cerrar" class="p-1 text-gray-500 hover:bg-gray-100 rounded-full" @click="abierto = false">
-            <X class="w-5 h-5 stroke-[2.5]" />
-          </button>
-        </div>
+    <!-- Hoja con la vista previa de cada tarjeta -->
+    <HojaModal :abierto="abierto" titulo="Fotos del inicio" @cerrar="abierto = false">
+      <p class="text-sm text-gray-600">Prefiere fotos con zonas oscuras abajo: ahí va el texto blanco de la tarjeta.</p>
 
-        <p class="text-sm text-gray-600">Prefiere fotos con zonas oscuras abajo: ahí va el texto blanco de la tarjeta.</p>
-
-        <div class="space-y-4">
-          <div v-for="tarjeta in TARJETAS_INICIO" :key="tarjeta.clave" class="space-y-2">
-            <!-- Vista previa de la tarjeta, con su texto -->
-            <div class="relative h-28 rounded-2xl overflow-hidden border border-brand-border bg-gradient-to-br from-brand-dark to-brand-accent">
-              <FondoFotoTarjeta :imagen="settingsStore.fotoInicio(tarjeta.clave)" />
-              <div class="absolute bottom-3 left-3 right-3 text-white">
-                <p class="text-xl font-black leading-tight drop-shadow-sm">{{ tarjeta.titulo }}</p>
-                <p class="text-sm font-bold text-gray-200 leading-tight">{{ tarjeta.subtitulo }}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-              <label
-                :class="['py-3 rounded-xl border border-brand-dark text-brand-dark font-bold text-center cursor-pointer', procesando ? 'opacity-50 pointer-events-none' : '']"
-              >
-                {{ procesando === tarjeta.clave ? 'Guardando…' : 'Cambiar foto' }}
-                <input type="file" accept="image/*" class="hidden" :disabled="!!procesando" @change="alElegirFoto(tarjeta.clave, $event)" />
-              </label>
-              <button
-                type="button"
-                :disabled="!!procesando || !settingsStore.fotosInicio[tarjeta.clave]"
-                class="py-3 rounded-xl border border-brand-dark text-brand-dark font-bold disabled:opacity-50"
-                @click="volverALaOriginal(tarjeta.clave)"
-              >Volver a la original</button>
-            </div>
+      <div v-for="tarjeta in TARJETAS_INICIO" :key="tarjeta.clave" class="space-y-2">
+        <!-- Vista previa de la tarjeta, con su texto -->
+        <div class="relative h-28 rounded-2xl overflow-hidden border border-brand-border bg-gradient-to-br from-brand-dark to-brand-accent">
+          <FondoFotoTarjeta :imagen="settingsStore.fotoInicio(tarjeta.clave)" />
+          <div class="absolute bottom-3 left-3 right-3 text-white">
+            <p class="text-xl font-black leading-tight drop-shadow-sm">{{ tarjeta.titulo }}</p>
+            <p class="text-sm font-bold text-gray-200 leading-tight">{{ tarjeta.subtitulo }}</p>
           </div>
         </div>
 
-        <p
-          v-if="mensaje"
-          role="status"
-          :class="['p-3 rounded-xl text-sm border', mensaje.tipo === 'ok' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-800']"
-        >{{ mensaje.texto }}</p>
-
-        <button type="button" class="w-full py-3 rounded-xl bg-brand-dark text-white font-bold" @click="abierto = false">Listo</button>
+        <div class="grid grid-cols-2 gap-2">
+          <label
+            :class="['py-3 rounded-xl border border-brand-dark text-brand-dark font-bold text-center cursor-pointer', procesando ? 'opacity-50 pointer-events-none' : '']"
+          >
+            {{ procesando === tarjeta.clave ? 'Guardando…' : 'Cambiar foto' }}
+            <input type="file" accept="image/*" class="hidden" :disabled="!!procesando" @change="alElegirFoto(tarjeta.clave, $event)" />
+          </label>
+          <button
+            type="button"
+            :disabled="!!procesando || !settingsStore.fotosInicio[tarjeta.clave]"
+            class="py-3 rounded-xl border border-brand-dark text-brand-dark font-bold disabled:opacity-50"
+            @click="volverALaOriginal(tarjeta.clave)"
+          >Volver a la original</button>
+        </div>
       </div>
-    </div>
+
+      <p
+        v-if="mensaje"
+        role="status"
+        :class="['p-3 rounded-xl text-sm border', mensaje.tipo === 'ok' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-800']"
+      >{{ mensaje.texto }}</p>
+
+      <template #pie>
+        <button type="button" class="w-full py-3.5 rounded-2xl border border-brand-dark bg-brand-dark text-white font-bold" @click="abierto = false">Listo</button>
+      </template>
+    </HojaModal>
   </section>
 </template>

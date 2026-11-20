@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { ref, watch, computed } from 'vue'
 import { X, ChevronLeft, ChevronRight, Users, BedDouble, Check } from 'lucide-vue-next'
 import type { Cabin } from '../../types/catalog'
 import ImageGalleryEditor from '../ui/ImageGalleryEditor.vue'
 import ListaEtiquetas from '../ui/ListaEtiquetas.vue'
-import ModalEdicion from '../ui/ModalEdicion.vue'
+import HojaModal from '../ui/HojaModal.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import { formatCLP } from '../../lib/format'
 
@@ -119,17 +118,12 @@ function handleSave() {
 function close() {
   emit('close')
 }
-useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl border-2 border-brand-border shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-      
-      <!-- =================================================== -->
-      <!-- 1. MODO CLIENTE (SOLO LECTURA CON CARRUSEL)        -->
-      <!-- =================================================== -->
-      <template v-if="!isEditable && cabin">
+  <!-- Detalle para el cliente: foto arriba, ficha con scroll y botones fijos -->
+  <HojaModal v-if="cabin" :abierto="isOpen && !isEditable" :titulo="cabin.name" sin-manija sin-relleno @cerrar="close">
+    <template #cabecera>
         <!-- Carrusel de Fotografías -->
         <div class="relative h-60 sm:h-64 w-full bg-black shrink-0 overflow-hidden">
           <img 
@@ -137,6 +131,11 @@ useBloqueoScroll(computed(() => props.isOpen))
             :alt="cabin.name"
             class="w-full h-full object-cover transition-all duration-300"
           />
+
+          <!-- Manija de la hoja, sobre la foto (la hoja no la dibuja porque la foto llega hasta arriba) -->
+          <div class="sm:hidden absolute top-2 inset-x-0 z-10 pointer-events-none" aria-hidden="true">
+            <div class="w-10 h-1.5 rounded-full bg-white/90 shadow-sm mx-auto"></div>
+          </div>
           
           <!-- Botón Cerrar -->
           <button aria-label="Cerrar" 
@@ -172,8 +171,10 @@ useBloqueoScroll(computed(() => props.isOpen))
           </div>
         </div>
 
+    </template>
+
         <!-- Ficha de Información de Cabaña -->
-        <div class="p-5 space-y-4 overflow-y-auto grow">
+        <div class="p-5 space-y-4">
           <div>
             <div class="flex items-center justify-between">
               <h3 class="text-xl font-black text-brand-dark leading-tight">{{ cabin.name }}</h3>
@@ -226,7 +227,8 @@ useBloqueoScroll(computed(() => props.isOpen))
         </div>
 
         <!-- Pie de Botones -->
-        <div class="p-4 bg-gray-50 border-t border-gray-200 flex items-center gap-2">
+        <template #pie>
+        <div class="flex items-center gap-2">
           <BaseButton variant="outline" class="flex-1" @click="close">
             Cerrar
           </BaseButton>
@@ -236,13 +238,12 @@ useBloqueoScroll(computed(() => props.isOpen))
             Elegir esta Cabaña
           </BaseButton>
         </div>
-      </template>
+        </template>
+  </HojaModal>
 
-      <!-- =================================================== -->
-      <!-- 2. MODO ADMINISTRADOR (FORMULARIO EDITABLE)        -->
-      <!-- =================================================== -->
-      <ModalEdicion
-        v-else
+  <!-- Formulario de edición (administrador) -->
+  <HojaModal
+        :abierto="isOpen && (isEditable || !cabin)"
         :titulo="isEditing ? 'Editar cabaña' : 'Nueva cabaña'"
         :subtitulo="isEditing ? form.name : undefined"
         texto-guardar="Guardar cabaña"
@@ -300,8 +301,5 @@ useBloqueoScroll(computed(() => props.isOpen))
           placeholder="Ej: Estufa a leña"
           @update:model-value="form.features = $event"
         />
-      </ModalEdicion>
-
-    </div>
-  </div>
+  </HojaModal>
 </template>

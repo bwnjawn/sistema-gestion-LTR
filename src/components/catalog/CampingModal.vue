@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
 import type { CampingSite } from '../../types/catalog'
 import ImageGalleryEditor from '../ui/ImageGalleryEditor.vue'
 import ListaEtiquetas from '../ui/ListaEtiquetas.vue'
-import ModalEdicion from '../ui/ModalEdicion.vue'
+import HojaModal from '../ui/HojaModal.vue'
 
 const props = defineProps<{
   isOpen: boolean
@@ -75,13 +74,11 @@ function handleSave() {
 function close() {
   emit('close')
 }
-useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
-      <ModalEdicion
+  <HojaModal
+    :abierto="isOpen"
         :titulo="isEditing ? 'Editar espacio de camping' : 'Nuevo espacio de camping'"
         :subtitulo="isEditing ? form.name : undefined"
         texto-guardar="Guardar espacio"
@@ -143,7 +140,5 @@ useBloqueoScroll(computed(() => props.isOpen))
           placeholder="Ej: Duchas con agua caliente"
           @update:model-value="form.features = $event"
         />
-      </ModalEdicion>
-    </div>
-  </div>
+  </HojaModal>
 </template>

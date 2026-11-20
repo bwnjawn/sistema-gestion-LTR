@@ -1,11 +1,11 @@
 <script setup lang="ts">
 // Ajustes → Reglas de reservas: abono, plazo, IVA, precio de la piscina, margen y cupos.
-import { useBloqueoScroll } from '../../../composables/useBloqueoScroll'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { Utensils, Users, Percent } from 'lucide-vue-next'
 import { formatCLP } from '../../../lib/format'
 import { useSettingsStore } from '../../../stores/settingsStore'
 import AjustesVolver from '../../../components/admin/AjustesVolver.vue'
+import HojaModal from '../../../components/ui/HojaModal.vue'
 
 const settingsStore = useSettingsStore()
 
@@ -51,7 +51,6 @@ async function saveParameters() {
   })
   if (parametrosGuardados && reglasGuardadas) isEditingParameters.value = false
 }
-useBloqueoScroll(computed(() => isEditingParameters.value))
 </script>
 
 <template>
@@ -112,55 +111,44 @@ useBloqueoScroll(computed(() => isEditingParameters.value))
       </div>
     </div>
 
-    <!-- Modal de Edición de Parámetros -->
-    <div v-if="isEditingParameters" class="fixed inset-0 z-50 bg-brand-dark/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl p-5 max-w-sm w-full border-2 border-brand-border shadow-2xl space-y-4">
-        <h3 class="text-base font-black text-brand-dark border-b border-gray-100 pb-2">Abonos, IVA y cupos</h3>
-
-        <div class="space-y-3 text-xs font-bold">
-          <div>
-            <label class="block text-gray-600 mb-1">Abono requerido (%):</label>
-            <input type="number" v-model.number="editDeposit" min="0" max="100" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
-          </div>
-          <div>
-            <label class="block text-gray-600 mb-1">Plazo para abonar desde que llega la solicitud (horas):</label>
-            <input type="number" inputmode="numeric" v-model.number="editDeadline" min="1" max="720" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
-          </div>
-          <div>
-            <label class="block text-gray-600 mb-1">IVA (%):</label>
-            <input type="number" v-model.number="editIva" min="0" max="100" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
-          </div>
-          <div>
-            <label class="block text-gray-600 mb-1">Entrada a la piscina por persona ($, sin abono):</label>
-            <input type="number" inputmode="numeric" v-model.number="editPoolPrice" min="0" max="1000000" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
-          </div>
-          <div>
-            <label class="block text-gray-600 mb-1">Margen de cupos (%):</label>
-            <input type="number" v-model.number="editMargin" min="0" max="100" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
-          </div>
-          <div v-for="espacio in editSpaces" :key="espacio.id">
-            <label class="block text-gray-600 mb-1">{{ espacio.nombre }} del restaurante (personas):</label>
-            <input type="number" inputmode="numeric" v-model.number="espacio.capacidad" min="0" max="1000" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
-          </div>
-          <div>
-            <label class="block text-gray-600 mb-1">Menús distintos solo para grupos de más de (personas):</label>
-            <input type="number" inputmode="numeric" v-model.number="editMenuThreshold" min="1" max="1000" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
-          </div>
-          <div>
-            <label class="block text-gray-600 mb-1">Máximo de menús distintos por comida en esos grupos:</label>
-            <input type="number" inputmode="numeric" v-model.number="editMenuVarieties" min="1" max="50" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
-          </div>
-          <div>
-            <label class="block text-gray-600 mb-1">Capacidad máxima del camping (personas):</label>
-            <input type="number" v-model.number="editMaxCamping" min="1" max="1000" class="w-full p-2 rounded-xl border border-brand-border bg-brand-light font-black" />
-          </div>
-        </div>
-
-        <div class="flex gap-2 pt-2">
-          <button type="button" @click="isEditingParameters = false" class="flex-1 py-2.5 rounded-xl border border-brand-border font-black text-xs">Cancelar</button>
-          <button type="button" @click="saveParameters" class="flex-1 py-2.5 rounded-xl bg-brand-dark text-white font-black text-xs">Guardar</button>
-        </div>
+    <!-- Edición de los parámetros: hoja que sube desde abajo (SCRUM-279) -->
+    <HojaModal :abierto="isEditingParameters" titulo="Abonos, IVA y cupos" texto-guardar="Guardar" @cerrar="isEditingParameters = false" @guardar="saveParameters">
+      <div>
+        <label for="reg-abono" class="campo-etiqueta">Abono requerido (%)</label>
+        <input id="reg-abono" type="number" v-model.number="editDeposit" min="0" max="100" class="campo-entrada" />
       </div>
-    </div>
+      <div>
+        <label for="reg-plazo" class="campo-etiqueta">Plazo para abonar desde que llega la solicitud (horas)</label>
+        <input id="reg-plazo" type="number" inputmode="numeric" v-model.number="editDeadline" min="1" max="720" class="campo-entrada" />
+      </div>
+      <div>
+        <label for="reg-iva" class="campo-etiqueta">IVA (%)</label>
+        <input id="reg-iva" type="number" v-model.number="editIva" min="0" max="100" class="campo-entrada" />
+      </div>
+      <div>
+        <label for="reg-piscina" class="campo-etiqueta">Entrada a la piscina por persona ($, sin abono)</label>
+        <input id="reg-piscina" type="number" inputmode="numeric" v-model.number="editPoolPrice" min="0" max="1000000" class="campo-entrada" />
+      </div>
+      <div>
+        <label for="reg-margen" class="campo-etiqueta">Margen de cupos (%)</label>
+        <input id="reg-margen" type="number" v-model.number="editMargin" min="0" max="100" class="campo-entrada" />
+      </div>
+      <div v-for="espacio in editSpaces" :key="espacio.id">
+        <label :for="`reg-espacio-${espacio.id}`" class="campo-etiqueta">{{ espacio.nombre }} del restaurante (personas)</label>
+        <input :id="`reg-espacio-${espacio.id}`" type="number" inputmode="numeric" v-model.number="espacio.capacidad" min="0" max="1000" class="campo-entrada" />
+      </div>
+      <div>
+        <label for="reg-umbral" class="campo-etiqueta">Menús distintos solo para grupos de más de (personas)</label>
+        <input id="reg-umbral" type="number" inputmode="numeric" v-model.number="editMenuThreshold" min="1" max="1000" class="campo-entrada" />
+      </div>
+      <div>
+        <label for="reg-variedades" class="campo-etiqueta">Máximo de menús distintos por comida en esos grupos</label>
+        <input id="reg-variedades" type="number" inputmode="numeric" v-model.number="editMenuVarieties" min="1" max="50" class="campo-entrada" />
+      </div>
+      <div>
+        <label for="reg-camping" class="campo-etiqueta">Capacidad máxima del camping (personas)</label>
+        <input id="reg-camping" type="number" v-model.number="editMaxCamping" min="1" max="1000" class="campo-entrada" />
+      </div>
+    </HojaModal>
   </div>
 </template>

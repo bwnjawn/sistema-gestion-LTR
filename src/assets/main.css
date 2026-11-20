@@ -73,6 +73,32 @@ input[type="password"] {
   font-family: system-ui, -apple-system, sans-serif;
 }
 
+/* Hoja de edición (HojaModal): el fondo aparece suave y el panel sube desde abajo */
+.hoja-enter-active,
+.hoja-leave-active {
+  transition: opacity 0.2s ease;
+}
+.hoja-enter-active .hoja-panel,
+.hoja-leave-active .hoja-panel {
+  transition: transform 0.25s ease;
+}
+.hoja-enter-from,
+.hoja-leave-to {
+  opacity: 0;
+}
+.hoja-enter-from .hoja-panel,
+.hoja-leave-to .hoja-panel {
+  transform: translateY(100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hoja-enter-active,
+  .hoja-leave-active,
+  .hoja-enter-active .hoja-panel,
+  .hoja-leave-active .hoja-panel {
+    transition: none;
+  }
+}
+
 /* Barra de progreso al cambiar de pantalla */
 @keyframes progreso-ruta {
   0% { transform: translateX(-100%); }
