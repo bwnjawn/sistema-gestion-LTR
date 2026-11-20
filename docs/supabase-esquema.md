@@ -342,7 +342,7 @@ Las vistas llaman al **store de Pinia**; el store llama a un **repositorio por e
 | `AuthRepository` | `admins` (un `Repositorio`), `getSession`, `saveSession`, `clearSession` | Supabase Auth (reemplaza este repositorio) |
 
 Reglas de la capa:
-- **Sin `watch` que guarden.** Cada acción aplica el cambio en pantalla, llama al repositorio y, si falla, lo **revierte** y muestra el aviso global (`persistirConReversion`, `AvisoErrores`). El repositorio lanza `ErrorDeAlmacenamiento` / `ErrorNoEncontrado` (`src/lib/errores.ts`).
+- **Sin `watch` que guarden.** Cada acción aplica el cambio en pantalla, llama al repositorio y, si falla, lo **revierte** y muestra el aviso global (`persistirConReversion`, `AvisoAccion`); y al revés, cuando sí se guardó avisa arriba qué se hizo (SCRUM-288, `docs/specs/SCRUM-288.md`). El repositorio lanza `ErrorDeAlmacenamiento` / `ErrorNoEncontrado` (`src/lib/errores.ts`).
 - **`init()` asíncrono** en cada store; `main.ts` no monta la app hasta que todos cargan (`src/lib/arranque.ts`). Si falla, muestra una pantalla con "Reintentar".
 - **Semillas** (`src/data/seed.ts`) solo las usa el repositorio local, mientras no haya nada guardado. Los valores de fábrica de los ajustes están en `src/data/ajustesPorDefecto.ts`.
 - **`migrateLegacyData()`** (`src/lib/migrarDatosLocales.ts`) lleva lo guardado en el navegador al formato vigente al arrancar. Solo existe para el almacenamiento local; en Supabase los datos nacen en el formato vigente, así que el código ya no acepta valores antiguos (`'cabaña'`, `'confirmada'`, `'pendiente'`…).

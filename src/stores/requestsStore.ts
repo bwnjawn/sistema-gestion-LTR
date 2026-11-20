@@ -9,6 +9,15 @@ import { persistirConReversion } from '../lib/persistirConReversion'
 import { mensajeDeError, esErrorDeRed } from '../lib/errores'
 import { conTiempoLimite } from '../lib/conTiempoLimite'
 import { marcarServidorCaido, servidorInalcanzable } from '../lib/estadoDeRed'
+import { avisarGuardadoSinConexion } from '../lib/avisos'
+import {
+  avisoDeEdicion,
+  avisoDeEstado,
+  avisoDePago,
+  avisoPlazoAmpliado,
+  textoGuardadoSinConexion,
+  type AvisoDeAccion
+} from '../services/mensajesAvisos'
 import { requestToBooking } from '../services/adaptadoresReserva'
 import { applyRequestEdit, puedeCancelarse, type RequestEdit } from '../services/requests'
 import { useCatalogStore } from './catalogStore'
@@ -115,16 +124,26 @@ export const useRequestsStore = defineStore('requests', () => {
     mensaje: string
     cambio: CambioAdmin
     resumen: string
+    /** Aviso de arriba: verde si se guardó, azul si quedó en la cola sin conexión (SCRUM-288). */
+    aviso?: AvisoDeAccion
   }): Promise<T | undefined> {
+    let enCola = false
+    const avisarCola = () => {
+      enCola = true
+      if (o.aviso) avisarGuardadoSinConexion(textoGuardadoSinConexion(o.aviso))
+    }
     return persistirConReversion<T | undefined>({
       aplicar: o.aplicar,
       revertir: o.revertir,
       mensaje: o.mensaje,
+      // Si solo quedó en la cola ya avisó el azul: nunca se dice "listo" de lo que aún no llegó al servidor
+      exito: () => (enCola || !o.aviso ? null : { titulo: o.aviso.titulo, detalle: o.aviso.detalle, tono: o.aviso.tono }),
       persistir: async () => {
         const cola = useCambiosAdminStore()
         if (cola.pendientes.length > 0) {
           await cola.encolar(o.cambio, o.resumen)
           void cola.reintentar()
+          avisarCola()
           return undefined
         }
         try {
@@ -138,6 +157,7 @@ export const useRequestsStore = defineStore('requests', () => {
             console.error('[Solicitudes] No se pudo guardar el cambio en el dispositivo:', errorAlGuardar)
             throw e
           }
+          avisarCola()
           return undefined
         }
       }
@@ -148,7 +168,8 @@ export const useRequestsStore = defineStore('requests', () => {
   async function reemplazar(
     id: string,
     nueva: ReservationRequest,
-    mensaje: string
+    mensaje: string,
+    crearAviso?: (previa: ReservationRequest, nueva: ReservationRequest) => AvisoDeAccion
   ): Promise<void> {
     const indice = requests.value.findIndex(r => r.id === id)
     if (indice === -1) return
@@ -159,6 +180,7 @@ export const useRequestsStore = defineStore('requests', () => {
     await conEscritura(() => persistirOEncolar({
       cambio: { tipo: 'guardar', solicitud: nueva, esNueva: false },
       resumen: resumenDeGuardado(previa, nueva),
+      aviso: crearAviso?.(previa, nueva),
       aplicar: () => { requests.value[indice] = nueva },
       revertir: () => {
         const actual = requests.value.findIndex(r => r.id === id)
@@ -260,7 +282,7 @@ export const useRequestsStore = defineStore('requests', () => {
     try {
       // Confirmada: el abono ya no se espera con plazo
       const nueva: ReservationRequest = { ...found, status, depositDueAt: status === 'confirmed' ? undefined : found.depositDueAt }
-      await reemplazar(id, nueva, 'No se pudo cambiar el estado de la solicitud.')
+      await reemplazar(id, nueva, 'No se pudo cambiar el estado de la solicitud.', (previa, n) => avisoDeEstado(previa.status, n.status, n))
       return true
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al actualizar el estado de la solicitud.')
@@ -286,6 +308,7 @@ export const useRequestsStore = defineStore('requests', () => {
       await conEscritura(() => persistirOEncolar({
         cambio: { tipo: 'pago-agregar', solicitudId: id, pago },
         resumen: resumenDePago('agregar', found, pago.amount),
+        aviso: avisoDePago('registrado', found, pago.amount),
         aplicar: () => { found.payments.push(pago) },
         revertir: () => { found.payments = found.payments.filter(p => p.id !== pago.id) },
         persistir: () => repositorios().payments.add(id, pago),
@@ -305,6 +328,7 @@ export const useRequestsStore = defineStore('requests', () => {
       await conEscritura(() => persistirOEncolar({
         cambio: { tipo: 'pago-quitar', solicitudId: id, pagoId: paymentId },
         resumen: resumenDePago('quitar', found, previos.find(p => p.id === paymentId)?.amount),
+        aviso: avisoDePago('quitado', found, previos.find(p => p.id === paymentId)?.amount),
         aplicar: () => { found.payments = previos.filter(p => p.id !== paymentId) },
         revertir: () => { found.payments = previos },
         persistir: () => repositorios().payments.remove(id, paymentId),
@@ -338,7 +362,7 @@ export const useRequestsStore = defineStore('requests', () => {
     if (!result.ok) return { ok: false, message: result.message }
 
     try {
-      await reemplazar(id, result.request, 'No se pudieron guardar los cambios de la solicitud.')
+      await reemplazar(id, result.request, 'No se pudieron guardar los cambios de la solicitud.', (previa, n) => avisoDeEdicion(previa, n))
       return { ok: true }
     } catch (e) {
       return { ok: false, message: mensajeDeError(e, 'No se pudieron guardar los cambios de la solicitud.') }
@@ -398,7 +422,7 @@ export const useRequestsStore = defineStore('requests', () => {
         ...found,
         depositDueAt: calculateInitialDepositDueAt(found, useSettingsStore().depositDeadlineHours)
       }
-      await reemplazar(id, nueva, 'No se pudo dar más plazo para el abono.')
+      await reemplazar(id, nueva, 'No se pudo dar más plazo para el abono.', (_previa, n) => avisoPlazoAmpliado(n, useSettingsStore().depositDeadlineHours))
     } catch (e) {
       error.value = mensajeDeError(e, 'Error al dar más plazo para el abono.')
     }

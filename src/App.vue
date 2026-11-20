@@ -1,11 +1,11 @@
 <template>
   <ProgresoRuta />
-  <AvisoErrores />
+  <AvisoAccion />
   <router-view />
 </template>
 
 <script setup lang="ts">
 // Punto de montaje global para Vue Router
 import ProgresoRuta from './components/ui/ProgresoRuta.vue'
-import AvisoErrores from './components/ui/AvisoErrores.vue'
+import AvisoAccion from './components/ui/AvisoAccion.vue'
 </script>
