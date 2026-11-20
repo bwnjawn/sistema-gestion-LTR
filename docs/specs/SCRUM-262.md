@@ -60,7 +60,8 @@ Tareas relacionadas, todas en el Sprint 2:
 - **Filtros:** tres de estado (Pendientes, Confirmadas, Descartadas) en una grilla de tres columnas, para que no se sobrepongan. "Por mover" no se combina con el de estado: activar uno quita el otro.
 - **Ayuda:** la sección Solicitudes tiene botón "?" en el encabezado (`AyudaSolicitudes.vue`, registrada en `ayudasAdmin.ts`) que explica cada estado y la franja de color.
 - **Fondo bloqueado:** todos los diálogos usan `useBloqueoScroll`, que ahora también frena el gesto de deslizar en iPhone fuera de la hoja. La barra fija del formulario de fecha queda sobre el calendario.
-- Pendiente a futuro: fechas sugeridas y comparación antes/después al mover.
+- **Antes y después al mover (SCRUM-285):** al tocar "Guardar cambios" con la fecha cambiada, el recuadro de confirmación muestra dos columnas, **Antes** y **Ahora** (fechas, noches, total y abono exigido) y una frase: "El precio no cambia", "El total baja $X" o "El total sube $X". Sale de `compararCambio` (`services/comparacionCambio.ts`), que usa el mismo `applyRequestEdit` que el guardado: lo que se ve es lo que se aplica. Restaurante y piscina no cambian de precio al mover el día; en las visitas de un día no se muestran noches. **Decisión (21/11):** no se compara con lo ya pagado ni se avisa si el abono pagado supera al nuevo exigido, porque el abono pagado cubre parte de la cuota general.
+- Pendiente a futuro: fechas sugeridas.
 
 ## Preguntas abiertas
 - Ninguna por ahora.

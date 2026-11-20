@@ -19,7 +19,8 @@ import {
   type AvisoDeAccion
 } from '../services/mensajesAvisos'
 import { requestToBooking } from '../services/adaptadoresReserva'
-import { applyRequestEdit, puedeCancelarse, type RequestEdit } from '../services/requests'
+import { applyRequestEdit, puedeCancelarse, type RequestEdit, type RequestEditContext } from '../services/requests'
+import { compararCambio, type ResultadoDeComparacion } from '../services/comparacionCambio'
 import { useCatalogStore } from './catalogStore'
 import { TIEMPO_ENVIO_MS, useColaEnvioStore } from './colaEnvioStore'
 import { TIEMPO_CAMBIO_MS, TIEMPO_CAMBIO_SIN_SENAL_MS, useCambiosAdminStore } from './cambiosAdminStore'
@@ -340,13 +341,10 @@ export const useRequestsStore = defineStore('requests', () => {
   }
 
   /** Modifica una solicitud viva. Valida, recalcula el precio y persiste; no cambia el estado. */
-  async function updateRequestDetails(id: string, edit: RequestEdit): Promise<{ ok: boolean; message?: string }> {
-    const found = requests.value.find(r => r.id === id)
-    if (!found) return { ok: false, message: 'No se encontró la solicitud.' }
-
+  function contextoDeEdicion(): RequestEditContext {
     const catalogStore = useCatalogStore()
     const settingsStore = useSettingsStore()
-    const result = applyRequestEdit(found, edit, {
+    return {
       requests: requests.value,
       cabins: catalogStore.todasLasCabanas,
       campingSites: catalogStore.todosLosSitios,
@@ -358,7 +356,21 @@ export const useRequestsStore = defineStore('requests', () => {
         restaurante: settingsStore.restaurantCapacity,
         camping: settingsStore.limitesAforo.campingPersonas
       }
-    })
+    }
+  }
+
+  /** El antes y el después de un cambio, sin guardar nada: lo que se muestra es lo que `updateRequestDetails` aplicaría. */
+  function previsualizarEdicion(id: string, edit: RequestEdit): ResultadoDeComparacion {
+    const found = requests.value.find(r => r.id === id)
+    if (!found) return { ok: false, message: 'No se encontró la solicitud.' }
+    return compararCambio(found, edit, contextoDeEdicion())
+  }
+
+  async function updateRequestDetails(id: string, edit: RequestEdit): Promise<{ ok: boolean; message?: string }> {
+    const found = requests.value.find(r => r.id === id)
+    if (!found) return { ok: false, message: 'No se encontró la solicitud.' }
+
+    const result = applyRequestEdit(found, edit, contextoDeEdicion())
     if (!result.ok) return { ok: false, message: result.message }
 
     try {
@@ -442,6 +454,7 @@ export const useRequestsStore = defineStore('requests', () => {
     addRequest,
     updateRequestStatus,
     updateRequestDetails,
+    previsualizarEdicion,
     registerPayment,
     removePayment,
     crossedRequestsFor,

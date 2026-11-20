@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "node scripts/dev-local.mjs",
     "dev:red": "vite --host",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",

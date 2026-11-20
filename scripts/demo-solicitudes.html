@@ -19,10 +19,11 @@
 </head>
 <body>
   <h1>Casos de prueba de solicitudes</h1>
-  <p>Herramienta de desarrollo (cruces y "Por mover"). Guarda solicitudes de prueba en este navegador. Las tuyas no se tocan: solo se agregan o se quitan las de prueba (código <b>SOL-PRUEBA-…</b>). No se mezcla con las del calendario (<b>SOL-DEMO-…</b>).</p>
+  <p>Herramienta de desarrollo (cruces y "Por mover"). Guarda solicitudes de prueba en este navegador (solo sirve con la app en <b>modo local</b>, sin Supabase). <b>"Cargar casos de prueba" borra primero todas las solicitudes de este navegador</b> y deja solo las de prueba (código <b>SOL-PRUEBA-…</b>).</p>
 
   <button class="principal" id="cargar">Cargar casos de prueba</button>
   <button id="quitar">Quitar casos de prueba</button>
+  <button id="quitarTodas">Borrar TODAS las solicitudes de este navegador</button>
   <div id="estado">Listo.</div>
   <p><a href="/admin/solicitudes">Ir a las solicitudes del admin</a> (si ya estaba abierto, recárgalo).</p>
 
@@ -66,6 +67,16 @@
       var r = base('cabana', cab.nombre, cliente, 4, dia, o || {})
       r.timeOrDuration = salida
       r.details = { resourceId: cab.id, startDate: iso(mas(dia)), endDate: salida }
+      return r
+    }
+    // Cabaña con el precio real (IVA 19 %, abono 30 %), para probar el antes y el después al mover la fecha
+    function cabanaConPrecio(cab, precioNoche, cliente, dia, noches, o) {
+      var sub = precioNoche * noches
+      var iva = Math.round(sub * 0.19)
+      var total = sub + iva
+      var abono = Math.round(total * 0.3)
+      var r = cabana(cab, cliente, dia, noches, Object.assign({ total: total, abono: abono }, o || {}))
+      r.details.pricing = { subtotal: sub, ivaAmount: iva, ivaPercentage: 19, depositPercentage: 30, nights: noches }
       return r
     }
     function almuerzo(cliente, personas, dia, o) {
@@ -113,6 +124,26 @@
           buscar: 'Solicitud sin problemas, con abono recibido',
           esperado: 'Elena Ortiz: "Abono recibido: falta aprobar"; Aprobar la confirma directo.',
           reservas: [cabana(CABANA_6, 'Elena Ortiz', 55, 2, { pagado: 36000 })]
+        },
+        {
+          buscar: 'Mover fecha (SCRUM-285): el precio baja',
+          esperado: 'Marcela Pinto, Cabaña 8, 3 noches, con abono pagado. Lápiz > elegir 2 noches > Guardar: Antes $428.400 / Ahora $285.600 y "El total baja $142.800".',
+          reservas: [cabanaConPrecio(CABANA_8, 120000, 'Marcela Pinto', 70, 3, { estado: 'confirmed', pagado: 128520 })]
+        },
+        {
+          buscar: 'Mover fecha (SCRUM-285): el precio sube',
+          esperado: 'Hugo Salas, Cabaña 8, 2 noches. Elegir 4 noches: Antes $285.600 / Ahora $571.200 y "El total sube $285.600".',
+          reservas: [cabanaConPrecio(CABANA_8, 120000, 'Hugo Salas', 80, 2, { estado: 'confirmed' })]
+        },
+        {
+          buscar: 'Mover fecha (SCRUM-285): el precio no cambia',
+          esperado: 'Nadia Cruz, Cabaña 6, 3 noches. Elegir otras 3 noches: mismos montos y "El precio no cambia".',
+          reservas: [cabanaConPrecio(CABANA_6, 65000, 'Nadia Cruz', 90, 3, { estado: 'confirmed' })]
+        },
+        {
+          buscar: 'Mover fecha (SCRUM-285): restaurante',
+          esperado: 'Óscar Vidal, 20 personas. Elegir otro día: sin noches y "El precio no cambia".',
+          reservas: [almuerzo('Óscar Vidal', 20, 100, { estado: 'confirmed', total: 85000, abono: 25500 })]
         }
       ]
     }
@@ -133,10 +164,10 @@
     document.getElementById('cargar').onclick = function () {
       var nuevas = []
       casos().forEach(function (c) { nuevas = nuevas.concat(c.reservas) })
-      var lista = nuevas.concat(sinPrueba(leer()))
+      var lista = nuevas
       try {
         localStorage.setItem(CLAVE, JSON.stringify(lista))
-        mostrar('Listo: ' + nuevas.length + ' solicitudes de prueba cargadas. Abre o recarga las solicitudes del admin.')
+        mostrar('Listo: ' + nuevas.length + ' solicitudes de prueba cargadas. Las demás se borraron. Abre o recarga las solicitudes del admin.')
       } catch (e) { mostrar('No se pudo guardar: ' + e.message) }
     }
     document.getElementById('quitar').onclick = function () {
@@ -145,6 +176,14 @@
       try {
         localStorage.setItem(CLAVE, JSON.stringify(resto))
         mostrar('Quitadas ' + (lista.length - resto.length) + ' solicitudes de prueba. Quedan ' + resto.length + '.')
+      } catch (e) { mostrar('No se pudo guardar: ' + e.message) }
+    }
+
+    document.getElementById('quitarTodas').onclick = function () {
+      var n = leer().length
+      try {
+        localStorage.setItem(CLAVE, '[]')
+        mostrar('Borradas ' + n + ' solicitudes. No queda ninguna.')
       } catch (e) { mostrar('No se pudo guardar: ' + e.message) }
     }
 
