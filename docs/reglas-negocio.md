@@ -149,6 +149,15 @@ Los enlaces (mapa, Instagram, web) se generan en `lib/contactLinks.ts` a partir 
 - Ubicación del mapa (corregida el 8/11): "Turismo Los Troncos de Repil", coordenadas -41.0616375, -73.647016. Los valores anteriores tenían el signo positivo y apuntaban a otro lugar; `settingsStore.ts` los reemplaza solos si el navegador los tenía guardados.
 - Sitio web por defecto: `fresianatural.cl` (abre `https://www.fresianatural.cl/troncos-de-repil-fresia-natural.html`).
 
+## 6b. Fotos del inicio (SCRUM-271)
+
+| Regla | Valor | Historia | Estado |
+|---|---|---|---|
+| Tarjetas con foto editable | Las cinco del inicio: Cabaña, Camping, Restaurante, Piscina y Evento especial. El administrador cambia cada foto desde Ajustes → Contenido para el cliente → "Fotos del inicio" (con vista previa de la tarjeta y su texto) o la restaura con "Volver a la original" | SCRUM-271 | ✅ `AdminFotosInicioCard`, `cambiarFotoInicio` en `settingsStore` |
+| Foto provisoria | Sin foto subida se muestra la provisoria (Unsplash, en `services/fotosInicio.ts`); si la foto no carga, queda el fondo verde. Los datos viven en el ajuste `fotos_inicio` (una foto por tarjeta; vacía = provisoria) | SCRUM-271 | ✅ migración 9 abre su lectura pública |
+| Legibilidad del texto | Todas las tarjetas llevan un oscurecimiento leve (12 %) y un degradado inferior reforzado (90 %), para que el texto blanco se lea con cualquier foto. La foto se recorta (`object-cover`) en tarjetas de ancho completo y de media columna | SCRUM-271 | ✅ `FondoFotoTarjeta` |
+| Peso de la foto | Se comprime a 1200 px de ancho (JPEG 80 %) antes de guardar. Hasta SCRUM-248 con almacenamiento local solo se ve en el navegador de quien la sube; con Supabase se guarda en la base y la ve todo cliente | SCRUM-271 | ⚠️ pasar a Storage junto con el catálogo (SCRUM-248) |
+
 ## 7. Decisiones abiertas que bloquean la entrega
 
 | # | Pregunta | A quién | Para cuándo |

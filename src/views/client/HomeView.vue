@@ -7,6 +7,7 @@ import { useSettingsStore } from '../../stores/settingsStore'
 import { formatCLP } from '../../lib/format'
 import type { ServiceType } from '../../types/domain'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
+import FondoFotoTarjeta from '../../components/ui/FondoFotoTarjeta.vue'
 import TarjetaServicioExtra from '../../components/ui/TarjetaServicioExtra.vue'
 import HojaContactoEvento from '../../components/ui/HojaContactoEvento.vue'
 import FranjaModoAdmin from '../../components/ui/FranjaModoAdmin.vue'
@@ -75,14 +76,9 @@ function selectService(service: ServiceType) {
         <!-- CARD 1: CABAÑA -->
         <div 
           @click="selectService('cabana')"
-          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
+          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
         >
-          <img 
-            src="https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=800&q=80" 
-            alt="Cabaña" 
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          <FondoFotoTarjeta :imagen="settingsStore.fotoInicio('cabana')" />
 
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
@@ -102,14 +98,9 @@ function selectService(service: ServiceType) {
         <!-- CARD 2: ACAMPAR -->
         <div 
           @click="selectService('camping')"
-          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
+          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
         >
-          <img 
-            src="https://images.unsplash.com/photo-1510312305653-8ed496efae75?auto=format&fit=crop&w=800&q=80" 
-            alt="Acampar en Los Troncos de Repil" 
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          <FondoFotoTarjeta :imagen="settingsStore.fotoInicio('camping')" />
 
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
@@ -129,14 +120,9 @@ function selectService(service: ServiceType) {
         <!-- CARD 3: COMER -->
         <div 
           @click="selectService('restaurante')"
-          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target"
+          class="relative h-36 rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm cursor-pointer group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
         >
-          <img 
-            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80" 
-            alt="Restaurante y Comida" 
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          <FondoFotoTarjeta :imagen="settingsStore.fotoInicio('restaurante')" />
 
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
@@ -160,7 +146,7 @@ function selectService(service: ServiceType) {
             :class="{ 'col-span-2': reservationStore.isAdminMode }"
             titulo="Piscina"
             :subtitulo="`${formatCLP(settingsStore.poolEntryPrice)} por persona`"
-            imagen="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=800&q=80"
+            :imagen="settingsStore.fotoInicio('piscina')"
             nota="Gratis si reservas otro servicio"
             :icono="Waves"
             @click="selectService('piscina')"
@@ -171,7 +157,7 @@ function selectService(service: ServiceType) {
             v-if="!reservationStore.isAdminMode"
             titulo="Evento especial"
             subtitulo="Contacta a los dueños"
-            imagen="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=800&q=80"
+            :imagen="settingsStore.fotoInicio('evento')"
             :icono="PartyPopper"
             @click="contactoEventoAbierto = true"
           />

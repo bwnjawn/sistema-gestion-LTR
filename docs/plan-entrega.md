@@ -107,7 +107,7 @@ Recorrido cliente → admin hecho el 8/11 en iPhone (Chrome, incógnito). Los ha
 
 ## Seguridad del prototipo (SCRUM-242)
 - Se quitaron los botones de datos de prueba del login y el enlace público "Crear cuenta".
-- `/admin/registro` exige sesión de administrador y está en Ajustes → Administradores. Crear una cuenta no cambia la sesión de quien la crea.
+- `/admin/registro` exige sesión de administrador y está en Ajustes → Equipo (Administradores). Crear una cuenta no cambia la sesión de quien la crea.
 - Las dos cuentas de fábrica (`dueno1@` y `dueno2@troncosderepil.cl`) tienen contraseñas nuevas, definidas en `authStore.ts` (`DEFAULT_ADMINS`). Los navegadores que aún guardaban `admin123` pierden esas cuentas y la sesión asociada al abrir la app.
 - **Límite conocido:** la autenticación sigue siendo de prototipo. Las contraseñas están en texto plano en el navegador y en el código de la aplicación, así que cualquiera con acceso al navegador o al código puede leerlas. No sirve para datos reales. La autenticación de verdad llega con Supabase Auth (SCRUM-248); hay que cambiar las contraseñas de fábrica antes de la entrega final.
 

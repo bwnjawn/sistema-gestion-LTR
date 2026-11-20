@@ -10,6 +10,8 @@ import type {
   CampingSchedules,
   CapacityRules,
   ClaveAjuste,
+  ClaveFotoInicio,
+  FotosInicio,
   LimiteVariedades,
   LimitesAforo,
   ReglamentoCamping,
@@ -31,6 +33,7 @@ import { repositorios } from '../lib/repositories'
 import { persistirConReversion } from '../lib/persistirConReversion'
 import { mensajeDeError } from '../lib/errores'
 import { rutaDeReglamentoCamping, validarPdf } from '../services/documentos'
+import { FOTOS_INICIO_VACIAS, fotoDeInicio } from '../services/fotosInicio'
 
 export type { BusinessParametersExtended, CapacityRules }
 
@@ -43,6 +46,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const cabinSchedules = ref<CabinSchedules>({ ...DEFAULT_CABIN_SCHEDULES })
   const parameters = ref<BusinessParametersExtended>(structuredClone(DEFAULT_PARAMS))
   const campingRules = ref<ReglamentoCamping>({ ...REGLAMENTO_CAMPING_VACIO })
+  const fotosInicio = ref<FotosInicio>({ ...FOTOS_INICIO_VACIAS })
 
   const isLoading = ref(false)
   const isReady = ref(false)
@@ -71,16 +75,18 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null
     try {
       const repo = repositorios().settings
-      const [contacto, transferencia, restaurante, camping, cabana, parametros, reglamento] = await Promise.all([
+      const [contacto, transferencia, restaurante, camping, cabana, parametros, reglamento, fotos] = await Promise.all([
         repo.get('contact_info', DEFAULT_CONTACT),
         repo.get('transfer_info', DEFAULT_TRANSFER),
         repo.get('restaurant_schedules', DEFAULT_RESTAURANT_SCHEDULES),
         repo.get('camping_schedules', DEFAULT_CAMPING_SCHEDULES),
         repo.get('cabin_schedules', DEFAULT_CABIN_SCHEDULES),
         repo.get('parameters', DEFAULT_PARAMS),
-        repo.get('camping_rules', REGLAMENTO_CAMPING_VACIO)
+        repo.get('camping_rules', REGLAMENTO_CAMPING_VACIO),
+        repo.get('fotos_inicio', FOTOS_INICIO_VACIAS)
       ])
       campingRules.value = reglamento
+      fotosInicio.value = { ...FOTOS_INICIO_VACIAS, ...fotos }
       contactInfo.value = contacto
       // Lo guardado antes de que existieran campos nuevos se completa con los de fábrica
       transferInfo.value = { ...DEFAULT_TRANSFER, ...transferencia }
@@ -105,14 +111,15 @@ export const useSettingsStore = defineStore('settings', () => {
     if (isLoading.value) return false
     const repo = repositorios().settings
     repo.invalidar()
-    const [contacto, transferencia, restaurante, camping, cabana, parametros, reglamento] = await Promise.all([
+    const [contacto, transferencia, restaurante, camping, cabana, parametros, reglamento, fotos] = await Promise.all([
       repo.get('contact_info', DEFAULT_CONTACT),
       repo.get('transfer_info', DEFAULT_TRANSFER),
       repo.get('restaurant_schedules', DEFAULT_RESTAURANT_SCHEDULES),
       repo.get('camping_schedules', DEFAULT_CAMPING_SCHEDULES),
       repo.get('cabin_schedules', DEFAULT_CABIN_SCHEDULES),
       repo.get('parameters', DEFAULT_PARAMS),
-      repo.get('camping_rules', REGLAMENTO_CAMPING_VACIO)
+      repo.get('camping_rules', REGLAMENTO_CAMPING_VACIO),
+      repo.get('fotos_inicio', FOTOS_INICIO_VACIAS)
     ])
     if (isLoading.value) return false
     const asignar = <T>(destino: { value: T }, nuevo: T) => {
@@ -125,6 +132,7 @@ export const useSettingsStore = defineStore('settings', () => {
     asignar(cabinSchedules, cabana)
     asignar(parameters, parametros)
     asignar(campingRules, reglamento)
+    asignar(fotosInicio, { ...FOTOS_INICIO_VACIAS, ...fotos })
     return true
   }
 
@@ -198,6 +206,18 @@ export const useSettingsStore = defineStore('settings', () => {
     return null
   }
 
+  /** La foto que se ve en la tarjeta del inicio: la del administrador o, sin ella, la provisoria. */
+  function fotoInicio(clave: ClaveFotoInicio): string {
+    return fotoDeInicio(fotosInicio.value, clave)
+  }
+
+  /** Cambia la foto de una tarjeta del inicio (`''` vuelve a la provisoria). Devuelve el mensaje de error, o `null` si quedó guardada. */
+  async function cambiarFotoInicio(clave: ClaveFotoInicio, foto: string): Promise<string | null> {
+    const mensaje = 'No se pudo guardar la foto.'
+    const guardado = await guardarAjuste('fotos_inicio', fotosInicio, { ...fotosInicio.value, [clave]: foto }, mensaje)
+    return guardado ? null : error.value ?? mensaje
+  }
+
   const capacityRulesActuales = computed<CapacityRules>(() => ({ ...DEFAULT_PARAMS.capacityRules, ...parameters.value.capacityRules }))
   const restaurantCapacity = computed(() => getRestaurantCapacity(capacityRulesActuales.value.restaurantSpaces))
   const limitesAforo = computed<LimitesAforo>(() => ({
@@ -254,6 +274,9 @@ export const useSettingsStore = defineStore('settings', () => {
     cabinSchedules,
     parameters,
     campingRules,
+    fotosInicio,
+    fotoInicio,
+    cambiarFotoInicio,
     tieneReglamentoCamping,
     isLoading,
     isReady,

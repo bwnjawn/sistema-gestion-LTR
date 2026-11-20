@@ -74,6 +74,11 @@ const routes = [
       { path: 'calendario', name: 'admin-calendar', meta: { titulo: 'Calendario', ayuda: 'calendario', actualizable: true }, component: () => import('../views/admin/AdminCalendarView.vue') },
       { path: 'catalogo', name: 'admin-catalog', meta: { titulo: 'Catálogo', ayuda: 'catalogo' }, component: () => import('../views/admin/AdminCatalogEditView.vue') },
       { path: 'ajustes', name: 'admin-settings', meta: { titulo: 'Ajustes', ayuda: 'ajustes' }, component: () => import('../views/admin/AdminSettingsView.vue') },
+      // Secciones de Ajustes: la lista (arriba) lleva a cada una
+      { path: 'ajustes/negocio', name: 'admin-settings-negocio', meta: { titulo: 'Datos del negocio', ayuda: 'ajustes' }, component: () => import('../views/admin/ajustes/AjustesNegocioView.vue') },
+      { path: 'ajustes/reglas', name: 'admin-settings-reglas', meta: { titulo: 'Reglas de reservas', ayuda: 'ajustes' }, component: () => import('../views/admin/ajustes/AjustesReglasView.vue') },
+      { path: 'ajustes/contenido', name: 'admin-settings-contenido', meta: { titulo: 'Contenido', ayuda: 'ajustes' }, component: () => import('../views/admin/ajustes/AjustesContenidoView.vue') },
+      { path: 'ajustes/equipo', name: 'admin-settings-equipo', meta: { titulo: 'Equipo', ayuda: 'ajustes' }, component: () => import('../views/admin/ajustes/AjustesEquipoView.vue') },
       // Rutas antiguas
       { path: 'editar', redirect: { name: 'admin-catalog' } },
       { path: 'mas', redirect: { name: 'admin-settings' } }
