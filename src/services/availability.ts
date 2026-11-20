@@ -699,6 +699,8 @@ export interface Conflicto {
   solicitudIds: string[]
   /** Fechas ISO en que se topan, ordenadas. */
   dias: string[]
+  /** Solo restaurante y camping: el tope que se pasa y de qué comida o modalidad es (para explicar el cupo). */
+  cupo?: { limite: number; comida?: string; modalidad?: 'diario' | 'pernoctar' }
 }
 
 const ETIQUETA_COMIDA: Record<string, string> = {
@@ -721,14 +723,14 @@ function diasQueOcupa(r: ReservationRequest): string[] {
 class AcumuladorConflictos {
   private porClave = new Map<string, Conflicto>()
 
-  agregar(servicio: ServiceType, motivo: string, solicitudIds: string[], dias: string[]): void {
+  agregar(servicio: ServiceType, motivo: string, solicitudIds: string[], dias: string[], cupo?: Conflicto['cupo']): void {
     const ids = [...solicitudIds].sort()
     const clave = `${servicio}|${motivo}|${ids.join(',')}`
     const existente = this.porClave.get(clave)
     if (existente) {
       existente.dias = Array.from(new Set([...existente.dias, ...dias])).sort()
     } else {
-      this.porClave.set(clave, { servicio, motivo, solicitudIds: ids, dias: [...dias].sort() })
+      this.porClave.set(clave, { servicio, motivo, solicitudIds: ids, dias: [...dias].sort(), ...(cupo ? { cupo } : {}) })
     }
   }
 
@@ -794,7 +796,7 @@ export function findConflicts(
     if (grupo.personas <= limites.restaurantePersonas) continue
     const [dia, comida] = clave.split('|')
     const cuando = ETIQUETA_COMIDA[comida] ?? 'el día'
-    acumulador.agregar('restaurante', `Juntas superan el aforo de ${cuando} en el restaurante (${limites.restaurantePersonas} personas)`, grupo.ids, [dia])
+    acumulador.agregar('restaurante', `Juntas superan el aforo de ${cuando} en el restaurante (${limites.restaurantePersonas} personas)`, grupo.ids, [dia], { limite: limites.restaurantePersonas, comida })
   }
 
   // Camping: personas por día y modalidad (diario y pernoctar tienen cupos separados)
@@ -810,7 +812,7 @@ export function findConflicts(
     if (grupo.personas <= limites.campingPersonas) continue
     const [dia, modalidad] = clave.split('|')
     const tipo = modalidad === 'diario' ? 'por el día' : 'para pernoctar'
-    acumulador.agregar('camping', `Juntas superan el cupo del camping ${tipo} (${limites.campingPersonas} personas)`, grupo.ids, [dia])
+    acumulador.agregar('camping', `Juntas superan el cupo del camping ${tipo} (${limites.campingPersonas} personas)`, grupo.ids, [dia], { limite: limites.campingPersonas, modalidad: modalidad as 'diario' | 'pernoctar' })
   }
 
   return acumulador.resultado()

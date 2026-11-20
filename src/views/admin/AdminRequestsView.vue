@@ -8,7 +8,6 @@ import AdminRequestCard from '../../components/admin/AdminRequestCard.vue'
 import CargaDatosAdmin from '../../components/admin/CargaDatosAdmin.vue'
 import EsqueletoSolicitudes from '../../components/admin/EsqueletoSolicitudes.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
-import AdminConfirmarCruceDialog from '../../components/admin/AdminConfirmarCruceDialog.vue'
 import AdminMoverFechaDialog from '../../components/admin/AdminMoverFechaDialog.vue'
 import AdminConfirmarRechazoDialog from '../../components/admin/AdminConfirmarRechazoDialog.vue'
 import AdminConfirmarSinAbonoDialog from '../../components/admin/AdminConfirmarSinAbonoDialog.vue'
@@ -45,9 +44,7 @@ const bloqueos = computed(() =>
 const soloPorMover = ref(false)
 const cantidadPorMover = computed(() => Object.keys(requestsStore.porMoverPorId).length)
 
-// Aprobar desde la tarjeta: si la solicitud se cruza con otras, se pregunta cuál confirmar (SCRUM-262)
-const cruceId = ref<string | null>(null)
-
+// Aprobar desde la tarjeta (SCRUM-262, SCRUM-287)
 // Si falta abono, primero se avisa (SCRUM-264); el admin decide si confirma igual
 const sinAbonoId = ref<string | null>(null)
 
@@ -55,6 +52,11 @@ function aprobar(id: string) {
   // Una pendiente sobre una fecha confirmada nunca se aprueba: se mueve
   if (requestsStore.porMoverPorId[id]) {
     moverId.value = id
+    return
+  }
+  // Si se cruza con otras, se aprueba desde el detalle: ahí se ve con qué se topa antes de decidir (SCRUM-287)
+  if (requestsStore.crossedRequestsFor(id).length > 0) {
+    abrirDetalle(id)
     return
   }
   const req = requestsStore.requests.find(r => r.id === id)
@@ -67,10 +69,6 @@ function aprobar(id: string) {
 
 async function continuarAprobacion(id: string) {
   sinAbonoId.value = null
-  if (requestsStore.crossedRequestsFor(id).length > 0) {
-    cruceId.value = id
-    return
-  }
   await requestsStore.confirmRequest(id)
 }
 
@@ -270,7 +268,6 @@ function verTodas() {
 
     <AdminRequestDetailModal :request-id="openedRequestId" @close="abrirDetalle(null)" @open-request="abrirDetalle($event)" />
     <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="continuarAprobacion" @close="sinAbonoId = null" />
-    <AdminConfirmarCruceDialog :request-id="cruceId" @close="cruceId = null" />
     <AdminMoverFechaDialog :request-id="moverId" @close="moverId = null" />
     <AdminExportarExcelDialog :abierto="exportando" :visibles="filteredRequests" @close="exportando = false" />
     <AdminConfirmarRechazoDialog :request-id="rechazoId" @close="rechazoId = null" />
