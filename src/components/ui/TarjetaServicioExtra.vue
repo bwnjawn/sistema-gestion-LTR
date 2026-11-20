@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // Tarjeta con foto de los servicios extra del home (Piscina y Evento especial), con el mismo
 // lenguaje visual de las tarjetas de Cabaña, Camping y Restaurante pero más baja.
-// Si la foto no carga (por ejemplo sin conexión), queda el fondo verde con el ícono grande.
-import { ref, type Component } from 'vue'
+// Si la foto no carga (por ejemplo sin conexión), queda el fondo verde con el ícono grande (lo resuelve FondoFotoTarjeta).
+import type { Component } from 'vue'
 import { ChevronRight } from 'lucide-vue-next'
+import FondoFotoTarjeta from './FondoFotoTarjeta.vue'
 
 defineProps<{
   titulo: string
@@ -17,7 +18,6 @@ defineProps<{
 
 defineEmits<{ (e: 'click'): void }>()
 
-const fotoRota = ref(false)
 </script>
 
 <template>
@@ -31,14 +31,7 @@ const fotoRota = ref(false)
       class="absolute -right-3 -top-3 w-24 h-24 text-white/15 stroke-[1.5]"
       aria-hidden="true"
     />
-    <img
-      v-if="imagen && !fotoRota"
-      :src="imagen"
-      alt=""
-      class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-      @error="fotoRota = true"
-    />
-    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+    <FondoFotoTarjeta :imagen="imagen" />
 
     <div class="absolute bottom-3.5 left-3.5 right-3.5 flex items-end justify-between gap-2 text-white">
       <div class="min-w-0">

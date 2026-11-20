@@ -23,6 +23,10 @@ const settingsStore = useSettingsStore()
       <b class="font-bold text-brand-dark">Cupos y menús.</b>
       Los cupos de camping y restaurante bloquean las fechas llenas en el calendario del cliente. En grupos grandes se limita la cantidad de menús distintos por comida.
     </li>
+    <li>
+      <b class="font-bold text-brand-dark">Reglamento y fotos.</b>
+      En "Contenido para el cliente" subes el reglamento del camping (PDF) y cambias la foto de cada tarjeta del inicio. Si una foto no te convence, "Volver a la original" deja la provisoria.
+    </li>
     <li class="border-t-2 border-brand-border/40 pt-3.5">
       <b class="font-bold text-brand-dark">Administradores.</b>
       Es la lista de quienes tienen acceso a este panel.

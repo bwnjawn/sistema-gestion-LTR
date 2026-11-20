@@ -61,7 +61,7 @@ async function handleRegister() {
 }
 
 function handleBackToPanel() {
-  router.push({ name: 'admin-settings' })
+  router.push({ name: 'admin-settings-equipo' })
 }
 </script>
 

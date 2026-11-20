@@ -96,6 +96,12 @@ export interface ReglamentoCamping {
   actualizadoEn: string
 }
 
+/** Las cinco tarjetas del inicio que tienen foto editable (SCRUM-271). */
+export type ClaveFotoInicio = 'cabana' | 'camping' | 'restaurante' | 'piscina' | 'evento'
+
+/** Foto que subió el administrador para cada tarjeta del inicio. Vacía = se usa la foto provisoria. */
+export type FotosInicio = Record<ClaveFotoInicio, string>
+
 /** Los ajustes que se guardan, por clave. Es lo que lee y escribe `SettingsRepository`. */
 export interface AjustesGuardados {
   contact_info: BusinessInfo
@@ -105,6 +111,7 @@ export interface AjustesGuardados {
   camping_schedules: CampingSchedules
   cabin_schedules: CabinSchedules
   camping_rules: ReglamentoCamping
+  fotos_inicio: FotosInicio
 }
 
 export type ClaveAjuste = keyof AjustesGuardados

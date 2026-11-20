@@ -235,7 +235,7 @@ create table ajustes (                            -- una fila por clave; el valo
 );
 ```
 
-Claves de `ajustes` (las mismas que hoy usa `settingsRepository` en `localStorage`): `contacto`, `transferencia`, `parametros` (abono por defecto, plazo en horas, margen, precio de la entrada a la piscina), `horarios_restaurante`, `horarios_camping`, `horarios_cabana`, `limites_aforo` (camping, topes de grupo y variedades de menú).
+Claves de `ajustes` (las mismas que hoy usa `settingsRepository` en `localStorage`): `contacto`, `transferencia`, `parametros` (abono por defecto, plazo en horas, margen, precio de la entrada a la piscina), `horarios_restaurante`, `horarios_camping`, `horarios_cabana`, `limites_aforo` (camping, topes de grupo y variedades de menú), `reglamento_camping` (SCRUM-51) y `fotos_inicio` (SCRUM-271: foto de cada tarjeta del inicio; lectura pública).
 
 Las reglas de aforo **no tienen tabla propia**: el aforo de camping y la regla de variedades de menú son valores de `ajustes`, y el del restaurante es la suma de `espacios_restaurante`. Los límites de camping y restaurante no pueden ser una restricción de exclusión (dependen de sumar personas); se validan en la función `crear_solicitud` y al confirmar (ver sección 6).
 
