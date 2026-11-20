@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import { AlertTriangle, Building2, CalendarClock, Check, ChevronRight, Tent, Utensils, Waves, X } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
 import EstadoSolicitud from './EstadoSolicitud.vue'
+import EtiquetaSinSincronizar from './EtiquetaSinSincronizar.vue'
 import { formatCLP } from '../../lib/format'
 import { describirPago, resumirSolicitud, senalDeSolicitud, tonoDeEstado } from '../../services/resumenSolicitud'
 import type { ReservationRequest } from '../../types/domain'
@@ -80,7 +81,10 @@ const iconoFondo = computed(() => ({
       </div>
 
       <div class="flex items-center justify-between gap-3">
-        <EstadoSolicitud :status="request.status" :por-mover="!!bloqueo" />
+        <span class="flex items-center gap-1.5 flex-wrap min-w-0">
+          <EstadoSolicitud :status="request.status" :por-mover="!!bloqueo" :en-conflicto="request.enConflicto" />
+          <EtiquetaSinSincronizar :solicitud-id="request.id" />
+        </span>
         <div v-if="!apagada" class="flex items-center gap-2 min-w-0">
           <div class="w-16 h-1.5 rounded-full bg-gray-200 overflow-hidden shrink-0" aria-hidden="true">
             <div class="h-full bg-brand-dark" :style="{ width: pago.porcentaje + '%' }"></div>

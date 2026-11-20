@@ -36,10 +36,10 @@ Quién hace cada cosa: **Tú** = en el panel de Supabase o decisiones tuyas. **C
 | B12 | Prueba de punta a punta: cliente en un celular, administrador en otro dispositivo | Tú + Claude |
 
 ## Fase C — Modo sin conexión (SCRUM-250, 20 al 24/11)
-- C1 ◐: caché local (IndexedDB) del catálogo, los ajustes y la disponibilidad ✅ (`conCacheSinConexion`); falta la de las solicitudes del administrador (parte 2).
+- C1 ✅: caché local (IndexedDB) del catálogo, los ajustes, la disponibilidad y las solicitudes del administrador (`conCacheSinConexion`; se borra la del administrador al cerrar sesión).
 - C2 ✅: cola de envío del cliente con id propio; sincroniza al reconectar (`colaEnvioStore`).
 - C3 ✅: pantalla "Por enviar" (`/pendientes`) y aviso en el inicio.
-- C4 (parte 2): administrador sin conexión y estado "En conflicto, por resolver" cuando la base rechaza una confirmación cruzada.
+- C4 ✅ (`cambiosAdminStore`, `/admin/sincronizacion`, `AvisoConflictos`): administrador sin conexión y estado "En conflicto, por resolver" cuando la base rechaza una confirmación cruzada.
 - Hay que reducir alcance si no alcanza: el cliente primero, el administrador después.
 
 ## Fase D — Cierre (24 al 27/11)

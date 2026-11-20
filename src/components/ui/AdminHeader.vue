@@ -65,6 +65,9 @@
         Sin conexión a internet. Ves los últimos datos guardados; para hacer cambios necesitas conexión.
       </p>
     </div>
+
+    <!-- Cambios hechos sin conexión que aún no llegaron al servidor (SCRUM-250) -->
+    <AvisoCambiosSinSincronizar />
   </header>
 </template>
 
@@ -77,6 +80,7 @@ import { useAuthStore } from '../../stores/authStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import DropdownMenu, { type DropdownItem } from './DropdownMenu.vue'
 import ModalAyuda from './ModalAyuda.vue'
+import AvisoCambiosSinSincronizar from '../admin/AvisoCambiosSinSincronizar.vue'
 import { AYUDAS_ADMIN } from '../admin/ayudasAdmin'
 import { textoHaceCuanto } from '../../services/actualizacion'
 
@@ -119,7 +123,7 @@ const goDashboard = () => {
 
 const alElegir = async (clave: string) => {
   if (clave !== 'salir') return
-  await authStore.logout()
-  router.push({ name: 'admin-login' })
+  // Con cambios sin sincronizar no se cierra la sesión (se perderían): el store avisa por qué
+  if (await authStore.logout()) router.push({ name: 'admin-login' })
 }
 </script>

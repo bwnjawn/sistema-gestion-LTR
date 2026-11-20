@@ -19,6 +19,7 @@ import {
 } from '../src/services/colaEnvio'
 import { useRequestsStore } from '../src/stores/requestsStore'
 import { useColaEnvioStore } from '../src/stores/colaEnvioStore'
+import { useCambiosAdminStore } from '../src/stores/cambiosAdminStore'
 import { useSettingsStore } from '../src/stores/settingsStore'
 import { DEFAULT_CABINS } from '../src/data/seed'
 import { DEFAULT_CONTACT } from '../src/data/ajustesPorDefecto'
@@ -243,11 +244,13 @@ describe('envío del cliente sin señal', () => {
     nueva.detener()
   })
 
-  it('una solicitud del administrador sin señal no se encola: falla con el aviso de siempre', async () => {
+  it('una solicitud del administrador sin señal no va a la cola del cliente: queda como cambio del administrador', async () => {
     const store = useRequestsStore()
-    await expect(store.addRequest({ ...solicitud(), requestCode: 'ADM-1' })).rejects.toThrow()
+    await store.addRequest({ ...solicitud(), requestCode: 'ADM-1' })
     expect(useColaEnvioStore().entradas).toHaveLength(0)
-    expect(store.requests).toHaveLength(0)
+    expect(useCambiosAdminStore().pendientes).toHaveLength(1)
+    expect(store.requests).toHaveLength(1)
+    useCambiosAdminStore().detener()
   })
 
   it('un error de regla del servidor no se encola: la solicitud falla y el cliente ve el motivo', async () => {

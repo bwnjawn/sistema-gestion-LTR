@@ -10,7 +10,9 @@ import { repositorios } from './repositories'
 import { useActualizacionStore } from '../stores/actualizacionStore'
 import { useAuthStore } from '../stores/authStore'
 import { useCatalogStore } from '../stores/catalogStore'
+import { useCambiosAdminStore } from '../stores/cambiosAdminStore'
 import { useColaEnvioStore } from '../stores/colaEnvioStore'
+import { olvidarDatosDelAdministrador } from './almacenSinConexion'
 import { useDisponibilidadStore } from '../stores/disponibilidadStore'
 import { useRequestsStore } from '../stores/requestsStore'
 import { useSettingsStore } from '../stores/settingsStore'
@@ -24,6 +26,8 @@ export async function inicializarAplicacion(): Promise<void> {
   const auth = useAuthStore()
   // La sesión primero: de ella depende qué datos se pueden leer
   await auth.init()
+  // Los cambios del administrador guardados sin conexión se ven encima de las solicitudes (SCRUM-250)
+  if (auth.isAuthenticated) await useCambiosAdminStore().init()
   await Promise.all([
     useSettingsStore().init(),
     useCatalogStore().init(),
@@ -37,21 +41,27 @@ export async function inicializarAplicacion(): Promise<void> {
   actualizacion.empezarTiempoReal()
   // Las solicitudes que quedaron guardadas sin señal se reintentan solas (SCRUM-250)
   await useColaEnvioStore().iniciar()
+  if (auth.isAuthenticated) void useCambiosAdminStore().iniciar()
 }
 
 /** Lo que solo ve un administrador: todas las solicitudes y el catálogo completo (también lo dado de baja). */
 export async function cargarDatosDeAdministrador(): Promise<void> {
+  await useCambiosAdminStore().init()
   await Promise.all([useRequestsStore().init(), useCatalogStore().init()])
   const actualizacion = useActualizacionStore()
   actualizacion.marcarActualizado()
   actualizacion.empezarTiempoReal()
+  void useCambiosAdminStore().iniciar()
 }
 
 /** Al cerrar la sesión no queda en pantalla nada que el público no pueda ver. */
 export async function descartarDatosDeAdministrador(): Promise<void> {
   // Se deja de escuchar los cambios de las reservas: sin sesión ya no hay nada que el público pueda ver
   useActualizacionStore().detenerTiempoReal()
+  useCambiosAdminStore().detener()
   if (repositorios().modo === 'local') return
+  // La copia de las solicitudes y del catálogo completo no debe quedar para el público
+  await olvidarDatosDelAdministrador()
   useRequestsStore().requests = []
   await useCatalogStore().init()
 }

@@ -1,16 +1,22 @@
 <script setup lang="ts">
 // Estado de una solicitud como insignia con color, ícono y texto (tres señales, no solo el color):
 // Pendiente = ámbar con reloj · Por mover = rojo con calendario · Confirmada = verde con check ·
-// Descartada (rechazada o cancelada) = gris con X.
+// Descartada (rechazada o cancelada) = gris con X · En conflicto (una confirmación hecha sin conexión chocó
+// con otra al sincronizar, SCRUM-250) = rojo con triángulo.
 import { computed } from 'vue'
-import { CalendarClock, Check, Clock, X } from 'lucide-vue-next'
+import { CalendarClock, Check, Clock, TriangleAlert, X } from 'lucide-vue-next'
 import { etiquetaEstado, tonoDeEstado } from '../../services/resumenSolicitud'
 import type { BookingStatus } from '../../types/domain'
 
-const props = defineProps<{ status: BookingStatus; porMover?: boolean }>()
+const props = defineProps<{ status: BookingStatus; porMover?: boolean; enConflicto?: boolean }>()
 
-const tono = computed(() => tonoDeEstado(props.status, !!props.porMover))
-const texto = computed(() => (props.porMover && props.status === 'pending' ? 'Por mover' : etiquetaEstado(props.status)))
+const conflicto = computed(() => !!props.enConflicto && props.status === 'pending')
+
+const tono = computed(() => tonoDeEstado(props.status, !!props.porMover || conflicto.value))
+const texto = computed(() => {
+  if (conflicto.value) return 'En conflicto'
+  return props.porMover && props.status === 'pending' ? 'Por mover' : etiquetaEstado(props.status)
+})
 
 const clase = computed(() => {
   switch (tono.value) {
@@ -21,6 +27,7 @@ const clase = computed(() => {
   }
 })
 const icono = computed(() => {
+  if (conflicto.value) return TriangleAlert
   switch (tono.value) {
     case 'confirmada': return Check
     case 'por-mover': return CalendarClock

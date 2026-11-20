@@ -10,6 +10,7 @@ import AdminConfirmarCruceDialog from './AdminConfirmarCruceDialog.vue'
 import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
 import AdminMoverFechaDialog from './AdminMoverFechaDialog.vue'
 import EstadoSolicitud from './EstadoSolicitud.vue'
+import EtiquetaSinSincronizar from './EtiquetaSinSincronizar.vue'
 import CotizacionAcciones from './CotizacionAcciones.vue'
 import { puedeCotizarse } from '../../services/cotizacion'
 import { useRequestsStore } from '../../stores/requestsStore'
@@ -227,7 +228,8 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
           <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block">{{ view.serviceLabel }} · {{ request.requestCode }}</span>
           <h2 class="text-xl font-bold text-gray-900 leading-tight truncate">{{ request.clientName }}</h2>
           <p class="flex items-center gap-2 mt-1 flex-wrap">
-            <EstadoSolicitud :status="request.status" :por-mover="!!bloqueo" />
+            <EstadoSolicitud :status="request.status" :por-mover="!!bloqueo" :en-conflicto="request.enConflicto" />
+            <EtiquetaSinSincronizar :solicitud-id="request.id" />
             <span class="text-xs text-gray-700">Recibida el {{ formatDateTime(request.createdAt) }}</span>
           </p>
         </div>
