@@ -35,7 +35,7 @@ Formato único para las instrucciones de cada pantalla. Las instrucciones no van
 | Admin · Solicitudes | Hecha |
 | Admin · Calendario | Hecha |
 | Admin · Catálogo | Hecha (SCRUM-229) |
-| Admin · Ajustes | Hecha: "Qué se ajusta aquí" |
+| Admin · Ajustes | Hecha: "Qué se ajusta aquí" (también en sus secciones) |
 | Admin · Inicio | No lleva: es solo un resumen, sin textos que explicar |
 | Cliente · último paso de cada flujo | Hecha: "Antes de enviar" |
 | Cliente · camping, paso 1 | Hecha: "Modalidad y fecha" |
