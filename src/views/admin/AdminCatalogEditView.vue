@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import HojaModal from '../../components/ui/HojaModal.vue'
+import HorariosCabanaCard from '../../components/admin/HorariosCabanaCard.vue'
+import HorariosCampingCard from '../../components/admin/HorariosCampingCard.vue'
+import HorariosRestauranteCard from '../../components/admin/HorariosRestauranteCard.vue'
+import CuposRestauranteCard from '../../components/admin/CuposRestauranteCard.vue'
 import { ref, computed } from 'vue'
 import { 
   Home, Tent, Utensils, Plus, Trash2, AlertTriangle, Pencil, Wrench, X, Check
@@ -264,6 +268,14 @@ function executeDelete() {
         </button>
       </div>
     </div>
+
+    <!-- HORARIOS (y cupos del restaurante) del servicio elegido (SCRUM-280) -->
+    <HorariosCabanaCard v-if="activeCategory === 'cabana'" />
+    <HorariosCampingCard v-else-if="activeCategory === 'camping'" />
+    <template v-else>
+      <HorariosRestauranteCard />
+      <CuposRestauranteCard />
+    </template>
 
     <!-- BOTÓN NUEVO -->
     <div class="flex justify-end" v-if="!(activeCategory === 'restaurante' && restaurantTab === 'sides')">

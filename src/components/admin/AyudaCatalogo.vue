@@ -2,6 +2,10 @@
   <!-- Contenido de la ayuda del catálogo; el marco (modal) lo pone ModalAyuda -->
   <ul class="space-y-3 text-sm text-gray-700">
     <li>
+      <b class="font-bold text-brand-dark">Horarios.</b>
+      Cada pestaña tiene sus horarios arriba. En el menú eliges desde y hasta qué hora se puede pedir cada comida: el cliente ve todas las medias horas de ese rango y debajo de cada una te mostramos cuáles son.
+    </li>
+    <li>
       <b class="font-bold text-brand-dark">Acompañamientos de un plato.</b>
       "Ninguno" no ofrece nada, "Fijo" viene incluido con el plato y "A elección" deja que el cliente reparta sus platos entre las opciones que marques.
     </li>

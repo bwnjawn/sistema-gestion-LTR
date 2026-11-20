@@ -1,55 +1,59 @@
 <script setup lang="ts">
-// Ajustes → Reglas de reservas: abono, plazo, IVA, precio de la piscina, margen y cupos.
+// Ajustes → Reglas de reservas: pagos y precios (abono, plazo, IVA, piscina) y cupos del camping.
+// Los horarios y los cupos del restaurante están en el Catálogo (SCRUM-280).
 import { ref } from 'vue'
-import { Utensils, Users, Percent } from 'lucide-vue-next'
 import { formatCLP } from '../../../lib/format'
 import { useSettingsStore } from '../../../stores/settingsStore'
 import AjustesVolver from '../../../components/admin/AjustesVolver.vue'
+import TarjetaAjuste from '../../../components/admin/TarjetaAjuste.vue'
 import HojaModal from '../../../components/ui/HojaModal.vue'
 
 const settingsStore = useSettingsStore()
 
-const isEditingParameters = ref(false)
+// ---- Pagos y precios ----
+const editandoPagos = ref(false)
+const abono = ref(0)
+const plazo = ref(0)
+const iva = ref(0)
+const precioPiscina = ref(0)
 
-const editDeposit = ref(settingsStore.defaultDepositPercentage)
-const editDeadline = ref(settingsStore.depositDeadlineHours)
-const editIva = ref(settingsStore.ivaPercentage)
-const editPoolPrice = ref(settingsStore.poolEntryPrice)
-const editMargin = ref(settingsStore.marginPercentage)
-const editSpaces = ref(settingsStore.capacityRules.restaurantSpaces.map(e => ({ ...e })))
-const editMaxCamping = ref(settingsStore.capacityRules.maxCampingPeopleCapacity)
-const editMenuThreshold = ref(settingsStore.capacityRules.menuLargeGroupThreshold)
-const editMenuVarieties = ref(settingsStore.capacityRules.maxMenuVarietiesLargeGroup)
-
-function openParametersEdit() {
-  editDeposit.value = settingsStore.defaultDepositPercentage
-  editDeadline.value = settingsStore.depositDeadlineHours
-  editIva.value = settingsStore.ivaPercentage
-  editPoolPrice.value = settingsStore.poolEntryPrice
-  editMargin.value = settingsStore.marginPercentage
-  editSpaces.value = settingsStore.capacityRules.restaurantSpaces.map(e => ({ ...e }))
-  editMaxCamping.value = settingsStore.capacityRules.maxCampingPeopleCapacity
-  editMenuThreshold.value = settingsStore.capacityRules.menuLargeGroupThreshold
-  editMenuVarieties.value = settingsStore.capacityRules.maxMenuVarietiesLargeGroup
-  isEditingParameters.value = true
+function abrirPagos() {
+  abono.value = settingsStore.defaultDepositPercentage
+  plazo.value = settingsStore.depositDeadlineHours
+  iva.value = settingsStore.ivaPercentage
+  precioPiscina.value = settingsStore.poolEntryPrice
+  editandoPagos.value = true
 }
 
-async function saveParameters() {
-  const parametrosGuardados = await settingsStore.updateParameters({
-    defaultDepositPercentage: editDeposit.value,
-    depositDeadlineHours: Math.max(1, Number(editDeadline.value) || 1),
-    ivaPercentage: editIva.value,
-    poolEntryPrice: Math.max(0, Math.round(Number(editPoolPrice.value) || 0)),
-    marginPercentage: editMargin.value
+async function guardarPagos() {
+  const guardado = await settingsStore.updateParameters({
+    defaultDepositPercentage: abono.value,
+    depositDeadlineHours: Math.max(1, Number(plazo.value) || 1),
+    ivaPercentage: iva.value,
+    poolEntryPrice: Math.max(0, Math.round(Number(precioPiscina.value) || 0))
   })
-  const reglasGuardadas = await settingsStore.updateCapacityRules({
-    restaurantSpaces: editSpaces.value.map(e => ({ ...e, capacidad: Math.max(0, Number(e.capacidad) || 0) })),
-    menuLargeGroupThreshold: Math.max(1, Number(editMenuThreshold.value) || 1),
-    maxMenuVarietiesLargeGroup: Math.max(1, Number(editMenuVarieties.value) || 1),
-    maxCampingPeopleCapacity: editMaxCamping.value,
-    marginPercentage: editMargin.value
+  if (guardado) editandoPagos.value = false
+}
+
+// ---- Cupos del camping ----
+const editandoCupos = ref(false)
+const capacidadCamping = ref(0)
+const margen = ref(0)
+
+function abrirCupos() {
+  capacidadCamping.value = settingsStore.capacityRules.maxCampingPeopleCapacity
+  margen.value = settingsStore.marginPercentage
+  editandoCupos.value = true
+}
+
+async function guardarCupos() {
+  // El margen vive en los parámetros y también en las reglas de aforo: se guardan juntos para que no se desfasen
+  const parametros = await settingsStore.updateParameters({ marginPercentage: margen.value })
+  const reglas = await settingsStore.updateCapacityRules({
+    maxCampingPeopleCapacity: capacidadCamping.value,
+    marginPercentage: margen.value
   })
-  if (parametrosGuardados && reglasGuardadas) isEditingParameters.value = false
+  if (parametros && reglas) editandoCupos.value = false
 }
 </script>
 
@@ -57,97 +61,47 @@ async function saveParameters() {
   <div class="space-y-4 max-w-md mx-auto w-full pb-20">
     <AjustesVolver />
 
-    <div class="bg-white p-4 sm:p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <Percent class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <h3 class="text-sm font-black text-brand-dark">Abonos, IVA y cupos</h3>
-        </div>
-        <button type="button" @click="openParametersEdit" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-100">
-          Editar
-        </button>
-      </div>
+    <TarjetaAjuste titulo="Pagos y precios" @editar="abrirPagos">
+      <p class="flex justify-between gap-2"><span>Abono exigido</span><span class="font-bold text-brand-dark">{{ settingsStore.defaultDepositPercentage }}%</span></p>
+      <p class="flex justify-between gap-2"><span>Plazo del abono</span><span class="font-bold text-brand-dark">{{ settingsStore.depositDeadlineHours }} horas</span></p>
+      <p class="flex justify-between gap-2"><span>IVA</span><span class="font-bold text-brand-dark">{{ settingsStore.ivaPercentage }}%</span></p>
+      <p class="flex justify-between gap-2"><span>Entrada a la piscina</span><span class="font-bold text-brand-dark">{{ formatCLP(settingsStore.poolEntryPrice) }}</span></p>
+    </TarjetaAjuste>
 
-      <div class="grid grid-cols-2 gap-2 text-xs font-bold">
-        <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-xs text-gray-700 uppercase block">Abono exigido</span>
-          <span class="text-sm font-black text-brand-dark">{{ settingsStore.defaultDepositPercentage }}%</span>
-        </div>
-        <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-xs text-gray-700 uppercase block">Plazo del abono</span>
-          <span class="text-sm font-black text-brand-dark">{{ settingsStore.depositDeadlineHours }} h</span>
-        </div>
-        <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-xs text-gray-700 uppercase block">IVA</span>
-          <span class="text-sm font-black text-brand-dark">{{ settingsStore.ivaPercentage }}%</span>
-        </div>
-        <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-xs text-gray-700 uppercase block">Entrada a la piscina</span>
-          <span class="text-sm font-black text-brand-dark">{{ formatCLP(settingsStore.poolEntryPrice) }}</span>
-        </div>
-        <div class="p-2.5 bg-brand-light rounded-2xl border border-brand-border text-center space-y-0.5">
-          <span class="text-xs text-gray-700 uppercase block">Margen de cupos</span>
-          <span class="text-sm font-black text-brand-dark">{{ settingsStore.marginPercentage }}%</span>
-        </div>
-      </div>
+    <TarjetaAjuste titulo="Cupos del camping" @editar="abrirCupos">
+      <p class="flex justify-between gap-2"><span>Capacidad máxima</span><span class="font-bold text-brand-dark">{{ settingsStore.capacityRules.maxCampingPeopleCapacity }} personas</span></p>
+      <p class="flex justify-between gap-2"><span>Margen de cupos</span><span class="font-bold text-brand-dark">{{ settingsStore.marginPercentage }}%</span></p>
+    </TarjetaAjuste>
 
-      <div class="space-y-2 text-xs font-bold text-gray-700 bg-gray-50 p-3 rounded-2xl border border-gray-200">
-        <div class="flex items-center justify-between">
-          <span class="flex items-center gap-1 text-brand-dark"><Utensils class="w-3.5 h-3.5 text-brand-accent" /> Capacidad total del restaurante:</span>
-          <span class="font-black text-brand-dark">{{ settingsStore.restaurantCapacity }} personas</span>
-        </div>
-        <div v-for="espacio in settingsStore.capacityRules.restaurantSpaces" :key="espacio.id" class="flex items-center justify-between pl-5">
-          <span>{{ espacio.nombre }}:</span>
-          <span class="font-black text-brand-dark">{{ espacio.capacidad }} personas</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="flex items-center gap-1 text-brand-dark"><Utensils class="w-3.5 h-3.5 text-brand-accent" /> Grupos de más de {{ settingsStore.capacityRules.menuLargeGroupThreshold }} personas:</span>
-          <span class="font-black text-brand-dark">máx. {{ settingsStore.capacityRules.maxMenuVarietiesLargeGroup }} menús distintos</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="flex items-center gap-1 text-brand-dark"><Users class="w-3.5 h-3.5 text-brand-accent" /> Capacidad máxima del camping:</span>
-          <span class="font-black text-brand-dark">{{ settingsStore.capacityRules.maxCampingPeopleCapacity }} personas</span>
-        </div>
-      </div>
-    </div>
+    <p class="text-sm text-gray-600 px-1">Los horarios y los cupos del restaurante se editan en Catálogo → Menú.</p>
 
-    <!-- Edición de los parámetros: hoja que sube desde abajo (SCRUM-279) -->
-    <HojaModal :abierto="isEditingParameters" titulo="Abonos, IVA y cupos" texto-guardar="Guardar" @cerrar="isEditingParameters = false" @guardar="saveParameters">
+    <HojaModal :abierto="editandoPagos" titulo="Pagos y precios" texto-guardar="Guardar" @cerrar="editandoPagos = false" @guardar="guardarPagos">
       <div>
         <label for="reg-abono" class="campo-etiqueta">Abono requerido (%)</label>
-        <input id="reg-abono" type="number" v-model.number="editDeposit" min="0" max="100" class="campo-entrada" />
+        <input id="reg-abono" v-model.number="abono" type="number" inputmode="numeric" min="0" max="100" class="campo-entrada" />
       </div>
       <div>
         <label for="reg-plazo" class="campo-etiqueta">Plazo para abonar desde que llega la solicitud (horas)</label>
-        <input id="reg-plazo" type="number" inputmode="numeric" v-model.number="editDeadline" min="1" max="720" class="campo-entrada" />
+        <input id="reg-plazo" v-model.number="plazo" type="number" inputmode="numeric" min="1" max="720" class="campo-entrada" />
       </div>
       <div>
         <label for="reg-iva" class="campo-etiqueta">IVA (%)</label>
-        <input id="reg-iva" type="number" v-model.number="editIva" min="0" max="100" class="campo-entrada" />
+        <input id="reg-iva" v-model.number="iva" type="number" inputmode="numeric" min="0" max="100" class="campo-entrada" />
       </div>
       <div>
         <label for="reg-piscina" class="campo-etiqueta">Entrada a la piscina por persona ($, sin abono)</label>
-        <input id="reg-piscina" type="number" inputmode="numeric" v-model.number="editPoolPrice" min="0" max="1000000" class="campo-entrada" />
+        <input id="reg-piscina" v-model.number="precioPiscina" type="number" inputmode="numeric" min="0" max="1000000" class="campo-entrada" />
+      </div>
+    </HojaModal>
+
+    <HojaModal :abierto="editandoCupos" titulo="Cupos del camping" texto-guardar="Guardar" @cerrar="editandoCupos = false" @guardar="guardarCupos">
+      <div>
+        <label for="reg-camping" class="campo-etiqueta">Capacidad máxima del camping (personas)</label>
+        <input id="reg-camping" v-model.number="capacidadCamping" type="number" inputmode="numeric" min="1" max="1000" class="campo-entrada" />
       </div>
       <div>
         <label for="reg-margen" class="campo-etiqueta">Margen de cupos (%)</label>
-        <input id="reg-margen" type="number" v-model.number="editMargin" min="0" max="100" class="campo-entrada" />
-      </div>
-      <div v-for="espacio in editSpaces" :key="espacio.id">
-        <label :for="`reg-espacio-${espacio.id}`" class="campo-etiqueta">{{ espacio.nombre }} del restaurante (personas)</label>
-        <input :id="`reg-espacio-${espacio.id}`" type="number" inputmode="numeric" v-model.number="espacio.capacidad" min="0" max="1000" class="campo-entrada" />
-      </div>
-      <div>
-        <label for="reg-umbral" class="campo-etiqueta">Menús distintos solo para grupos de más de (personas)</label>
-        <input id="reg-umbral" type="number" inputmode="numeric" v-model.number="editMenuThreshold" min="1" max="1000" class="campo-entrada" />
-      </div>
-      <div>
-        <label for="reg-variedades" class="campo-etiqueta">Máximo de menús distintos por comida en esos grupos</label>
-        <input id="reg-variedades" type="number" inputmode="numeric" v-model.number="editMenuVarieties" min="1" max="50" class="campo-entrada" />
-      </div>
-      <div>
-        <label for="reg-camping" class="campo-etiqueta">Capacidad máxima del camping (personas)</label>
-        <input id="reg-camping" type="number" v-model.number="editMaxCamping" min="1" max="1000" class="campo-entrada" />
+        <input id="reg-margen" v-model.number="margen" type="number" inputmode="numeric" min="0" max="100" class="campo-entrada" />
       </div>
     </HojaModal>
   </div>

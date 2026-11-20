@@ -3,7 +3,7 @@
 import { ChevronRight, Images, Percent, ShieldCheck, Store } from 'lucide-vue-next'
 
 const secciones = [
-  { ruta: 'admin-settings-negocio', titulo: 'Datos del negocio', detalle: 'Contacto, horarios y transferencia', icono: Store },
+  { ruta: 'admin-settings-negocio', titulo: 'Datos del negocio', detalle: 'Contacto y transferencia', icono: Store },
   { ruta: 'admin-settings-reglas', titulo: 'Reglas de reservas', detalle: 'Abonos, IVA y cupos', icono: Percent },
   { ruta: 'admin-settings-contenido', titulo: 'Contenido para el cliente', detalle: 'Reglamento y fotos del inicio', icono: Images },
   { ruta: 'admin-settings-equipo', titulo: 'Equipo', detalle: 'Quién tiene acceso al panel', icono: ShieldCheck }

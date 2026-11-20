@@ -147,7 +147,7 @@ export interface RangoHora {
 export type ResultadoHora = { valida: true; hora: string } | { valida: false; mensaje: string }
 
 /** Minutos desde las 00:00 de un texto de hora: "13:30", "9.30", "930" o "13" (= 13:00). */
-function minutosDeTexto(texto: string): number | null {
+export function minutosDeTexto(texto: string): number | null {
   const limpio = texto.trim().replace('.', ':')
   let horas: number
   let minutos: number
@@ -169,7 +169,7 @@ function minutosDeTexto(texto: string): number | null {
   return horas * 60 + minutos
 }
 
-function textoDeMinutos(minutos: number): string {
+export function textoDeMinutos(minutos: number): string {
   const h = Math.floor(minutos / 60).toString().padStart(2, '0')
   const m = (minutos % 60).toString().padStart(2, '0')
   return `${h}:${m}`

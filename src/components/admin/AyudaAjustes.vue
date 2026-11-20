@@ -9,7 +9,7 @@ const settingsStore = useSettingsStore()
   <ul class="space-y-3 text-sm text-gray-700">
     <li>
       <b class="font-bold text-brand-dark">Lo que ve el cliente.</b>
-      Los datos de contacto, los horarios y los datos de transferencia se muestran en la app. El cliente ve la transferencia en el último paso de su solicitud.
+      Los datos de contacto y los datos de transferencia se muestran en la app. El cliente ve la transferencia en el último paso de su solicitud.
     </li>
     <li>
       <b class="font-bold text-brand-dark">Abono y plazo.</b>
@@ -21,7 +21,7 @@ const settingsStore = useSettingsStore()
     </li>
     <li>
       <b class="font-bold text-brand-dark">Cupos y menús.</b>
-      Los cupos de camping y restaurante bloquean las fechas llenas en el calendario del cliente. En grupos grandes se limita la cantidad de menús distintos por comida.
+      Los cupos del camping bloquean las fechas llenas en el calendario del cliente. Los horarios y los cupos del restaurante (con su regla de menús distintos para grupos grandes) se editan en el Catálogo.
     </li>
     <li>
       <b class="font-bold text-brand-dark">Reglamento y fotos.</b>
