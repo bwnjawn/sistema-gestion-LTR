@@ -17,16 +17,16 @@ const router = useRouter()
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <ShieldCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <h3 class="text-sm font-black text-brand-dark">Administradores</h3>
+          <h3 class="text-base font-bold text-brand-dark">Administradores</h3>
         </div>
-        <button type="button" @click="router.push({ name: 'admin-register' })" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-100 flex items-center gap-1">
+        <button type="button" @click="router.push({ name: 'admin-register' })" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-bold text-sm rounded-xl hover:bg-gray-100 flex items-center gap-1">
           <UserPlus class="w-3.5 h-3.5 stroke-[2.5]" /> Agregar
         </button>
       </div>
-      <ul class="space-y-1.5 text-xs font-bold text-gray-700 bg-brand-light p-3 rounded-2xl border border-brand-border">
-        <li v-for="admin in authStore.adminsList" :key="admin.id" class="flex justify-between gap-2">
+      <ul class="space-y-1.5 text-base text-gray-700 bg-brand-light p-3 rounded-2xl border border-brand-border">
+        <li v-for="admin in authStore.adminsList" :key="admin.id" class="flex flex-wrap justify-between gap-x-3 gap-y-0.5">
           <span class="text-brand-dark">{{ admin.name }}</span>
-          <span class="text-gray-700 truncate">{{ admin.email }}</span>
+          <span class="text-gray-700 break-all">{{ admin.email }}</span>
         </li>
       </ul>
     </div>

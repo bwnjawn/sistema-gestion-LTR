@@ -152,7 +152,7 @@ function hasConflict(id: string): boolean {
           @click="filtroActivo = 'todo'"
           :aria-pressed="filtroActivo === 'todo'"
           :class="[
-            'px-3.5 py-2 rounded-2xl text-xs font-black border transition-all active:scale-95 flex items-center gap-1.5 touch-target shadow-2xs',
+            'px-3.5 py-2 rounded-2xl text-sm font-bold border transition-all active:scale-95 flex items-center gap-1.5 touch-target shadow-2xs',
             filtroActivo === 'todo'
               ? 'bg-brand-dark text-white border-brand-dark'
               : 'bg-white text-gray-600 border-brand-border hover:bg-gray-50'
@@ -173,7 +173,7 @@ function hasConflict(id: string): boolean {
           :class="[
             'p-2.5 rounded-2xl border transition-all active:scale-95 flex items-center justify-center touch-target shadow-2xs',
             filtroActivo === filtro.id
-              ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-black'
+              ? 'bg-[#c5d7be] text-brand-dark border-brand-border font-bold'
               : 'bg-white text-gray-700 border-gray-400'
           ]"
         >
@@ -182,7 +182,7 @@ function hasConflict(id: string): boolean {
       </div>
 
       <div class="pt-2.5 border-t-2 border-brand-border/40">
-        <div class="flex items-center justify-center gap-x-4 gap-y-1 flex-wrap text-xs font-black">
+        <div class="flex items-center justify-center gap-x-4 gap-y-1 flex-wrap text-sm font-bold">
           <div class="flex items-center gap-1.5">
             <span class="w-3 h-3 rounded-full bg-brand-dark"></span>
             <span class="text-gray-700">Confirmadas</span>
@@ -204,7 +204,7 @@ function hasConflict(id: string): boolean {
         <button
           type="button"
           @click="goToday"
-          class="px-3 py-2 text-xs font-black rounded-xl bg-white text-brand-dark border border-brand-border hover:bg-[#c5d7be] active:scale-95 transition-all touch-target flex items-center gap-1 shrink-0 shadow-2xs"
+          class="px-3 py-2 text-sm font-bold rounded-xl bg-white text-brand-dark border border-brand-border hover:bg-[#c5d7be] active:scale-95 transition-all touch-target flex items-center gap-1 shrink-0 shadow-2xs"
           title="Ir a la fecha actual"
         >
           <CalendarDays class="w-4 h-4 text-brand-accent stroke-[2.5]" />
@@ -218,7 +218,7 @@ function hasConflict(id: string): boolean {
             type="button"
             @click="currentViewMode = mode.id"
             :class="[
-              'py-2 text-xs font-black rounded-xl transition-all active:scale-95 touch-target flex items-center justify-center text-center',
+              'py-2 text-sm font-bold rounded-xl transition-all active:scale-95 touch-target flex items-center justify-center text-center',
               currentViewMode === mode.id
                 ? 'bg-[#c5d7be] text-brand-dark shadow-2xs border border-brand-border'
                 : 'text-gray-700 hover:text-brand-dark'
@@ -239,7 +239,7 @@ function hasConflict(id: string): boolean {
         </div>
 
         <div v-else-if="currentViewMode === 'semanal'" class="space-y-3">
-          <div class="flex items-center justify-between text-xs font-black text-brand-dark px-1">
+          <div class="flex items-center justify-between text-sm font-bold text-brand-dark px-1">
             <span>Semana actual</span>
             <span class="text-brand-accent capitalize">{{ weekRangeFormatted }}</span>
           </div>
@@ -250,16 +250,16 @@ function hasConflict(id: string): boolean {
               type="button"
               @click="onDateSelect(day.date)"
               :class="[
-                'p-2 min-h-[4.5rem] rounded-2xl border-2 text-xs flex flex-col items-center gap-1 touch-target active:scale-95 transition-all overflow-hidden relative',
+                'p-2 min-h-[4.5rem] rounded-2xl border-2 text-sm flex flex-col items-center gap-1 touch-target active:scale-95 transition-all overflow-hidden relative',
                 isSelectedDay(day.date)
-                  ? ['border-brand-border font-black text-brand-dark shadow-2xs', day.resumen.lleno ? 'bg-rose-200' : 'bg-[#c5d7be]']
+                  ? ['border-brand-border font-bold text-brand-dark shadow-2xs', day.resumen.lleno ? 'bg-rose-200' : 'bg-[#c5d7be]']
                   : day.resumen.lleno
                     ? 'bg-rose-100 border-rose-300 text-rose-950'
                     : 'bg-brand-light border-brand-border/60 text-gray-600'
               ]"
             >
-              <span class="text-xs uppercase font-bold text-gray-700">{{ day.dayName }}</span>
-              <span class="font-black text-sm">{{ day.dayNum }}</span>
+              <span class="text-sm font-bold text-gray-700">{{ day.dayName }}</span>
+              <span class="font-bold text-sm">{{ day.dayNum }}</span>
               <MarcasDia :resumen="day.resumen" />
             </button>
           </div>
@@ -275,7 +275,7 @@ function hasConflict(id: string): boolean {
               <ChevronLeft class="w-5 h-5 stroke-[2.5]" />
             </button>
 
-            <span class="text-xs font-black text-brand-dark capitalize text-center">
+            <span class="text-sm font-bold text-brand-dark capitalize text-center">
               {{ selectedDateFullFormatted }}
             </span>
 

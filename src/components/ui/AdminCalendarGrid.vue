@@ -116,10 +116,10 @@ const handleDayClick = (date: Date) => {
       </button>
 
       <div class="text-center">
-        <h3 class="text-sm font-black text-brand-dark capitalize leading-tight">
+        <h3 class="text-sm font-bold text-brand-dark capitalize leading-tight">
           {{ currentMonthName }}
         </h3>
-        <p class="text-xs font-extrabold text-gray-700">
+        <p class="text-sm font-bold text-gray-700">
           {{ currentYear }}
         </p>
       </div>
@@ -138,7 +138,7 @@ const handleDayClick = (date: Date) => {
       <span 
         v-for="dayName in weekDayNames" 
         :key="dayName"
-        class="text-xs font-black text-gray-700 uppercase tracking-wider"
+        class="text-sm font-bold text-gray-700"
       >
         {{ dayName }}
       </span>
@@ -159,9 +159,9 @@ const handleDayClick = (date: Date) => {
         :class="[
           'h-12 rounded-2xl border-2 flex flex-col items-center justify-center gap-0.5 p-1 relative transition-all active:scale-95 touch-target overflow-hidden',
           isSameDay(dayObj.date, modelValue)
-            ? ['border-brand-border font-black text-brand-dark shadow-2xs', dayObj.resumen.lleno ? 'bg-rose-200' : 'bg-[#c5d7be]']
+            ? ['border-brand-border font-bold text-brand-dark shadow-2xs', dayObj.resumen.lleno ? 'bg-rose-200' : 'bg-[#c5d7be]']
             : isToday(dayObj.date)
-              ? ['border-brand-accent font-black text-brand-dark', dayObj.resumen.lleno ? 'bg-rose-100' : 'bg-emerald-50/90']
+              ? ['border-brand-accent font-bold text-brand-dark', dayObj.resumen.lleno ? 'bg-rose-100' : 'bg-emerald-50/90']
               : dayObj.resumen.lleno
                 ? 'bg-rose-100 border-rose-300 text-rose-950 font-bold'
                 : 'bg-white border-brand-border/40 hover:bg-brand-light text-gray-700 font-bold'
@@ -169,8 +169,8 @@ const handleDayClick = (date: Date) => {
       >
         <span
           :class="[
-            'text-xs leading-none',
-            isToday(dayObj.date) && !isSameDay(dayObj.date, modelValue) ? 'text-brand-accent font-black' : ''
+            'text-sm leading-none',
+            isToday(dayObj.date) && !isSameDay(dayObj.date, modelValue) ? 'text-brand-accent font-bold' : ''
           ]"
         >
           {{ dayObj.dayNum }}

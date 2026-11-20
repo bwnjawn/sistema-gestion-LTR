@@ -23,7 +23,7 @@ async function descartar() {
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
     <div v-if="cambios.entradas.length === 0" class="bg-white p-5 rounded-3xl border-2 border-brand-border text-center space-y-2">
-      <p class="text-base font-black text-brand-dark">Todo está sincronizado</p>
+      <p class="text-lg font-bold text-brand-dark">Todo está sincronizado</p>
       <p class="text-sm font-bold text-gray-700">Lo que hagas sin conexión aparecerá aquí hasta que llegue al servidor.</p>
     </div>
 
@@ -47,7 +47,7 @@ async function descartar() {
       <article v-for="c in cambios.entradas" :key="c.id" class="bg-white p-4 rounded-3xl border-2 border-brand-border space-y-2">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <h2 class="text-base font-black text-brand-dark leading-tight">{{ c.resumen }}</h2>
+            <h2 class="text-base font-bold text-brand-dark leading-tight">{{ c.resumen }}</h2>
             <p class="text-sm text-gray-600">Hecho el {{ formatDateTime(c.creadoEn) }}</p>
           </div>
           <button
@@ -61,7 +61,7 @@ async function descartar() {
           </button>
         </div>
 
-        <p v-if="c.estado === 'pendiente'" class="flex items-center gap-2 text-sm font-black text-sky-900">
+        <p v-if="c.estado === 'pendiente'" class="flex items-center gap-2 text-base font-bold text-sky-900">
           <CloudOff class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
           Sin sincronizar
         </p>

@@ -53,17 +53,17 @@ function alternar(f: FranjaDisponibilidad) {
 
 <template>
   <div class="space-y-1.5">
-    <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">Disponibilidad y reservas del día</span>
+    <span class="text-sm font-bold text-brand-accent block">Disponibilidad y reservas del día</span>
     <ul class="space-y-1.5">
       <li v-for="f in franjas" :key="llave(f)" class="space-y-1.5">
         <button
           type="button"
           @click="alternar(f)"
           :aria-expanded="abierta === llave(f)"
-          class="w-full flex items-center gap-2 text-xs font-bold bg-brand-light rounded-xl border border-brand-border px-3 py-2.5 text-left touch-target active:scale-[0.99] transition-transform"
+          class="w-full flex items-center gap-2 text-base bg-brand-light rounded-xl border border-brand-border px-3 py-2.5 text-left touch-target active:scale-[0.99] transition-transform"
         >
           <span class="w-3 h-3 rounded-full shrink-0" :class="puntoDeEstado(f.estado)" aria-hidden="true"></span>
-          <span class="text-brand-dark font-black">{{ nombre(f) }}</span>
+          <span class="text-brand-dark font-bold">{{ nombre(f) }}</span>
           <span class="ml-auto text-right text-gray-700">{{ cupo(f) }}</span>
           <!-- Mismo punto que en el calendario: solo avisa que hay pendientes o reservas que se topan -->
           <span
@@ -84,7 +84,7 @@ function alternar(f: FranjaDisponibilidad) {
             :se-cruza="seCruza(r.id)"
             @abrir="$emit('abrir', $event)"
           />
-          <p v-if="reservasDeFranja(f, reservas).length === 0" class="text-center py-3 text-gray-700 text-xs font-bold">
+          <p v-if="reservasDeFranja(f, reservas).length === 0" class="text-center py-3 text-gray-700 text-base">
             Sin reservas en {{ nombre(f).toLowerCase() }} este día.
           </p>
         </div>

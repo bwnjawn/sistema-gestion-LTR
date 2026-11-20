@@ -69,18 +69,18 @@ const iconoFondo = computed(() => ({
         </span>
         <div class="min-w-0 flex-1">
           <div class="flex items-baseline justify-between gap-2">
-            <h2 class="text-base font-bold text-gray-900 leading-tight truncate">{{ request.clientName }}</h2>
-            <span class="text-base font-bold text-gray-900 shrink-0">{{ formatCLP(request.totalAmount) }}</span>
+            <h2 class="text-lg font-bold text-gray-900 leading-tight break-words min-w-0">{{ request.clientName }}</h2>
+            <span class="text-lg font-bold text-gray-900 shrink-0">{{ formatCLP(request.totalAmount) }}</span>
           </div>
-          <p class="text-sm text-gray-800 leading-snug mt-0.5">
+          <p class="text-base text-gray-800 leading-snug mt-0.5">
             {{ resumen.recurso }} · <span class="font-bold">{{ resumen.fechas }}</span><template v-if="resumen.noches > 0"> · {{ resumen.noches }} {{ resumen.noches === 1 ? 'noche' : 'noches' }}</template>
           </p>
-          <p class="text-xs text-gray-700 mt-0.5">{{ resumen.personas }} · {{ request.requestCode }}</p>
+          <p class="text-sm text-gray-600 mt-0.5">{{ resumen.personas }} · {{ request.requestCode }}</p>
         </div>
         <ChevronRight class="w-5 h-5 text-gray-500 shrink-0 mt-2.5" aria-hidden="true" />
       </div>
 
-      <div class="flex items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <span class="flex items-center gap-1.5 flex-wrap min-w-0">
           <EstadoSolicitud :status="request.status" :por-mover="!!bloqueo" :en-conflicto="request.enConflicto" />
           <EtiquetaSinSincronizar :solicitud-id="request.id" />
@@ -89,7 +89,7 @@ const iconoFondo = computed(() => ({
           <div class="w-16 h-1.5 rounded-full bg-gray-200 overflow-hidden shrink-0" aria-hidden="true">
             <div class="h-full bg-brand-dark" :style="{ width: pago.porcentaje + '%' }"></div>
           </div>
-          <span class="text-xs text-gray-700 truncate">{{ pago.texto }}</span>
+          <span class="text-sm text-gray-600">{{ pago.texto }}</span>
         </div>
       </div>
 
@@ -97,23 +97,23 @@ const iconoFondo = computed(() => ({
       <p
         v-if="senal"
         :class="[
-          'flex items-start gap-2 rounded-xl px-3 py-2 text-sm font-bold',
+          'flex items-start gap-2 rounded-xl px-3 py-2 text-base font-bold',
           senal.urgente ? 'bg-rose-50 text-rose-950 border border-status-danger' : 'bg-amber-50 text-amber-950 border border-amber-500'
         ]"
       >
-        <AlertTriangle class="w-4 h-4 stroke-[2.5] shrink-0 mt-0.5" aria-hidden="true" />
+        <AlertTriangle class="w-5 h-5 stroke-[2.5] shrink-0 mt-0.5" aria-hidden="true" />
         <span>{{ senal.texto }}</span>
       </p>
     </button>
 
     <div v-if="esPendiente" class="grid grid-cols-2 gap-2 px-4 pb-4">
-      <BaseButton variant="outline" size="md" class="!text-sm !border-status-danger !text-status-danger" @click="emit('reject', request.id)">
+      <BaseButton variant="outline" size="md" class="!text-base !px-2 !border-status-danger !text-status-danger" @click="emit('reject', request.id)">
         <X class="w-4 h-4 mr-1 stroke-[3]" aria-hidden="true" /> Rechazar
       </BaseButton>
-      <BaseButton v-if="bloqueo" variant="primary" size="md" class="!text-sm" @click="emit('move', request.id)">
+      <BaseButton v-if="bloqueo" variant="primary" size="md" class="!text-base !px-2" @click="emit('move', request.id)">
         <CalendarClock class="w-4 h-4 mr-1 stroke-[3]" aria-hidden="true" /> Mover fecha
       </BaseButton>
-      <BaseButton v-else variant="success" size="md" class="!text-sm" @click="emit('approve', request.id)">
+      <BaseButton v-else variant="success" size="md" class="!text-base !px-2" @click="emit('approve', request.id)">
         <Check class="w-4 h-4 mr-1 stroke-[3]" aria-hidden="true" /> Aprobar
       </BaseButton>
     </div>

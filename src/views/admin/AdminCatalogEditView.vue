@@ -246,7 +246,7 @@ function executeDelete() {
         <button 
           type="button" 
           @click="activeCategory = 'cabana'" 
-          :class="['py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all', activeCategory === 'cabana' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-700']"
+          :class="['py-2.5 px-2 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all', activeCategory === 'cabana' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-700']"
         >
           <Home class="w-4 h-4 stroke-[2.5]" /> <span>Cabañas</span>
         </button>
@@ -254,7 +254,7 @@ function executeDelete() {
         <button 
           type="button" 
           @click="activeCategory = 'camping'" 
-          :class="['py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all', activeCategory === 'camping' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-700']"
+          :class="['py-2.5 px-2 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all', activeCategory === 'camping' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-700']"
         >
           <Tent class="w-4 h-4 stroke-[2.5]" /> <span>Camping</span>
         </button>
@@ -262,7 +262,7 @@ function executeDelete() {
         <button 
           type="button" 
           @click="activeCategory = 'restaurante'" 
-          :class="['py-2.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all', activeCategory === 'restaurante' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-700']"
+          :class="['py-2.5 px-2 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 transition-all', activeCategory === 'restaurante' ? 'bg-[#c5d7be] text-brand-dark border border-brand-border shadow-2xs' : 'bg-white text-gray-700']"
         >
           <Utensils class="w-4 h-4 stroke-[2.5]" /> <span>Menú</span>
         </button>
@@ -282,7 +282,7 @@ function executeDelete() {
       <button 
         type="button" 
         @click="openCreateModal" 
-        class="w-full sm:w-auto py-3 px-5 bg-[#25636B] hover:bg-[#1c4c52] text-white font-black text-xs rounded-2xl border-2 border-brand-border flex items-center justify-center gap-2 active:scale-95 shadow-sm transition-transform"
+        class="w-full sm:w-auto py-3 px-5 bg-[#25636B] hover:bg-[#1c4c52] text-white font-bold text-sm rounded-2xl border-2 border-brand-border flex items-center justify-center gap-2 active:scale-95 shadow-sm transition-transform"
       >
         <Plus class="w-4 h-4 stroke-[2.5]" /> <span>{{ getAddButtonLabel }}</span>
       </button>
@@ -292,7 +292,7 @@ function executeDelete() {
     <div v-if="activeCategory === 'cabana'" class="space-y-4">
       <div v-if="avisoMantencion" class="bg-amber-50 border-2 border-amber-600 rounded-2xl p-3 space-y-2" role="status">
         <div class="flex items-start justify-between gap-2">
-          <p class="text-sm font-black text-amber-950 flex items-start gap-1.5">
+          <p class="text-sm font-bold text-amber-950 flex items-start gap-1.5">
             <AlertTriangle class="w-5 h-5 stroke-[2.5] shrink-0" aria-hidden="true" />
             {{ avisoMantencion.cabana }} quedó en mantención, pero tiene {{ avisoMantencion.solicitudes.length }}
             {{ avisoMantencion.solicitudes.length === 1 ? 'reserva' : 'reservas' }} por venir. No cambian: revísalas desde Solicitudes.
@@ -333,13 +333,13 @@ function executeDelete() {
     <!-- RESTAURANTE -->
     <div v-else class="space-y-4">
       <div class="flex bg-white p-1 rounded-2xl border-2 border-brand-border">
-        <button type="button" @click="restaurantTab = 'dishes'" :class="['flex-1 py-2 text-xs font-black rounded-xl transition-all', restaurantTab === 'dishes' ? 'bg-[#c5d7be] text-brand-dark shadow-2xs' : 'text-gray-500']">Platos Principales</button>
-        <button type="button" @click="restaurantTab = 'sides'" :class="['flex-1 py-2 text-xs font-black rounded-xl transition-all', restaurantTab === 'sides' ? 'bg-[#c5d7be] text-brand-dark shadow-2xs' : 'text-gray-500']">Acompañamientos generales</button>
+        <button type="button" @click="restaurantTab = 'dishes'" :class="['flex-1 py-2 text-sm font-bold rounded-xl transition-all', restaurantTab === 'dishes' ? 'bg-[#c5d7be] text-brand-dark shadow-2xs' : 'text-gray-500']">Platos Principales</button>
+        <button type="button" @click="restaurantTab = 'sides'" :class="['flex-1 py-2 text-sm font-bold rounded-xl transition-all', restaurantTab === 'sides' ? 'bg-[#c5d7be] text-brand-dark shadow-2xs' : 'text-gray-500']">Acompañamientos generales</button>
       </div>
 
       <div v-if="restaurantTab === 'dishes'" class="space-y-3">
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
-          <button v-for="cat in dishCategories" :key="cat.valor" type="button" @click="selectedDishCategoryFilter = cat.valor" :class="['px-3.5 py-1.5 rounded-2xl text-xs font-black border transition-all shrink-0', selectedDishCategoryFilter === cat.valor ? 'bg-brand-dark text-white border-brand-dark shadow-2xs' : 'bg-white text-gray-600 border-brand-border hover:bg-gray-50']">
+          <button v-for="cat in dishCategories" :key="cat.valor" type="button" @click="selectedDishCategoryFilter = cat.valor" :class="['px-3.5 py-1.5 rounded-2xl text-sm font-bold border transition-all shrink-0', selectedDishCategoryFilter === cat.valor ? 'bg-brand-dark text-white border-brand-dark shadow-2xs' : 'bg-white text-gray-600 border-brand-border hover:bg-gray-50']">
             {{ cat.etiqueta }}
           </button>
         </div>
@@ -357,15 +357,15 @@ function executeDelete() {
 
       <div v-else class="space-y-3">
         <div class="bg-white p-4 rounded-3xl border-2 border-brand-border space-y-2">
-          <span class="text-xs font-black text-brand-dark block">Agregar acompañamiento general:</span>
+          <span class="text-base font-bold text-brand-dark block">Agregar acompañamiento general:</span>
           <div class="flex gap-2">
-            <input v-model="newSideInput" type="text" placeholder="Ej: Ensalada chilena" class="flex-1 p-3 rounded-xl border-2 border-brand-border bg-brand-light text-xs font-bold" @keyup.enter.prevent="addSideDirectly" />
-            <button type="button" @click="addSideDirectly" class="px-5 bg-brand-dark text-white rounded-xl font-black text-xs active:scale-95 shadow-2xs">Guardar</button>
+            <input v-model="newSideInput" type="text" placeholder="Ej: Ensalada chilena" class="flex-1 p-3 rounded-xl border-2 border-brand-border bg-brand-light text-base" @keyup.enter.prevent="addSideDirectly" />
+            <button type="button" @click="addSideDirectly" class="px-5 bg-brand-dark text-white rounded-xl font-bold text-sm active:scale-95 shadow-2xs">Guardar</button>
           </div>
         </div>
 
         <div class="space-y-2">
-          <p v-if="avisoAcompanamientos" role="alert" class="p-3 rounded-2xl bg-amber-50 border-2 border-amber-600 text-amber-950 text-sm font-black">{{ avisoAcompanamientos }}</p>
+          <p v-if="avisoAcompanamientos" role="alert" class="p-3 rounded-2xl bg-amber-50 border-2 border-amber-600 text-amber-950 text-sm font-bold">{{ avisoAcompanamientos }}</p>
           <div v-for="side in catalogStore.sideDishes" :key="side" class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs flex items-center justify-between gap-2">
             <form v-if="sideEnEdicion === side" class="flex items-center gap-2 grow" @submit.prevent="saveRenameSide">
               <input v-model="sideNuevoNombre" type="text" aria-label="Nuevo nombre del acompañamiento" class="flex-1 min-w-0 p-2.5 rounded-xl border-2 border-brand-border bg-brand-light text-base" @keyup.esc="sideEnEdicion = null" />
@@ -378,7 +378,7 @@ function executeDelete() {
             </form>
             <template v-else>
               <div class="min-w-0">
-                <p class="text-base text-brand-dark truncate">{{ side }}</p>
+                <p class="text-base text-brand-dark break-words min-w-0">{{ side }}</p>
                 <p class="text-sm text-gray-600">
                   {{ cantidadDePlatosConSide(side) === 0 ? 'Sin platos' : cantidadDePlatosConSide(side) === 1 ? 'En 1 plato' : `En ${cantidadDePlatosConSide(side)} platos` }}
                 </p>

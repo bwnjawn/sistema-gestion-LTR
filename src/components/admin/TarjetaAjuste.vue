@@ -8,8 +8,8 @@ const emit = defineEmits<{ (e: 'editar'): void }>()
 <template>
   <section class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
     <div class="flex items-center justify-between gap-3">
-      <h3 class="text-sm font-black text-brand-dark">{{ titulo }}</h3>
-      <button type="button" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-100" @click="emit('editar')">
+      <h3 class="text-base font-bold text-brand-dark">{{ titulo }}</h3>
+      <button type="button" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-bold text-sm rounded-xl hover:bg-gray-100" @click="emit('editar')">
         {{ textoBoton }}
       </button>
     </div>

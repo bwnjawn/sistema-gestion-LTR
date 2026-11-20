@@ -48,7 +48,7 @@ function ver(evento: Event) {
   <section class="bg-white p-4 sm:p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-4" aria-labelledby="titulo-reglamento">
     <div class="flex items-center gap-2">
       <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" aria-hidden="true" />
-      <h3 id="titulo-reglamento" class="text-sm font-black text-brand-dark">Reglamento del camping</h3>
+      <h3 id="titulo-reglamento" class="text-base font-bold text-brand-dark">Reglamento del camping</h3>
     </div>
 
     <template v-if="settingsStore.tieneReglamentoCamping">

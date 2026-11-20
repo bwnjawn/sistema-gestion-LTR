@@ -38,8 +38,8 @@ const icono = computed(() => {
 </script>
 
 <template>
-  <span :class="['inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-bold', clase]">
-    <component :is="icono" class="w-3.5 h-3.5 stroke-[3] shrink-0" aria-hidden="true" />
+  <span :class="['inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-sm font-bold', clase]">
+    <component :is="icono" class="w-4 h-4 stroke-[3] shrink-0" aria-hidden="true" />
     {{ texto }}
   </span>
 </template>

@@ -83,7 +83,7 @@ const claseOpcion = 'flex items-start gap-3 p-3 rounded-2xl border-2 touch-targe
         Se exportan las <span class="font-bold">{{ total }}</span> solicitudes, también las rechazadas y canceladas.
       </p>
 
-      <p class="text-xs text-gray-700 bg-brand-light border border-brand-border rounded-xl p-3">
+      <p class="text-base text-gray-700 bg-brand-light border border-brand-border rounded-xl p-3">
         El archivo trae los registros con año y mes, y hojas de resumen por mes, servicio y estado. En Excel puedes filtrar y ordenar desde los encabezados. Incluye teléfono y correo de los clientes: úsalo solo tú.
       </p>
     </template>

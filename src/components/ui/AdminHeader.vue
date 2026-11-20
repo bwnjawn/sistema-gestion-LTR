@@ -1,6 +1,6 @@
 <template>
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-gray-300 shadow-sm pt-[env(safe-area-inset-top,0px)]">
-    <div class="max-w-md mx-auto w-full px-4 h-14 flex items-center justify-between gap-3">
+    <div class="max-w-md mx-auto w-full px-4 min-h-14 py-1 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3 min-w-0">
         <button
           type="button"
@@ -11,8 +11,8 @@
           <img src="/images/logo-negro.png" alt="" class="w-full h-full object-cover" />
         </button>
         <div class="min-w-0">
-          <h1 class="text-xl font-black text-brand-dark leading-tight truncate">{{ titulo }}</h1>
-          <p v-if="mostrarActualizacion" class="text-xs text-gray-700 leading-tight truncate" aria-live="polite">{{ textoActualizacion }}</p>
+          <h1 class="text-xl font-bold text-brand-dark leading-tight line-clamp-2">{{ titulo }}</h1>
+          <p v-if="mostrarActualizacion" class="text-sm text-gray-700 leading-tight truncate" aria-live="polite">{{ textoActualizacion }}</p>
         </div>
         <!-- Solo el círculo del "?" se ve; el área de toque de 40 px es transparente -->
         <button
@@ -60,7 +60,7 @@
       role="status"
       class="bg-amber-100 border-t-2 border-amber-500 text-amber-950"
     >
-      <p class="max-w-md mx-auto px-4 py-2 flex items-center gap-2 text-sm font-black">
+      <p class="max-w-md mx-auto px-4 py-2 flex items-center gap-2 text-base font-bold">
         <WifiOff class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
         Sin conexión a internet. Ves los últimos datos guardados; para hacer cambios necesitas conexión.
       </p>
@@ -74,10 +74,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CircleHelp, CircleUser, LogOut, RefreshCw, WifiOff } from 'lucide-vue-next'
+import { CircleHelp, CircleUser, LogOut, RefreshCw, Type, WifiOff } from 'lucide-vue-next'
 import { useActualizacionStore } from '../../stores/actualizacionStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { usePreferenciasStore } from '../../stores/preferenciasStore'
 import DropdownMenu, { type DropdownItem } from './DropdownMenu.vue'
 import ModalAyuda from './ModalAyuda.vue'
 import AvisoCambiosSinSincronizar from '../admin/AvisoCambiosSinSincronizar.vue'
@@ -113,15 +114,23 @@ const actualizar = () => {
   void actualizacion.refrescarTodo()
 }
 
-const menuCuenta: DropdownItem[] = [
+// El tamaño de la letra es de este dispositivo y solo lo cambia el administrador (SCRUM-276)
+const preferencias = usePreferenciasStore()
+const menuCuenta = computed<DropdownItem[]>(() => [
+  { key: 'letra-normal', label: 'Letra normal', icon: Type, activo: preferencias.tamanoLetra === 'normal' },
+  { key: 'letra-grande', label: 'Letra grande', icon: Type, activo: preferencias.tamanoLetra === 'grande' },
   { key: 'salir', label: 'Cerrar sesión', icon: LogOut, danger: true }
-]
+])
 
 const goDashboard = () => {
   router.push({ name: 'admin-dashboard' })
 }
 
 const alElegir = async (clave: string) => {
+  if (clave === 'letra-normal' || clave === 'letra-grande') {
+    await preferencias.cambiarTamanoLetra(clave === 'letra-grande' ? 'grande' : 'normal')
+    return
+  }
   if (clave !== 'salir') return
   // Con cambios sin sincronizar no se cierra la sesión (se perderían): el store avisa por qué
   if (await authStore.logout()) router.push({ name: 'admin-login' })

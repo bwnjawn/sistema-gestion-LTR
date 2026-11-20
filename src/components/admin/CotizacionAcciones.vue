@@ -70,24 +70,24 @@ async function enviar() {
   trabajando.value = false
 }
 
-const claseCanal = 'py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1 border-2 touch-target'
+const claseCanal = 'py-3 rounded-xl text-base font-bold flex items-center justify-center gap-1.5 border-2 touch-target'
 const claseInactivo = 'bg-gray-100 border-gray-300 text-gray-600 pointer-events-none'
 </script>
 
 <template>
   <section class="space-y-2">
-    <h3 class="text-xs font-bold text-brand-accent uppercase tracking-wider">Cotización</h3>
+    <h3 class="text-base font-bold text-brand-dark">Cotización</h3>
     <div class="bg-brand-light border border-brand-border rounded-2xl p-3 space-y-3">
-      <p class="text-sm text-gray-800 flex items-start gap-2">
+      <p class="text-base text-gray-800 flex items-start gap-2">
         <FileText class="w-4 h-4 text-brand-accent stroke-[2.5] shrink-0 mt-0.5" aria-hidden="true" />
         PDF con el detalle de precios, el IVA y el abono de {{ request.requestCode }}.
       </p>
 
       <div class="grid grid-cols-2 gap-2">
-        <BaseButton variant="outline" size="md" class="!text-sm" :disabled="trabajando" @click="descargar">
+        <BaseButton variant="outline" size="md" class="!text-base" :disabled="trabajando" @click="descargar">
           <Download class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Descargar
         </BaseButton>
-        <BaseButton variant="primary" size="md" class="!text-sm" :disabled="trabajando" @click="enviar">
+        <BaseButton variant="primary" size="md" class="!text-base" :disabled="trabajando" @click="enviar">
           <Send class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> {{ trabajando ? 'Preparando…' : 'Enviar al cliente' }}
         </BaseButton>
       </div>
@@ -96,7 +96,7 @@ const claseInactivo = 'bg-gray-100 border-gray-300 text-gray-600 pointer-events-
 
       <!-- Respaldo: sin menú de compartir, el administrador adjunta el PDF descargado -->
       <div v-if="descargado" class="space-y-2 bg-amber-50 border border-amber-500 rounded-xl p-3">
-        <p class="text-sm text-amber-950">
+        <p class="text-base text-amber-950">
           Se descargó el PDF. Abre uno de estos canales con el mensaje ya escrito y <span class="font-bold">adjunta el archivo</span>.
         </p>
         <div class="grid grid-cols-2 gap-2">
@@ -115,7 +115,7 @@ const claseInactivo = 'bg-gray-100 border-gray-300 text-gray-600 pointer-events-
             <Mail class="w-4 h-4 stroke-[2.5]" aria-hidden="true" /> Correo
           </a>
         </div>
-        <p v-if="!request.clientEmail" class="text-xs text-amber-950">El cliente no dejó correo.</p>
+        <p v-if="!request.clientEmail" class="text-sm text-amber-950">El cliente no dejó correo.</p>
       </div>
     </div>
   </section>

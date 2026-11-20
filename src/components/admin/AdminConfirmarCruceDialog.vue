@@ -130,8 +130,8 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
           >
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
-                <p v-if="fila.esLaPropia" class="text-xs font-bold text-brand-accent uppercase tracking-wider">La que apruebas</p>
-                <h3 class="text-base font-bold text-brand-dark leading-tight truncate">{{ fila.solicitud.clientName }}</h3>
+                <p v-if="fila.esLaPropia" class="text-sm font-bold text-brand-accent">La que apruebas</p>
+                <h3 class="text-base font-bold text-brand-dark leading-tight break-words">{{ fila.solicitud.clientName }}</h3>
               </div>
               <EstadoSolicitud :status="fila.solicitud.status" class="mt-0.5" />
             </div>
@@ -140,11 +140,11 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
               <p class="text-sm text-gray-800">
                 {{ fila.datos.servicio }} · {{ fila.solicitud.resourceName }} · <span class="font-bold">{{ fila.datos.fechas }}</span>
               </p>
-              <p class="text-xs text-gray-700">
+              <p class="text-sm text-gray-700">
                 {{ fila.solicitud.guestsCount }} personas · {{ formatCLP(fila.solicitud.totalAmount) }} · {{ fila.datos.cercania }}
               </p>
-              <p class="text-xs font-bold text-rose-950">Se topan: {{ fila.datos.dias }}</p>
-              <p v-if="fila.seCruzaCon" class="text-xs text-rose-950">Se cruza con {{ fila.seCruzaCon }}</p>
+              <p class="text-sm font-bold text-rose-950">Se topan: {{ fila.datos.dias }}</p>
+              <p v-if="fila.seCruzaCon" class="text-sm text-rose-950">Se cruza con {{ fila.seCruzaCon }}</p>
             </div>
 
             <template v-if="!fila.confirmada">
@@ -159,8 +159,8 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
 
             <!-- Salidas para quien no queda confirmada -->
             <section v-if="mostrarSalidas(fila)" class="space-y-2 border-t border-brand-border/60 pt-2.5">
-              <h4 class="text-xs font-bold text-gray-800">Avisar al cliente (la app no envía nada sola)</h4>
-              <p v-if="!fila.datos.telefonoUtil" class="text-xs font-bold text-amber-950 bg-amber-50 border border-amber-500 rounded-xl p-2">
+              <h4 class="text-sm font-bold text-gray-800">Avisar al cliente (la app no envía nada sola)</h4>
+              <p v-if="!fila.datos.telefonoUtil" class="text-sm font-bold text-amber-950 bg-amber-50 border border-amber-500 rounded-xl p-2">
                 El teléfono parece incompleto. Revísalo antes de llamar.
               </p>
               <div class="grid grid-cols-3 gap-2">

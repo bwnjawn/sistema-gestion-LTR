@@ -54,14 +54,14 @@ function handleBackToHome() {
       </div>
 
       <div>
-        <span class="inline-flex items-center gap-1.5 bg-brand-dark text-white text-xs font-black uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs">
+        <span class="inline-flex items-center gap-1.5 bg-brand-dark text-white text-sm font-bold px-3 py-0.5 rounded-full shadow-2xs">
           <ShieldCheck class="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
           Acceso Administrativo
         </span>
-        <h1 class="text-2xl font-black text-brand-dark tracking-tight pt-1">
+        <h1 class="text-2xl font-bold text-brand-dark tracking-tight pt-1">
           Los Troncos de Repil
         </h1>
-        <p class="text-xs font-semibold text-gray-700">
+        <p class="text-base text-gray-700">
           Inicia sesión para gestionar reservas y servicios
         </p>
       </div>
@@ -79,7 +79,7 @@ function handleBackToHome() {
         
         <!-- Campo Correo -->
         <div class="space-y-1.5">
-          <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+          <label class="text-sm text-gray-700 flex items-center gap-1.5">
             <Mail class="w-4 h-4 text-brand-accent stroke-[2.5]" />
             Correo de Administrador
           </label>
@@ -94,7 +94,7 @@ function handleBackToHome() {
 
         <!-- Campo Contraseña con Toggle Ojo -->
         <div class="space-y-1.5">
-          <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+          <label class="text-sm text-gray-700 flex items-center gap-1.5">
             <Lock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
             Contraseña
           </label>

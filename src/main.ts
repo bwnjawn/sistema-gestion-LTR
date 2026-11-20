@@ -9,6 +9,7 @@ import { evitarZoomDobleToque } from './lib/sinZoomDobleToque'
 import { corregirViewportTeclado } from './lib/corregirViewportTeclado'
 import { inicializarAplicacion } from './lib/arranque'
 import { useActualizacionStore } from './stores/actualizacionStore'
+import { usePreferenciasStore } from './stores/preferenciasStore'
 
 /** Si los datos no se pudieron cargar no se monta la app: se explica y se deja reintentar. */
 function mostrarErrorDeArranque(): void {
@@ -48,6 +49,8 @@ async function iniciar() {
 
   // El router se instala después de cargar los datos: sus guardas leen la sesión del administrador
   app.use(router)
+  // La letra grande del administrador también vale en su zona sin sesión (inicio de sesión)
+  router.afterEach(to => usePreferenciasStore(pinia).definirAreaAdmin(to.path.startsWith('/admin')))
   app.mount('#app')
   evitarZoomDobleToque()
   corregirViewportTeclado()
