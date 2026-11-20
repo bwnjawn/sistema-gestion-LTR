@@ -8,7 +8,7 @@ defineProps<{ resumen: ResumenDia }>()
   <!-- Número = reservas confirmadas (trabajo); punto ámbar = hay algo por resolver. El fondo rojo lo pone cada casilla. -->
   <span
     v-if="resumen.confirmadas > 0"
-    class="min-w-4 px-1 rounded-full bg-brand-dark text-white text-xs font-black leading-4 text-center"
+    class="min-w-5 px-1 rounded-full bg-brand-dark text-white text-sm font-bold leading-5 text-center"
     aria-hidden="true"
   >{{ resumen.confirmadas }}</span>
   <span

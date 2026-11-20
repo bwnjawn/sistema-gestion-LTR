@@ -12,6 +12,7 @@ import { SupabasePaymentRepository } from './pagos'
 import { SupabaseRequestRepository } from './solicitudes'
 import { ColaEnvioIndexedDb } from '../colaEnvioRepository'
 import { ColaCambiosIndexedDb } from '../colaCambiosRepository'
+import { LocalPreferenciasRepository } from '../preferenciasRepository'
 
 export function crearRepositoriosSupabase(): Repositorios {
   return {
@@ -24,6 +25,8 @@ export function crearRepositoriosSupabase(): Repositorios {
     documents: new SupabaseDocumentosRepository(),
     auth: new SupabaseAuthRepository(),
     colaEnvio: new ColaEnvioIndexedDb(),
-    colaCambios: new ColaCambiosIndexedDb()
+    colaCambios: new ColaCambiosIndexedDb(),
+    // Las preferencias de pantalla son de cada dispositivo: no van a la base
+    preferencias: new LocalPreferenciasRepository()
   }
 }

@@ -80,14 +80,14 @@ function handleBackToPanel() {
       </div>
 
       <div>
-        <span class="inline-flex items-center gap-1.5 bg-brand-dark text-white text-xs font-black uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs">
+        <span class="inline-flex items-center gap-1.5 bg-brand-dark text-white text-sm font-bold px-3 py-0.5 rounded-full shadow-2xs">
           <ShieldCheck class="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
           Nuevo administrador
         </span>
-        <h1 class="text-xl font-black text-brand-dark tracking-tight pt-1">
+        <h1 class="text-xl font-bold text-brand-dark tracking-tight pt-1">
           Crear cuenta de acceso
         </h1>
-        <p class="text-xs font-semibold text-gray-700">
+        <p class="text-base text-gray-700">
           La persona podrá entrar al panel con este correo y esta contraseña
         </p>
       </div>
@@ -109,7 +109,7 @@ function handleBackToPanel() {
         
         <!-- Nombre Completo -->
         <div class="space-y-1">
-          <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+          <label class="text-sm text-gray-700 flex items-center gap-1.5">
             <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
             Nombre Completo *
           </label>
@@ -124,7 +124,7 @@ function handleBackToPanel() {
 
         <!-- Correo Electrónico -->
         <div class="space-y-1">
-          <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+          <label class="text-sm text-gray-700 flex items-center gap-1.5">
             <Mail class="w-4 h-4 text-brand-accent stroke-[2.5]" />
             Correo Electrónico *
           </label>
@@ -139,7 +139,7 @@ function handleBackToPanel() {
 
         <!-- Contraseña -->
         <div class="space-y-1">
-          <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+          <label class="text-sm text-gray-700 flex items-center gap-1.5">
             <Lock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
             Contraseña (mín. 8 caracteres) *
           </label>
@@ -165,12 +165,12 @@ function handleBackToPanel() {
 
         <!-- Confirmar Contraseña -->
         <div class="space-y-1">
-          <label class="block text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center justify-between">
+          <label class="text-sm text-gray-700 flex items-center justify-between">
             <span class="flex items-center gap-1.5">
               <Lock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
               Confirmar Contraseña *
             </span>
-            <span v-if="password && isPasswordMatch" class="text-emerald-600 font-bold text-xs flex items-center gap-1">
+            <span v-if="password && isPasswordMatch" class="text-emerald-600 font-bold text-sm flex items-center gap-1">
               <CheckCircle2 class="w-3 h-3 stroke-[2.5]" />
               Coinciden
             </span>
@@ -197,7 +197,7 @@ function handleBackToPanel() {
             </button>
           </div>
 
-          <p v-if="confirmPassword && !isPasswordMatch" class="text-xs font-bold text-rose-600 pt-0.5">
+          <p v-if="confirmPassword && !isPasswordMatch" class="text-sm font-bold text-rose-600 pt-0.5">
             Las contraseñas no coinciden.
           </p>
         </div>

@@ -22,7 +22,7 @@ const texto = computed(() =>
     class="w-full text-left bg-rose-50 border-2 border-status-danger rounded-3xl p-4 text-rose-950 active:scale-98 transition-transform"
     @click="router.push('/admin/solicitudes?estado=pending')"
   >
-    <span class="flex items-center gap-2 text-base font-black">
+    <span class="flex items-center gap-2 text-base font-bold">
       <TriangleAlert class="w-5 h-5 stroke-[2.5] shrink-0" aria-hidden="true" />
       {{ texto }}
     </span>

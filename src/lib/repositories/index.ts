@@ -10,6 +10,8 @@ import { conCacheSinConexion } from './conCacheSinConexion'
 import type { ColaEnvioRepository } from './colaEnvioRepository'
 import { ColaEnvioIndexedDb } from './colaEnvioRepository'
 import type { ColaCambiosRepository } from './colaCambiosRepository'
+import type { PreferenciasRepository } from './preferenciasRepository'
+import { LocalPreferenciasRepository } from './preferenciasRepository'
 import { ColaCambiosIndexedDb } from './colaCambiosRepository'
 import type { AuthRepository } from './authRepository'
 import type { AvailabilityRepository } from './availabilityRepository'
@@ -43,6 +45,8 @@ export interface Repositorios {
   colaEnvio: ColaEnvioRepository
   /** Cambios del administrador hechos sin conexión que esperan enviarse (SCRUM-250). Viven en el dispositivo. */
   colaCambios: ColaCambiosRepository
+  /** Preferencias de pantalla de este dispositivo, como el tamaño de la letra (SCRUM-276). */
+  preferencias: PreferenciasRepository
 }
 
 /** Todos los repositorios sobre un almacenamiento local (el real o uno en memoria para pruebas). */
@@ -58,7 +62,8 @@ export function crearRepositoriosLocales(almacenamiento: Almacenamiento = almace
     documents: new LocalDocumentosRepository(),
     auth: new LocalAuthRepository(almacenamiento),
     colaEnvio: new ColaEnvioIndexedDb(),
-    colaCambios: new ColaCambiosIndexedDb()
+    colaCambios: new ColaCambiosIndexedDb(),
+    preferencias: new LocalPreferenciasRepository(almacenamiento)
   }
 }
 

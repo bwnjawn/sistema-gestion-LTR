@@ -60,7 +60,7 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
     </p>
 
     <section class="space-y-2">
-      <h3 class="text-xs font-bold text-brand-accent uppercase tracking-wider">Hablar con el cliente</h3>
+      <h3 class="text-lg font-bold text-brand-dark">Hablar con el cliente</h3>
       <div class="grid grid-cols-3 gap-2">
         <a :href="contacto.tel" :class="[claseSalida, contacto.telefonoUtil ? 'bg-white border-brand-border text-brand-dark' : claseSalidaInactiva]">
           <Phone class="w-4 h-4 stroke-[2.5]" aria-hidden="true" /> Llamar
@@ -77,7 +77,7 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
           <Mail class="w-4 h-4 stroke-[2.5]" aria-hidden="true" /> Correo
         </a>
       </div>
-      <p class="text-xs text-gray-700">El mensaje va prearmado y no propone fechas. Lo envías tú.</p>
+      <p class="text-sm text-gray-700">El mensaje va prearmado y no propone fechas. Lo envías tú.</p>
     </section>
 
     <AdminRequestEditForm :request="request" solo-fecha @saved="emit('close')" @cancel="emit('close')" />

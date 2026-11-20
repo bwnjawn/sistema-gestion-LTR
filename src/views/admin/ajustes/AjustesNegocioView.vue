@@ -21,14 +21,14 @@ const showTransferModal = ref(false)
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <h3 class="text-sm font-black text-brand-dark">Datos de contacto</h3>
+          <h3 class="text-base font-bold text-brand-dark">Datos de contacto</h3>
         </div>
-        <button type="button" @click="showContactModal = true" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-100">
+        <button type="button" @click="showContactModal = true" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-bold text-sm rounded-xl hover:bg-gray-100">
           Editar
         </button>
       </div>
 
-      <div class="space-y-2 text-xs font-bold text-gray-700 bg-brand-light p-3 rounded-2xl border border-brand-border">
+      <div class="space-y-2 text-base text-gray-700 bg-brand-light p-3 rounded-2xl border border-brand-border">
         <div class="flex items-center gap-2">
           <Phone class="w-3.5 h-3.5 text-gray-700" />
           <span>{{ settingsStore.contactInfo.phone1 }}<template v-if="settingsStore.contactInfo.phone2"> y {{ settingsStore.contactInfo.phone2 }}</template></span>
@@ -56,14 +56,14 @@ const showTransferModal = ref(false)
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <Landmark class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <h3 class="text-sm font-black text-brand-dark">Datos de transferencia</h3>
+          <h3 class="text-base font-bold text-brand-dark">Datos de transferencia</h3>
         </div>
-        <button type="button" @click="showTransferModal = true" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-100">
+        <button type="button" @click="showTransferModal = true" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-bold text-sm rounded-xl hover:bg-gray-100">
           Editar
         </button>
       </div>
 
-      <div class="space-y-1 text-xs font-bold text-gray-700 bg-brand-light p-3 rounded-2xl border border-brand-border">
+      <div class="space-y-1 text-base text-gray-700 bg-brand-light p-3 rounded-2xl border border-brand-border">
         <p>{{ settingsStore.transferInfo.bank }} · {{ settingsStore.transferInfo.accountType }}</p>
         <p>Cuenta {{ settingsStore.transferInfo.accountNumber }}</p>
         <p>{{ settingsStore.transferInfo.holderName }} · {{ settingsStore.transferInfo.holderRut }}</p>

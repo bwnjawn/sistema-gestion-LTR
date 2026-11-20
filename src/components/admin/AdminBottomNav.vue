@@ -52,7 +52,7 @@ function navigate(path: string) {
         <IconoBarra :nombre="item.icono" :activo="isActive(item.path)" />
         <span
           v-if="item.icono === 'solicitudes' && pendientes > 0"
-          class="absolute top-1.5 left-1/2 ml-1.5 min-w-5 h-5 px-1 rounded-full bg-status-danger text-white text-xs font-bold leading-5 text-center border-2 border-white box-content"
+          class="absolute top-1.5 left-1/2 ml-1.5 min-w-5 h-5 px-1 rounded-full bg-status-danger text-white text-sm font-bold leading-5 text-center border-2 border-white box-content"
           :aria-label="`${pendientes} pendientes`"
         >{{ textoPendientes }}</span>
       </button>

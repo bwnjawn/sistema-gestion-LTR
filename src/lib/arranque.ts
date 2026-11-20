@@ -12,6 +12,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useCatalogStore } from '../stores/catalogStore'
 import { useCambiosAdminStore } from '../stores/cambiosAdminStore'
 import { useColaEnvioStore } from '../stores/colaEnvioStore'
+import { usePreferenciasStore } from '../stores/preferenciasStore'
 import { olvidarDatosDelAdministrador } from './almacenSinConexion'
 import { useDisponibilidadStore } from '../stores/disponibilidadStore'
 import { useRequestsStore } from '../stores/requestsStore'
@@ -26,6 +27,8 @@ export async function inicializarAplicacion(): Promise<void> {
   const auth = useAuthStore()
   // La sesión primero: de ella depende qué datos se pueden leer
   await auth.init()
+  // El tamaño de la letra del administrador (SCRUM-276); el cliente siempre ve el normal
+  await usePreferenciasStore().iniciar()
   // Los cambios del administrador guardados sin conexión se ven encima de las solicitudes (SCRUM-250)
   if (auth.isAuthenticated) await useCambiosAdminStore().init()
   await Promise.all([

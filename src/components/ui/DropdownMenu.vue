@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, nextTick, onBeforeUnmount, type Component } from 'vue'
-import { MoreVertical, ChevronDown } from 'lucide-vue-next'
+import { MoreVertical, ChevronDown, Check } from 'lucide-vue-next'
 
 export interface DropdownItem {
   key: string
   label: string
   icon?: Component
   danger?: boolean
+  /** Para opciones excluyentes (como el tamaño de la letra): marca la que está elegida. */
+  activo?: boolean
 }
 
 defineProps<{
@@ -29,7 +31,7 @@ const triggerRef = ref<HTMLElement | null>(null)
 const menuRef = ref<HTMLElement | null>(null)
 const menuStyle = ref<Record<string, string>>({})
 
-const MENU_WIDTH = 190
+const MENU_WIDTH = 220
 
 function updatePosition() {
   const el = triggerRef.value
@@ -126,15 +128,17 @@ onBeforeUnmount(close)
         v-for="item in items"
         :key="item.key"
         type="button"
-        role="menuitem"
+        :role="item.activo === undefined ? 'menuitem' : 'menuitemradio'"
+        :aria-checked="item.activo"
         @click.stop="choose(item.key)"
         :class="[
-          'w-full flex items-center gap-2 px-3 py-3 rounded-xl text-xs font-black text-left active:scale-98 transition-colors',
+          'w-full flex items-center gap-2 px-3 py-3 rounded-xl text-base font-bold text-left active:scale-98 transition-colors',
           item.danger ? 'text-rose-700 hover:bg-rose-50' : 'text-brand-dark hover:bg-brand-light'
         ]"
       >
-        <component :is="item.icon" v-if="item.icon" class="w-4 h-4 stroke-[2.5]" />
-        <span>{{ item.label }}</span>
+        <component :is="item.icon" v-if="item.icon" class="w-5 h-5 stroke-[2.5] shrink-0" />
+        <span class="grow">{{ item.label }}</span>
+        <Check v-if="item.activo" class="w-5 h-5 stroke-[3] text-brand-accent shrink-0" aria-hidden="true" />
       </button>
     </div>
   </Teleport>

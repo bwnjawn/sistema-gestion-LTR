@@ -53,9 +53,9 @@ async function volverALaOriginal(clave: ClaveFotoInicio) {
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <IconoFoto class="w-4 h-4 text-brand-accent stroke-[2.5]" aria-hidden="true" />
-        <h3 id="titulo-fotos-inicio" class="text-sm font-black text-brand-dark">Fotos del inicio</h3>
+        <h3 id="titulo-fotos-inicio" class="text-base font-bold text-brand-dark">Fotos del inicio</h3>
       </div>
-      <button type="button" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-black text-xs rounded-xl hover:bg-gray-100" @click="abrir">
+      <button type="button" class="py-1.5 px-3 bg-brand-light border border-brand-border text-brand-dark font-bold text-sm rounded-xl hover:bg-gray-100" @click="abrir">
         Editar
       </button>
     </div>
@@ -66,7 +66,7 @@ async function volverALaOriginal(clave: ClaveFotoInicio) {
         <div class="relative aspect-square rounded-xl overflow-hidden border border-brand-border bg-gradient-to-br from-brand-dark to-brand-accent">
           <img :src="settingsStore.fotoInicio(tarjeta.clave)" alt="" class="absolute inset-0 w-full h-full object-cover" @error="($event.target as HTMLImageElement).style.display = 'none'" />
         </div>
-        <span class="block mt-1 text-xs font-bold text-gray-700 leading-tight truncate">{{ tarjeta.titulo }}</span>
+        <span class="block mt-1 text-sm font-bold text-gray-700 leading-tight truncate">{{ tarjeta.titulo }}</span>
       </li>
     </ul>
 
@@ -79,7 +79,7 @@ async function volverALaOriginal(clave: ClaveFotoInicio) {
         <div class="relative h-28 rounded-2xl overflow-hidden border border-brand-border bg-gradient-to-br from-brand-dark to-brand-accent">
           <FondoFotoTarjeta :imagen="settingsStore.fotoInicio(tarjeta.clave)" />
           <div class="absolute bottom-3 left-3 right-3 text-white">
-            <p class="text-xl font-black leading-tight drop-shadow-sm">{{ tarjeta.titulo }}</p>
+            <p class="text-xl font-bold leading-tight drop-shadow-sm">{{ tarjeta.titulo }}</p>
             <p class="text-sm font-bold text-gray-200 leading-tight">{{ tarjeta.subtitulo }}</p>
           </div>
         </div>

@@ -155,16 +155,16 @@ function verTodas() {
           @click="toggleStatus(f.id)"
           :aria-pressed="filterStatus === f.id"
           :class="[
-            'px-1.5 py-2 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1 min-w-0 active:scale-95 transition-all touch-target shadow-2xs',
+            'px-1.5 py-2 rounded-2xl border text-sm font-bold flex flex-col items-center justify-center gap-0.5 min-w-0 active:scale-95 transition-all touch-target shadow-2xs',
             filterStatus === f.id ? 'bg-[#c5d7be] text-brand-dark border-brand-border' : 'bg-white text-gray-700 border-gray-400'
           ]"
         >
-          <span class="truncate">{{ f.label }}</span>
-          <span :class="['shrink-0 min-w-5 px-1.5 rounded-full text-xs font-bold leading-5 text-center', filterStatus === f.id ? 'bg-brand-dark text-white' : 'bg-gray-200 text-gray-800']">{{ counts[f.id] }}</span>
+          <span class="leading-tight">{{ f.label }}</span>
+          <span :class="['shrink-0 min-w-6 px-2 rounded-full text-sm font-bold leading-6 text-center', filterStatus === f.id ? 'bg-brand-dark text-white' : 'bg-gray-200 text-gray-800']">{{ counts[f.id] }}</span>
         </button>
       </div>
 
-      <div class="flex items-center justify-center gap-2 pt-3 border-t-2 border-brand-border/40">
+      <div class="flex flex-wrap items-center justify-center gap-2 pt-3 border-t-2 border-brand-border/40">
         <button
           v-for="t in typeFilters"
           :key="t.id"
@@ -175,13 +175,13 @@ function verTodas() {
           :aria-pressed="filterType === t.id"
           :class="[
             'rounded-2xl border active:scale-95 transition-all flex items-center justify-center gap-1.5 touch-target shadow-2xs',
-            t.id === 'all' ? 'px-3.5 py-2 text-xs font-bold' : 'p-2.5',
+            t.id === 'all' ? 'px-3 py-2 text-sm font-bold' : 'p-2',
             filterType === t.id
               ? t.id === 'all' ? 'bg-brand-dark text-white border-brand-dark' : 'bg-[#c5d7be] text-brand-dark border-brand-border'
               : 'bg-white text-gray-700 border-gray-400'
           ]"
         >
-          <component :is="t.icon" class="w-4 h-4 stroke-[2.5]" aria-hidden="true" />
+          <component :is="t.icon" class="w-5 h-5 stroke-[2.5]" aria-hidden="true" />
           <span v-if="t.id === 'all'">Todo</span>
         </button>
         <button
@@ -190,16 +190,16 @@ function verTodas() {
           aria-label="Buscar solicitudes"
           :aria-pressed="mostrarBusqueda"
           :class="[
-            'p-2.5 rounded-2xl border active:scale-95 transition-all touch-target shadow-2xs',
+            'p-2 rounded-2xl border active:scale-95 transition-all touch-target shadow-2xs',
             mostrarBusqueda ? 'bg-[#c5d7be] text-brand-dark border-brand-border' : 'bg-white text-gray-700 border-gray-400'
           ]"
         >
-          <Search class="w-4 h-4 stroke-[2.5]" aria-hidden="true" />
+          <Search class="w-5 h-5 stroke-[2.5]" aria-hidden="true" />
         </button>
       </div>
 
       <div v-if="mostrarBusqueda" class="relative">
-        <Search class="w-4 h-4 text-gray-700 absolute left-3.5 top-1/2 -translate-y-1/2 stroke-[2.5]" aria-hidden="true" />
+        <Search class="w-5 h-5 text-gray-700 absolute left-3.5 top-1/2 -translate-y-1/2 stroke-[2.5]" aria-hidden="true" />
         <input
           type="text"
           v-model="searchQuery"
@@ -212,13 +212,13 @@ function verTodas() {
 
     <!-- Cuántas se ven y exportar a Excel (SCRUM-275) -->
     <div class="flex items-center justify-between gap-2 px-1">
-      <span class="text-sm text-gray-700">{{ filteredRequests.length }} {{ filteredRequests.length === 1 ? 'solicitud' : 'solicitudes' }}</span>
+      <span class="text-base text-gray-600">{{ filteredRequests.length }} {{ filteredRequests.length === 1 ? 'solicitud' : 'solicitudes' }}</span>
       <button
         type="button"
         @click="exportando = true"
-        class="px-3 py-2 rounded-2xl border border-gray-400 bg-white text-sm font-bold text-gray-800 flex items-center gap-1.5 active:scale-95 transition-all touch-target shadow-2xs"
+        class="px-3 py-2 rounded-2xl border border-gray-400 bg-white text-base font-bold text-gray-800 flex items-center gap-1.5 active:scale-95 transition-all touch-target shadow-2xs"
       >
-        <FileSpreadsheet class="w-4 h-4 stroke-[2.5]" aria-hidden="true" /> Exportar a Excel
+        <FileSpreadsheet class="w-5 h-5 stroke-[2.5]" aria-hidden="true" /> Exportar a Excel
       </button>
     </div>
 
@@ -229,12 +229,12 @@ function verTodas() {
       @click="alternarPorMover"
       :aria-pressed="soloPorMover"
       :class="[
-        'w-full px-4 py-2.5 rounded-2xl border text-left text-sm font-bold flex items-center justify-between gap-2 touch-target active:scale-[0.99] transition-all',
+        'w-full px-4 py-2.5 rounded-2xl border text-left text-base font-bold flex items-center justify-between gap-2 touch-target active:scale-[0.99] transition-all',
         soloPorMover ? 'bg-status-danger text-white border-status-danger' : 'bg-rose-50 text-rose-950 border-status-danger'
       ]"
     >
       <span>{{ cantidadPorMover }} {{ cantidadPorMover === 1 ? 'pendiente por mover' : 'pendientes por mover' }} de fecha</span>
-      <span class="text-xs">{{ soloPorMover ? 'Ver todas' : 'Ver solo estas' }}</span>
+      <span class="text-sm font-normal shrink-0">{{ soloPorMover ? 'Ver todas' : 'Ver solo estas' }}</span>
     </button>
 
     <div class="space-y-3">
@@ -252,7 +252,7 @@ function verTodas() {
 
       <div v-if="filteredRequests.length === 0" class="bg-white p-8 rounded-3xl border-2 border-brand-border shadow-xs text-center space-y-3">
         <Inbox class="w-8 h-8 text-gray-600 mx-auto stroke-[2]" aria-hidden="true" />
-        <p class="text-base font-bold text-gray-800">{{ emptyMessage }}</p>
+        <p class="text-base text-gray-700">{{ emptyMessage }}</p>
         <BaseButton
           v-if="(filterStatus || soloPorMover) && requestsStore.requests.length > 0"
           variant="outline"
