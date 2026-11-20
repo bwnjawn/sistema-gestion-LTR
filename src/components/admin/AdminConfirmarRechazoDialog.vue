@@ -32,8 +32,8 @@ async function rechazar() {
     </p>
     <template #pie>
       <div class="grid grid-cols-2 gap-2">
-        <BaseButton variant="danger" size="md" class="!text-sm" @click="rechazar">Sí, rechazar</BaseButton>
-        <BaseButton variant="outline" size="md" class="!text-sm" @click="emit('close')">No, volver</BaseButton>
+        <BaseButton variant="danger" size="md" class="!text-base" @click="rechazar">Sí, rechazar</BaseButton>
+        <BaseButton variant="outline" size="md" class="!text-base" @click="emit('close')">No, volver</BaseButton>
       </div>
     </template>
   </HojaModal>

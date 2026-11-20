@@ -73,7 +73,7 @@ const config = computed(() => {
     <button aria-label="Cerrar"
       v-if="dismissible"
       type="button"
-      class="text-gray-500 hover:text-gray-800 p-1 rounded-lg touch-target"
+      class="text-gray-600 hover:text-gray-800 p-1 rounded-lg touch-target"
       @click="emit('dismiss')"
     >
       <X class="w-5 h-5" />

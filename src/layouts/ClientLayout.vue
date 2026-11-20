@@ -31,13 +31,13 @@ function goHome() {
 
           <!-- Título con tipografía moderna -->
           <div class="space-y-0.5">
-            <span class="text-xs font-extrabold text-emerald-300 uppercase tracking-widest block leading-none">
+            <span class="text-sm font-bold text-emerald-300 block leading-none">
               Centro Turístico
             </span>
-            <h1 class="text-xl font-black text-white tracking-tight leading-tight font-modern">
+            <h1 class="text-xl font-bold text-white tracking-tight leading-tight font-modern">
               Los Troncos de Repil
             </h1>
-            <span class="text-xs font-bold text-gray-300 block leading-none">
+            <span class="text-sm font-bold text-gray-300 block leading-none">
               Reservas y Servicios
             </span>
           </div>

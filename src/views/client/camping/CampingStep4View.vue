@@ -101,32 +101,32 @@ const { terminar: handleGoHome } = useSalidaReserva()
       <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-4">
         <div class="space-y-0.5">
           <div class="flex items-center justify-between gap-3">
-            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Espacio</p>
+            <p class="text-sm font-bold text-brand-accent">Espacio</p>
             <button type="button" @click="router.push('/camping/paso2')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
           <p class="text-xl font-bold text-brand-dark">{{ nombreEspacio }}</p>
-          <p class="text-sm text-gray-700">{{ store.guestsCount }} personas</p>
+          <p class="text-base text-gray-700">{{ store.guestsCount }} personas</p>
         </div>
         <div class="space-y-0.5 pt-4 border-t border-gray-200">
           <div class="flex items-center justify-between gap-3">
-            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Fechas y modalidad</p>
+            <p class="text-sm font-bold text-brand-accent">Fechas y modalidad</p>
             <button type="button" @click="router.push('/camping/paso1')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
           <p class="text-base font-bold text-brand-dark">{{ formattedScheduleDisplay }}</p>
-          <p class="text-sm text-gray-700">Ingreso {{ horarioCamping.checkIn }} hrs · Salida {{ horarioCamping.checkOut }} hrs{{ isDiario ? ' (mismo día)' : '' }}</p>
+          <p class="text-base text-gray-700">Ingreso {{ horarioCamping.checkIn }} hrs · Salida {{ horarioCamping.checkOut }} hrs{{ isDiario ? ' (mismo día)' : '' }}</p>
         </div>
         <div class="space-y-0.5 pt-4 border-t border-gray-200">
           <div class="flex items-center justify-between gap-3">
-            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Titular</p>
+            <p class="text-sm font-bold text-brand-accent">Titular</p>
             <button type="button" @click="router.push('/camping/paso3')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
           <p class="text-base font-bold text-brand-dark">{{ store.clientName }}</p>
-          <p class="text-sm text-gray-700">{{ store.clientPhone }}</p>
-          <p v-if="store.clientEmail" class="text-sm text-gray-700">{{ store.clientEmail }}</p>
+          <p class="text-base text-gray-700">{{ store.clientPhone }}</p>
+          <p v-if="store.clientEmail" class="text-base text-gray-700">{{ store.clientEmail }}</p>
         </div>
         <div v-if="store.comments" class="pt-4 border-t border-gray-200 space-y-0.5">
-          <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Comentarios</p>
-          <p class="text-sm text-gray-700 italic">"{{ store.comments }}"</p>
+          <p class="text-sm font-bold text-brand-accent">Comentarios</p>
+          <p class="text-base text-gray-700 italic">"{{ store.comments }}"</p>
         </div>
         <div class="pt-4 border-t border-gray-200 space-y-1.5 text-sm text-gray-700">
           <div class="flex justify-between gap-3"><span>{{ store.guestsCount }} personas × {{ isDiario ? '1 día' : nightsCount + ' noche/s' }}</span><span>{{ formatCLP(subtotal) }}</span></div>
@@ -179,29 +179,29 @@ const { terminar: handleGoHome } = useSalidaReserva()
           ¡Solicitud de Camping Registrada!
         </h2>
 
-        <p class="text-sm text-gray-700 leading-relaxed max-w-xs mx-auto">
+        <p class="text-base text-gray-700 leading-relaxed max-w-xs mx-auto">
           Registramos tu solicitud de camping para tu grupo de <strong class="text-brand-dark font-bold">{{ store.guestsCount }} personas</strong>. Te contactaremos al <strong class="text-brand-dark font-bold">{{ store.clientPhone }}</strong>. <span class="block mt-2 text-brand-dark font-bold">Tu solicitud queda pendiente. La fecha se asegura al confirmar y abonar.</span>
         </p>
       </div>
 
       <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm text-gray-700">
         <div class="flex justify-between items-center">
-          <span class="text-gray-500">Servicio:</span>
+          <span class="text-gray-600">Servicio:</span>
           <span class="text-brand-dark font-bold">{{ nombreEspacio }}</span>
         </div>
         <div class="flex justify-between items-start gap-2">
-          <span class="text-gray-500 shrink-0">Fechas y Modalidad:</span>
+          <span class="text-gray-600 shrink-0">Fechas y Modalidad:</span>
           <span class="text-brand-dark font-bold text-right">{{ formattedScheduleDisplay }}</span>
         </div>
         <div class="flex justify-between items-center border-t border-gray-200/60 pt-2 mt-1">
-          <span class="text-gray-500">Total Estimado:</span>
+          <span class="text-gray-600">Total Estimado:</span>
           <span class="text-sm font-bold text-brand-dark">{{ formatCLP(totalWithIva) }}</span>
         </div>
       </div>
 
       <div v-if="depositAmount > 0" class="bg-white p-4 rounded-2xl border-2 border-brand-border text-left space-y-2.5">
         <h3 class="text-base font-bold text-brand-dark">Abono para confirmar: {{ formatCLP(depositAmount) }}</h3>
-        <p class="text-sm text-gray-700">Transfiere dentro de {{ settingsStore.depositDeadlineHours }} horas. El saldo se paga al llegar.</p>
+        <p class="text-base text-gray-700">Transfiere dentro de {{ settingsStore.depositDeadlineHours }} horas. El saldo se paga al llegar.</p>
         <DatosTransferencia />
       </div>
 
@@ -213,7 +213,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
           <span>¿Quieres agregar comida o alojamiento en cabaña?</span>
         </div>
 
-        <p class="text-sm font-normal text-amber-900 leading-relaxed">
+        <p class="text-base font-normal text-amber-900 leading-relaxed">
           Conservamos las fechas y tu grupo de <strong class="text-amber-950 font-bold">{{ store.guestsCount }} personas</strong> para que selecciones tus servicios adicionales sin volver a llenar datos.
         </p>
 

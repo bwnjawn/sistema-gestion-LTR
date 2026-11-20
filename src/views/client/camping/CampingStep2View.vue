@@ -75,8 +75,8 @@ function handleNext() {
       <div class="flex items-center gap-2">
         <Clock class="w-4 h-4 text-brand-accent shrink-0 stroke-[2.5]" />
         <div>
-          <span class="block text-sm uppercase font-black text-gray-500">Horario de Servicio ({{ isDiario ? 'Día' : 'Noche' }}):</span>
-          <span class="text-brand-dark font-black">
+          <span class="block text-sm text-gray-600">Horario de Servicio ({{ isDiario ? 'Día' : 'Noche' }}):</span>
+          <span class="text-brand-dark font-bold">
             {{ formattedScheduleDisplay }}
           </span>
         </div>
@@ -86,7 +86,7 @@ function handleNext() {
     <HorarioCard :titulo="isDiario ? 'Horario del día de campo' : 'Horario de pernoctar'" :ingreso="horario.checkIn" :salida="horario.checkOut" :salida-mismo-dia="isDiario" />
     <!-- Una sola tarjeta: el espacio se asigna por capacidad y no se distingue por tipo -->
     <div v-if="selectedCampingOption" class="space-y-2">
-      <span class="text-sm font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full inline-flex items-center gap-1 border border-emerald-200">
+      <span class="text-sm font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full inline-flex items-center gap-1 border border-emerald-200">
         <CheckCircle2 class="w-3.5 h-3.5 stroke-[2.5]" /> {{ isDiario ? 'Tu día de campo' : 'Espacio asignado para tu grupo' }}
       </span>
 
@@ -101,7 +101,7 @@ function handleNext() {
           <button
             type="button"
             @click.stop="isModalOpen = true"
-            class="w-full py-3 px-4 rounded-xl bg-brand-light border-2 border-brand-dark text-brand-dark font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            class="w-full py-3 px-4 rounded-xl bg-brand-light border-2 border-brand-dark text-brand-dark font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
           >
             <Eye class="w-4 h-4 stroke-[2.5]" />
             Ver detalle
@@ -112,12 +112,12 @@ function handleNext() {
 
     <div v-if="selectedCampingOption" class="bg-brand-dark text-white p-4 rounded-2xl border-2 border-brand-border shadow-xs flex items-center justify-between">
       <div>
-        <span class="text-sm font-extrabold text-emerald-300 uppercase tracking-wider block">
+        <span class="text-sm font-bold text-emerald-300 block">
           Subtotal Neto ({{ guests }} pers. {{ !isDiario ? 'x ' + nightsCount + ' noc.' : '' }})
         </span>
         <span class="text-sm font-bold text-gray-300">{{ isDiario ? NOMBRE_DIA_DE_CAMPO : selectedCampingOption?.name }}</span>
       </div>
-      <span class="text-xl font-black text-white">
+      <span class="text-xl font-bold text-white">
         {{ formatCLP(subtotalNeto) }}
       </span>
     </div>

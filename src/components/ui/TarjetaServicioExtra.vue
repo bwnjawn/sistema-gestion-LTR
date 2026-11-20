@@ -23,7 +23,7 @@ defineEmits<{ (e: 'click'): void }>()
 <template>
   <button
     type="button"
-    class="relative h-36 w-full rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm text-left group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
+    class="relative h-40 w-full rounded-3xl overflow-hidden border-2 border-brand-border shadow-sm text-left group active:scale-98 transition-all touch-target bg-gradient-to-br from-brand-dark to-brand-accent"
     @click="$emit('click')"
   >
     <component
@@ -35,7 +35,7 @@ defineEmits<{ (e: 'click'): void }>()
 
     <div class="absolute bottom-3.5 left-3.5 right-3.5 flex items-end justify-between gap-2 text-white">
       <div class="min-w-0">
-        <h3 class="text-xl font-black leading-tight drop-shadow-sm">{{ titulo }}</h3>
+        <h3 class="text-xl font-bold leading-tight drop-shadow-sm">{{ titulo }}</h3>
         <p class="text-sm font-bold text-gray-200 mt-0.5 leading-tight">{{ subtitulo }}</p>
         <p v-if="nota" class="text-sm font-bold text-amber-200 mt-1 leading-tight">{{ nota }}</p>
       </div>

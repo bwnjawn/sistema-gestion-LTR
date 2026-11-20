@@ -149,7 +149,7 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
 
             <template v-if="!fila.confirmada">
               <!-- Si la fecha ya la ocupa una confirmada, no se ofrece confirmar: solo mover la fecha o rechazar -->
-              <BaseButton v-if="fila.puedeConfirmarse" variant="success" size="md" fullWidth class="!text-sm" @click="confirmar(fila.solicitud.id)">
+              <BaseButton v-if="fila.puedeConfirmarse" variant="success" size="md" fullWidth class="!text-base" @click="confirmar(fila.solicitud.id)">
                 <Check class="w-4 h-4 mr-1 stroke-[3]" aria-hidden="true" /> Confirmar esta
               </BaseButton>
               <p v-else class="text-sm text-rose-950 bg-rose-50 border border-status-danger rounded-xl px-3 py-2">
@@ -183,15 +183,15 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
               <div v-if="rechazandoId === fila.solicitud.id" class="border border-status-danger bg-rose-50 rounded-2xl p-3 space-y-2">
                 <p class="text-sm font-bold text-rose-950">¿Rechazar la solicitud de {{ fila.solicitud.clientName }}? El cliente tendrá que volver a solicitarla.</p>
                 <div class="grid grid-cols-2 gap-2">
-                  <BaseButton variant="danger" size="md" class="!text-sm" @click="rechazar(fila.solicitud.id)">Sí, rechazar</BaseButton>
-                  <BaseButton variant="outline" size="md" class="!text-sm" @click="rechazandoId = null">No, volver</BaseButton>
+                  <BaseButton variant="danger" size="md" class="!text-base" @click="rechazar(fila.solicitud.id)">Sí, rechazar</BaseButton>
+                  <BaseButton variant="outline" size="md" class="!text-base" @click="rechazandoId = null">No, volver</BaseButton>
                 </div>
               </div>
               <div v-else class="grid grid-cols-2 gap-2">
-                <BaseButton variant="primary" size="md" class="!text-sm" @click="editandoId = fila.solicitud.id">
+                <BaseButton variant="primary" size="md" class="!text-base" @click="editandoId = fila.solicitud.id">
                   <Calendar class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Mover fecha
                 </BaseButton>
-                <BaseButton variant="outline" size="md" class="!text-sm !border-status-danger !text-status-danger" @click="rechazandoId = fila.solicitud.id">
+                <BaseButton variant="outline" size="md" class="!text-base !border-status-danger !text-status-danger" @click="rechazandoId = fila.solicitud.id">
                   <X class="w-4 h-4 mr-1.5 stroke-[3]" aria-hidden="true" /> Rechazar
                 </BaseButton>
               </div>
@@ -200,7 +200,7 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
       </div>
 
       <template v-if="!filaEnEdicion" #pie>
-        <BaseButton variant="outline" size="md" fullWidth class="!text-sm" @click="emit('close')">
+        <BaseButton variant="outline" size="md" fullWidth class="!text-base" @click="emit('close')">
           {{ hayConfirmada ? 'Cerrar' : 'Cerrar sin confirmar' }}
         </BaseButton>
       </template>

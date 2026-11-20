@@ -53,13 +53,13 @@ function selectService(service: ServiceType) {
         </div>
 
         <div class="space-y-0.5">
-          <span class="text-sm font-extrabold text-brand-accent uppercase tracking-widest block leading-none">
+          <span class="text-sm font-bold text-brand-accent block leading-none">
             Centro Turístico
           </span>
-          <h1 class="text-xl font-black text-brand-dark tracking-tight leading-tight">
+          <h1 class="text-xl font-bold text-brand-dark tracking-tight leading-tight">
             Los Troncos de Repil
           </h1>
-          <span class="text-sm font-bold text-gray-600 block leading-none">
+          <span class="text-sm text-gray-600 block leading-none">
             Fresia, Región de los Lagos
           </span>
         </div>
@@ -70,7 +70,7 @@ function selectService(service: ServiceType) {
 
       <!-- Título de Sección -->
       <div class="space-y-1">
-        <h2 class="text-xl font-black text-brand-dark tracking-tight">
+        <h2 class="text-xl font-bold text-brand-dark tracking-tight">
           ¿Qué quieres reservar?
         </h2>
       </div>
@@ -86,7 +86,7 @@ function selectService(service: ServiceType) {
 
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
-              <h3 class="text-2xl font-black leading-tight drop-shadow-sm">
+              <h3 class="text-2xl font-bold leading-tight drop-shadow-sm">
                 Cabaña
               </h3>
               <p class="text-sm font-bold text-gray-200 mt-0.5">
@@ -108,7 +108,7 @@ function selectService(service: ServiceType) {
 
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
-              <h3 class="text-2xl font-black leading-tight drop-shadow-sm">
+              <h3 class="text-2xl font-bold leading-tight drop-shadow-sm">
                 Camping
               </h3>
               <p class="text-sm font-bold text-gray-200 mt-0.5">
@@ -130,7 +130,7 @@ function selectService(service: ServiceType) {
 
           <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <div>
-              <h3 class="text-2xl font-black leading-tight drop-shadow-sm">
+              <h3 class="text-2xl font-bold leading-tight drop-shadow-sm">
                 Restaurante
               </h3>
               <p class="text-sm font-bold text-gray-200 mt-0.5">

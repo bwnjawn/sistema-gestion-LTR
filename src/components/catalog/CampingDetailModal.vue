@@ -34,11 +34,11 @@ const imagesList = computed(() => {
     </div>
 
     <div class="flex items-center justify-between p-3 bg-brand-light rounded-2xl border border-brand-border">
-      <span class="text-xs font-black text-brand-dark">Tarifa:</span>
-      <span class="text-base font-black text-brand-accent">{{ formattedPrice }} por persona</span>
+      <span class="text-sm font-bold text-brand-dark">Tarifa:</span>
+      <span class="text-base font-bold text-brand-accent">{{ formattedPrice }} por persona</span>
     </div>
 
-    <div v-if="!diaDeCampo" class="grid grid-cols-2 gap-2 text-xs font-bold text-gray-700">
+    <div v-if="!diaDeCampo" class="grid grid-cols-2 gap-2 text-sm text-gray-700">
       <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-2">
         <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
         <span>Capacidad: {{ site.minCapacity }} - {{ site.maxCapacity }} personas</span>
@@ -49,15 +49,15 @@ const imagesList = computed(() => {
       </div>
     </div>
 
-    <p v-if="site.description" class="text-xs font-medium text-gray-600 leading-relaxed">
+    <p v-if="site.description" class="text-base text-gray-600 leading-relaxed">
       {{ site.description }}
     </p>
 
     <!-- Servicios -->
     <div v-if="site.features && site.features.length > 0" class="space-y-1.5">
-      <h4 class="text-xs font-black text-brand-dark">Servicios e Instalaciones:</h4>
+      <h4 class="text-sm font-bold text-brand-dark">Servicios e Instalaciones:</h4>
       <div class="flex flex-wrap gap-1.5">
-        <span v-for="(feat, idx) in site.features" :key="idx" class="text-xs font-bold text-brand-dark bg-brand-light px-3 py-1 rounded-xl border border-brand-border flex items-center gap-1.5">
+        <span v-for="(feat, idx) in site.features" :key="idx" class="text-sm font-bold text-brand-dark bg-brand-light px-3 py-1 rounded-xl border border-brand-border flex items-center gap-1.5">
           <Check class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
           {{ feat }}
         </span>

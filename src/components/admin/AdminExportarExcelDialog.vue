@@ -92,8 +92,8 @@ const claseOpcion = 'flex items-start gap-3 p-3 rounded-2xl border-2 touch-targe
 
     <template #pie>
       <div class="grid grid-cols-2 gap-2">
-        <BaseButton variant="outline" size="md" class="!text-sm" @click="emit('close')">Cancelar</BaseButton>
-        <BaseButton variant="primary" size="md" class="!text-sm" :disabled="trabajando || total === 0" @click="descargar">
+        <BaseButton variant="outline" size="md" class="!text-base" @click="emit('close')">Cancelar</BaseButton>
+        <BaseButton variant="primary" size="md" class="!text-base" :disabled="trabajando || total === 0" @click="descargar">
           <Download class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> {{ trabajando ? 'Preparando…' : 'Descargar' }}
         </BaseButton>
       </div>

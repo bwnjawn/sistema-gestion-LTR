@@ -21,7 +21,7 @@ const emit = defineEmits<{ (e: 'quitar', item: string): void }>()
       <button
         type="button"
         :aria-label="`Quitar ${item}`"
-        class="w-11 h-11 shrink-0 flex items-center justify-center rounded-lg text-gray-500 active:text-rose-700 active:bg-rose-50"
+        class="w-11 h-11 shrink-0 flex items-center justify-center rounded-lg text-gray-600 active:text-rose-700 active:bg-rose-50"
         @click="emit('quitar', item)"
       >
         <X class="w-5 h-5 stroke-2" />

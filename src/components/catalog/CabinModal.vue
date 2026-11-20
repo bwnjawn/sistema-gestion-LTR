@@ -166,7 +166,7 @@ function close() {
           </button>
 
           <!-- Contador N/M -->
-          <div v-if="cabinImages.length > 0" class="absolute bottom-3 right-3 bg-black/70 text-white text-xs font-black px-3 py-1 rounded-full backdrop-blur-xs">
+          <div v-if="cabinImages.length > 0" class="absolute bottom-3 right-3 bg-black/70 text-white text-sm font-bold px-3 py-1 rounded-full backdrop-blur-xs">
             {{ currentImageIndex + 1 }} / {{ cabinImages.length }}
           </div>
         </div>
@@ -177,33 +177,33 @@ function close() {
         <div class="p-5 space-y-4">
           <div>
             <div class="flex items-center justify-between">
-              <h3 class="text-xl font-black text-brand-dark leading-tight">{{ cabin.name }}</h3>
-              <span class="bg-brand-light text-brand-dark border border-brand-border px-3 py-1 rounded-full font-black text-xs flex items-center gap-1.5">
+              <h3 class="text-xl font-bold text-brand-dark leading-tight">{{ cabin.name }}</h3>
+              <span class="bg-brand-light text-brand-dark border border-brand-border px-3 py-1 rounded-full font-bold text-sm flex items-center gap-1.5">
                 <Users class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
                 Hasta {{ cabin.capacity }} Personas
               </span>
             </div>
-            <p v-if="cabin.bedsDescription" class="text-xs font-black text-brand-accent mt-1 flex items-center gap-1.5">
+            <p v-if="cabin.bedsDescription" class="text-sm font-bold text-brand-accent mt-1 flex items-center gap-1.5">
               <BedDouble class="w-4 h-4 stroke-[2.5]" />
               {{ cabin.bedsDescription }}
             </p>
           </div>
 
           <div v-if="cabin.description" class="space-y-1">
-            <h4 class="text-xs font-black text-gray-700 uppercase tracking-wider">Descripción</h4>
-            <p class="text-xs font-medium text-gray-700 leading-relaxed bg-brand-light p-3 rounded-2xl border border-brand-border">
+            <h4 class="text-sm text-gray-700">Descripción</h4>
+            <p class="text-base text-gray-700 leading-relaxed bg-brand-light p-3 rounded-2xl border border-brand-border">
               {{ cabin.description }}
             </p>
           </div>
 
           <!-- Equipamientos -->
           <div v-if="cabin.features && cabin.features.length > 0" class="space-y-2">
-            <h4 class="text-xs font-black text-gray-700 uppercase tracking-wider">Servicios y Equipamiento</h4>
+            <h4 class="text-sm text-gray-700">Servicios y Equipamiento</h4>
             <div class="flex flex-wrap gap-1.5">
               <span 
                 v-for="(feature, fIdx) in cabin.features" 
                 :key="fIdx"
-                class="bg-brand-light text-brand-dark border border-brand-border px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5"
+                class="bg-brand-light text-brand-dark border border-brand-border px-3 py-1 rounded-xl text-sm font-bold flex items-center gap-1.5"
               >
                 <Check class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
                 {{ feature }}
@@ -214,12 +214,12 @@ function close() {
           <!-- Presupuesto Estimado -->
           <div class="bg-brand-light p-4 rounded-2xl border-2 border-brand-border flex items-center justify-between">
             <div>
-              <span class="text-xs font-black text-gray-700 block uppercase">Tarifa por noche</span>
-              <span class="text-xs font-black text-gray-800">{{ formatCLP(cabin.pricePerNight) }}</span>
+              <span class="text-sm text-gray-700 block">Tarifa por noche</span>
+              <span class="text-sm font-bold text-gray-800">{{ formatCLP(cabin.pricePerNight) }}</span>
             </div>
             <div class="text-right">
-              <span class="text-xs font-black text-brand-accent block uppercase">Total por {{ nightsCount }} Noches</span>
-              <span class="text-lg font-black text-brand-dark">
+              <span class="text-sm font-bold text-brand-accent block">Total por {{ nightsCount }} Noches</span>
+              <span class="text-lg font-bold text-brand-dark">
                 {{ formatCLP(cabin.pricePerNight * nightsCount) }}
               </span>
             </div>

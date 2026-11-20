@@ -58,23 +58,23 @@ function cargarOtra() {
 
     <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm text-gray-700">
       <div class="flex justify-between gap-2">
-        <span class="text-gray-500">Cliente:</span>
+        <span class="text-gray-600">Cliente:</span>
         <span class="text-brand-dark font-bold text-right">{{ store.clientName || 'Sin nombre' }}</span>
       </div>
       <div class="flex justify-between gap-2">
-        <span class="text-gray-500">Teléfono:</span>
+        <span class="text-gray-600">Teléfono:</span>
         <span class="text-brand-dark font-bold text-right">{{ store.clientPhone }}</span>
       </div>
       <div class="flex justify-between gap-2">
-        <span class="text-gray-500">Servicio:</span>
+        <span class="text-gray-600">Servicio:</span>
         <span class="text-brand-dark font-bold text-right">{{ servicio }}</span>
       </div>
       <div class="flex justify-between gap-2">
-        <span class="text-gray-500">Fechas:</span>
+        <span class="text-gray-600">Fechas:</span>
         <span class="text-brand-dark font-bold text-right">{{ fechas }}</span>
       </div>
       <div class="flex justify-between border-t border-gray-200/60 pt-2 mt-1">
-        <span class="text-gray-500">Total:</span>
+        <span class="text-gray-600">Total:</span>
         <span class="text-brand-dark font-bold">{{ formatCLP(total) }}</span>
       </div>
       <p class="text-sm text-gray-700 pt-1">

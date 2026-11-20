@@ -22,7 +22,7 @@ const deadlineHours = computed(() => settingsStore.depositDeadlineHours)
       <ChevronDown class="w-5 h-5 stroke-[2.5] transition-transform group-open:rotate-180" aria-hidden="true" />
     </summary>
     <div class="px-4 pb-4 space-y-3">
-      <p class="text-sm text-gray-700">
+      <p class="text-base text-gray-700">
         Transfiere después de enviar la solicitud: tienes {{ deadlineHours }} horas. El saldo se paga al llegar.
       </p>
       <DatosTransferencia />

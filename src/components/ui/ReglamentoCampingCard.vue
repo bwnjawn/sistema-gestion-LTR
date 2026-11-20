@@ -31,6 +31,6 @@ function alTocar(evento: Event) {
       <span class="block font-bold text-brand-dark">Reglamento del camping</span>
       <span class="block text-sm text-gray-600">Léelo antes de venir. Se abre en PDF.</span>
     </span>
-    <ExternalLink class="w-5 h-5 shrink-0 text-gray-500" aria-hidden="true" />
+    <ExternalLink class="w-5 h-5 shrink-0 text-gray-600" aria-hidden="true" />
   </a>
 </template>

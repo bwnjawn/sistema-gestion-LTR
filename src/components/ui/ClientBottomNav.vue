@@ -15,7 +15,7 @@
         ]"
       >
         <IconoBarra :nombre="item.icono" :activo="item.activo" />
-        <span :class="['text-xs', item.activo ? 'font-bold' : 'font-normal']">{{ item.etiqueta }}</span>
+        <span :class="['text-sm', item.activo ? 'font-bold' : 'font-normal']">{{ item.etiqueta }}</span>
       </button>
     </div>
   </nav>

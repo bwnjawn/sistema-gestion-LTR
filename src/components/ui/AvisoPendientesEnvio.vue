@@ -24,7 +24,7 @@ const texto = computed(() => {
   >
     <CloudOff class="w-6 h-6 stroke-[2.5] shrink-0" aria-hidden="true" />
     <span class="grow min-w-0">
-      <span class="block text-sm font-black">{{ texto }}</span>
+      <span class="block text-sm font-bold">{{ texto }}</span>
       <span class="block text-sm font-bold">Toca para verla</span>
     </span>
   </RouterLink>

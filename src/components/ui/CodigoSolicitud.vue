@@ -16,7 +16,7 @@ defineProps<{ codigo: string }>()
   </div>
 
   <div v-else role="status" class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 text-left space-y-1.5 text-amber-950">
-    <p class="flex items-center gap-2 text-sm font-black">
+    <p class="flex items-center gap-2 text-sm font-bold">
       <CloudOff class="w-5 h-5 stroke-[2.5] shrink-0" aria-hidden="true" />
       Guardada en este teléfono
     </p>
@@ -24,6 +24,6 @@ defineProps<{ codigo: string }>()
       No hay señal, así que tu solicitud todavía no llegó. Se enviará sola cuando vuelva la conexión y ahí recibirás su código.
       Mantén la aplicación abierta o vuelve a abrirla con señal.
     </p>
-    <RouterLink to="/pendientes" class="inline-block text-sm font-black underline py-1">Ver solicitudes por enviar</RouterLink>
+    <RouterLink to="/pendientes" class="inline-block text-sm font-bold underline py-1">Ver solicitudes por enviar</RouterLink>
   </div>
 </template>

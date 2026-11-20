@@ -70,8 +70,8 @@ function nextStep() {
     <StepIndicator :current-step="2" />
 
     <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-1">
-      <h2 class="text-base font-black text-brand-dark">Selecciona tu Cabaña</h2>
-      <p class="text-sm font-medium text-gray-600">
+      <h2 class="text-base font-bold text-brand-dark">Selecciona tu Cabaña</h2>
+      <p class="text-base text-gray-600">
         <template v-if="reservationStore.isAdminMode">
           Cabañas para {{ reservationStore.guestsCount }} personas. Si una tiene solicitudes pendientes en esas fechas, se avisa y tu reserva queda pendiente. Las confirmadas no se ofrecen.
         </template>
@@ -97,7 +97,7 @@ function nextStep() {
           <template #actions>
             <p
               v-if="cruces(cabin).length > 0"
-              class="mb-2 rounded-xl border-2 border-amber-600 bg-amber-50 px-3 py-2 text-sm font-black text-amber-900"
+              class="mb-2 rounded-xl border-2 border-amber-600 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-900"
             >
               Hay una solicitud pendiente en estas fechas ({{ cruces(cabin).join(', ') }}). Tu reserva quedará pendiente.
             </p>
@@ -105,7 +105,7 @@ function nextStep() {
               <button
                 type="button"
                 @click.stop="openCabinDetail(cabin)"
-                class="flex-1 py-3 px-3 rounded-xl bg-brand-light border-2 border-brand-dark text-brand-dark font-black text-sm flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                class="flex-1 py-3 px-3 rounded-xl bg-brand-light border-2 border-brand-dark text-brand-dark font-bold text-sm flex items-center justify-center gap-1.5 transition-all active:scale-95"
               >
                 <Eye class="w-4 h-4 stroke-[2.5]" />
                 Ver detalle
@@ -114,7 +114,7 @@ function nextStep() {
                 type="button"
                 @click.stop="selectCabin(cabin)"
                 :class="[
-                  'flex-[1.5] py-3 px-3 rounded-xl font-black text-sm transition-all active:scale-95',
+                  'flex-[1.5] py-3 px-3 rounded-xl font-bold text-sm transition-all active:scale-95',
                   reservationStore.selectedCabinId === cabin.id
                     ? 'bg-brand-accent text-white shadow-2xs'
                     : 'bg-brand-dark text-white hover:bg-brand-dark/90'
@@ -129,7 +129,7 @@ function nextStep() {
     </div>
 
     <div v-else class="bg-white p-6 rounded-3xl border-2 border-brand-border text-center space-y-2">
-      <p class="text-sm font-bold text-gray-600">
+      <p class="text-base text-gray-600">
         No se encontraron cabañas disponibles o con capacidad suficiente para {{ reservationStore.guestsCount }} personas en las fechas seleccionadas.
         <template v-if="reservationStore.isAdminMode"> Las cabañas en mantención no se ofrecen: desactiva la marca desde el Catálogo.</template>
       </p>

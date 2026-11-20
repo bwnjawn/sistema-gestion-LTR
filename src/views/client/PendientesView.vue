@@ -39,8 +39,8 @@ async function descartar() {
 
     <main class="space-y-4 max-w-md mx-auto w-full px-4 pt-4 pb-contenido-nav">
       <div v-if="cola.entradas.length === 0" class="bg-white p-5 rounded-3xl border-2 border-brand-border text-center space-y-2">
-        <p class="text-base font-black text-brand-dark">No tienes solicitudes por enviar</p>
-        <p class="text-sm font-bold text-gray-700">Las que hagas sin señal aparecerán aquí hasta que lleguen.</p>
+        <p class="text-base font-bold text-brand-dark">No tienes solicitudes por enviar</p>
+        <p class="text-base text-gray-700">Las que hagas sin señal aparecerán aquí hasta que lleguen.</p>
       </div>
 
       <template v-else>
@@ -67,9 +67,9 @@ async function descartar() {
         >
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <h2 class="text-lg font-black text-brand-dark leading-tight truncate">{{ e.solicitud.resourceName }}</h2>
-              <p class="text-sm font-bold text-gray-700">{{ resumen(e) }}</p>
-              <p class="text-sm text-gray-600">Guardada el {{ formatDateTime(e.encoladaEn) }}</p>
+              <h2 class="text-lg font-bold text-brand-dark leading-tight truncate">{{ e.solicitud.resourceName }}</h2>
+              <p class="text-base text-gray-700">{{ resumen(e) }}</p>
+              <p class="text-base text-gray-600">Guardada el {{ formatDateTime(e.encoladaEn) }}</p>
             </div>
             <button
               type="button"
@@ -81,7 +81,7 @@ async function descartar() {
             </button>
           </div>
 
-          <p v-if="e.estado === 'pendiente'" class="flex items-center gap-2 text-sm font-black text-amber-900">
+          <p v-if="e.estado === 'pendiente'" class="flex items-center gap-2 text-sm font-bold text-amber-900">
             <CloudOff class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
             Esperando señal
           </p>
@@ -93,7 +93,7 @@ async function descartar() {
             </BaseAlert>
             <a
               :href="'tel:' + settingsStore.phone1Clean"
-              class="flex items-center justify-center gap-2 min-h-12 rounded-2xl border-2 border-brand-border text-sm font-black text-brand-dark active:scale-95"
+              class="flex items-center justify-center gap-2 min-h-12 rounded-2xl border-2 border-brand-border text-sm font-bold text-brand-dark active:scale-95"
             >
               <Phone class="w-4 h-4 stroke-[2.5]" aria-hidden="true" />
               Llamar al {{ settingsStore.contactInfo.phone1 }}

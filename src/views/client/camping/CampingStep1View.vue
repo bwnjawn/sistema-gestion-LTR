@@ -140,7 +140,7 @@ function handleNext() {
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       
       <div class="space-y-2">
-        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm text-gray-600 flex items-center gap-1.5">
           <Tent class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Tipo de Visita
         </label>
@@ -158,11 +158,11 @@ function handleNext() {
           >
             <div class="flex items-center justify-between mb-2">
               <Moon class="w-5 h-5 text-brand-accent stroke-[2.5]" />
-              <span v-if="campingType === 'pernoctar'" class="text-sm font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
+              <span v-if="campingType === 'pernoctar'" class="text-sm font-bold bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
             </div>
             <div>
-              <span class="text-sm font-black block">Pernoctar</span>
-              <span class="text-sm font-semibold text-gray-300 block">Con carpa (por noche)</span>
+              <span class="text-sm font-bold block">Pernoctar</span>
+              <span class="text-sm font-bold text-gray-300 block">Con carpa (por noche)</span>
             </div>
           </button>
 
@@ -178,18 +178,18 @@ function handleNext() {
           >
             <div class="flex items-center justify-between mb-2">
               <Sun class="w-5 h-5 text-amber-500 stroke-[2.5]" />
-              <span v-if="campingType === 'diario'" class="text-sm font-black uppercase bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
+              <span v-if="campingType === 'diario'" class="text-sm font-bold bg-brand-accent px-2 py-0.5 rounded-full text-white">Activo</span>
             </div>
             <div>
-              <span class="text-sm font-black block">Paseo por el Día</span>
-              <span class="text-sm font-semibold text-gray-300 block">Uso diario sin carpa</span>
+              <span class="text-sm font-bold block">Paseo por el Día</span>
+              <span class="text-sm font-bold text-gray-300 block">Uso diario sin carpa</span>
             </div>
           </button>
         </div>
       </div>
 
       <div class="space-y-2 pt-2 border-t-2 border-gray-100">
-        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider">
+        <label class="block text-sm text-gray-600">
           Selecciona Fecha ({{ campingType === 'diario' ? 'Día de visita' : 'Llegada - Salida' }})
         </label>
         <BaseCalendar 
@@ -212,7 +212,7 @@ function handleNext() {
       </div>
 
       <div class="pt-3 border-t-2 border-gray-100 space-y-2">
-        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm text-gray-600 flex items-center gap-1.5">
           <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Cantidad de Visitantes
         </label>
@@ -221,7 +221,7 @@ function handleNext() {
           <button
             type="button"
             @click="decrementGuests"
-            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-black text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
+            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-bold text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
           >
             -
           </button>
@@ -235,9 +235,9 @@ function handleNext() {
               @blur="handleGuestsBlur"
               min="1"
               max="150"
-              class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
+              class="w-20 text-center text-3xl font-bold text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
-            <span class="text-sm font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
+            <span class="text-sm text-gray-600 mt-1 block text-center">
               {{ store.guestsCount === 1 ? 'Persona' : 'Personas' }}
             </span>
           </div>
@@ -245,7 +245,7 @@ function handleNext() {
           <button
             type="button"
             @click="incrementGuests"
-            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-black text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
+            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-bold text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
           >
             +
           </button>

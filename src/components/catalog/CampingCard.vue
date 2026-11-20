@@ -31,7 +31,7 @@ const displayImage = computed(() => {
     <!-- Imagen -->
     <div class="relative h-44 sm:h-48 w-full bg-gray-100 overflow-hidden">
       <img :src="displayImage" :alt="site.name" class="w-full h-full object-cover" />
-      <div class="absolute top-3 right-3 bg-brand-dark/90 text-white px-3 py-1 rounded-full font-black text-sm">
+      <div class="absolute top-3 right-3 bg-brand-dark/90 text-white px-3 py-1 rounded-full font-bold text-sm">
         {{ formattedPrice }} por persona
       </div>
     </div>
@@ -39,14 +39,14 @@ const displayImage = computed(() => {
     <!-- Contenido -->
     <div class="p-4 sm:p-5 flex flex-col justify-between grow space-y-3">
       <div>
-        <h3 class="text-base sm:text-lg font-black text-brand-dark leading-tight mb-1">{{ diaDeCampo ? NOMBRE_DIA_DE_CAMPO : site.name }}</h3>
+        <h3 class="text-base sm:text-lg font-bold text-brand-dark leading-tight mb-1">{{ diaDeCampo ? NOMBRE_DIA_DE_CAMPO : site.name }}</h3>
 
-        <p v-if="site.description && !compacta" class="text-sm font-medium text-gray-600 line-clamp-2 mb-2">
+        <p v-if="site.description && !compacta" class="text-base text-gray-600 line-clamp-2 mb-2">
           {{ site.description }}
         </p>
 
         <!-- Capacidad y Modalidad -->
-        <div v-if="!diaDeCampo" class="flex flex-wrap items-center gap-2 text-sm font-bold text-gray-700 py-1">
+        <div v-if="!diaDeCampo" class="flex flex-wrap items-center gap-2 text-sm text-gray-700 py-1">
           <div class="flex items-center gap-1.5 bg-brand-light px-2.5 py-1 rounded-xl border border-brand-border/60">
             <Users class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
             <span>{{ site.minCapacity }} a {{ site.maxCapacity }} personas</span>
@@ -62,7 +62,7 @@ const displayImage = computed(() => {
           <span
             v-for="(feat, idx) in site.features"
             :key="idx"
-            class="text-sm font-extrabold text-brand-dark bg-gray-100 px-2.5 py-0.5 rounded-lg border border-gray-200 flex items-center gap-1"
+            class="text-sm font-bold text-brand-dark bg-gray-100 px-2.5 py-0.5 rounded-lg border border-gray-200 flex items-center gap-1"
           >
             <Check class="w-3 h-3 text-brand-accent stroke-[2.5]" />
             {{ feat }}
@@ -78,7 +78,7 @@ const displayImage = computed(() => {
             type="button"
             @click="emit('select', site)"
             :class="[
-              'w-full py-2.5 px-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 active:scale-95',
+              'w-full py-2.5 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 active:scale-95',
               isSelected ? 'bg-brand-accent text-white shadow-2xs' : 'bg-brand-dark text-white hover:bg-brand-dark/90'
             ]"
           >
