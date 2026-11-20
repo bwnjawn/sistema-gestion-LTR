@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import HojaModal from '../../components/ui/HojaModal.vue'
 import { ref, computed } from 'vue'
 import { 
   Home, Tent, Utensils, Plus, Trash2, AlertTriangle, Pencil, Wrench, X, Check
@@ -231,7 +231,6 @@ function executeDelete() {
 
   deleteTarget.value = null
 }
-useBloqueoScroll(computed(() => !!deleteTarget.value))
 </script>
 
 <template>
@@ -391,21 +390,15 @@ useBloqueoScroll(computed(() => !!deleteTarget.value))
     <CampingModal :is-open="showCampingModal" :site="selectedCamping" :is-editable="true" @close="showCampingModal = false" @save="saveCamping" />
     <DishModal :is-open="showDishModal" :dish="selectedDish" :is-editable="true" :global-side-dishes="catalogStore.sideDishes" @close="showDishModal = false" @save="saveDish" @add-global-side="handleGlobalSideAdded" />
 
-    <!-- MODAL CONFIRMACIÓN ELIMINAR -->
-    <div v-if="deleteTarget" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl p-5 border-2 border-brand-border shadow-2xl max-w-xs w-full space-y-4 text-center">
-        <div class="w-12 h-12 bg-rose-100 text-rose-700 rounded-full flex items-center justify-center mx-auto">
-          <AlertTriangle class="w-6 h-6 stroke-[2.5]" />
+    <!-- Confirmación de eliminar -->
+    <HojaModal v-if="deleteTarget" :abierto="true" titulo="¿Eliminar registro?" ocultar-cierre @cerrar="deleteTarget = null">
+      <p class="text-base text-gray-700">Estás a punto de borrar <strong class="font-bold">"{{ deleteTarget.name }}"</strong>. Esta acción no se puede deshacer.</p>
+      <template #pie>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" class="py-3.5 rounded-2xl border border-brand-dark bg-white text-brand-dark font-bold" @click="deleteTarget = null">Cancelar</button>
+          <button type="button" class="py-3.5 rounded-2xl bg-rose-600 text-white font-bold" @click="executeDelete">Eliminar</button>
         </div>
-        <div class="space-y-1">
-          <h3 class="text-base font-black text-brand-dark">¿Eliminar registro?</h3>
-          <p class="text-xs font-bold text-gray-600">Estás a punto de borrar <strong>"{{ deleteTarget.name }}"</strong>. Esta acción no se puede deshacer.</p>
-        </div>
-        <div class="flex gap-2 pt-2">
-          <button type="button" @click="deleteTarget = null" class="flex-1 py-2.5 bg-brand-light border border-brand-border rounded-xl font-black text-xs text-brand-dark">Cancelar</button>
-          <button type="button" @click="executeDelete" class="flex-1 py-2.5 bg-rose-600 text-white rounded-xl font-black text-xs shadow-2xs">Eliminar</button>
-        </div>
-      </div>
-    </div>
+      </template>
+    </HojaModal>
   </div>
 </template>

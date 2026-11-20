@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
-import { ref, watch, computed } from 'vue'
-import { X, Save, Phone, Mail, MapPin, Globe, Instagram } from 'lucide-vue-next'
+import { ref, watch } from 'vue'
 import { useSettingsStore } from '../../stores/settingsStore'
-import BaseButton from '../ui/BaseButton.vue'
+import HojaModal from '../ui/HojaModal.vue'
 import { buildWebsiteUrl, buildInstagramUrl, cleanInstagramUser, buildMapsUrl, buildMapEmbedUrl } from '../../lib/contactLinks'
 
 const props = defineProps<{
@@ -59,108 +57,33 @@ async function handleSave() {
   })
   if (guardado) emit('close')
 }
-useBloqueoScroll(computed(() => props.isOpen))
 </script>
 
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 bg-brand-dark/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-5 max-w-sm w-full border-2 border-brand-border shadow-2xl space-y-4 max-h-[90dvh] overflow-y-auto">
-      
-      <!-- Encabezado del Modal -->
-      <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-        <h3 class="text-sm font-black text-brand-dark uppercase tracking-wider flex items-center gap-1.5">
-          <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          Datos de contacto
-        </h3>
-        <button aria-label="Cerrar" type="button" @click="emit('close')" class="p-1 text-gray-500 hover:bg-gray-100 rounded-full">
-          <X class="w-5 h-5 stroke-[2.5]" />
-        </button>
-      </div>
-
-      <!-- Formulario -->
-      <form @submit.prevent="handleSave" class="space-y-3 text-xs font-bold">
-        <div>
-          <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
-            <Phone class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Teléfono principal
-          </label>
-          <input 
-            v-model="form.phone1" 
-            type="text" 
-            class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs" 
-          />
-        </div>
-
-        <div>
-          <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
-            <Phone class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Teléfono secundario (opcional)
-          </label>
-          <input 
-            v-model="form.phone2" 
-            type="text" 
-            class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs" 
-          />
-        </div>
-
-        <div>
-          <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
-            <Mail class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Correo electrónico
-          </label>
-          <input 
-            v-model="form.email" 
-            type="email" 
-            class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs" 
-          />
-        </div>
-
-        <div>
-          <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
-            <MapPin class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Dirección
-          </label>
-          <input 
-            v-model="form.address" 
-            type="text" 
-            class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs" 
-          />
-        </div>
-
-        <div>
-          <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
-            <Globe class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Sitio web
-          </label>
-          <input 
-            v-model="form.websiteDisplay" 
-            type="text" 
-            class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs" 
-          />
-        </div>
-
-        <div>
-          <label class="block text-gray-700 mb-1 flex items-center gap-1.5">
-            <Instagram class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            Usuario de Instagram
-          </label>
-          <input 
-            v-model="form.instagramUser" 
-            type="text" 
-            class="w-full p-3 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-xs" 
-          />
-        </div>
-
-        <div class="flex gap-2 pt-2">
-          <BaseButton variant="outline" class="flex-1" type="button" @click="emit('close')">
-            Cancelar
-          </BaseButton>
-          <BaseButton variant="primary" class="flex-1" type="submit">
-            <Save class="w-4 h-4 mr-1 stroke-[2.5]" /> Guardar
-          </BaseButton>
-        </div>
-      </form>
-
+  <HojaModal :abierto="isOpen" titulo="Datos de contacto" texto-guardar="Guardar" @cerrar="emit('close')" @guardar="handleSave">
+    <div>
+      <label for="contacto-phone1" class="campo-etiqueta">Teléfono principal</label>
+      <input id="contacto-phone1" v-model="form.phone1" type="text" class="campo-entrada" />
     </div>
-  </div>
+    <div>
+      <label for="contacto-phone2" class="campo-etiqueta">Teléfono secundario (opcional)</label>
+      <input id="contacto-phone2" v-model="form.phone2" type="text" class="campo-entrada" />
+    </div>
+    <div>
+      <label for="contacto-email" class="campo-etiqueta">Correo electrónico</label>
+      <input id="contacto-email" v-model="form.email" type="email" class="campo-entrada" />
+    </div>
+    <div>
+      <label for="contacto-address" class="campo-etiqueta">Dirección</label>
+      <input id="contacto-address" v-model="form.address" type="text" class="campo-entrada" />
+    </div>
+    <div>
+      <label for="contacto-websiteDisplay" class="campo-etiqueta">Sitio web</label>
+      <input id="contacto-websiteDisplay" v-model="form.websiteDisplay" type="text" class="campo-entrada" />
+    </div>
+    <div>
+      <label for="contacto-instagramUser" class="campo-etiqueta">Usuario de Instagram</label>
+      <input id="contacto-instagramUser" v-model="form.instagramUser" type="text" class="campo-entrada" />
+    </div>
+  </HojaModal>
 </template>

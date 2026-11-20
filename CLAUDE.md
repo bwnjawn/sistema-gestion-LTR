@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Convenciones de Desarrollo
 - Idioma: Todos los textos de la interfaz (UI), nombres de dominio y comentarios deben estar en español.
 - Diseño: Usa Tailwind v3. Mantén alta legibilidad usando los colores tierra/verde del proyecto y la fuente Atkinson Hyperlegible.
+- Modales: todo modal (formularios, detalles y confirmaciones) usa `src/components/ui/HojaModal.vue`: hoja que sube desde abajo en el teléfono, fondo negro al 40 % sin color ni desenfoque, título y botones fijos y contenido con scroll. No escribir `fixed inset-0` a mano. La única excepción son las ayudas "?" (`ModalAyuda`), que van en una caja centrada.
 - Lógica de Negocio: Mantén las vistas (`.vue`) ligeras. Toda la lógica de negocio (disponibilidad, precios) debe ir en `src/services/`.
 - Estado de Wizard: El estado de los formularios paso a paso vive en `stores/reservationStore.ts` y debe persistirse en `sessionStorage` (`ltr_wizard_draft`).
 

@@ -3,9 +3,9 @@
 // Muestra el grupo completo de solicitudes que compiten y deja elegir cuál confirmar. Nada se rechaza solo:
 // para las que no quedan confirmadas, el administrador contacta al cliente, mueve la fecha o rechaza.
 import { computed, ref, watch } from 'vue'
-import { AlertTriangle, Calendar, Check, Mail, MessageCircle, Phone, X } from 'lucide-vue-next'
+import { Calendar, Check, Mail, MessageCircle, Phone, X } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import HojaModal from '../ui/HojaModal.vue'
 import AdminRequestEditForm from './AdminRequestEditForm.vue'
 import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
 import EstadoSolicitud from './EstadoSolicitud.vue'
@@ -94,56 +94,31 @@ async function rechazar(id: string) {
   rechazandoId.value = null
 }
 
-useBloqueoScroll(computed(() => !!props.requestId))
 
 const claseSalida = 'py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1 border-2 touch-target'
 const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-events-none'
 </script>
 
 <template>
-  <div
-    v-if="requestId"
-    class="fixed inset-0 z-[60] bg-black/60 flex items-end sm:items-center justify-center sm:p-4"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Solicitudes que se cruzan"
-  >
-    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full border-2 border-brand-border shadow-2xl max-h-[92dvh] flex flex-col">
+  <template v-if="requestId">
+    <HojaModal
+      :abierto="true"
+      :titulo="filaEnEdicion ? `Mover la fecha de ${filaEnEdicion.solicitud.clientName}` : 'Solicitudes que se cruzan'"
+      :subtitulo="filaEnEdicion ? 'Los días ocupados por reservas confirmadas no se pueden elegir.' : 'Elige cuál se queda con la fecha. Nada se rechaza solo.'"
+      :nivel="60"
+      :cerrar-al-tocar-fuera="false"
+      @cerrar="emit('close')"
+    >
       <!-- Mover la fecha: es un paso aparte, con su propio botón de guardar -->
-      <template v-if="filaEnEdicion">
-        <div class="p-4 border-b-2 border-brand-border/60">
-          <h2 class="text-lg font-bold text-brand-dark leading-tight">Mover la fecha de {{ filaEnEdicion.solicitud.clientName }}</h2>
-          <p class="text-xs text-gray-700 mt-0.5">Los días ocupados por reservas confirmadas no se pueden elegir.</p>
-        </div>
-        <div class="overflow-y-auto p-4">
-          <AdminRequestEditForm
-            :request="filaEnEdicion.solicitud"
-            solo-fecha
-            @saved="editandoId = null"
-            @cancel="editandoId = null"
-          />
-        </div>
-      </template>
+      <AdminRequestEditForm
+        v-if="filaEnEdicion"
+        :request="filaEnEdicion.solicitud"
+        solo-fecha
+        @saved="editandoId = null"
+        @cancel="editandoId = null"
+      />
 
-      <template v-else>
-        <div class="flex items-start justify-between gap-3 p-4 border-b-2 border-brand-border/60">
-          <div class="min-w-0">
-            <h2 class="text-lg font-bold text-brand-dark leading-tight flex items-center gap-1.5">
-              <AlertTriangle class="w-5 h-5 text-status-danger stroke-[2.5] shrink-0" aria-hidden="true" /> Solicitudes que se cruzan
-            </h2>
-            <p class="text-xs text-gray-700 mt-0.5">Elige cuál se queda con la fecha. Nada se rechaza solo.</p>
-          </div>
-          <button
-            type="button"
-            @click="emit('close')"
-            aria-label="Cerrar"
-            class="w-10 h-10 rounded-full bg-brand-light border-2 border-brand-border text-brand-dark active:scale-95 transition-transform flex items-center justify-center shrink-0"
-          >
-            <X class="w-5 h-5 stroke-[2.5]" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div class="overflow-y-auto p-4 space-y-3">
+      <div v-else class="space-y-3">
           <p v-if="filas.length === 0" class="text-sm font-bold text-emerald-950 bg-emerald-50 border border-status-success rounded-2xl p-3">
             Ya no hay cruces. Cierra este aviso y aprueba la solicitud con normalidad.
           </p>
@@ -222,16 +197,15 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
               </div>
             </section>
           </article>
-        </div>
+      </div>
 
-        <div class="p-4 border-t-2 border-brand-border/60 bg-white rounded-b-3xl">
-          <BaseButton variant="outline" size="md" fullWidth class="!text-sm" @click="emit('close')">
-            {{ hayConfirmada ? 'Cerrar' : 'Cerrar sin confirmar' }}
-          </BaseButton>
-        </div>
+      <template v-if="!filaEnEdicion" #pie>
+        <BaseButton variant="outline" size="md" fullWidth class="!text-sm" @click="emit('close')">
+          {{ hayConfirmada ? 'Cerrar' : 'Cerrar sin confirmar' }}
+        </BaseButton>
       </template>
-    </div>
+    </HojaModal>
 
     <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="confirmarIgual" @close="sinAbonoId = null" />
-  </div>
+  </template>
 </template>

@@ -8,7 +8,7 @@ import ModalAyuda from '../components/ui/ModalAyuda.vue'
 import { ayudaDelPaso } from '../components/ui/ayudasCliente'
 import { useSalidaReserva } from '../composables/useSalidaReserva'
 import { useReservationStore } from '../stores/reservationStore'
-import { useBloqueoScroll } from '../composables/useBloqueoScroll'
+import HojaModal from '../components/ui/HojaModal.vue'
 import { WIZARD_STEPS } from '../services/wizard'
 import type { ServiceType } from '../types/domain'
 
@@ -66,7 +66,6 @@ const conAyuda = computed(() => ayuda.value !== null)
 
 // Salir: si ya hay datos se pregunta si guardarlos o borrarlos
 const confirmando = ref(false)
-useBloqueoScroll(confirmando)
 
 const { terminar: salirAlPanel } = useSalidaReserva()
 
@@ -120,25 +119,13 @@ function salirBorrando() {
     </ModalAyuda>
 
     <!-- Confirmación al salir con datos escritos -->
-    <div
-      v-if="confirmando"
-      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-      @click.self="confirmando = false"
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="titulo-salir"
-        class="bg-white w-full max-w-sm rounded-3xl border-2 border-brand-border shadow-2xl p-5 space-y-4 max-h-[90dvh] overflow-y-auto"
-      >
-        <div class="space-y-1">
-          <h2 id="titulo-salir" class="text-xl font-black text-brand-dark">¿Salir de la reserva?</h2>
-          <p class="text-base font-bold text-gray-700">
-            {{ store.isAdminMode
-              ? 'Ya cargaste algunos datos. Si sales, se borran.'
-              : 'Ya elegiste algunos datos. Puedes guardarlos para seguir después o borrarlos.' }}
-          </p>
-        </div>
+    <HojaModal :abierto="confirmando" titulo="¿Salir de la reserva?" ocultar-cierre @cerrar="confirmando = false">
+      <p class="text-base text-gray-700">
+        {{ store.isAdminMode
+          ? 'Ya cargaste algunos datos. Si sales, se borran.'
+          : 'Ya elegiste algunos datos. Puedes guardarlos para seguir después o borrarlos.' }}
+      </p>
+      <template #pie>
         <div class="space-y-2.5">
           <BaseButton variant="primary" size="lg" full-width @click="confirmando = false">
             Seguir reservando
@@ -150,7 +137,7 @@ function salirBorrando() {
             Salir y borrar
           </BaseButton>
         </div>
-      </div>
-    </div>
+      </template>
+    </HojaModal>
   </div>
 </template>

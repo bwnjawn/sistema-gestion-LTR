@@ -2,9 +2,8 @@
 // Aviso al aprobar una solicitud a la que aún le falta abono (SCRUM-264).
 // Solo el administrador decide si confirma sin el abono completo; la app solo se lo advierte.
 import { computed } from 'vue'
-import { AlertTriangle } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import HojaModal from '../ui/HojaModal.vue'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
 import { getPaymentSummary } from '../../services/payments'
@@ -22,34 +21,23 @@ const emit = defineEmits<{
 const requestsStore = useRequestsStore()
 const request = computed(() => requestsStore.requests.find(r => r.id === props.requestId) ?? null)
 const payment = computed(() => (request.value ? getPaymentSummary(request.value) : null))
-
-useBloqueoScroll(computed(() => !!request.value))
 </script>
 
 <template>
-  <div
-    v-if="request && payment"
-    class="fixed inset-0 z-[70] bg-black/60 flex items-end sm:items-center justify-center sm:p-4"
-    role="alertdialog"
-    aria-modal="true"
-    aria-label="Falta el abono"
-  >
-    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full border-2 border-brand-border shadow-2xl p-4 space-y-3">
-      <h2 class="text-lg font-bold text-brand-dark flex items-center gap-1.5">
-        <AlertTriangle class="w-6 h-6 text-amber-700 stroke-[2.5] shrink-0" aria-hidden="true" /> Falta el abono
-      </h2>
-      <p class="text-sm text-gray-800">
-        A la solicitud de <strong class="font-bold">{{ request.clientName }}</strong> le faltan
-        <strong class="font-bold">{{ formatCLP(payment.depositPending) }}</strong> para completar el abono exigido de
-        {{ formatCLP(payment.depositRequired) }}.
-      </p>
-      <p class="text-sm text-gray-800">
-        Si la confirmas ahora, retiene las fechas y quedará como "Confirmada sin abono". Puedes anotar el pago antes desde el detalle.
-      </p>
+  <HojaModal v-if="request && payment" :abierto="true" titulo="Falta el abono" ocultar-cierre :nivel="70" @cerrar="emit('close')">
+    <p class="text-base text-gray-800">
+      A la solicitud de <strong class="font-bold">{{ request.clientName }}</strong> le faltan
+      <strong class="font-bold">{{ formatCLP(payment.depositPending) }}</strong> para completar el abono exigido de
+      {{ formatCLP(payment.depositRequired) }}.
+    </p>
+    <p class="text-base text-gray-800">
+      Si la confirmas ahora, retiene las fechas y quedará como "Confirmada sin abono". Puedes anotar el pago antes desde el detalle.
+    </p>
+    <template #pie>
       <div class="grid grid-cols-2 gap-2">
         <BaseButton variant="success" size="md" class="!text-sm" @click="emit('confirm', request.id)">Confirmar igual</BaseButton>
         <BaseButton variant="outline" size="md" class="!text-sm" @click="emit('close')">Volver</BaseButton>
       </div>
-    </div>
-  </div>
+    </template>
+  </HojaModal>
 </template>

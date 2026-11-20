@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, toRef } from 'vue'
+import { computed } from 'vue'
 import { AlertTriangle } from 'lucide-vue-next'
 import BaseButton from './BaseButton.vue'
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import HojaModal from './HojaModal.vue'
 import { useReservationStore } from '../../stores/reservationStore'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { PAYMENT_METHOD_LABELS } from '../../services/payments'
@@ -21,8 +21,6 @@ const emit = defineEmits<{
   (e: 'confirmar'): void
   (e: 'cerrar'): void
 }>()
-
-useBloqueoScroll(toRef(props, 'abierto'))
 
 const store = useReservationStore()
 const settingsStore = useSettingsStore()
@@ -48,80 +46,65 @@ const opciones = computed(() => [
 </script>
 
 <template>
-  <!-- Teleport: el encabezado tiene backdrop-blur y ese efecto encierra a los elementos fijos que lleva dentro -->
-  <Teleport to="body">
-  <div
-    v-if="abierto"
-    class="fixed inset-0 z-[70] bg-black/60 flex items-end sm:items-center justify-center sm:p-4"
-    @click.self="emit('cerrar')"
-    @keydown.esc="emit('cerrar')"
-  >
-  <section
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="estado-reserva-admin"
-    class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full border-2 border-brand-border shadow-2xl p-4 space-y-3 max-h-[90dvh] overflow-y-auto"
-  >
-    <h3 id="estado-reserva-admin" class="text-base font-bold text-brand-dark">¿Cómo queda esta reserva?</h3>
+  <HojaModal :abierto="abierto" titulo="¿Cómo queda esta reserva?" :nivel="70" @cerrar="emit('cerrar')">
+  <div class="space-y-2" role="radiogroup" aria-label="Estado de la reserva">
+    <label
+      v-for="op in opciones"
+      :key="op.valor"
+      :class="[
+        'flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer touch-target',
+        store.adminEstado === op.valor ? 'border-brand-dark bg-brand-light' : 'border-gray-400 bg-white'
+      ]"
+    >
+      <input type="radio" name="estado-reserva-admin" :value="op.valor" v-model="store.adminEstado" class="mt-1 w-5 h-5 shrink-0 accent-brand-dark" />
+      <span class="space-y-0.5">
+        <span class="block text-base font-bold text-brand-dark">{{ op.titulo }}</span>
+        <span class="block text-sm text-gray-700">{{ op.detalle }}</span>
+      </span>
+    </label>
+  </div>
 
-    <div class="space-y-2" role="radiogroup" aria-labelledby="estado-reserva-admin">
-      <label
-        v-for="op in opciones"
-        :key="op.valor"
-        :class="[
-          'flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer touch-target',
-          store.adminEstado === op.valor ? 'border-brand-dark bg-brand-light' : 'border-gray-400 bg-white'
-        ]"
-      >
-        <input type="radio" name="estado-reserva-admin" :value="op.valor" v-model="store.adminEstado" class="mt-1 w-5 h-5 shrink-0 accent-brand-dark" />
-        <span class="space-y-0.5">
-          <span class="block text-base font-bold text-brand-dark">{{ op.titulo }}</span>
-          <span class="block text-sm text-gray-700">{{ op.detalle }}</span>
-        </span>
+  <div class="space-y-2 border-t-2 border-gray-200 pt-3">
+    <h4 class="text-base font-bold text-brand-dark">Abono recibido (opcional)</h4>
+    <p class="text-sm text-gray-700">
+      Si el cliente ya abonó, anótalo aquí.
+      <template v-if="exigeAbono">El abono exigido es {{ formatCLP(depositAmount) }}.</template>
+      <template v-else>Esta reserva no exige abono.</template>
+    </p>
+    <div class="grid grid-cols-2 gap-2">
+      <label class="space-y-1 text-sm font-bold text-gray-800">
+        Monto (CLP)
+        <input
+          v-model.number="store.adminAbonoMonto"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          :max="totalAmount"
+          class="w-full p-3 rounded-xl border-2 border-gray-500 bg-white font-normal text-base"
+        />
+      </label>
+      <label class="space-y-1 text-sm font-bold text-gray-800">
+        Medio de pago
+        <select v-model="store.adminAbonoMedio" class="w-full p-3 rounded-xl border-2 border-gray-500 bg-white font-normal text-base">
+          <option v-for="(label, key) in PAYMENT_METHOD_LABELS" :key="key" :value="key">{{ label }}</option>
+        </select>
       </label>
     </div>
-
-    <div class="space-y-2 border-t-2 border-gray-200 pt-3">
-      <h4 class="text-base font-bold text-brand-dark">Abono recibido (opcional)</h4>
-      <p class="text-sm text-gray-700">
-        Si el cliente ya abonó, anótalo aquí.
-        <template v-if="exigeAbono">El abono exigido es {{ formatCLP(depositAmount) }}.</template>
-        <template v-else>Esta reserva no exige abono.</template>
-      </p>
-      <div class="grid grid-cols-2 gap-2">
-        <label class="space-y-1 text-sm font-bold text-gray-800">
-          Monto (CLP)
-          <input
-            v-model.number="store.adminAbonoMonto"
-            type="number"
-            inputmode="numeric"
-            min="0"
-            :max="totalAmount"
-            class="w-full p-3 rounded-xl border-2 border-gray-500 bg-white font-normal text-base"
-          />
-        </label>
-        <label class="space-y-1 text-sm font-bold text-gray-800">
-          Medio de pago
-          <select v-model="store.adminAbonoMedio" class="w-full p-3 rounded-xl border-2 border-gray-500 bg-white font-normal text-base">
-            <option v-for="(label, key) in PAYMENT_METHOD_LABELS" :key="key" :value="key">{{ label }}</option>
-          </select>
-        </label>
-      </div>
-    </div>
-
-    <p
-      v-if="store.adminEstado === 'confirmed' && exigeAbono && faltaAbono > 0"
-      class="flex items-start gap-1.5 text-sm bg-amber-100 border-2 border-amber-500 text-amber-950 rounded-xl p-3"
-    >
-      <AlertTriangle class="w-5 h-5 stroke-[2.5] shrink-0" aria-hidden="true" />
-      Quedará confirmada sin el abono completo: faltan {{ formatCLP(faltaAbono) }}. Podrás anotarlo después en el detalle.
-    </p>
-
-    <div class="grid grid-cols-2 gap-2 pt-1">
-      <BaseButton variant="primary" size="lg" class="!text-base" @click="emit('confirmar')">Enviar reserva</BaseButton>
-      <BaseButton variant="outline" size="lg" class="!text-base" @click="emit('cerrar')">Volver</BaseButton>
-    </div>
-  </section>
   </div>
-  </Teleport>
+
+  <p
+    v-if="store.adminEstado === 'confirmed' && exigeAbono && faltaAbono > 0"
+    class="flex items-start gap-1.5 text-sm bg-amber-100 border-2 border-amber-500 text-amber-950 rounded-xl p-3"
+  >
+    <AlertTriangle class="w-5 h-5 stroke-[2.5] shrink-0" aria-hidden="true" />
+    Quedará confirmada sin el abono completo: faltan {{ formatCLP(faltaAbono) }}. Podrás anotarlo después en el detalle.
+  </p>
+
+    <template #pie>
+      <div class="grid grid-cols-2 gap-2">
+        <BaseButton variant="primary" size="lg" class="!text-base" @click="emit('confirmar')">Enviar reserva</BaseButton>
+        <BaseButton variant="outline" size="lg" class="!text-base" @click="emit('cerrar')">Volver</BaseButton>
+      </div>
+    </template>
+  </HojaModal>
 </template>

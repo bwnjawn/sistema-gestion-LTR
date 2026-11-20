@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import HojaModal from '../../components/ui/HojaModal.vue'
 import { ref, computed } from 'vue'
 import { 
-  CalendarDays, ChevronLeft, ChevronRight, X, 
+  CalendarDays, ChevronLeft, ChevronRight, 
   Layers, Home, Tent, Utensils, Waves
 } from 'lucide-vue-next'
 import AdminCalendarGrid from '../../components/ui/AdminCalendarGrid.vue'
@@ -141,7 +141,6 @@ function hasConflict(id: string): boolean {
   return (requestsStore.conflictsByRequestId[id]?.length ?? 0) > 0
 }
 
-useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !== 'diario'))
 </script>
 
 <template>
@@ -301,48 +300,25 @@ useBloqueoScroll(computed(() => showDayDetail.value && currentViewMode.value !==
       </div>
     </div>
 
-    <!-- Modal Detalle del Día -->
-    <div 
-      v-if="showDayDetail && currentViewMode !== 'diario'" 
-      class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-2 sm:p-4"
+    <!-- Detalle del día -->
+    <HojaModal
+      :abierto="showDayDetail && currentViewMode !== 'diario'"
+      :titulo="selectedDateFullFormatted"
+      subtitulo="Resumen de reservas"
+      @cerrar="closeDayDetail"
     >
-      <div class="bg-white w-full max-w-md rounded-3xl border-2 border-brand-border p-5 space-y-4 max-h-[85dvh] overflow-y-auto shadow-2xl">
-        <div class="flex items-center justify-between border-b-2 border-brand-border/60 pb-3">
-          <div>
-            <span class="text-xs font-black text-brand-accent uppercase tracking-wider block">
-              Resumen de Reservas
-            </span>
-            <h3 class="text-base font-black text-brand-dark capitalize leading-tight">
-              {{ selectedDateFullFormatted }}
-            </h3>
-          </div>
+      <DisponibilidadDelDia
+        :franjas="detalleDelDia"
+        :reservas="filteredRequestsForDay"
+        :fecha="selectedDateISO"
+        :se-cruza="hasConflict"
+        @abrir="openedRequestId = $event"
+      />
 
-          <button aria-label="Cerrar" 
-            type="button" 
-            @click="closeDayDetail"
-            class="w-9 h-9 rounded-full bg-brand-light border-2 border-brand-border text-brand-dark hover:bg-gray-200 active:scale-95 transition-transform touch-target flex items-center justify-center shrink-0"
-          >
-            <X class="w-5 h-5 stroke-[2.5]" />
-          </button>
-        </div>
-
-        <DisponibilidadDelDia
-          :franjas="detalleDelDia"
-          :reservas="filteredRequestsForDay"
-          :fecha="selectedDateISO"
-          :se-cruza="hasConflict"
-          @abrir="openedRequestId = $event"
-        />
-
-        <button
-          type="button"
-          @click="closeDayDetail"
-          class="w-full py-3 bg-brand-dark hover:bg-emerald-900 text-white font-black text-xs rounded-2xl border-2 border-brand-border transition-colors touch-target active:scale-95 shadow-2xs"
-        >
-          Cerrar
-        </button>
-      </div>
-    </div>
+      <template #pie>
+        <button type="button" class="w-full py-3.5 rounded-2xl border border-brand-dark bg-brand-dark text-white font-bold" @click="closeDayDetail">Cerrar</button>
+      </template>
+    </HojaModal>
 
     <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" @open-request="openedRequestId = $event" />
   </div>

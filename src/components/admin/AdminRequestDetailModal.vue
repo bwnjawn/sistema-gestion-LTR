@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
 import { computed, ref, watch } from 'vue'
 import {
   AlertTriangle, ArrowRight, CalendarClock, Check, ChevronDown, ChevronRight, CreditCard, Mail, MessageCircle, Pencil, Phone, X
 } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
+import HojaModal from '../ui/HojaModal.vue'
 import AdminRequestEditForm from './AdminRequestEditForm.vue'
 import AdminConfirmarCruceDialog from './AdminConfirmarCruceDialog.vue'
 import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
@@ -215,19 +215,13 @@ const claseContactoInactivo = 'bg-gray-100 border-gray-300 text-gray-600 pointer
 const claseCampo = 'w-full p-3 rounded-xl border-2 border-brand-border bg-white text-base font-normal'
 const claseResumen = 'cursor-pointer list-none flex items-center justify-between gap-2 px-3 py-2.5 text-sm font-bold text-brand-dark touch-target'
 
-useBloqueoScroll(computed(() => !!request.value))
 </script>
 
 <template>
-  <div
-    v-if="request && view && payment"
-    class="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center sm:p-4"
-    role="dialog"
-    aria-modal="true"
-    :aria-label="`Detalle de la solicitud ${request.requestCode}`"
-  >
-    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full border-2 border-brand-border shadow-2xl max-h-[92dvh] flex flex-col">
+  <template v-if="request && view && payment">
+    <HojaModal :abierto="true" :titulo="`Detalle de la solicitud ${request.requestCode}`" sin-relleno :cerrar-al-tocar-fuera="!isEditing" @cerrar="emit('close')">
       <!-- Encabezado: quién es, en qué estado está, y modificar / cerrar -->
+      <template #cabecera>
       <div class="flex items-start gap-3 p-4 border-b-2 border-brand-border/60">
         <div class="min-w-0 flex-1">
           <span class="text-xs font-bold text-brand-accent uppercase tracking-wider block">{{ view.serviceLabel }} · {{ request.requestCode }}</span>
@@ -257,7 +251,9 @@ useBloqueoScroll(computed(() => !!request.value))
         </button>
       </div>
 
-      <div class="overflow-y-auto overscroll-contain p-4 space-y-4">
+      </template>
+
+      <div class="p-4 space-y-4">
         <AdminRequestEditForm
           v-if="isEditing"
           :request="request"
@@ -528,7 +524,8 @@ useBloqueoScroll(computed(() => !!request.value))
       </div>
 
       <!-- Acciones: solo las pendientes tienen decisión que tomar; para el resto basta la X de arriba -->
-      <div v-if="!isEditing && isPending" class="p-4 border-t-2 border-brand-border/60 bg-white rounded-b-3xl">
+      <template v-if="!isEditing && isPending" #pie>
+      <div>
         <div v-if="!confirmingReject" class="grid grid-cols-2 gap-2">
           <BaseButton variant="outline" size="md" class="!text-sm !border-status-danger !text-status-danger" @click="confirmingReject = true">
             <X class="w-4 h-4 mr-1 stroke-[3]" aria-hidden="true" /> Rechazar
@@ -548,10 +545,11 @@ useBloqueoScroll(computed(() => !!request.value))
           </div>
         </div>
       </div>
-    </div>
+      </template>
+    </HojaModal>
 
     <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="continueApproval" @close="sinAbonoId = null" />
     <AdminConfirmarCruceDialog :request-id="cruceId" @close="cruceId = null" />
     <AdminMoverFechaDialog :request-id="moviendo ? request.id : null" @close="moviendo = false" />
-  </div>
+  </template>
 </template>
