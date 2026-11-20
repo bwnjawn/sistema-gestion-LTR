@@ -9,11 +9,14 @@ import type { CabinRepository, CampingSiteRepository, DishRepository, GlobalSide
 import type { Repositorio } from './repositorio'
 import type { SettingsRepository } from './settingsRepository'
 import type { AvailabilityRepository } from './availabilityRepository'
+import type { RequestRepository } from './requestsRepository'
 import type { AjustesGuardados, ClaveAjuste } from '../../types/settings'
 import { guardarSinConexion, leerSinConexion } from '../almacenSinConexion'
 import { conTiempoLimite } from '../conTiempoLimite'
 import { esErrorDeRed } from '../errores'
 import { marcarServidorActivo, marcarServidorCaido } from '../estadoDeRed'
+
+export const CLAVE_SOLICITUDES = 'solicitudes'
 
 /** Una lectura que no responde en este tiempo se da por caída y se usa la copia guardada. */
 export const TIEMPO_LECTURA_MS = 15000
@@ -66,6 +69,19 @@ function disponibilidad(r: AvailabilityRepository): AvailabilityRepository {
   return { fechasOcupadas: (desde, hasta) => leerConRespaldo('disponibilidad', () => r.fechasOcupadas(desde, hasta)) }
 }
 
+/** La lista de solicitudes del administrador: se guarda al leerla y se usa sin conexión (SCRUM-250). */
+function solicitudes(r: RequestRepository): RequestRepository {
+  return {
+    list: () => leerConRespaldo(CLAVE_SOLICITUDES, () => r.list()),
+    listByRange: (desde, hasta) => r.listByRange(desde, hasta),
+    getById: id => r.getById(id),
+    create: item => r.create(item),
+    update: (id, cambios) => r.update(id, cambios),
+    remove: id => r.remove(id),
+    escucharCambios: alCambiar => r.escucharCambios(alCambiar)
+  }
+}
+
 export function conCacheSinConexion(r: Repositorios): Repositorios {
   return {
     ...r,
@@ -74,6 +90,7 @@ export function conCacheSinConexion(r: Repositorios): Repositorios {
     dishes: coleccion('catalogo:platos', r.dishes) as DishRepository,
     globalSides: acompanamientos(r.globalSides),
     settings: ajustes(r.settings),
-    availability: disponibilidad(r.availability)
+    availability: disponibilidad(r.availability),
+    requests: solicitudes(r.requests)
   }
 }

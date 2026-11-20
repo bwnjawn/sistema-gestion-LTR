@@ -19,7 +19,10 @@ export class SupabasePaymentRepository implements PaymentRepository {
 
   async add(requestId: string, pago: Payment): Promise<Payment> {
     const { data } = await supabase().auth.getSession()
-    const resultado = await supabase().from('pagos').insert(pagoAFila(pago, requestId, data.session?.user.id ?? null))
+    // Idempotente: si el pago ya llegó (se reenvía tras un corte, SCRUM-250), no se duplica ni falla
+    const resultado = await supabase()
+      .from('pagos')
+      .upsert(pagoAFila(pago, requestId, data.session?.user.id ?? null), { onConflict: 'id', ignoreDuplicates: true })
     if (resultado.error) {
       // La reserva ya no existe: la base lo informa con una restricción de clave foránea
       if (resultado.error.code === '23503') throw new ErrorNoEncontrado('la solicitud', requestId)

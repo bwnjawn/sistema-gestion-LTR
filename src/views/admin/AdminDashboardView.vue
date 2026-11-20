@@ -6,6 +6,7 @@ import {
 } from 'lucide-vue-next'
 import { useRequestsStore } from '../../stores/requestsStore'
 import { formatCLP } from '../../lib/format'
+import AvisoConflictos from '../../components/admin/AvisoConflictos.vue'
 
 const router = useRouter()
 const requestsStore = useRequestsStore()
@@ -24,6 +25,9 @@ function navigateTo(path: string) {
 
 <template>
   <div class="space-y-4 max-w-md mx-auto w-full pb-28">
+    <!-- Confirmaciones hechas sin conexión que chocaron con otra reserva al sincronizar (SCRUM-250) -->
+    <AvisoConflictos />
+
     <!-- Métricas Generales -->
     <div class="grid grid-cols-2 gap-3">
       <div

@@ -25,6 +25,9 @@ const CODIGOS_DE_LA_BASE = [
   'aforo_excedido'
 ]
 
+/** Rechazos por choque con otra reserva o por cupo: al sincronizar sin conexión, la reserva queda "en conflicto". */
+const CODIGOS_DE_CONFLICTO = ['fecha_no_disponible', 'sin_cupo', 'aforo_excedido']
+
 export const MENSAJE_SIN_CONEXION = 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.'
 
 /** Código de la base al inicio del mensaje, si lo tiene (por ejemplo `sin_cupo`). */
@@ -40,9 +43,12 @@ export function traducirError(error: unknown, respaldo: string): ErrorDeAlmacena
   const mensaje = e.message ?? (error instanceof Error ? error.message : '')
 
   const codigo = codigoDeLaBase(mensaje)
-  if (codigo) return new ErrorDeAlmacenamiento('desconocida', mensaje.slice(codigo.length + 1).trim())
+  if (codigo) {
+    const causa = CODIGOS_DE_CONFLICTO.includes(codigo) ? 'conflicto' : codigo === 'demasiadas_solicitudes' ? 'temporal' : 'desconocida'
+    return new ErrorDeAlmacenamiento(causa, mensaje.slice(codigo.length + 1).trim())
+  }
 
-  if (e.code === '23P01') return new ErrorDeAlmacenamiento('desconocida', 'Ya hay una reserva confirmada en esas fechas o cupos.')
+  if (e.code === '23P01') return new ErrorDeAlmacenamiento('conflicto', 'Ya hay una reserva confirmada en esas fechas o cupos.')
   if (e.code === '42501' || e.code === 'PGRST301' || /row-level security|permission denied|JWT/i.test(mensaje)) {
     return new ErrorDeAlmacenamiento('desconocida', 'No tienes permiso para hacer esto. Inicia sesión como administrador.')
   }

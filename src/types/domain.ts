@@ -150,6 +150,11 @@ export interface ReservationRequest {
    * Las confirmadas y las que no exigen abono no tienen plazo.
    */
   depositDueAt?: string
+  /**
+   * Una confirmación hecha sin conexión chocó con otra reserva al sincronizar (SCRUM-250): quedó pendiente y el
+   * administrador debe resolverla (mover la fecha o rechazarla). Cualquier acción sobre la solicitud lo quita.
+   */
+  enConflicto?: boolean
   details?: {
     comments?: string
     selectedMeals?: SelectedMealPayload[]

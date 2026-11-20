@@ -140,7 +140,7 @@ export function requestToBooking(req: ReservationRequest, ctx: ContextoAdaptador
     ...(req.depositDueAt ? { depositDueAt: req.depositDueAt } : {}),
     meals: elegidasComoComidas(req, ctx),
     payments: req.payments.map(p => ({ ...p })),
-    inConflict: false,
+    inConflict: !!req.enConflicto,
     createdAt: req.createdAt,
     // La solicitud no guarda cuándo se modificó por última vez
     updatedAt: req.createdAt
@@ -200,6 +200,7 @@ export function bookingToRequest(b: Booking, ctx: ContextoAdaptador = {}): Reser
     status: b.status,
     createdAt: b.createdAt,
     ...(b.depositDueAt ? { depositDueAt: b.depositDueAt } : {}),
+    ...(b.inConflict ? { enConflicto: true } : {}),
     details: {
       comments: b.comments ?? '',
       selectedMeals,

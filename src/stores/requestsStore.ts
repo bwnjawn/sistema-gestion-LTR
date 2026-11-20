@@ -8,11 +8,13 @@ import { repositorios } from '../lib/repositories'
 import { persistirConReversion } from '../lib/persistirConReversion'
 import { mensajeDeError, esErrorDeRed } from '../lib/errores'
 import { conTiempoLimite } from '../lib/conTiempoLimite'
-import { marcarServidorCaido } from '../lib/estadoDeRed'
+import { marcarServidorCaido, servidorInalcanzable } from '../lib/estadoDeRed'
 import { requestToBooking } from '../services/adaptadoresReserva'
 import { applyRequestEdit, type RequestEdit } from '../services/requests'
 import { useCatalogStore } from './catalogStore'
 import { TIEMPO_ENVIO_MS, useColaEnvioStore } from './colaEnvioStore'
+import { TIEMPO_CAMBIO_MS, TIEMPO_CAMBIO_SIN_SENAL_MS, useCambiosAdminStore } from './cambiosAdminStore'
+import { aplicarCambios, resumenDeGuardado, resumenDePago, type CambioAdmin } from '../services/cambiosAdmin'
 import { useDisponibilidadStore } from './disponibilidadStore'
 import { useSettingsStore } from './settingsStore'
 import {
@@ -54,7 +56,8 @@ export const useRequestsStore = defineStore('requests', () => {
     isLoading.value = true
     error.value = null
     try {
-      requests.value = await repositorios().requests.list()
+      // Con cambios del administrador sin sincronizar, se ven encima de lo que dice el servidor (SCRUM-250)
+      requests.value = aplicarCambios(await repositorios().requests.list(), useCambiosAdminStore().entradas)
       isReady.value = true
     } catch (e) {
       error.value = mensajeDeError(e, 'No se pudieron cargar las solicitudes.')
@@ -84,12 +87,13 @@ export const useRequestsStore = defineStore('requests', () => {
    * error: quien llama decide si avisa.
    */
   async function refrescar(): Promise<boolean> {
-    if (escrituras > 0) {
+    // Mientras se envían los cambios guardados, la lista del servidor puede estar a medias
+    if (escrituras > 0 || useCambiosAdminStore().sincronizando) {
       refrescoPendiente = true
       return false
     }
-    const nuevas = await repositorios().requests.list()
-    if (escrituras > 0) {
+    const nuevas = aplicarCambios(await repositorios().requests.list(), useCambiosAdminStore().entradas)
+    if (escrituras > 0 || useCambiosAdminStore().sincronizando) {
       // Se empezó a guardar mientras llegaba la respuesta: puede ser anterior al cambio
       refrescoPendiente = true
       return false
@@ -97,6 +101,47 @@ export const useRequestsStore = defineStore('requests', () => {
     if (JSON.stringify(nuevas) !== JSON.stringify(requests.value)) requests.value = nuevas
     isReady.value = true
     return true
+  }
+
+  /**
+   * Como `persistirConReversion`, pero sin señal el cambio del administrador no se revierte: queda guardado en el
+   * dispositivo, se ve en pantalla con la marca "Sin sincronizar" y se envía al volver la conexión (SCRUM-250).
+   * Detrás de cambios ya pendientes también se encola, para no enviarlos fuera de orden.
+   */
+  function persistirOEncolar<T>(o: {
+    aplicar: () => void
+    revertir: () => void
+    persistir: () => Promise<T>
+    mensaje: string
+    cambio: CambioAdmin
+    resumen: string
+  }): Promise<T | undefined> {
+    return persistirConReversion<T | undefined>({
+      aplicar: o.aplicar,
+      revertir: o.revertir,
+      mensaje: o.mensaje,
+      persistir: async () => {
+        const cola = useCambiosAdminStore()
+        if (cola.pendientes.length > 0) {
+          await cola.encolar(o.cambio, o.resumen)
+          void cola.reintentar()
+          return undefined
+        }
+        try {
+          return await conTiempoLimite(o.persistir(), servidorInalcanzable.value ? TIEMPO_CAMBIO_SIN_SENAL_MS : TIEMPO_CAMBIO_MS)
+        } catch (e) {
+          if (!esErrorDeRed(e)) throw e
+          marcarServidorCaido()
+          try {
+            await cola.encolar(o.cambio, o.resumen)
+          } catch (errorAlGuardar) {
+            console.error('[Solicitudes] No se pudo guardar el cambio en el dispositivo:', errorAlGuardar)
+            throw e
+          }
+          return undefined
+        }
+      }
+    })
   }
 
   /** Reemplaza la solicitud `id` por `nueva` en pantalla, la guarda y, si falla, deja la anterior y lanza el error. */
@@ -108,7 +153,12 @@ export const useRequestsStore = defineStore('requests', () => {
     const indice = requests.value.findIndex(r => r.id === id)
     if (indice === -1) return
     const previa = requests.value[indice]
-    await conEscritura(() => persistirConReversion({
+    // Cualquier acción del administrador sobre la solicitud da por vista su marca "en conflicto"
+    const { enConflicto: _resuelta, ...sinMarca } = nueva
+    nueva = sinMarca
+    await conEscritura(() => persistirOEncolar({
+      cambio: { tipo: 'guardar', solicitud: nueva, esNueva: false },
+      resumen: resumenDeGuardado(previa, nueva),
       aplicar: () => { requests.value[indice] = nueva },
       revertir: () => {
         const actual = requests.value.findIndex(r => r.id === id)
@@ -127,11 +177,29 @@ export const useRequestsStore = defineStore('requests', () => {
    * falla con el aviso de siempre. Si no se puede ni guardar en el teléfono, lanza el error original.
    */
   async function crearOEncolar(req: ReservationRequest): Promise<ReservationRequest> {
+    const esCliente = requestToBooking(req).origin === 'cliente'
+    const cambios = useCambiosAdminStore()
+    // La del administrador va detrás de sus cambios pendientes, para no enviarse fuera de orden
+    if (!esCliente && cambios.pendientes.length > 0) {
+      await cambios.encolar({ tipo: 'guardar', solicitud: req, esNueva: true }, resumenDeGuardado(undefined, req))
+      void cambios.reintentar()
+      return req
+    }
     try {
-      return await conTiempoLimite(repositorios().requests.create(req), TIEMPO_ENVIO_MS)
+      return await conTiempoLimite(repositorios().requests.create(req), esCliente ? TIEMPO_ENVIO_MS : TIEMPO_CAMBIO_MS)
     } catch (e) {
-      if (!esErrorDeRed(e) || requestToBooking(req).origin !== 'cliente') throw e
+      if (!esErrorDeRed(e)) throw e
       marcarServidorCaido()
+      if (!esCliente) {
+        // Sin señal, la reserva del administrador queda guardada en el dispositivo (SCRUM-250)
+        try {
+          await cambios.encolar({ tipo: 'guardar', solicitud: req, esNueva: true }, resumenDeGuardado(undefined, req))
+        } catch (errorAlGuardar) {
+          console.error('[Solicitudes] No se pudo guardar la reserva en el dispositivo:', errorAlGuardar)
+          throw e
+        }
+        return req
+      }
       try {
         await useColaEnvioStore().encolar(req)
       } catch (errorAlGuardar) {
@@ -215,7 +283,9 @@ export const useRequestsStore = defineStore('requests', () => {
 
     const pago = buildPayment(input)
     try {
-      await conEscritura(() => persistirConReversion({
+      await conEscritura(() => persistirOEncolar({
+        cambio: { tipo: 'pago-agregar', solicitudId: id, pago },
+        resumen: resumenDePago('agregar', found, pago.amount),
         aplicar: () => { found.payments.push(pago) },
         revertir: () => { found.payments = found.payments.filter(p => p.id !== pago.id) },
         persistir: () => repositorios().payments.add(id, pago),
@@ -232,7 +302,9 @@ export const useRequestsStore = defineStore('requests', () => {
     if (!found) return
     const previos = [...found.payments]
     try {
-      await conEscritura(() => persistirConReversion({
+      await conEscritura(() => persistirOEncolar({
+        cambio: { tipo: 'pago-quitar', solicitudId: id, pagoId: paymentId },
+        resumen: resumenDePago('quitar', found, previos.find(p => p.id === paymentId)?.amount),
         aplicar: () => { found.payments = previos.filter(p => p.id !== paymentId) },
         revertir: () => { found.payments = previos },
         persistir: () => repositorios().payments.remove(id, paymentId),

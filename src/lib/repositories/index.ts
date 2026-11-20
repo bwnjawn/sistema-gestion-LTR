@@ -9,6 +9,8 @@ import { crearRepositoriosSupabase } from './supabase'
 import { conCacheSinConexion } from './conCacheSinConexion'
 import type { ColaEnvioRepository } from './colaEnvioRepository'
 import { ColaEnvioIndexedDb } from './colaEnvioRepository'
+import type { ColaCambiosRepository } from './colaCambiosRepository'
+import { ColaCambiosIndexedDb } from './colaCambiosRepository'
 import type { AuthRepository } from './authRepository'
 import type { AvailabilityRepository } from './availabilityRepository'
 import { LocalAvailabilityRepository } from './availabilityRepository'
@@ -39,6 +41,8 @@ export interface Repositorios {
   auth: AuthRepository
   /** Solicitudes del cliente que esperan señal para enviarse (SCRUM-250). Viven en el dispositivo. */
   colaEnvio: ColaEnvioRepository
+  /** Cambios del administrador hechos sin conexión que esperan enviarse (SCRUM-250). Viven en el dispositivo. */
+  colaCambios: ColaCambiosRepository
 }
 
 /** Todos los repositorios sobre un almacenamiento local (el real o uno en memoria para pruebas). */
@@ -53,7 +57,8 @@ export function crearRepositoriosLocales(almacenamiento: Almacenamiento = almace
     settings: new LocalSettingsRepository(almacenamiento),
     documents: new LocalDocumentosRepository(),
     auth: new LocalAuthRepository(almacenamiento),
-    colaEnvio: new ColaEnvioIndexedDb()
+    colaEnvio: new ColaEnvioIndexedDb(),
+    colaCambios: new ColaCambiosIndexedDb()
   }
 }
 

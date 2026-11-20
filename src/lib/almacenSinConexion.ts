@@ -66,6 +66,20 @@ export async function borrarSinConexion(clave: string): Promise<void> {
   await operar('readwrite', tabla => tabla.delete(clave))
 }
 
+/** Copias que solo existen mientras hay un administrador: se borran al cerrar sesión (SCRUM-250). */
+export const CLAVES_DEL_ADMINISTRADOR = [
+  'solicitudes',
+  'admin_perfil',
+  'catalogo:cabanas',
+  'catalogo:camping',
+  'catalogo:platos',
+  'catalogo:acompanamientos'
+]
+
+export async function olvidarDatosDelAdministrador(): Promise<void> {
+  await Promise.all(CLAVES_DEL_ADMINISTRADOR.map(c => borrarSinConexion(c)))
+}
+
 /** Solo para pruebas: olvida lo que haya en memoria y la conexión abierta. */
 export function reiniciarAlmacenSinConexion(): void {
   enMemoria.clear()

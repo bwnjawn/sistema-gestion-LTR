@@ -72,6 +72,8 @@ const routes = [
           return { name: 'home' }
         }
       },
+      // Cambios hechos sin conexión que esperan enviarse (SCRUM-250)
+      { path: 'sincronizacion', name: 'admin-sync', meta: { titulo: 'Sin sincronizar' }, component: () => import('../views/admin/AdminSincronizacionView.vue') },
       { path: 'solicitudes', name: 'admin-solicitudes', meta: { titulo: 'Solicitudes', ayuda: 'solicitudes', actualizable: true }, component: () => import('../views/admin/AdminRequestsView.vue') },
       { path: 'calendario', name: 'admin-calendar', meta: { titulo: 'Calendario', ayuda: 'calendario', actualizable: true }, component: () => import('../views/admin/AdminCalendarView.vue') },
       { path: 'catalogo', name: 'admin-catalog', meta: { titulo: 'Catálogo', ayuda: 'catalogo' }, component: () => import('../views/admin/AdminCatalogEditView.vue') },

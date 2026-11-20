@@ -5,6 +5,8 @@ import { ref, computed } from 'vue'
 import type { AdminUser, AdminUserWithPassword } from '../types/domain'
 import { repositorios } from '../lib/repositories'
 import { mensajeDeError, esErrorDeRed } from '../lib/errores'
+import { avisarError } from '../lib/avisos'
+import { useCambiosAdminStore } from './cambiosAdminStore'
 import { cargarDatosDeAdministrador, descartarDatosDeAdministrador } from '../lib/arranque'
 
 export type { AdminUser, AdminUserWithPassword }
@@ -106,7 +108,13 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Cierre de sesión
    */
-  async function logout(): Promise<void> {
+  async function logout(): Promise<boolean> {
+    // Al cerrar sesión se olvidan los datos del administrador: los cambios sin enviar se perderían (SCRUM-250)
+    const sinEnviar = useCambiosAdminStore().pendientes.length
+    if (sinEnviar > 0) {
+      avisarError(`Tienes ${sinEnviar} ${sinEnviar === 1 ? 'cambio' : 'cambios'} sin sincronizar. Conéctate a internet y espera a que se envíen antes de cerrar sesión.`)
+      return false
+    }
     try {
       await repositorios().auth.cerrarSesion()
     } finally {
@@ -114,6 +122,7 @@ export const useAuthStore = defineStore('auth', () => {
       adminsList.value = []
       await descartarDatosDeAdministrador()
     }
+    return true
   }
 
   return {
