@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Users, Tent, Check } from 'lucide-vue-next'
 import type { CampingSite } from '../../types/catalog'
 import { formatCLP } from '../../lib/format'
+import { ETIQUETA_MODALIDAD_ESPACIO, NOMBRE_DIA_DE_CAMPO } from '../../services/wizard'
 
 const props = defineProps<{
   site: CampingSite
@@ -10,6 +11,8 @@ const props = defineProps<{
   isSelected?: boolean
   // En el flujo del cliente solo se muestra lo esencial: nombre, precio y capacidad
   compacta?: boolean
+  // Por el día no hay espacios grandes ni pequeños (SCRUM-277): sin nombre del espacio ni rango de personas
+  diaDeCampo?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -31,29 +34,26 @@ const displayImage = computed(() => {
       <div class="absolute top-3 right-3 bg-brand-dark/90 text-white px-3 py-1 rounded-full font-black text-sm">
         {{ formattedPrice }} por persona
       </div>
-      <div v-if="site.isSpecial" class="absolute top-3 left-3 bg-amber-400 text-slate-900 font-black text-sm px-2.5 py-1 rounded-full uppercase">
-        Grupos y eventos
-      </div>
     </div>
 
     <!-- Contenido -->
     <div class="p-4 sm:p-5 flex flex-col justify-between grow space-y-3">
       <div>
-        <h3 class="text-base sm:text-lg font-black text-brand-dark leading-tight mb-1">{{ site.name }}</h3>
+        <h3 class="text-base sm:text-lg font-black text-brand-dark leading-tight mb-1">{{ diaDeCampo ? NOMBRE_DIA_DE_CAMPO : site.name }}</h3>
 
         <p v-if="site.description && !compacta" class="text-sm font-medium text-gray-600 line-clamp-2 mb-2">
           {{ site.description }}
         </p>
 
         <!-- Capacidad y Modalidad -->
-        <div class="flex flex-wrap items-center gap-2 text-sm font-bold text-gray-700 py-1">
+        <div v-if="!diaDeCampo" class="flex flex-wrap items-center gap-2 text-sm font-bold text-gray-700 py-1">
           <div class="flex items-center gap-1.5 bg-brand-light px-2.5 py-1 rounded-xl border border-brand-border/60">
             <Users class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
             <span>{{ site.minCapacity }} a {{ site.maxCapacity }} personas</span>
           </div>
           <div class="flex items-center gap-1.5 bg-brand-light px-2.5 py-1 rounded-xl border border-brand-border/60">
             <Tent class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
-            <span class="capitalize">{{ site.modality }}</span>
+            <span>{{ ETIQUETA_MODALIDAD_ESPACIO[site.modality] }}</span>
           </div>
         </div>
 

@@ -4,10 +4,13 @@ import { computed } from 'vue'
 import { Users, Tent, Check } from 'lucide-vue-next'
 import type { CampingSite } from '../../types/catalog'
 import { formatCLP } from '../../lib/format'
+import { ETIQUETA_MODALIDAD_ESPACIO, NOMBRE_DIA_DE_CAMPO } from '../../services/wizard'
 
 const props = defineProps<{
   isOpen: boolean
   site?: CampingSite | null
+  // Por el día no hay espacios grandes ni pequeños (SCRUM-277): sin nombre del espacio ni rango de personas
+  diaDeCampo?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -24,7 +27,7 @@ const imagesList = computed(() => {
 </script>
 
 <template>
-  <HojaModal v-if="site" :abierto="isOpen" :titulo="site.name" subtitulo="Detalle del espacio" @cerrar="emit('close')">
+  <HojaModal v-if="site" :abierto="isOpen" :titulo="diaDeCampo ? NOMBRE_DIA_DE_CAMPO : site.name" :subtitulo="diaDeCampo ? 'Detalle del camping' : 'Detalle del espacio'" @cerrar="emit('close')">
     <!-- Galería de Fotos -->
     <div class="grid grid-cols-2 gap-2">
       <img v-for="(img, idx) in imagesList" :key="idx" :src="img" alt="" class="w-full h-32 object-cover rounded-2xl border border-brand-border" />
@@ -35,14 +38,14 @@ const imagesList = computed(() => {
       <span class="text-base font-black text-brand-accent">{{ formattedPrice }} por persona</span>
     </div>
 
-    <div class="grid grid-cols-2 gap-2 text-xs font-bold text-gray-700">
+    <div v-if="!diaDeCampo" class="grid grid-cols-2 gap-2 text-xs font-bold text-gray-700">
       <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-2">
         <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
         <span>Capacidad: {{ site.minCapacity }} - {{ site.maxCapacity }} personas</span>
       </div>
       <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-2">
         <Tent class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-        <span class="capitalize">Modalidad: {{ site.modality }}</span>
+        <span>Modalidad: {{ ETIQUETA_MODALIDAD_ESPACIO[site.modality] }}</span>
       </div>
     </div>
 

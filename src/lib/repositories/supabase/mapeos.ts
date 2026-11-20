@@ -97,6 +97,7 @@ export interface FilaSitio {
   precio_persona: number
   capacidad_min: number
   capacidad_max: number
+  /** Sin uso desde SCRUM-277: el espacio grande se distingue solo por su capacidad. La columna no se borra. */
   es_especial: boolean
   modalidades: CampingModality[]
   imagen_principal: string | null
@@ -108,8 +109,8 @@ export interface FilaSitio {
 function modalidadDe(modalidades: CampingModality[]): CampingSiteModality {
   const tieneDiario = modalidades.includes('diario')
   const tienePernoctar = modalidades.includes('pernoctar')
-  if (tieneDiario && tienePernoctar) return 'ambos'
-  return tieneDiario ? 'diario' : 'pernoctar'
+  // Un espacio que antes era solo para pernoctar pasa a servir también de día (SCRUM-277)
+  return tieneDiario && !tienePernoctar ? 'diario' : 'ambos'
 }
 
 function modalidadesDe(modalidad: CampingSiteModality): CampingModality[] {
@@ -124,7 +125,6 @@ export function sitioDeFila(f: FilaSitio): CampingSite {
     pricePerPerson: f.precio_persona,
     minCapacity: f.capacidad_min,
     maxCapacity: f.capacidad_max,
-    isSpecial: f.es_especial,
     modality: modalidadDe(f.modalidades ?? []),
     ...(f.imagen_principal ? { image: f.imagen_principal } : {}),
     images: f.imagenes ?? [],
@@ -141,7 +141,6 @@ export function sitioAFila(s: Partial<CampingSite>): Record<string, unknown> {
   if (s.pricePerPerson !== undefined) fila.precio_persona = s.pricePerPerson
   if (s.minCapacity !== undefined) fila.capacidad_min = s.minCapacity
   if (s.maxCapacity !== undefined) fila.capacidad_max = s.maxCapacity
-  if (s.isSpecial !== undefined) fila.es_especial = s.isSpecial
   if (s.modality !== undefined) fila.modalidades = modalidadesDe(s.modality)
   if ('image' in s) fila.imagen_principal = s.image ?? null
   if (s.images !== undefined) fila.imagenes = s.images

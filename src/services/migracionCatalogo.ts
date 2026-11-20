@@ -8,7 +8,6 @@ import { aplicarReglaDeAcompanamiento } from './menus'
 import type { Cabin, CabinFeature, CampingSite, CampingSiteModality, Dish, MealType, SideDishMode } from '../types/domain'
 
 const COMIDAS: readonly MealType[] = ['desayuno', 'almuerzo', 'once']
-const MODALIDADES: readonly CampingSiteModality[] = ['diario', 'pernoctar', 'ambos']
 
 /** Texto libre ('Almuerzo', ' once ') → comida válida. Lo que no se reconoce queda como almuerzo. */
 export function normalizarComida(valor: unknown): MealType {
@@ -16,10 +15,10 @@ export function normalizarComida(valor: unknown): MealType {
   return COMIDAS.find(c => c === texto) ?? 'almuerzo'
 }
 
-/** Texto libre → modalidad válida de un espacio. Lo que no se reconoce queda como `pernoctar`. */
+/** Texto libre → modalidad válida de un espacio. `diario` solo si lo dice; todo lo demás (incluido el antiguo `pernoctar`) es `ambos`. */
 export function normalizarModalidadSitio(valor: unknown): CampingSiteModality {
   const texto = typeof valor === 'string' ? valor.trim().toLowerCase() : ''
-  return MODALIDADES.find(m => m === texto) ?? 'pernoctar'
+  return texto === 'diario' ? 'diario' : 'ambos'
 }
 
 /** Una característica antigua (texto u objeto `{ text, name, icon }`) → su texto. */
@@ -58,7 +57,6 @@ export function normalizarSitio(s: any): CampingSite {
     pricePerPerson: s.pricePerPerson,
     minCapacity: s.minCapacity,
     maxCapacity: s.maxCapacity,
-    isSpecial: s.isSpecial === true,
     modality: normalizarModalidadSitio(s.modality),
     image: principal,
     images: Array.isArray(s.images) && s.images.length > 0 ? s.images : principal ? [principal] : [],

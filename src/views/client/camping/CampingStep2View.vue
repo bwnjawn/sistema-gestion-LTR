@@ -12,7 +12,7 @@ import CampingDetailModal from '../../../components/catalog/CampingDetailModal.v
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { formatCLP } from '../../../lib/format'
-import { findCampingSite, noCampingSiteMessage } from '../../../services/wizard'
+import { findCampingSite, noCampingSiteMessage, NOMBRE_DIA_DE_CAMPO } from '../../../services/wizard'
 import type { CampingSite } from '../../../types/domain'
 import { formatDateShort, nightsBetween } from '../../../lib/dates'
 
@@ -84,21 +84,17 @@ function handleNext() {
     </div>
 
     <HorarioCard :titulo="isDiario ? 'Horario del día de campo' : 'Horario de pernoctar'" :ingreso="horario.checkIn" :salida="horario.checkOut" :salida-mismo-dia="isDiario" />
-    <div v-if="selectedCampingOption" class="bg-white rounded-3xl border-2 border-brand-border p-5 shadow-sm space-y-4">
-      <div class="flex items-center justify-between">
-        <span class="inline-flex items-center gap-1 bg-brand-light text-brand-dark px-3 py-1 rounded-full text-sm font-black border border-brand-border">
-          {{ selectedCampingOption?.isSpecial ? 'Espacio para Grupos Grandes' : 'Camping Estándar' }}
-        </span>
-        <span class="text-sm font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-200">
-          <CheckCircle2 class="w-3.5 h-3.5 stroke-[2.5]" /> Asignado
-        </span>
-      </div>
+    <!-- Una sola tarjeta: el espacio se asigna por capacidad y no se distingue por tipo -->
+    <div v-if="selectedCampingOption" class="space-y-2">
+      <span class="text-sm font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full inline-flex items-center gap-1 border border-emerald-200">
+        <CheckCircle2 class="w-3.5 h-3.5 stroke-[2.5]" /> {{ isDiario ? 'Tu día de campo' : 'Espacio asignado para tu grupo' }}
+      </span>
 
       <CampingCard
-        v-if="selectedCampingOption"
         :site="selectedCampingOption"
         :selected-option-id="store.selectedCampingId"
         :is-diario="isDiario"
+        :dia-de-campo="isDiario"
         compacta
       >
         <template #actions>
@@ -119,7 +115,7 @@ function handleNext() {
         <span class="text-sm font-extrabold text-emerald-300 uppercase tracking-wider block">
           Subtotal Neto ({{ guests }} pers. {{ !isDiario ? 'x ' + nightsCount + ' noc.' : '' }})
         </span>
-        <span class="text-sm font-bold text-gray-300">{{ selectedCampingOption?.name }}</span>
+        <span class="text-sm font-bold text-gray-300">{{ isDiario ? NOMBRE_DIA_DE_CAMPO : selectedCampingOption?.name }}</span>
       </div>
       <span class="text-xl font-black text-white">
         {{ formatCLP(subtotalNeto) }}
@@ -130,6 +126,7 @@ function handleNext() {
       v-if="selectedCampingOption"
       :isOpen="isModalOpen"
       :site="selectedCampingOption"
+      :dia-de-campo="isDiario"
       @close="isModalOpen = false"
     />
 
