@@ -65,6 +65,8 @@ const filas = computed(() => {
   }))
 })
 const hayConfirmada = computed(() => filas.value.some(f => f.confirmada))
+// La solicitud con la que se abrió ya quedó confirmada: el diálogo solo sirve para avisar a las que perdieron el lugar
+const propiaConfirmada = computed(() => filas.value.some(f => f.esLaPropia && f.confirmada))
 const filaEnEdicion = computed(() => filas.value.find(f => f.solicitud.id === editandoId.value) ?? null)
 
 /** Las salidas de contacto aparecen para quien ya no puede quedar confirmada (hay una confirmada en su lugar). */
@@ -103,8 +105,8 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
   <template v-if="requestId">
     <HojaModal
       :abierto="true"
-      :titulo="filaEnEdicion ? `Mover la fecha de ${filaEnEdicion.solicitud.clientName}` : 'Solicitudes que se cruzan'"
-      :subtitulo="filaEnEdicion ? 'Los días ocupados por reservas confirmadas no se pueden elegir.' : 'Elige cuál se queda con la fecha. Nada se rechaza solo.'"
+      :titulo="filaEnEdicion ? `Mover la fecha de ${filaEnEdicion.solicitud.clientName}` : propiaConfirmada ? 'Reserva confirmada' : 'Solicitudes que se cruzan'"
+      :subtitulo="filaEnEdicion ? 'Los días ocupados por reservas confirmadas no se pueden elegir.' : propiaConfirmada ? 'Estas solicitudes quedaron sin lugar. Avísales o cámbiales la fecha; nada se rechaza solo.' : 'Elige cuál se queda con la fecha. Nada se rechaza solo.'"
       :nivel="60"
       :cerrar-al-tocar-fuera="false"
       @cerrar="emit('close')"
@@ -130,7 +132,7 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
           >
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
-                <p v-if="fila.esLaPropia" class="text-sm font-bold text-brand-accent">La que apruebas</p>
+                <p v-if="fila.esLaPropia" class="text-sm font-bold text-brand-accent">{{ fila.confirmada ? 'Recién confirmada' : 'La que apruebas' }}</p>
                 <h3 class="text-base font-bold text-brand-dark leading-tight break-words">{{ fila.solicitud.clientName }}</h3>
               </div>
               <EstadoSolicitud :status="fila.solicitud.status" class="mt-0.5" />
@@ -201,7 +203,7 @@ const claseSalidaInactiva = 'bg-gray-100 border-gray-300 text-gray-600 pointer-e
 
       <template v-if="!filaEnEdicion" #pie>
         <BaseButton variant="outline" size="md" fullWidth class="!text-base" @click="emit('close')">
-          {{ hayConfirmada ? 'Cerrar' : 'Cerrar sin confirmar' }}
+          {{ propiaConfirmada ? 'Listo' : hayConfirmada ? 'Cerrar' : 'Cerrar sin confirmar' }}
         </BaseButton>
       </template>
     </HojaModal>

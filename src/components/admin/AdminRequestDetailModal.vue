@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import {
-  AlertTriangle, ArrowRight, CalendarClock, Check, ChevronDown, ChevronRight, CreditCard, Mail, MessageCircle, Pencil, Phone, X
+  AlertTriangle, ArrowRight, CalendarClock, Check, ChevronDown, CreditCard, Mail, MessageCircle, Pencil, Phone, X
 } from 'lucide-vue-next'
 import BaseButton from '../ui/BaseButton.vue'
 import HojaModal from '../ui/HojaModal.vue'
@@ -11,6 +11,7 @@ import AdminConfirmarSinAbonoDialog from './AdminConfirmarSinAbonoDialog.vue'
 import AdminMoverFechaDialog from './AdminMoverFechaDialog.vue'
 import AdminCancelarReservaDialog from './AdminCancelarReservaDialog.vue'
 import EstadoSolicitud from './EstadoSolicitud.vue'
+import AvisoCruceSolicitud from './AvisoCruceSolicitud.vue'
 import EtiquetaSinSincronizar from './EtiquetaSinSincronizar.vue'
 import CotizacionAcciones from './CotizacionAcciones.vue'
 import { puedeCotizarse } from '../../services/cotizacion'
@@ -23,6 +24,7 @@ import { PAYMENT_METHOD_LABELS, getPaymentSummary, isConfirmedWithoutDeposit, is
 import { canEditRequest, describeRequest, puedeCancelarse } from '../../services/requests'
 import { describirBloqueo } from '../../services/cruces'
 import { partesDeFecha, resumirSolicitud } from '../../services/resumenSolicitud'
+import { resumirCruce } from '../../services/resumenCruce'
 import type { PaymentMethod } from '../../types/domain'
 
 const props = defineProps<{
@@ -56,18 +58,15 @@ function cerrarCancelacion() {
 // Pendiente cuya fecha ya ocupa una confirmada: no se aprueba, solo se mueve de fecha o se rechaza
 const bloqueo = computed(() => (request.value ? describirBloqueo(requestsStore.porMoverPorId[request.value.id] ?? []) : ''))
 
-// Solicitudes con las que se topa esta (SCRUM-60); la resolución es manual
-const conflicts = computed(() => {
-  if (!request.value) return []
-  const own = request.value.id
-  return (requestsStore.conflictsByRequestId[own] ?? []).map(c => ({
-    motivo: c.motivo,
-    dias: c.dias.map(d => formatDateShort(d)).join(', '),
-    others: c.solicitudIds
-      .filter(id => id !== own)
-      .map(id => requestsStore.requests.find(r => r.id === id))
-      .filter((r): r is NonNullable<typeof r> => !!r)
-  }))
+// Solicitudes con las que se topa esta (SCRUM-60, SCRUM-287); la resolución es manual
+const resumenCruce = computed(() => {
+  if (!request.value) return null
+  return resumirCruce({
+    solicitud: request.value,
+    solicitudes: requestsStore.requests,
+    conflictos: requestsStore.conflictsByRequestId[request.value.id] ?? [],
+    bloqueantes: requestsStore.porMoverPorId[request.value.id] ?? []
+  })
 })
 
 const paidPercent = computed(() => {
@@ -109,7 +108,7 @@ watch(() => props.requestId, () => {
   paymentError.value = ''
 })
 
-// Si la solicitud se cruza con otras, se abre el diálogo para elegir cuál confirmar (SCRUM-262)
+// Después de confirmar una solicitud que tenía otras encima, diálogo para avisarles (SCRUM-262, SCRUM-287)
 const cruceId = ref<string | null>(null)
 
 // Si falta abono, primero se avisa (SCRUM-264); el admin decide si confirma igual
@@ -127,12 +126,22 @@ function approve() {
 async function continueApproval() {
   sinAbonoId.value = null
   if (!request.value || bloqueo.value) return
-  if (requestsStore.crossedRequestsFor(request.value.id).length > 0) {
-    cruceId.value = request.value.id
+  // El bloque de cruces de arriba ya mostró con qué se topa: se confirma directo (SCRUM-287).
+  // Si había otras solicitudes encima, se abre el diálogo solo para avisarles o cambiarles la fecha.
+  const id = request.value.id
+  const habiaCruces = requestsStore.crossedRequestsFor(id).length > 0
+  if (!(await requestsStore.confirmRequest(id))) return
+  if (habiaCruces && requestsStore.crossedRequestsFor(id).length > 0) {
+    cruceId.value = id
     return
   }
-  await requestsStore.confirmRequest(request.value.id)
   emit('close')
+}
+
+/** Al cerrar el diálogo de avisos: si la reserva ya quedó confirmada, el detalle también se cierra. */
+function cerrarCruce() {
+  cruceId.value = null
+  if (request.value?.status === 'confirmed') emit('close')
 }
 
 async function reject() {
@@ -278,31 +287,12 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
 
         <template v-else>
           <!-- Se cruza con otras solicitudes: el aviso más importante va primero -->
-          <section v-if="conflicts.length > 0" class="space-y-2 bg-rose-50 border border-status-danger rounded-2xl p-3">
-            <h3 class="text-base font-bold text-rose-950 flex items-center gap-1.5">
-              <AlertTriangle class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
-              {{ bloqueo ? `Fecha ocupada por ${bloqueo}` : 'Se cruza con' }}
-            </h3>
-            <div v-for="(conflict, index) in conflicts" :key="index" class="space-y-1.5">
-              <p class="text-sm text-rose-950">{{ conflict.motivo }}. Días: {{ conflict.dias }}.</p>
-              <button
-                v-for="other in conflict.others"
-                :key="other.id"
-                type="button"
-                @click="emit('open-request', other.id)"
-                class="w-full text-left bg-white border border-rose-300 rounded-xl px-3 py-2 flex items-center gap-2 active:scale-[0.99] transition-transform"
-              >
-                <span class="min-w-0 flex-1">
-                  <span class="block text-base font-bold text-brand-dark break-words">{{ other.clientName }}</span>
-                  <span class="block text-sm text-gray-600">{{ other.requestCode }} · {{ other.guestsCount }} personas</span>
-                </span>
-                <EstadoSolicitud :status="other.status" />
-                <ChevronRight class="w-4 h-4 text-gray-500 shrink-0" aria-hidden="true" />
-              </button>
-            </div>
-            <p v-if="bloqueo" class="text-sm font-bold text-rose-950">No se puede aprobar: muévela de fecha o recházala.</p>
-            <p v-else class="text-sm text-rose-950">No se rechaza nada solo: decide tú cuál aprobar.</p>
-          </section>
+          <AvisoCruceSolicitud
+            v-if="resumenCruce"
+            :key="request.id"
+            :resumen="resumenCruce"
+            @open-request="id => emit('open-request', id)"
+          />
 
           <!-- Fechas: llegada y salida en grande, como en un calendario -->
           <section class="space-y-2">
@@ -569,7 +559,7 @@ const claseResumen = 'cursor-pointer list-none flex items-center justify-between
     </HojaModal>
 
     <AdminConfirmarSinAbonoDialog :request-id="sinAbonoId" @confirm="continueApproval" @close="sinAbonoId = null" />
-    <AdminConfirmarCruceDialog :request-id="cruceId" @close="cruceId = null" />
+    <AdminConfirmarCruceDialog :request-id="cruceId" @close="cerrarCruce" />
     <AdminMoverFechaDialog :request-id="moviendo ? request.id : null" @close="moviendo = false" />
     <AdminCancelarReservaDialog :request-id="cancelandoReserva ? request.id : null" @close="cerrarCancelacion" />
   </template>
