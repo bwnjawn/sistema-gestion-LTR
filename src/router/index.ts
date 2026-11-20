@@ -82,6 +82,7 @@ const routes = [
       { path: 'ajustes/negocio', name: 'admin-settings-negocio', meta: { titulo: 'Datos del negocio', ayuda: 'ajustes' }, component: () => import('../views/admin/ajustes/AjustesNegocioView.vue') },
       { path: 'ajustes/reglas', name: 'admin-settings-reglas', meta: { titulo: 'Reglas de reservas', ayuda: 'ajustes' }, component: () => import('../views/admin/ajustes/AjustesReglasView.vue') },
       { path: 'ajustes/contenido', name: 'admin-settings-contenido', meta: { titulo: 'Contenido', ayuda: 'ajustes' }, component: () => import('../views/admin/ajustes/AjustesContenidoView.vue') },
+      { path: 'ajustes/avisos', name: 'admin-settings-avisos', meta: { titulo: 'Avisos', ayuda: 'ajustes' }, component: () => import('../views/admin/ajustes/AjustesAvisosView.vue') },
       { path: 'ajustes/equipo', name: 'admin-settings-equipo', meta: { titulo: 'Equipo', ayuda: 'ajustes' }, component: () => import('../views/admin/ajustes/AjustesEquipoView.vue') },
       // Rutas antiguas
       { path: 'editar', redirect: { name: 'admin-catalog' } },

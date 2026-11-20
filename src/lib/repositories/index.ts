@@ -14,6 +14,8 @@ import type { PreferenciasRepository } from './preferenciasRepository'
 import { LocalPreferenciasRepository } from './preferenciasRepository'
 import { ColaCambiosIndexedDb } from './colaCambiosRepository'
 import type { AuthRepository } from './authRepository'
+import type { AvisosPushRepository } from './avisosPushRepository'
+import { LocalAvisosPushRepository } from './avisosPushRepository'
 import type { AvailabilityRepository } from './availabilityRepository'
 import { LocalAvailabilityRepository } from './availabilityRepository'
 import { LocalAuthRepository } from './authRepository'
@@ -47,6 +49,8 @@ export interface Repositorios {
   colaCambios: ColaCambiosRepository
   /** Preferencias de pantalla de este dispositivo, como el tamaño de la letra (SCRUM-276). */
   preferencias: PreferenciasRepository
+  /** Dispositivos del administrador con avisos push de solicitudes nuevas activados (SCRUM-68). Solo con Supabase. */
+  avisosPush: AvisosPushRepository
 }
 
 /** Todos los repositorios sobre un almacenamiento local (el real o uno en memoria para pruebas). */
@@ -63,7 +67,8 @@ export function crearRepositoriosLocales(almacenamiento: Almacenamiento = almace
     auth: new LocalAuthRepository(almacenamiento),
     colaEnvio: new ColaEnvioIndexedDb(),
     colaCambios: new ColaCambiosIndexedDb(),
-    preferencias: new LocalPreferenciasRepository(almacenamiento)
+    preferencias: new LocalPreferenciasRepository(almacenamiento),
+    avisosPush: new LocalAvisosPushRepository()
   }
 }
 
