@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { CheckCircle2, FileCheck, Utensils, Tent, RotateCcw } from 'lucide-vue-next'
+import { CheckCircle2, Utensils, Tent, RotateCcw } from 'lucide-vue-next'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import AvisoEnvio from '../../../components/ui/AvisoEnvio.vue'
+import CodigoSolicitud from '../../../components/ui/CodigoSolicitud.vue'
 import { useEnvioSolicitud } from '../../../composables/useEnvioSolicitud'
 import { useSalidaReserva } from '../../../composables/useSalidaReserva'
 import ConfirmacionReservaAdmin from '../../../components/ui/ConfirmacionReservaAdmin.vue'
@@ -54,7 +55,7 @@ function handleGoToCamping() {
 
 const { terminar: handleGoHome } = useSalidaReserva()
 
-const { isSubmitting, errorEnvio, sinConexion, enviar } = useEnvioSolicitud()
+const { isSubmitting, errorEnvio, sinConexion, seGuardaParaDespues, bloqueado, enviar } = useEnvioSolicitud()
 
 function handleSendRequest() {
   return enviar(async () => {
@@ -125,6 +126,7 @@ function confirmarEstadoAdmin() {
 
       <AvisoEnvio
         :sin-conexion="sinConexion"
+        :se-guarda="seGuardaParaDespues"
         :error="errorEnvio"
         :enviando="isSubmitting"
         @reintentar="handleSendRequest"
@@ -139,7 +141,7 @@ function confirmarEstadoAdmin() {
         @cerrar="mostrarEstadoAdmin = false"
       />
 
-      <BarraAccionInferior enviar :total="totalWithIva" :abono="depositAmount" :loading="isSubmitting || sinConexion" :disabled="sinConexion" @click="alTocarEnviar">{{ sinConexion ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar solicitud' }}</BarraAccionInferior>
+      <BarraAccionInferior enviar :total="totalWithIva" :abono="depositAmount" :loading="isSubmitting || bloqueado" :disabled="bloqueado" @click="alTocarEnviar">{{ bloqueado ? 'Esperando conexión…' : isSubmitting ? 'Enviando…' : 'Enviar solicitud' }}</BarraAccionInferior>
     </div>
 
     <!-- El administrador ve su propia confirmación, sin el texto dirigido al cliente -->
@@ -157,10 +159,7 @@ function confirmarEstadoAdmin() {
       </div>
 
       <div class="space-y-2.5">
-        <div class="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border px-3.5 py-1 rounded-full text-sm font-bold text-brand-dark shadow-2xs">
-          <FileCheck class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-          <span>Código: {{ reservationCode }}</span>
-        </div>
+        <CodigoSolicitud :codigo="reservationCode" />
 
         <h2 class="text-2xl font-bold text-brand-dark tracking-tight">
           ¡Solicitud de Cabaña Registrada!

@@ -2,6 +2,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { servidorInalcanzable } from '../lib/estadoDeRed'
 import type { BusinessInfo, TransferInfo } from '../types/domain'
 import type {
   AjustesGuardados,
@@ -53,16 +54,20 @@ export const useSettingsStore = defineStore('settings', () => {
   const isReady = ref(false)
   const error = ref<string | null>(null)
 
-  const isOnline = ref(typeof navigator !== 'undefined' ? navigator.onLine : true)
+  const isOnline = ref(typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean' ? navigator.onLine : true)
 
   function updateOnlineStatus() {
-    isOnline.value = typeof navigator !== 'undefined' ? navigator.onLine : true
+    isOnline.value = typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean' ? navigator.onLine : true
   }
 
   if (typeof window !== 'undefined') {
     window.addEventListener('online', updateOnlineStatus)
     window.addEventListener('offline', updateOnlineStatus)
   }
+
+  // Hay conexión si el navegador la reporta Y el último pedido al servidor funcionó (SCRUM-250): en iPhone
+  // `navigator.onLine` puede decir que sí sin que haya señal de verdad
+  const isConnected = computed(() => isOnline.value && !servidorInalcanzable.value)
 
   const currentDateDynamic = computed(() => {
     const now = new Date()
@@ -298,7 +303,7 @@ export const useSettingsStore = defineStore('settings', () => {
     limitesAforo,
     limiteVariedades,
     currentDate: currentDateDynamic,
-    isConnected: isOnline,
+    isConnected,
     phone1Clean,
     phone2Clean,
     updateContactInfo,

@@ -1,7 +1,8 @@
 // src/lib/errores.ts
 // Errores de la capa de datos. El mensaje siempre está en español y es apto para mostrarse al usuario.
 
-export type CausaErrorAlmacenamiento = 'cuota' | 'desconocida'
+/** `red`: no se pudo hablar con el servidor (sin señal, corte o demora). Es lo único que la cola de envío reintenta. */
+export type CausaErrorAlmacenamiento = 'cuota' | 'red' | 'desconocida'
 
 /** Falló al leer o escribir en el almacenamiento (navegador lleno, sin permiso, base de datos caída…). */
 export class ErrorDeAlmacenamiento extends Error {
@@ -25,6 +26,11 @@ export class ErrorNoEncontrado extends Error {
     super(`No se encontró ${entidad} (${id}).`)
     this.name = 'ErrorNoEncontrado'
   }
+}
+
+/** El error es de red (sin señal o servidor inalcanzable), no una regla del negocio ni un fallo de permisos. */
+export function esErrorDeRed(error: unknown): boolean {
+  return (error instanceof ErrorDeAlmacenamiento && error.causa === 'red') || error instanceof TypeError
 }
 
 /** Texto para el usuario: el del error si ya está en español, o el de respaldo. */

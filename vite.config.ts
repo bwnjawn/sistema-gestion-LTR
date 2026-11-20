@@ -9,7 +9,19 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'apple-touch-icon-admin.png', 'pwa-admin-192x192.png', 'pwa-admin-512x512.png'],
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg,woff2}']
+        globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
+        // Sin señal las fotos del catálogo y del inicio (Supabase Storage) se siguen viendo (SCRUM-250)
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }: { url: URL }) => url.hostname.endsWith('.supabase.co') && url.pathname.startsWith('/storage/v1/object/public/'),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'fotos-supabase',
+              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          }
+        ]
       },
       manifest: {
         name: 'Los Troncos de Repil',

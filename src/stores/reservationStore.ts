@@ -5,6 +5,7 @@ import { computed, ref, watch } from 'vue'
 import { useRequestsStore } from './requestsStore'
 import { useSettingsStore } from './settingsStore'
 import { useCatalogStore } from './catalogStore'
+import { useColaEnvioStore } from './colaEnvioStore'
 import { todayISO } from '../lib/dates'
 import { calculateBookingPrice, type PriceBreakdown } from '../services/pricing'
 import { buildRequestFromDraft, generateRequestCode } from '../services/requests'
@@ -377,7 +378,8 @@ export const useReservationStore = defineStore('reservation', () => {
     // Limpia el borrador de sessionStorage una vez enviada la solicitud
     clearDraftFromSession()
     solicitudEnviada.value = true
-    return creada.requestCode
+    // Sin señal quedó guardada en el teléfono (SCRUM-250): todavía no tiene código del servidor
+    return useColaEnvioStore().estaEnCola(creada.id) ? '' : creada.requestCode
   }
 
   return {

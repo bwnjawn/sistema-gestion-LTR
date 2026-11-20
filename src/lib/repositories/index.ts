@@ -6,6 +6,9 @@
 import { almacenamientoLocal, type Almacenamiento } from '../persistence'
 import { supabaseConfigurado } from '../supabase'
 import { crearRepositoriosSupabase } from './supabase'
+import { conCacheSinConexion } from './conCacheSinConexion'
+import type { ColaEnvioRepository } from './colaEnvioRepository'
+import { ColaEnvioIndexedDb } from './colaEnvioRepository'
 import type { AuthRepository } from './authRepository'
 import type { AvailabilityRepository } from './availabilityRepository'
 import { LocalAvailabilityRepository } from './availabilityRepository'
@@ -34,6 +37,8 @@ export interface Repositorios {
   settings: SettingsRepository
   documents: DocumentosRepository
   auth: AuthRepository
+  /** Solicitudes del cliente que esperan señal para enviarse (SCRUM-250). Viven en el dispositivo. */
+  colaEnvio: ColaEnvioRepository
 }
 
 /** Todos los repositorios sobre un almacenamiento local (el real o uno en memoria para pruebas). */
@@ -47,7 +52,8 @@ export function crearRepositoriosLocales(almacenamiento: Almacenamiento = almace
     availability: new LocalAvailabilityRepository(requests),
     settings: new LocalSettingsRepository(almacenamiento),
     documents: new LocalDocumentosRepository(),
-    auth: new LocalAuthRepository(almacenamiento)
+    auth: new LocalAuthRepository(almacenamiento),
+    colaEnvio: new ColaEnvioIndexedDb()
   }
 }
 
@@ -55,7 +61,7 @@ let actuales: Repositorios | null = null
 
 /** Los repositorios en uso. Se crean la primera vez que se piden. */
 export function repositorios(): Repositorios {
-  if (!actuales) actuales = supabaseConfigurado ? crearRepositoriosSupabase() : crearRepositoriosLocales()
+  if (!actuales) actuales = supabaseConfigurado ? conCacheSinConexion(crearRepositoriosSupabase()) : crearRepositoriosLocales()
   return actuales
 }
 

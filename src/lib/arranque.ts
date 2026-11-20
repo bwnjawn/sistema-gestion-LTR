@@ -10,6 +10,7 @@ import { repositorios } from './repositories'
 import { useActualizacionStore } from '../stores/actualizacionStore'
 import { useAuthStore } from '../stores/authStore'
 import { useCatalogStore } from '../stores/catalogStore'
+import { useColaEnvioStore } from '../stores/colaEnvioStore'
 import { useDisponibilidadStore } from '../stores/disponibilidadStore'
 import { useRequestsStore } from '../stores/requestsStore'
 import { useSettingsStore } from '../stores/settingsStore'
@@ -34,6 +35,8 @@ export async function inicializarAplicacion(): Promise<void> {
   actualizacion.marcarActualizado()
   // Con la sesión guardada del administrador, el panel se mantiene al día en vivo
   actualizacion.empezarTiempoReal()
+  // Las solicitudes que quedaron guardadas sin señal se reintentan solas (SCRUM-250)
+  await useColaEnvioStore().iniciar()
 }
 
 /** Lo que solo ve un administrador: todas las solicitudes y el catálogo completo (también lo dado de baja). */
