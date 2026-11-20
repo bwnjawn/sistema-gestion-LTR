@@ -33,15 +33,15 @@ const lineaAcompanamiento = computed(() => {
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
           <h3 class="text-base font-bold text-brand-dark leading-snug">{{ dish.name }}</h3>
-          <p class="text-sm text-gray-600">{{ categoryLabel }} · {{ formattedPrice }}</p>
+          <p class="text-base text-gray-600">{{ categoryLabel }} · {{ formattedPrice }}</p>
         </div>
         <div class="-mt-1 -mr-1 shrink-0">
           <slot name="menu" :dish="dish" />
         </div>
       </div>
 
-      <p v-if="dish.description" class="mt-1 text-sm text-gray-700 line-clamp-2">{{ dish.description }}</p>
-      <p v-if="lineaAcompanamiento" class="mt-1 text-sm text-gray-600 line-clamp-2">{{ lineaAcompanamiento }}</p>
+      <p v-if="dish.description" class="mt-1 text-base text-gray-700 line-clamp-2">{{ dish.description }}</p>
+      <p v-if="lineaAcompanamiento" class="mt-1 text-base text-gray-600 line-clamp-2">{{ lineaAcompanamiento }}</p>
     </div>
   </article>
 </template>

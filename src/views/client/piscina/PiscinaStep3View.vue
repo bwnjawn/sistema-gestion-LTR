@@ -46,19 +46,19 @@ const { terminar: handleGoHome } = useSalidaReserva()
       <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-4">
         <div class="space-y-0.5">
           <div class="flex items-center justify-between gap-3">
-            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Visita</p>
+            <p class="text-sm font-bold text-brand-accent">Visita</p>
             <button type="button" @click="router.push('/piscina/paso1')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
           <p class="text-xl font-bold text-brand-dark">{{ formatDateShort(store.checkInDate) }}</p>
-          <p class="text-sm text-gray-700">{{ personas }}</p>
+          <p class="text-base text-gray-700">{{ personas }}</p>
         </div>
         <div class="space-y-0.5 pt-4 border-t border-gray-200">
           <div class="flex items-center justify-between gap-3">
-            <p class="text-xs font-bold text-brand-accent uppercase tracking-wider">Contacto</p>
+            <p class="text-sm font-bold text-brand-accent">Contacto</p>
             <button type="button" @click="router.push('/piscina/paso2')" class="text-sm font-bold text-brand-accent underline py-1 shrink-0">Editar</button>
           </div>
           <p class="text-base font-bold text-brand-dark">{{ store.clientName }}</p>
-          <p class="text-sm text-gray-700">{{ store.clientPhone }}</p>
+          <p class="text-base text-gray-700">{{ store.clientPhone }}</p>
         </div>
         <div class="pt-4 border-t border-gray-200 space-y-1.5 text-sm text-gray-700">
           <div class="flex justify-between gap-3"><span>{{ personas }} × {{ formatCLP(settingsStore.poolEntryPrice) }}</span><span>{{ formatCLP(total) }}</span></div>
@@ -93,14 +93,14 @@ const { terminar: handleGoHome } = useSalidaReserva()
       <div class="space-y-2.5">
         <CodigoSolicitud :codigo="reservationCode" />
         <h2 class="text-2xl font-bold text-brand-dark tracking-tight">¡Visita registrada!</h2>
-        <p class="text-sm text-gray-700 leading-relaxed max-w-xs mx-auto">
+        <p class="text-base text-gray-700 leading-relaxed max-w-xs mx-auto">
           Te esperamos el <strong class="text-brand-dark font-bold">{{ formatDateShort(store.checkInDate) }}</strong> con
           <strong class="text-brand-dark font-bold">{{ personas }}</strong>. No necesitas abonar nada.
         </p>
       </div>
 
       <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left text-sm text-gray-700 flex justify-between items-center">
-        <span class="text-gray-500">Total de la entrada:</span>
+        <span class="text-gray-600">Total de la entrada:</span>
         <span class="text-base font-bold text-brand-dark">{{ formatCLP(total) }}</span>
       </div>
 

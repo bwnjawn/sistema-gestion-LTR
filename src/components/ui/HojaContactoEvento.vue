@@ -43,8 +43,8 @@ const contactos = computed(() =>
       class="flex items-center gap-3 rounded-2xl border border-brand-border bg-brand-light p-3"
     >
       <div class="grow min-w-0">
-        <span class="text-sm font-bold text-gray-500 block leading-none">{{ c.etiqueta }}</span>
-        <span class="text-base font-black text-brand-dark whitespace-nowrap">{{ c.numero }}</span>
+        <span class="text-sm text-gray-600 block leading-none">{{ c.etiqueta }}</span>
+        <span class="text-base font-bold text-brand-dark whitespace-nowrap">{{ c.numero }}</span>
       </div>
       <a
         :href="c.urlLlamar"
@@ -64,7 +64,7 @@ const contactos = computed(() =>
       </a>
     </div>
 
-    <p v-if="contactos.length === 0" class="text-sm font-bold text-gray-600">
+    <p v-if="contactos.length === 0" class="text-base text-gray-600">
       Escríbenos desde la pestaña Contacto.
     </p>
   </HojaModal>

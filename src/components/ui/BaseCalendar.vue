@@ -248,10 +248,10 @@ function isToday(dayNum: number) {
       </button>
 
       <div class="text-center">
-        <span class="text-lg font-extrabold text-brand-dark block leading-tight">
+        <span class="text-lg font-bold text-brand-dark block leading-tight">
           {{ monthNames[currentMonth] }} {{ currentYear }}
         </span>
-        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">{{ todayFormatted }}</span>
+        <span class="text-sm text-gray-600">{{ todayFormatted }}</span>
       </div>
 
       <button 
@@ -268,18 +268,18 @@ function isToday(dayNum: number) {
       <button 
         type="button"
         @click="goToToday"
-        class="px-5 py-2 bg-white border-2 border-brand-border text-brand-dark font-extrabold text-xs rounded-full hover:bg-brand-light active:scale-95 transition-transform shadow-xs"
+        class="px-5 py-2 bg-white border-2 border-brand-border text-brand-dark font-bold text-sm rounded-full hover:bg-brand-light active:scale-95 transition-transform shadow-xs"
       >
         Ir a hoy
       </button>
     </div>
 
     <div class="pt-1">
-      <div class="grid grid-cols-7 text-center font-extrabold text-xs text-gray-500 mb-2 uppercase tracking-wider">
+      <div class="grid grid-cols-7 text-center text-sm text-gray-600 mb-2">
         <span v-for="d in dayNames" :key="d">{{ d }}</span>
       </div>
 
-      <div class="grid grid-cols-7 gap-y-1.5 text-center font-extrabold text-base">
+      <div class="grid grid-cols-7 gap-y-1.5 text-center font-bold text-base">
         <span v-for="blank in firstDayOffset" :key="'b-' + blank" class="h-12"></span>
 
         <div v-for="day in daysInMonth" :key="day" class="relative h-12 flex items-center justify-center">
@@ -295,11 +295,11 @@ function isToday(dayNum: number) {
               estaDeshabilitado(day)
                 ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through'
                 : isSelectedStart(day) || isSelectedEnd(day)
-                  ? 'bg-brand-dark text-white shadow-md font-black'
+                  ? 'bg-brand-dark text-white shadow-md font-bold'
                   : isInRange(day)
-                    ? 'text-brand-dark font-black'
+                    ? 'text-brand-dark font-bold'
                     : isToday(day)
-                      ? 'border-2 border-brand-dark bg-emerald-50 text-brand-dark font-black'
+                      ? 'border-2 border-brand-dark bg-emerald-50 text-brand-dark font-bold'
                       : 'hover:bg-brand-light text-brand-dark'
             ]"
           >
@@ -318,17 +318,17 @@ function isToday(dayNum: number) {
       <button
         type="button"
         @click="clearDates"
-        class="px-4 py-2 bg-white border-2 border-brand-border text-brand-dark font-extrabold text-sm rounded-full hover:bg-brand-light active:scale-95 transition-transform touch-target"
+        class="px-4 py-2 bg-white border-2 border-brand-border text-brand-dark font-bold text-sm rounded-full hover:bg-brand-light active:scale-95 transition-transform touch-target"
       >
         Borrar fechas
       </button>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-extrabold pt-3 border-t border-gray-200">
+    <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm font-bold pt-3 border-t border-gray-200">
       <span class="flex items-center gap-1.5">
         <span class="w-3.5 h-3.5 bg-brand-dark rounded-full inline-block"></span> Elegido
       </span>
-      <span class="flex items-center gap-1.5 text-gray-400">
+      <span class="flex items-center gap-1.5 text-gray-600">
         <span class="w-3.5 h-3.5 bg-gray-200 rounded-full inline-block"></span> Sin cupo
       </span>
       <span class="flex items-center gap-1.5">

@@ -185,40 +185,40 @@ async function save() {
       />
     </div>
 
-    <p v-if="request.type === 'piscina'" class="text-sm text-gray-700">
+    <p v-if="request.type === 'piscina'" class="text-base text-gray-700">
       Si cambias las personas, el total se recalcula con el mismo valor por persona.
     </p>
-    <p v-else-if="request.type !== 'restaurante'" class="text-sm text-gray-700">
+    <p v-else-if="request.type !== 'restaurante'" class="text-base text-gray-700">
       Si cambias las fechas o las personas, el total y el abono exigido se recalculan. Los pagos ya registrados se conservan.
     </p>
 
-    <p v-if="error" class="text-sm font-bold text-rose-950 bg-rose-50 border border-status-danger rounded-xl p-2" role="alert">{{ error }}</p>
+    <p v-if="error" class="text-base font-bold text-rose-950 bg-rose-50 border border-status-danger rounded-xl p-2" role="alert">{{ error }}</p>
 
     <!-- Barra fija: siempre a la vista, con el resumen de lo que se guardará -->
     <div class="sticky bottom-0 z-20 -mx-3 -mb-3 px-3 py-3 bg-white border-t-2 border-brand-border/60 rounded-b-2xl space-y-2">
       <div v-if="confirmingDates" class="border-2 border-amber-500 bg-amber-50 rounded-2xl p-3 space-y-2" role="alertdialog">
-        <p class="text-sm font-bold text-amber-950">{{ datesChangeMessage }}</p>
+        <p class="text-base font-bold text-amber-950">{{ datesChangeMessage }}</p>
         <div class="grid grid-cols-2 gap-2">
-          <BaseButton type="button" variant="primary" size="md" class="!text-sm" @click="save">Sí, cambiar</BaseButton>
-          <BaseButton type="button" variant="outline" size="md" class="!text-sm" @click="confirmingDates = false">No, volver</BaseButton>
+          <BaseButton type="button" variant="primary" size="md" class="!text-base" @click="save">Sí, cambiar</BaseButton>
+          <BaseButton type="button" variant="outline" size="md" class="!text-base" @click="confirmingDates = false">No, volver</BaseButton>
         </div>
       </div>
 
       <div v-else-if="confirmingDiscard" class="border-2 border-status-danger bg-rose-50 rounded-2xl p-3 space-y-2" role="alertdialog">
-        <p class="text-sm font-bold text-rose-950">Hay cambios sin guardar. ¿Salir sin guardarlos?</p>
+        <p class="text-base font-bold text-rose-950">Hay cambios sin guardar. ¿Salir sin guardarlos?</p>
         <div class="grid grid-cols-2 gap-2">
-          <BaseButton type="button" variant="danger" size="md" class="!text-sm" @click="emit('cancel')">Sí, descartar</BaseButton>
-          <BaseButton type="button" variant="outline" size="md" class="!text-sm" @click="confirmingDiscard = false">No, seguir</BaseButton>
+          <BaseButton type="button" variant="danger" size="md" class="!text-base" @click="emit('cancel')">Sí, descartar</BaseButton>
+          <BaseButton type="button" variant="outline" size="md" class="!text-base" @click="confirmingDiscard = false">No, seguir</BaseButton>
         </div>
       </div>
 
       <template v-else>
-        <p :class="['text-sm font-bold', hasChanges ? 'text-brand-dark' : 'text-gray-700']">{{ changeSummary }}</p>
+        <p :class="['text-base font-bold', hasChanges ? 'text-brand-dark' : 'text-gray-700']">{{ changeSummary }}</p>
         <div class="grid grid-cols-2 gap-2">
-          <BaseButton type="submit" variant="primary" size="md" class="!text-sm" :disabled="!hasChanges">
+          <BaseButton type="submit" variant="primary" size="md" class="!text-base" :disabled="!hasChanges">
             <Save class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Guardar cambios
           </BaseButton>
-          <BaseButton type="button" variant="outline" size="md" class="!text-sm" @click="requestCancel">
+          <BaseButton type="button" variant="outline" size="md" class="!text-base" @click="requestCancel">
             <X class="w-4 h-4 mr-1.5 stroke-[2.5]" aria-hidden="true" /> Cancelar
           </BaseButton>
         </div>

@@ -50,7 +50,7 @@ const icon = computed(() => {
 
     <div class="space-y-0.5">
       <!-- Título destacado en negrita -->
-      <h4 v-if="title" class="font-extrabold text-sm uppercase tracking-wider">
+      <h4 v-if="title" class="font-bold text-sm">
         {{ title }}
       </h4>
 

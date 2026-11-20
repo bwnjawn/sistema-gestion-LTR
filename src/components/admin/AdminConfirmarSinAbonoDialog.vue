@@ -35,8 +35,8 @@ const payment = computed(() => (request.value ? getPaymentSummary(request.value)
     </p>
     <template #pie>
       <div class="grid grid-cols-2 gap-2">
-        <BaseButton variant="success" size="md" class="!text-sm" @click="emit('confirm', request.id)">Confirmar igual</BaseButton>
-        <BaseButton variant="outline" size="md" class="!text-sm" @click="emit('close')">Volver</BaseButton>
+        <BaseButton variant="success" size="md" class="!text-base" @click="emit('confirm', request.id)">Confirmar igual</BaseButton>
+        <BaseButton variant="outline" size="md" class="!text-base" @click="emit('close')">Volver</BaseButton>
       </div>
     </template>
   </HojaModal>

@@ -211,7 +211,7 @@ function close() {
                 :aria-pressed="form.sideMode === opcion.valor"
                 :class="[
                   'py-2.5 px-1 rounded-lg text-sm',
-                  form.sideMode === opcion.valor ? 'bg-white text-brand-dark font-bold shadow-sm' : 'text-gray-600'
+                  form.sideMode === opcion.valor ? 'bg-white text-brand-dark shadow-sm' : 'text-gray-600'
                 ]"
                 @click="form.sideMode = opcion.valor"
               >

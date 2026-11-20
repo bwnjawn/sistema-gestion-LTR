@@ -38,8 +38,8 @@ const settingsStore = useSettingsStore()
       </div>
 
       <div class="min-w-0 grow px-2">
-        <h1 class="text-xl font-black text-brand-dark leading-tight truncate">{{ titulo }}</h1>
-        <p v-if="subtitulo" class="text-sm font-bold text-gray-700 leading-tight truncate">{{ subtitulo }}</p>
+        <h1 class="text-xl font-bold text-brand-dark leading-tight truncate">{{ titulo }}</h1>
+        <p v-if="subtitulo" class="text-sm text-gray-700 leading-tight truncate">{{ subtitulo }}</p>
       </div>
 
       <!-- Sin borde ni fondo: el ícono ya es un círculo y un marco lo dejaría doble -->
@@ -70,7 +70,7 @@ const settingsStore = useSettingsStore()
       role="status"
       class="bg-amber-100 border-t-2 border-amber-500 text-amber-950"
     >
-      <p class="max-w-md mx-auto px-4 py-2 flex items-center gap-2 text-sm font-black">
+      <p class="max-w-md mx-auto px-4 py-2 flex items-center gap-2 text-sm font-bold">
         <WifiOff class="w-4 h-4 stroke-[2.5] shrink-0" aria-hidden="true" />
         Sin conexión. Puedes enviar: se guardará y se mandará al volver la señal.
       </p>

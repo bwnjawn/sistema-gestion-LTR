@@ -14,7 +14,7 @@ const settingsStore = useSettingsStore()
   <div class="space-y-4 max-w-md mx-auto w-full px-4 pt-4 pb-contenido-nav">
     <!-- Canales de Contacto Directo -->
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
-      <h2 class="text-sm font-black text-brand-dark border-b border-gray-100 pb-2">
+      <h2 class="text-sm font-bold text-brand-dark border-b border-gray-100 pb-2">
         Atención y Consultas
       </h2>
 
@@ -28,8 +28,8 @@ const settingsStore = useSettingsStore()
             <Phone class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <span class="text-sm text-gray-500 block leading-none">Llamar o escribir por WhatsApp</span>
-            <span class="text-sm font-black">{{ settingsStore.contactInfo.phone1 }}</span>
+            <span class="text-sm text-gray-600 block leading-none">Llamar o escribir por WhatsApp</span>
+            <span class="text-sm font-bold">{{ settingsStore.contactInfo.phone1 }}</span>
           </div>
         </a>
 
@@ -42,8 +42,8 @@ const settingsStore = useSettingsStore()
             <Phone class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <span class="text-sm text-gray-500 block leading-none">Teléfono Secundario</span>
-            <span class="text-sm font-black">{{ settingsStore.contactInfo.phone2 }}</span>
+            <span class="text-sm text-gray-600 block leading-none">Teléfono Secundario</span>
+            <span class="text-sm font-bold">{{ settingsStore.contactInfo.phone2 }}</span>
           </div>
         </a>
 
@@ -56,8 +56,8 @@ const settingsStore = useSettingsStore()
             <Mail class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div class="min-w-0 flex-1">
-            <span class="text-sm text-gray-500 block leading-none">Correo Electrónico</span>
-            <span class="text-sm font-black truncate block">{{ settingsStore.contactInfo.email }}</span>
+            <span class="text-sm text-gray-600 block leading-none">Correo Electrónico</span>
+            <span class="text-sm font-bold truncate block">{{ settingsStore.contactInfo.email }}</span>
           </div>
         </a>
 
@@ -73,8 +73,8 @@ const settingsStore = useSettingsStore()
             <Globe class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <span class="text-sm text-gray-500 block leading-none">Sitio Web Oficial</span>
-            <span class="text-sm font-black">{{ settingsStore.contactInfo.websiteDisplay }}</span>
+            <span class="text-sm text-gray-600 block leading-none">Sitio Web Oficial</span>
+            <span class="text-sm font-bold">{{ settingsStore.contactInfo.websiteDisplay }}</span>
           </div>
         </a>
 
@@ -90,8 +90,8 @@ const settingsStore = useSettingsStore()
             <Instagram class="w-4 h-4 stroke-[2.5]" />
           </div>
           <div>
-            <span class="text-sm text-gray-500 block leading-none">Síguenos en Instagram</span>
-            <span class="text-sm font-black">{{ settingsStore.contactInfo.instagramUser }}</span>
+            <span class="text-sm text-gray-600 block leading-none">Síguenos en Instagram</span>
+            <span class="text-sm font-bold">{{ settingsStore.contactInfo.instagramUser }}</span>
           </div>
         </a>
       </div>
@@ -101,21 +101,21 @@ const settingsStore = useSettingsStore()
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center gap-2 text-brand-dark">
         <Clock class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-        <h2 class="text-sm font-black">Horarios de Atención y Servicios</h2>
+        <h2 class="text-sm font-bold">Horarios de Atención y Servicios</h2>
       </div>
 
-      <div class="space-y-2 text-sm font-bold text-gray-700 bg-brand-light p-3.5 rounded-2xl border border-brand-border">
-        <div class="flex justify-between items-center">
-          <span class="text-gray-500">Cabañas (entrada y salida):</span>
-          <span class="text-brand-dark">{{ settingsStore.cabinSchedules.checkIn }} - {{ settingsStore.cabinSchedules.checkOut }} horas</span>
+      <div class="space-y-2 text-base text-gray-700 bg-brand-light p-3.5 rounded-2xl border border-brand-border">
+        <div class="flex flex-wrap justify-between items-center gap-x-3 gap-y-0.5">
+          <span class="text-gray-600">Cabañas (entrada y salida):</span>
+          <span class="font-bold text-brand-dark">{{ settingsStore.cabinSchedules.checkIn }} - {{ settingsStore.cabinSchedules.checkOut }} horas</span>
         </div>
-        <div class="flex justify-between items-center">
-          <span class="text-gray-500">Camping (Día de campo):</span>
-          <span class="text-brand-dark">{{ settingsStore.campingSchedules.diario.checkIn }} - {{ settingsStore.campingSchedules.diario.checkOut }} horas</span>
+        <div class="flex flex-wrap justify-between items-center gap-x-3 gap-y-0.5">
+          <span class="text-gray-600">Camping (Día de campo):</span>
+          <span class="font-bold text-brand-dark">{{ settingsStore.campingSchedules.diario.checkIn }} - {{ settingsStore.campingSchedules.diario.checkOut }} horas</span>
         </div>
-        <div class="flex justify-between items-center">
-          <span class="text-gray-500">Restaurante (Almuerzo):</span>
-          <span class="text-brand-dark">{{ settingsStore.restaurantSchedules.almuerzo.start }} - {{ settingsStore.restaurantSchedules.almuerzo.end }} horas</span>
+        <div class="flex flex-wrap justify-between items-center gap-x-3 gap-y-0.5">
+          <span class="text-gray-600">Restaurante (Almuerzo):</span>
+          <span class="font-bold text-brand-dark">{{ settingsStore.restaurantSchedules.almuerzo.start }} - {{ settingsStore.restaurantSchedules.almuerzo.end }} horas</span>
         </div>
       </div>
     </div>
@@ -124,10 +124,10 @@ const settingsStore = useSettingsStore()
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center gap-2 text-brand-dark">
         <MapPin class="w-4 h-4 text-brand-accent stroke-[2.5]" />
-        <h2 class="text-sm font-black">Cómo Llegar</h2>
+        <h2 class="text-sm font-bold">Cómo Llegar</h2>
       </div>
 
-      <p class="text-sm font-medium text-gray-600">
+      <p class="text-base text-gray-600">
         {{ settingsStore.direccionDelLocal }}
       </p>
 
@@ -149,7 +149,7 @@ const settingsStore = useSettingsStore()
         :href="settingsStore.contactInfo.mapsUrl"
         target="_blank"
         rel="noopener noreferrer"
-        class="w-full py-3 px-4 bg-brand-dark text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
+        class="w-full py-3 px-4 bg-brand-dark text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
       >
         <span>Abrir en Google Maps GPS</span>
       </a>

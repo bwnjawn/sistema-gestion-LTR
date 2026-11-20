@@ -30,7 +30,7 @@ const steps = computed(() =>
 
 <template>
   <nav aria-label="Progreso de la reserva" class="w-full py-2">
-    <ol class="flex items-center justify-between w-full text-xs font-bold">
+    <ol class="flex items-center justify-between w-full text-sm font-bold">
       <li
         v-for="(step, index) in steps"
         :key="step.id"
@@ -39,7 +39,7 @@ const steps = computed(() =>
           index < steps.length - 1 ? 'grow after:content-[\'\'] after:w-full after:h-0.5 after:mx-2 sm:after:mx-3 after:transition-colors' : '',
           step.id < currentStep 
             ? 'after:bg-status-success text-status-success' 
-            : 'after:bg-gray-200 text-gray-400'
+            : 'after:bg-gray-200 text-gray-600'
         ]"
       >
         <div class="flex items-center gap-2 shrink-0">
@@ -54,7 +54,7 @@ const steps = computed(() =>
           <!-- Paso Actual (Verde Bosque Destacado) -->
           <span
             v-else-if="step.id === currentStep"
-            class="w-8 h-8 rounded-full bg-brand-dark text-white font-extrabold flex items-center justify-center shadow-sm shrink-0 ring-4 ring-brand-dark/15"
+            class="w-8 h-8 rounded-full bg-brand-dark text-white font-bold flex items-center justify-center shadow-sm shrink-0 ring-4 ring-brand-dark/15"
           >
             <component :is="step.icon" class="w-4.5 h-4.5 stroke-[2.5]" />
           </span>
@@ -62,7 +62,7 @@ const steps = computed(() =>
           <!-- Paso Futuro (Gris Claro) -->
           <span
             v-else
-            class="w-8 h-8 rounded-full bg-white text-gray-400 border-2 border-gray-200 flex items-center justify-center shrink-0 font-bold"
+            class="w-8 h-8 rounded-full bg-white text-gray-600 border-2 border-gray-200 flex items-center justify-center shrink-0 font-bold"
           >
             {{ step.id }}
           </span>
@@ -70,12 +70,12 @@ const steps = computed(() =>
           <!-- Nombre del Paso -->
           <span
             :class="[
-              'text-xs font-bold tracking-tight hidden xs:inline-block',
+              'text-sm font-bold tracking-tight hidden xs:inline-block',
               step.id === currentStep 
-                ? 'text-brand-dark font-extrabold' 
+                ? 'text-brand-dark font-bold' 
                 : step.id < currentStep 
-                  ? 'text-status-success font-semibold' 
-                  : 'text-gray-400 font-medium'
+                  ? 'text-status-success font-bold' 
+                  : 'text-gray-600 font-medium'
             ]"
           >
             {{ step.label }}

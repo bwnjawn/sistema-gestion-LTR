@@ -70,7 +70,7 @@ function handleNext() {
       
       <!-- Selector Exclusivo: Tipo de Cliente -->
       <div class="space-y-2">
-        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm text-gray-700 flex items-center gap-1.5">
           <Building2 class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Tipo de Cliente *
         </label>
@@ -81,7 +81,7 @@ function handleNext() {
             type="button"
             @click="selectedClientType = type"
             :class="[
-              'py-2.5 px-3 rounded-xl font-black text-sm transition-all border-2 text-center touch-target active:scale-95',
+              'py-2.5 px-3 rounded-xl font-bold text-sm transition-all border-2 text-center touch-target active:scale-95',
               selectedClientType === type
                 ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
                 : 'bg-brand-light text-brand-dark border-brand-border hover:bg-gray-100'
@@ -94,7 +94,7 @@ function handleNext() {
 
       <!-- Campo: Nombre / Razón Social -->
       <div class="space-y-1.5">
-        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm text-gray-700 flex items-center gap-1.5">
           <User class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           {{ selectedClientType === 'Particular' ? 'Nombre Completo *' : 'Nombre de la empresa o institución *' }}
         </label>
@@ -102,13 +102,13 @@ function handleNext() {
           type="text"
           v-model="store.clientName"
           :placeholder="selectedClientType === 'Particular' ? 'Ej: Juan Pérez' : 'Ej: Escuela Rural Repil'"
-          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
+          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
       </div>
 
       <!-- Campo: Teléfono de Contacto -->
       <div class="space-y-1.5">
-        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm text-gray-700 flex items-center gap-1.5">
           <Phone class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Teléfono / WhatsApp *
         </label>
@@ -117,19 +117,19 @@ function handleNext() {
           inputmode="numeric"
           v-model="store.clientPhone"
           placeholder="+56 9 1234 5678"
-          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-bold text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
+          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
-        <span v-if="phoneIncomplete" class="text-sm font-black text-rose-800 block" role="alert">
+        <span v-if="phoneIncomplete" class="text-sm font-bold text-rose-800 block" role="alert">
           El número está incompleto: son +56 9 y 8 dígitos más.
         </span>
-        <span class="text-sm font-semibold text-gray-500 block">
+        <span class="text-sm text-gray-600 block">
           Te contactaremos a este número para confirmar los detalles.
         </span>
       </div>
 
       <!-- Campo: Correo Electrónico (Opcional) -->
       <div class="space-y-1.5">
-        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm text-gray-700 flex items-center gap-1.5">
           <Mail class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Correo Electrónico (Opcional)
         </label>
@@ -137,13 +137,13 @@ function handleNext() {
           type="email"
           v-model="store.clientEmail"
           placeholder="ejemplo@correo.com"
-          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-semibold text-sm focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
+          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors touch-target"
         />
       </div>
 
       <!-- Campo: Comentarios u Observaciones -->
       <div class="space-y-1.5">
-        <label class="block text-sm font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm text-gray-700 flex items-center gap-1.5">
           <FileText class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Comentarios u Observaciones (Opcional)
         </label>
@@ -151,29 +151,29 @@ function handleNext() {
           v-model="store.comments"
           rows="3"
           placeholder="¿Requerimientos de alergias, restricción alimentaria o mesa especial?"
-          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light font-semibold text-sm focus:bg-white focus:border-brand-dark focus:outline-none transition-colors resize-none"
+          class="w-full p-3.5 rounded-xl border-2 border-brand-border bg-brand-light text-base focus:bg-white focus:border-brand-dark focus:outline-none transition-colors resize-none"
         ></textarea>
       </div>
 
       <!-- Resumen Fijo Unificado -->
-      <div class="bg-brand-light p-3.5 rounded-xl border border-brand-border space-y-1 text-sm font-bold text-gray-700">
+      <div class="bg-brand-light p-3.5 rounded-xl border border-brand-border space-y-1 text-sm text-gray-700">
         <div class="flex justify-between">
           <span>Servicio:</span>
-          <span class="text-brand-dark font-extrabold flex items-center gap-1">
+          <span class="text-brand-dark font-bold flex items-center gap-1">
             <Utensils class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
             Restaurante ({{ activeMealNames }})
           </span>
         </div>
         <div class="flex justify-between items-center">
           <span>Fecha y Atentados:</span>
-          <span class="text-brand-dark font-extrabold flex items-center gap-1 text-right">
+          <span class="text-brand-dark font-bold flex items-center gap-1 text-right">
             <Clock class="w-3.5 h-3.5 text-brand-accent stroke-[2.5] shrink-0" />
             {{ formattedScheduleDisplay }}
           </span>
         </div>
         <div class="flex justify-between">
           <span>Comensales y Menús:</span>
-          <span class="text-brand-dark font-extrabold">
+          <span class="text-brand-dark font-bold">
             {{ store.guestsCount }} pers. ({{ totalDishesCount }} menús)
           </span>
         </div>

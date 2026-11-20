@@ -121,7 +121,7 @@ function handleNext() {
       
       <!-- Calendario Interactivo -->
       <div class="space-y-2">
-        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider">
+        <label class="block text-sm text-gray-600">
           Selecciona Estadía (Llegada - Salida)
         </label>
         <BaseCalendar 
@@ -135,7 +135,7 @@ function handleNext() {
 
       <!-- Selector de Huéspedes (Botones + - e Input Manual Centrado) -->
       <div class="pt-3 border-t-2 border-gray-100 space-y-2">
-        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm text-gray-600 flex items-center gap-1.5">
           <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Cantidad de Huéspedes
         </label>
@@ -144,7 +144,7 @@ function handleNext() {
           <button
             type="button"
             @click="decrementGuests"
-            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-black text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
+            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-bold text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
           >
             -
           </button>
@@ -158,9 +158,9 @@ function handleNext() {
               @blur="handleGuestsBlur"
               min="1"
               max="20"
-              class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
+              class="w-20 text-center text-3xl font-bold text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
-            <span class="text-sm font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
+            <span class="text-sm text-gray-600 mt-1 block text-center">
               {{ reservationStore.guestsCount === 1 ? 'Persona' : 'Personas' }}
             </span>
           </div>
@@ -168,7 +168,7 @@ function handleNext() {
           <button
             type="button"
             @click="incrementGuests"
-            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-black text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
+            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-bold text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
           >
             +
           </button>
@@ -180,21 +180,21 @@ function handleNext() {
       </BaseAlert>
 
       <!-- Resumen de Estadía -->
-      <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-sm font-bold text-gray-700">
+      <div class="bg-brand-light p-3.5 rounded-2xl border-2 border-brand-border flex items-center justify-between text-sm text-gray-700">
         <div>
-          <span class="text-gray-400 text-sm uppercase font-extrabold block">Llegada</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(reservationStore.checkInDate) }}</span>
+          <span class="text-gray-600 text-sm block">Llegada</span>
+          <span class="text-brand-dark font-bold">{{ formatDateShort(reservationStore.checkInDate) }}</span>
         </div>
         <div class="text-center border-x border-gray-200 px-3">
-          <span class="text-gray-400 text-sm uppercase font-extrabold block">Noches</span>
-          <span class="text-brand-dark font-black flex items-center justify-center gap-1">
+          <span class="text-gray-600 text-sm block">Noches</span>
+          <span class="text-brand-dark font-bold flex items-center justify-center gap-1">
             <Moon class="w-3.5 h-3.5 text-brand-accent stroke-[2.5]" />
             {{ nightsCount }} {{ nightsCount === 1 ? 'Noche' : 'Noches' }}
           </span>
         </div>
         <div class="text-right">
-          <span class="text-gray-400 text-sm uppercase font-extrabold block">Salida</span>
-          <span class="text-brand-dark font-black">{{ formatDateShort(reservationStore.checkOutDate) }}</span>
+          <span class="text-gray-600 text-sm block">Salida</span>
+          <span class="text-brand-dark font-bold">{{ formatDateShort(reservationStore.checkOutDate) }}</span>
         </div>
       </div>
       <HorarioCard titulo="Horarios de la cabaña" :ingreso="settingsStore.cabinSchedules.checkIn" :salida="settingsStore.cabinSchedules.checkOut" />

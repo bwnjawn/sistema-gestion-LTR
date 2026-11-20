@@ -68,14 +68,14 @@ function handleNext() {
 
     <div class="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-sm space-y-6">
       <div class="space-y-2">
-        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider">
+        <label class="block text-sm text-gray-600">
           Selecciona la fecha de tu visita
         </label>
         <BaseCalendar :start-date="calendarStartDate" :end-date="calendarStartDate" single @change="handleCalendarChange" />
       </div>
 
       <div class="pt-3 border-t-2 border-gray-100 space-y-2">
-        <label class="block text-sm font-extrabold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <label class="block text-sm text-gray-600 flex items-center gap-1.5">
           <Users class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Cantidad de personas
         </label>
@@ -85,7 +85,7 @@ function handleNext() {
             type="button"
             aria-label="Una persona menos"
             @click="decrementGuests"
-            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-black text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
+            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-bold text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
           >
             -
           </button>
@@ -99,9 +99,9 @@ function handleNext() {
               @blur="handleGuestsBlur"
               min="1"
               :max="MAX_PERSONAS"
-              class="w-20 text-center text-3xl font-black text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
+              class="w-20 text-center text-3xl font-bold text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none p-0"
             />
-            <span class="text-sm font-extrabold text-gray-500 uppercase tracking-wider mt-1 block text-center">
+            <span class="text-sm text-gray-600 mt-1 block text-center">
               {{ store.guestsCount === 1 ? 'Persona' : 'Personas' }}
             </span>
           </div>
@@ -110,21 +110,21 @@ function handleNext() {
             type="button"
             aria-label="Una persona más"
             @click="incrementGuests"
-            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-black text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
+            class="w-12 h-12 rounded-xl bg-white border-2 border-brand-border text-brand-dark font-bold text-2xl flex items-center justify-center touch-target active:scale-95 transition-transform shadow-xs shrink-0"
           >
             +
           </button>
         </div>
       </div>
 
-      <div class="pt-3 border-t-2 border-gray-100 space-y-1 text-sm font-bold text-gray-700">
-        <div class="flex items-center gap-1.5 text-sm font-extrabold text-gray-500 uppercase tracking-wider">
+      <div class="pt-3 border-t-2 border-gray-100 space-y-1 text-sm text-gray-700">
+        <div class="flex items-center gap-1.5 text-sm text-gray-600">
           <Receipt class="w-4 h-4 text-brand-accent stroke-[2.5]" />
           Valor de la entrada
         </div>
         <div class="flex justify-between">
           <span>{{ store.guestsCount }} {{ store.guestsCount === 1 ? 'persona' : 'personas' }} × {{ formatCLP(settingsStore.poolEntryPrice) }}</span>
-          <span class="text-base font-black text-brand-dark">{{ formatCLP(total) }}</span>
+          <span class="text-base font-bold text-brand-dark">{{ formatCLP(total) }}</span>
         </div>
       </div>
     </div>

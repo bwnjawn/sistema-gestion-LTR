@@ -250,7 +250,7 @@ function proceedToStep3() {
     
     <!-- Menús incompletos: aviso antes de continuar -->
     <HojaModal :abierto="showIncompleteModal" titulo="Menús incompletos" ocultar-cierre @cerrar="showIncompleteModal = false">
-    <p class="text-sm font-semibold text-gray-600 leading-relaxed">
+    <p class="text-base text-gray-600 leading-relaxed">
       Tienes categorías con menos platos asignados que la cantidad de comensales ({{ totalGuests }} personas):
     </p>
 
@@ -263,7 +263,7 @@ function proceedToStep3() {
         <span>{{ mealLabels[mId] }}:</span>
         <span 
           :class="[
-            'font-black px-2 py-0.5 rounded-md text-sm',
+            'font-bold px-2 py-0.5 rounded-md text-sm',
             getMealSelectedCount(mId) === totalGuests
               ? 'bg-emerald-100 text-emerald-800'
               : 'bg-amber-200 text-amber-900'
@@ -274,7 +274,7 @@ function proceedToStep3() {
       </div>
     </div>
 
-    <p class="text-sm font-semibold text-gray-500">
+    <p class="text-base text-gray-600">
       ¿Deseas continuar de todos modos o prefieres ajustar las cantidades antes de avanzar?
     </p>
 
@@ -329,7 +329,7 @@ function proceedToStep3() {
         :key="mId"
         @click="selectMealTab(idx)"
         :class="[
-          'flex-1 py-2.5 px-2 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-1.5 border touch-target',
+          'flex-1 py-2.5 px-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5 border touch-target',
           activeMealIndex === idx
             ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
             : 'bg-white text-brand-dark border-brand-border hover:bg-gray-100'
@@ -338,7 +338,7 @@ function proceedToStep3() {
         <span>{{ mealLabels[mId] }}</span>
         <span 
           :class="[
-            'text-sm px-1.5 py-0.5 rounded-full font-extrabold',
+            'text-sm px-1.5 py-0.5 rounded-full font-bold',
             isMealValid(mId) && getMealSelectedCount(mId) > 0
               ? 'bg-emerald-400 text-brand-dark'
               : 'bg-gray-200 text-gray-700'
@@ -371,15 +371,15 @@ function proceedToStep3() {
             class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
             @error="(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80' }"
           />
-          <div class="absolute top-2.5 right-2.5 bg-brand-dark/95 text-white font-black text-sm px-3 py-1 rounded-full backdrop-blur-xs border border-white/20 shadow-xs">
+          <div class="absolute top-2.5 right-2.5 bg-brand-dark/95 text-white font-bold text-sm px-3 py-1 rounded-full backdrop-blur-xs border border-white/20 shadow-xs">
             {{ formatCLP(dish.price) }}
           </div>
         </div>
 
         <div class="flex items-start justify-between gap-3">
           <div class="space-y-1">
-            <h3 class="text-lg font-black text-brand-dark leading-tight">{{ dish.name }}</h3>
-            <p class="text-sm font-bold text-gray-500 leading-relaxed">{{ dish.description }}</p>
+            <h3 class="text-lg font-bold text-brand-dark leading-tight">{{ dish.name }}</h3>
+            <p class="text-base text-gray-600 leading-relaxed">{{ dish.description }}</p>
           </div>
 
           <!-- Contador de Platos -->
@@ -387,7 +387,7 @@ function proceedToStep3() {
             <button aria-label="Disminuir cantidad"
               type="button"
               @click="updateDishCount(dish.id, -1)"
-              class="w-8 h-8 rounded-xl bg-white border border-brand-border font-black text-lg flex items-center justify-center active:scale-95 touch-target"
+              class="w-8 h-8 rounded-xl bg-white border border-brand-border font-bold text-lg flex items-center justify-center active:scale-95 touch-target"
             >
               <Minus class="w-4 h-4 stroke-[2.5]" />
             </button>
@@ -398,13 +398,13 @@ function proceedToStep3() {
               pattern="*"
               :value="selections[dish.id]?.count || 0"
               @input="(e) => handleDishCountInput(dish.id, e)"
-              class="w-12 text-center font-black text-base text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none focus:border-brand-dark p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              class="w-12 text-center font-bold text-base text-brand-dark bg-transparent border-b-2 border-brand-accent focus:outline-none focus:border-brand-dark p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
 
             <button aria-label="Aumentar cantidad"
               type="button"
               @click="updateDishCount(dish.id, 1)"
-              class="w-8 h-8 rounded-xl bg-white border border-brand-border font-black text-lg flex items-center justify-center active:scale-95 touch-target"
+              class="w-8 h-8 rounded-xl bg-white border border-brand-border font-bold text-lg flex items-center justify-center active:scale-95 touch-target"
             >
               <Plus class="w-4 h-4 stroke-[2.5]" />
             </button>
@@ -428,11 +428,11 @@ function proceedToStep3() {
           class="pt-3 border-t-2 border-gray-100 space-y-2.5"
         >
           <div class="flex items-center justify-between">
-            <span class="text-sm font-extrabold text-gray-600">Acompañamientos:</span>
+            <span class="text-sm text-gray-600">Acompañamientos:</span>
 
             <span 
               :class="[
-                'text-sm font-black px-2.5 py-0.5 rounded-full flex items-center gap-1',
+                'text-sm font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1',
                 dishStatusMap[dish.id]?.isComplete
                   ? 'bg-emerald-100 text-emerald-800'
                   : 'bg-rose-100 text-rose-800 animate-pulse'
@@ -446,7 +446,7 @@ function proceedToStep3() {
 
           <div 
             v-if="!dishStatusMap[dish.id]?.isComplete"
-            class="bg-rose-50 border border-rose-300 text-rose-900 p-2.5 rounded-xl text-sm font-extrabold flex items-center gap-2"
+            class="bg-rose-50 border border-rose-300 text-rose-900 p-2.5 rounded-xl text-sm font-bold flex items-center gap-2"
           >
             <AlertTriangle class="w-4 h-4 text-rose-600 shrink-0 stroke-[2.5]" />
             <span>Falta asignar {{ dishStatusMap[dish.id]?.missing }} acompañamiento(s) para este plato.</span>
@@ -456,14 +456,14 @@ function proceedToStep3() {
             <div 
               v-for="side in getSideDishes(dish)" 
               :key="side"
-              class="flex items-center justify-between text-sm font-bold text-gray-700"
+              class="flex items-center justify-between text-sm text-gray-700"
             >
               <span>{{ side }}</span>
               <div class="flex items-center gap-2">
                 <button aria-label="Disminuir cantidad"
                   type="button"
                   @click="updateSideCount(dish.id, side, -1)"
-                  class="w-7 h-7 rounded-lg bg-white border border-brand-border font-extrabold flex items-center justify-center active:scale-95 touch-target"
+                  class="w-7 h-7 rounded-lg bg-white border border-brand-border font-bold flex items-center justify-center active:scale-95 touch-target"
                 >
                   <Minus class="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
@@ -474,7 +474,7 @@ function proceedToStep3() {
                   pattern="*"
                   :value="selections[dish.id]?.sides?.[side] || 0"
                   @input="(e) => handleSideCountInput(dish.id, side, e)"
-                  class="w-10 text-center font-black text-sm text-brand-dark bg-transparent border-b border-brand-accent focus:outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  class="w-10 text-center font-bold text-sm text-brand-dark bg-transparent border-b border-brand-accent focus:outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
 
                 <button
@@ -482,9 +482,9 @@ function proceedToStep3() {
                   :disabled="dishStatusMap[dish.id]?.assignedSides >= (selections[dish.id]?.count || 0)"
                   @click="updateSideCount(dish.id, side, 1)"
                   :class="[
-                    'w-7 h-7 rounded-lg font-extrabold flex items-center justify-center touch-target border',
+                    'w-7 h-7 rounded-lg font-bold flex items-center justify-center touch-target border',
                     dishStatusMap[dish.id]?.assignedSides >= (selections[dish.id]?.count || 0)
-                      ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed'
+                      ? 'bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed'
                       : 'bg-white border-brand-border text-brand-dark active:scale-95'
                   ]"
                 >

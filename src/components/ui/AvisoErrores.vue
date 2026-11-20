@@ -14,7 +14,7 @@ import { avisoDeError, descartarAviso } from '../../lib/avisos'
     <div class="max-w-md mx-auto flex items-start gap-3 rounded-2xl border-2 border-status-danger bg-rose-50 p-3 shadow-2xl">
       <AlertTriangle class="w-6 h-6 text-rose-900 shrink-0 mt-0.5 stroke-[2.5]" aria-hidden="true" />
       <div class="grow space-y-0.5">
-        <p class="text-base font-black text-rose-950">No se guardó el cambio</p>
+        <p class="text-base font-bold text-rose-950">No se guardó el cambio</p>
         <p class="text-sm font-bold text-rose-950">{{ avisoDeError }}</p>
       </div>
       <button

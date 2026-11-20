@@ -100,7 +100,7 @@ onBeforeUnmount(close)
     :aria-label="ariaLabel || label || 'Opciones'"
     @click.stop="toggle"
     :class="[
-      'inline-flex items-center justify-center gap-1.5 text-brand-dark font-black text-xs transition-all',
+      'inline-flex items-center justify-center gap-1.5 text-brand-dark font-bold text-sm transition-all',
       discreto
         ? 'w-11 h-11 rounded-full text-gray-600 active:bg-gray-100'
         : 'touch-target border border-brand-border bg-brand-light active:scale-95 hover:bg-gray-100',
