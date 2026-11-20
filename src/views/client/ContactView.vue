@@ -128,7 +128,7 @@ const settingsStore = useSettingsStore()
       </div>
 
       <p class="text-sm font-medium text-gray-600">
-        {{ settingsStore.contactInfo.address }}
+        {{ settingsStore.direccionDelLocal }}
       </p>
 
       <!-- Iframe Google Maps -->

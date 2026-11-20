@@ -255,6 +255,9 @@ export interface BusinessInfo {
   address: string
   mapsUrl: string
   iframeMapUrl: string
+  /** Punto exacto del local en el mapa (SCRUM-281). Si falta, el administrador aún no lo marcó. */
+  latitude?: number
+  longitude?: number
 }
 
 /** Datos bancarios que ve el cliente en el paso 4 para transferir el abono. */

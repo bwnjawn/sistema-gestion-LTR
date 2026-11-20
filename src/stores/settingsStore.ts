@@ -33,6 +33,7 @@ import { repositorios } from '../lib/repositories'
 import { persistirConReversion } from '../lib/persistirConReversion'
 import { mensajeDeError } from '../lib/errores'
 import { rutaDeReglamentoCamping, validarPdf } from '../services/documentos'
+import { direccionParaMostrar } from '../services/ubicacion'
 import { FOTOS_INICIO_VACIAS, fotoDeInicio } from '../services/fotosInicio'
 
 export type { BusinessParametersExtended, CapacityRules }
@@ -218,6 +219,8 @@ export const useSettingsStore = defineStore('settings', () => {
     return guardado ? null : error.value ?? mensaje
   }
 
+  /** La referencia de la dirección que se muestra al cliente: la escrita por el administrador o la de siempre (SCRUM-281). */
+  const direccionDelLocal = computed(() => direccionParaMostrar(contactInfo.value.address))
   const capacityRulesActuales = computed<CapacityRules>(() => ({ ...DEFAULT_PARAMS.capacityRules, ...parameters.value.capacityRules }))
   const restaurantCapacity = computed(() => getRestaurantCapacity(capacityRulesActuales.value.restaurantSpaces))
   const limitesAforo = computed<LimitesAforo>(() => ({
@@ -268,6 +271,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
   return {
     contactInfo,
+    direccionDelLocal,
     transferInfo,
     restaurantSchedules,
     campingSchedules,
