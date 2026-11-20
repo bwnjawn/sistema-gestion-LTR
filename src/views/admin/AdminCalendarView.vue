@@ -13,6 +13,8 @@ import { useCatalogStore } from '../../stores/catalogStore'
 import MarcasDia from '../../components/ui/MarcasDia.vue'
 import DisponibilidadDelDia from '../../components/ui/DisponibilidadDelDia.vue'
 import AdminRequestDetailModal from '../../components/admin/AdminRequestDetailModal.vue'
+import CargaDatosAdmin from '../../components/admin/CargaDatosAdmin.vue'
+import EsqueletoCalendarioAdmin from '../../components/admin/EsqueletoCalendarioAdmin.vue'
 import { isoToDate } from '../../lib/dates'
 import type { ReservationRequest, ServiceType } from '../../types/domain'
 
@@ -144,6 +146,8 @@ function hasConflict(id: string): boolean {
 </script>
 
 <template>
+  <CargaDatosAdmin>
+    <template #esqueleto><EsqueletoCalendarioAdmin /></template>
   <div class="space-y-4 pb-6">
     <div class="bg-white p-4 rounded-3xl border-2 border-brand-border shadow-xs space-y-3">
       <div class="flex items-center justify-center gap-2 flex-wrap">
@@ -322,4 +326,5 @@ function hasConflict(id: string): boolean {
 
     <AdminRequestDetailModal :request-id="openedRequestId" @close="openedRequestId = null" @open-request="openedRequestId = $event" />
   </div>
+  </CargaDatosAdmin>
 </template>

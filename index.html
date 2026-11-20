@@ -16,6 +16,8 @@
       .arranque p { margin: 0; font-size: 1rem; font-weight: 700; }
       @keyframes arranque-giro { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .arranque-rueda { animation-duration: 3s; } }
+      .arranque-lento { text-align: center; max-width: 20rem; padding: 0 1rem; }
+      .arranque-lento button { margin-top: .75rem; min-height: 3rem; padding: 0 1.5rem; border-radius: 1rem; border: 0; background: #1E4620; color: #fff; font: inherit; font-weight: 900; }
     </style>
   </head>
   <body>
@@ -24,8 +26,19 @@
         <img src="/images/logo.png" alt="" />
         <div class="arranque-rueda" aria-hidden="true"></div>
         <p>Cargando…</p>
+        <!-- A los 8 segundos sin que cargue, se avisa y se deja reintentar (SCRUM-258) -->
+        <div class="arranque-lento" role="status" hidden>
+          <p>Está tardando más de lo normal.</p>
+          <button type="button" onclick="location.reload()">Reintentar</button>
+        </div>
       </div>
     </div>
+    <script>
+      setTimeout(function () {
+        var aviso = document.querySelector('.arranque-lento')
+        if (aviso) aviso.hidden = false
+      }, 8000)
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

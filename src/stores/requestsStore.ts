@@ -300,6 +300,17 @@ export const useRequestsStore = defineStore('requests', () => {
   async function registerPayment(id: string, input: PaymentInput): Promise<{ ok: boolean; message?: string }> {
     const found = requests.value.find(r => r.id === id)
     if (!found) return { ok: false, message: 'No se encontró la solicitud.' }
+    // Un segundo toque mientras el primero se guarda no registra el mismo pago dos veces (SCRUM-258)
+    if (pagosEnCurso.has(id)) return { ok: false, message: 'Ya se está guardando un pago de esta solicitud.' }
+    pagosEnCurso.add(id)
+    try {
+      return await registrarPago(found, id, input)
+    } finally {
+      pagosEnCurso.delete(id)
+    }
+  }
+
+  async function registrarPago(found: ReservationRequest, id: string, input: PaymentInput): Promise<{ ok: boolean; message?: string }> {
 
     const validation = validatePayment(found, input)
     if (!validation.isValid) return { ok: false, message: validation.message }
@@ -365,6 +376,9 @@ export const useRequestsStore = defineStore('requests', () => {
     if (!found) return { ok: false, message: 'No se encontró la solicitud.' }
     return compararCambio(found, edit, contextoDeEdicion())
   }
+
+  /** Solicitudes con un pago guardándose en este momento. */
+  const pagosEnCurso = new Set<string>()
 
   async function updateRequestDetails(id: string, edit: RequestEdit): Promise<{ ok: boolean; message?: string }> {
     const found = requests.value.find(r => r.id === id)
