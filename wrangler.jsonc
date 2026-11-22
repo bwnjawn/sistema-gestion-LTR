@@ -7,5 +7,8 @@
     "directory": "./dist",
     // Cualquier ruta (/admin, /reservas...) carga la app en vez de dar 404.
     "not_found_handling": "single-page-application"
-  }
+  },
+  // Las ramas que no son main se publican como vista previa (`wrangler preview`),
+  // que exige este bloque, aunque vaya vacío.
+  "previews": {}
 }
