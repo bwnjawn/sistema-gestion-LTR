@@ -1,0 +1,11 @@
+{
+  // Hosting en Cloudflare (Worker con archivos estáticos).
+  // El nombre debe coincidir con el del Worker en el panel de Cloudflare.
+  "name": "sistema-gestion-ltr",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    // Cualquier ruta (/admin, /reservas...) carga la app en vez de dar 404.
+    "not_found_handling": "single-page-application"
+  }
+}
