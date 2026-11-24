@@ -1,6 +1,6 @@
 # Specs por historia
 
-Un spec describe **cómo** se construye una historia. Jira sigue siendo la fuente del **estado** y de los criterios oficiales; no se duplica el avance aquí.
+Un spec describe **cómo** se construye una historia. Los specs de historias terminadas se conservan como registro de las decisiones; su estado se alinea con Jira (última revisión: 22/11). Jira sigue siendo la fuente del **estado** y de los criterios oficiales; no se duplica el avance aquí.
 
 ## Cuándo se crea un spec
 - Sí: historias con lógica de negocio, decisiones de diseño o varias capas (servicio, store, repositorio, vista).
@@ -24,7 +24,9 @@ Un spec describe **cómo** se construye una historia. Jira sigue siendo la fuent
 | [SCRUM-258](SCRUM-258.md) | Esqueletos de carga, aviso de espera de 8 segundos y reintento | Fase 2 |
 | [SCRUM-287](SCRUM-287.md) | Conflictos legibles en el detalle: con qué se topa, cuál conviene elegir y qué hacer con las demás | Fase 2 |
 | [SCRUM-278](SCRUM-278.md) | Vista adaptada a PC: menú lateral, contenido a todo el ancho, hojas anchas y resumen lateral en los pasos | Fase 2 |
-| [SCRUM-27](SCRUM-27.md) | Spike: varias cabañas por solicitud | Aplazada (Sprint 3) |
+| [SCRUM-27](SCRUM-27.md) | Spike: varias cabañas por solicitud (propuesta: una solicitud por cabaña, con SCRUM-265) | Aplazada (Sprint 3) |
+| [SCRUM-261](SCRUM-261.md) | Evento especial: formulario inicial del cliente, cotización flexible y cierre de comedor, exterior o día | Fase 2 (borrador) |
+| [SCRUM-283](SCRUM-283.md) | Camping: cupos por grupos (2 de día, 3 de noche, 5 grandes), editables | Fase 2 (borrador, obligatoria) |
 
 Documentos relacionados: [`../reglas-negocio.md`](../reglas-negocio.md) y [`../plan-entrega.md`](../plan-entrega.md).
 

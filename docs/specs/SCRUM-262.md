@@ -1,6 +1,6 @@
 # SCRUM-262 — Resolver cruces al confirmar y avisar al cliente
 
-Estado: código listo (10/11), falta la verificación manual y el PR
+Estado: hecho y Finalizado en Jira (comprobado con la CI y los datos reales de Supabase). Falta la verificación manual en el teléfono
 Fase: 2, adelantable al prototipo
 
 ## Contexto

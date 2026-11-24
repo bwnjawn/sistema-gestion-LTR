@@ -1,6 +1,6 @@
 # SCRUM-275 — Exportar las solicitudes a Excel
 
-Estado: en curso
+Estado: hecho y Finalizado en Jira
 Fase: fase 2 (historia nueva del 18/11, sin sprint asignado)
 
 ## Contexto

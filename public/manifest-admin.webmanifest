@@ -3,6 +3,7 @@
   "short_name": "Admin Troncos",
   "lang": "es",
   "description": "Panel de administración de reservas",
+  "id": "/admin/",
   "start_url": "/admin/login",
   "scope": "/",
   "display": "standalone",
