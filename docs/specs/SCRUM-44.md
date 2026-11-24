@@ -1,6 +1,6 @@
 # SCRUM-44 — Piscina: pagar la entrada por separado
 
-Estado: hecho (falta la verificación manual en celular)
+Estado: hecho y Finalizado en Jira. Queda la verificación manual en el teléfono
 Fase: fase 2
 
 ## Contexto

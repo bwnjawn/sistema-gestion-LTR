@@ -1,6 +1,6 @@
 # SCRUM-71 — Cotización en PDF de una solicitud
 
-Estado: en curso
+Estado: hecho y Finalizado en Jira
 Fase: fase 2 (sprint 5)
 
 ## Contexto
