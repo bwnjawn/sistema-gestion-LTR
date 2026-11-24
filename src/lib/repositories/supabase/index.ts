@@ -5,6 +5,7 @@
 import type { Repositorios } from '../index'
 import { SupabaseSettingsRepository } from './ajustes'
 import { SupabaseAuthRepository } from './autenticacion'
+import { SupabaseAvisosPushRepository } from './avisosPush'
 import { crearRepositoriosCatalogoSupabase } from './catalogo'
 import { SupabaseAvailabilityRepository } from './disponibilidad'
 import { SupabaseDocumentosRepository } from './documentos'
@@ -27,6 +28,7 @@ export function crearRepositoriosSupabase(): Repositorios {
     colaEnvio: new ColaEnvioIndexedDb(),
     colaCambios: new ColaCambiosIndexedDb(),
     // Las preferencias de pantalla son de cada dispositivo: no van a la base
-    preferencias: new LocalPreferenciasRepository()
+    preferencias: new LocalPreferenciasRepository(),
+    avisosPush: new SupabaseAvisosPushRepository()
   }
 }

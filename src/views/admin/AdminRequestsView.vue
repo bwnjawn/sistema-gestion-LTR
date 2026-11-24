@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { usePantallaAncha } from '../../composables/usePantallaAncha'
 import { useRoute } from 'vue-router'
 import { FileSpreadsheet, Inbox, Search, Layers, Home, Tent, Utensils, Waves } from 'lucide-vue-next'
@@ -41,6 +41,17 @@ const rechazoId = ref<string | null>(null)
 function abrirDetalle(id: string | null) {
   openedRequestId.value = id
 }
+
+// Al tocar un aviso de solicitud nueva (SCRUM-68) la app abre aquí con ?solicitud=<id>: se muestra su detalle
+watch(
+  () => route.query.solicitud,
+  id => {
+    if (typeof id !== 'string' || !id) return
+    seleccionadaId.value = id
+    abrirDetalle(id)
+  },
+  { immediate: true }
+)
 
 // Pendientes cuya fecha ya ocupa una confirmada (no se aprueban, solo se mueven): id -> quién la ocupa
 const bloqueos = computed(() =>

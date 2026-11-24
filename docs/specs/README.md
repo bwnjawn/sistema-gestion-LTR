@@ -24,6 +24,7 @@ Un spec describe **cómo** se construye una historia. Los specs de historias ter
 | [SCRUM-258](SCRUM-258.md) | Esqueletos de carga, aviso de espera de 8 segundos y reintento | Fase 2 |
 | [SCRUM-287](SCRUM-287.md) | Conflictos legibles en el detalle: con qué se topa, cuál conviene elegir y qué hacer con las demás | Fase 2 |
 | [SCRUM-278](SCRUM-278.md) | Vista adaptada a PC: menú lateral, contenido a todo el ancho, hojas anchas y resumen lateral en los pasos | Fase 2 |
+| [SCRUM-68](SCRUM-68.md) | Aviso push al administrador por cada solicitud nueva (en lugar de WhatsApp) | Fase 2 |
 | [SCRUM-27](SCRUM-27.md) | Spike: varias cabañas por solicitud (propuesta: una solicitud por cabaña, con SCRUM-265) | Aplazada (Sprint 3) |
 | [SCRUM-261](SCRUM-261.md) | Evento especial: formulario inicial del cliente, cotización flexible y cierre de comedor, exterior o día | Fase 2 (borrador) |
 | [SCRUM-283](SCRUM-283.md) | Camping: cupos por grupos (2 de día, 3 de noche, 5 grandes), editables | Fase 2 (borrador, obligatoria) |
