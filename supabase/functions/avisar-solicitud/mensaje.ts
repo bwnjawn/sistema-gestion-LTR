@@ -21,10 +21,10 @@ export interface AvisoPush {
 }
 
 const NOMBRE_TIPO: Record<string, string> = {
-  cabana: 'Cabaña',
-  camping: 'Camping',
-  restaurante: 'Restaurante',
-  piscina: 'Piscina'
+  cabana: 'cabaña',
+  camping: 'camping',
+  restaurante: 'restaurante',
+  piscina: 'piscina'
 }
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
@@ -44,10 +44,10 @@ export function describirFechas(fechaInicio: string, fechaFin: string): string {
 }
 
 export function armarAviso(datos: DatosAviso): AvisoPush {
-  const tipo = NOMBRE_TIPO[datos.tipo] ?? 'Solicitud'
+  const tipo = NOMBRE_TIPO[datos.tipo]
   const personas = datos.personas === 1 ? '1 persona' : `${datos.personas} personas`
   return {
-    titulo: `Nueva solicitud · ${tipo}`,
+    titulo: tipo ? `Nueva solicitud de ${tipo}` : 'Nueva solicitud',
     cuerpo: `${datos.clienteNombre} · ${describirFechas(datos.fechaInicio, datos.fechaFin)} · ${personas}`,
     url: `/admin/solicitudes?solicitud=${encodeURIComponent(datos.id)}`,
     etiqueta: `solicitud-${datos.id}`

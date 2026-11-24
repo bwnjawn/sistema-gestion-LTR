@@ -62,7 +62,7 @@ describe('texto del aviso de solicitud nueva (SCRUM-68)', () => {
 
   it('arma título, cuerpo y enlace a la solicitud', () => {
     expect(armarAviso(datos)).toEqual({
-      titulo: 'Nueva solicitud · Cabaña',
+      titulo: 'Nueva solicitud de cabaña',
       cuerpo: 'Juan Pérez · 12 al 14 de enero · 4 personas',
       url: '/admin/solicitudes?solicitud=a1b2c3d4-0000-4000-8000-000000000001',
       etiqueta: 'solicitud-a1b2c3d4-0000-4000-8000-000000000001'
@@ -84,6 +84,11 @@ describe('texto del aviso de solicitud nueva (SCRUM-68)', () => {
   })
 
   it('un tipo desconocido usa un título genérico', () => {
-    expect(armarAviso({ ...datos, tipo: 'otro' }).titulo).toBe('Nueva solicitud · Solicitud')
+    expect(armarAviso({ ...datos, tipo: 'otro' }).titulo).toBe('Nueva solicitud')
+  })
+
+  it('el título nombra el servicio en todos los tipos', () => {
+    const titulos = ['cabana', 'camping', 'restaurante', 'piscina'].map(tipo => armarAviso({ ...datos, tipo }).titulo)
+    expect(titulos).toEqual(['Nueva solicitud de cabaña', 'Nueva solicitud de camping', 'Nueva solicitud de restaurante', 'Nueva solicitud de piscina'])
   })
 })

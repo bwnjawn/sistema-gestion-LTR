@@ -5,7 +5,7 @@
 ## Qué avisa y a quién
 - **Quién recibe:** todo administrador que active los avisos en un dispositivo (Ajustes → Avisos). Cada uno activa los suyos.
 - **Qué avisa:** solo las solicitudes que **crea el cliente** (`origen = 'cliente'`), de cualquier tipo, incluida la de piscina (informativa). Lo que el administrador registra él mismo no avisa.
-- **Texto:** título "Nueva solicitud · Cabaña" y cuerpo "Juan Pérez · 12 al 14 de enero · 4 personas" (`supabase/functions/avisar-solicitud/mensaje.ts`). **No** lleva teléfono, correo, precio ni comentarios: la notificación se ve en la pantalla de bloqueo.
+- **Texto:** título "Nueva solicitud de cabaña" (igual con camping, restaurante y piscina) y cuerpo "Juan Pérez · 12 al 14 de enero · 4 personas" (`supabase/functions/avisar-solicitud/mensaje.ts`). **No** lleva teléfono, correo, precio ni comentarios: la notificación se ve en la pantalla de bloqueo.
 - **Al tocarla:** abre `/admin/solicitudes?solicitud=<id>` y muestra el detalle de esa solicitud.
 - **Varias seguidas:** una notificación por solicitud (`tag` = `solicitud-<id>`, así un reenvío no la duplica).
 
