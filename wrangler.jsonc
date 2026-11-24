@@ -3,8 +3,12 @@
   // El nombre debe coincidir con el del Worker en el panel de Cloudflare.
   "name": "sistema-gestion-ltr",
   "compatibility_date": "2026-11-01",
+  // Atiende /admin y /admin/* para escribir la identidad de la app de administrador en el HTML (ver worker/index.js).
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/admin", "/admin/*"],
     // Cualquier ruta (/admin, /reservas...) carga la app en vez de dar 404.
     "not_found_handling": "single-page-application"
   },

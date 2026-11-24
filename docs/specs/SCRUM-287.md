@@ -1,6 +1,6 @@
 # SCRUM-287 — Conflictos legibles en el detalle de la solicitud
 
-Estado: hecho (pendiente de revisión en el teléfono)
+Estado: hecho y Finalizado en Jira. Falta la revisión en el teléfono
 Fase: fase 2
 
 ## Contexto

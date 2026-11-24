@@ -1,6 +1,6 @@
 # SCRUM-60 — Detectar solapamientos de reservas
 
-Estado: código del aviso listo (8/11). **Regla corregida el 10/11:** solo las confirmadas bloquean. Código ajustado en SCRUM-260, 263 y 262 (resolver al confirmar). Verificación manual pendiente.
+Estado: hecho y Finalizado en Jira. **Regla corregida el 10/11:** solo las confirmadas bloquean (código ajustado en SCRUM-260, 263 y 262). Verificación manual pendiente
 Fase: 2 (16 al 20/11)
 
 ## Contexto
@@ -62,7 +62,7 @@ Hecho el 10/11:
 6. **Resolver al aprobar (SCRUM-262):** el diálogo muestra las solicitudes que chocan con sus días, precio y cercanía, y el admin elige cuál confirmar. Para las demás: llamar, correo, WhatsApp, Modificar fecha o Rechazar.
 7. **Dos pendientes cruzadas se avisan igual** que una pendiente con una confirmada (decisión del 8/11).
 8. **Una pendiente sin abono en plazo** no se libera sola; ver "Abono vencido" (SCRUM-264).
-9. **Evento especial:** cuenta como restaurante completo y confirmado (SCRUM-261, bloqueada por decisiones de diseño).
+9. **Evento especial:** pendiente. El 22/11 se decidió que el administrador elige qué cierra (comedor, exterior o día entero); ver [SCRUM-261](SCRUM-261.md). Hasta entonces no genera cruces.
 
 ## Cambios por capa
 - **Servicio:** `findConflicts`, `getConflictsFor(requestId)`, `getCabinOverlaps` (admin) y la separación del conteo para bloquear y para avisar.

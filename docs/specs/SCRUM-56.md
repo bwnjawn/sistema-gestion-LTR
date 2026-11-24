@@ -1,6 +1,6 @@
 # SCRUM-56 — El administrador registra una reserva con el flujo del cliente
 
-Estado: hecho y verificado a mano (10/11). Las decisiones 6, 7 y 9 cambiaron el 10/11: ver SCRUM-260, 261 y 262
+Estado: hecho y verificado a mano (10/11), Finalizado en Jira. Las decisiones 6, 7 y 9 cambiaron el 10/11: ver SCRUM-260, 261 y 262
 Fase: 2 (16 al 20/11)
 
 ## Contexto
@@ -24,7 +24,7 @@ Existe `components/admin/AdminNewBookingModal.vue` (196 líneas), que es justame
 4. **Al empezar y al terminar** se limpia el borrador `ltr_wizard_draft`, para que un borrador de cliente no se filtre al admin ni al revés.
 5. **Al finalizar**, el admin vuelve a la lista de solicitudes y **no** ve la sugerencia de reservar otro servicio de SCRUM-47.
 6. **Estado inicial de la reserva del admin:** **cambia el 11/11 (SCRUM-264): lo elige el admin al final del flujo** ("Pendiente de abono", por defecto, o "Confirmada") y puede anotar el abono recibido. No se puede cargar confirmada si choca con otra confirmada. *Antes:* `confirmed` si no se cruzaba con nada y `pending` si se cruzaba con pendientes (SCRUM-260). Con una confirmada en la cabaña, no se puede elegir. Implementado en SCRUM-260. Si después hay que aprobar una solicitud que se cruza, el administrador elige cuál confirmar en el diálogo de SCRUM-262 y nunca quedan dos confirmadas cruzadas.
-7. **Evento especial:** se guarda como `details.isSpecialEvent`. Por ahora solo es una marca. **El 10/11 se decidió que debe bloquear todo el restaurante** y salir como opción en el home con los contactos del admin; está bloqueado por decisiones de diseño en SCRUM-261 (ver D6).
+7. **Evento especial:** se guarda como `details.isSpecialEvent`. Por ahora solo es una marca. El 10/11 se decidió que sale como opción en el home con los contactos del admin. **El 22/11 cambió el alcance:** el administrador decide qué cierra (un comedor, el exterior o el día entero) y cotiza; ver [SCRUM-261](SCRUM-261.md).
 8. **Abono:** la reserva del admin entra con `payments: []`; el abono se registra después en el detalle (SCRUM-239).
 9. **Disponibilidad:** **corregida el 10/11.** El admin no puede elegir una cabaña ni un cupo con una reserva **confirmada**; sí los que solo tienen pendientes, con un aviso dentro de la tarjeta, y el aviso de cruces de SCRUM-60 se muestra igual (SCRUM-260 y 263). Antes decía que el admin no quedaba bloqueado por nada.
 10. **Origen:** `details.origin` vale `cliente` o `admin`. Los códigos son `SOL-` y `ADM-`, sin repetirse (`generateRequestCode`).
@@ -44,7 +44,7 @@ Existe `components/admin/AdminNewBookingModal.vue` (196 líneas), que es justame
 - Las validaciones de disponibilidad aplican igual: confirmadas bloquean, pendientes avisan (decidido el 10/11).
 
 ## Preguntas abiertas
-- **D6 (respuesta parcial el 10/11, bloqueada en SCRUM-261):** el evento especial bloquea todo el restaurante, puede llevar extras como reservas enlazadas (SCRUM-265) y puede ser nocturno. Falta decidir si el nocturno bloquea también la cena del día y cómo se modela un horario libre.
+- **D6 (respondida en gran parte el 22/11, ver [SCRUM-261](SCRUM-261.md)):** el evento especial no bloquea siempre todo el restaurante; lo que se cierra lo decide el administrador. Queda por definir el abono y cómo se ve en el calendario.
 - Los eventos de instituciones no pagan abono (SCRUM-264).
 
 ## Verificación manual

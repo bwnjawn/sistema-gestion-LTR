@@ -10,7 +10,7 @@ export default defineConfig({
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'apple-touch-icon-admin.png', 'pwa-admin-192x192.png', 'pwa-admin-512x512.png'],
       workbox: {
         // Avisos push de solicitudes nuevas (SCRUM-68): public/push-sw.js se suma al service worker
-        importScripts: ['push-sw.js'],
+        importScripts: ['push-sw.js', 'admin-identidad-sw.js'],
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
         // Sin señal las fotos del catálogo y del inicio (Supabase Storage) se siguen viendo (SCRUM-250)
         runtimeCaching: [

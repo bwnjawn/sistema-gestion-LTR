@@ -1,6 +1,6 @@
 # SCRUM-59 — Resumen de solicitud para el administrador
 
-Estado: en curso (falta verificación manual en celular)
+Estado: hecho y Finalizado en Jira. Queda la verificación manual en el teléfono
 Fase: prototipo (hasta el 13/11), con "cambiar fecha" en la Fase 2
 
 ## Contexto

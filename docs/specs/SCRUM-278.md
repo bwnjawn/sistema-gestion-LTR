@@ -1,6 +1,6 @@
 # SCRUM-278 — Vista adaptada a PC
 
-Estado: en curso (pendiente de revisión en pantallas reales)
+Estado: hecho y Finalizado en Jira. Falta la revisión en pantallas reales (PC y teléfono)
 Fase: fase 2
 
 ## Contexto

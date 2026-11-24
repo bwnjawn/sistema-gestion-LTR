@@ -28,7 +28,7 @@ Orden desde el 8/11 (en revisión: 236 a 242, 252, 253, 254, 58, 59, 233):
 4. SCRUM-264: plazo de abono de 48 h ("Abono vencido") y exención de instituciones en restaurante.
 5. SCRUM-266: marca "En mantención" en cabañas.
 6. SCRUM-265: varias cabañas enlazadas para una familia.
-7. SCRUM-261: evento especial. **Bloqueada por decisiones de diseño: preguntar al usuario antes de implementar.**
+7. SCRUM-261: evento especial. **Desbloqueada el 22/11** (formulario inicial, cotización flexible y cierre elegido por el administrador; ver `specs/SCRUM-261.md`). Falta el abono y la marca en el calendario.
 8. SCRUM-250, 245 y 248: sin conexión, esquema de Supabase y restricción de exclusión sobre las confirmadas.
 
 ## Registro de avance — 8/11 (cierre del día)

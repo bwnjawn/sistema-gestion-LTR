@@ -1,6 +1,6 @@
 # SCRUM-229 — CRUD de acompañamientos (sin, fijo o elegible)
 
-Estado: hecho (pendiente de verificar a mano)
+Estado: hecho y Finalizado en Jira. Queda la verificación manual en el teléfono
 Fase: 2 (16 al 20/11)
 
 ## Contexto
