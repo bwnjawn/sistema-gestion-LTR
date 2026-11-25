@@ -1,5 +1,7 @@
 # Auditoría técnica — verificada contra el código (2026-11-08)
 
+> **Registro histórico del 8/11.** La mayoría de los hallazgos ya se corrigieron (historias SCRUM-236 a 248, 250 y siguientes). Los números de línea y las claves de `localStorage` que cita ya no corresponden al código actual. No usarlo como descripción del sistema vigente.
+
 Origen: una revisión externa anterior. Cada punto se comprobó en el código actual; aquí solo queda lo que sigue vigente.
 `npm run build` (con `vue-tsc`) **pasa limpio**, así que el punto "error de compilación por props sin usar" no aplica.
 

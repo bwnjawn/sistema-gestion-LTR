@@ -1,5 +1,7 @@
 # SCRUM-68 · Aviso push al administrador por cada solicitud nueva
 
+**Estado:** hecho y Finalizado en Jira (23/11, PR #45; probado en un iPhone real). Operación y redespliegue: `docs/despliegue-y-mantenimiento.md`, sección 7.
+
 **Historia:** "Como administrador, quiero que me llegue un aviso por cada solicitud." La historia pedía WhatsApp a ambos dueños; sin la API de WhatsApp Business no se puede enviar de forma automática, así que se hace con **notificaciones push de la PWA** (decidido el 20/11). El WhatsApp automático queda para cuando exista la cuenta de Business.
 
 ## Qué avisa y a quién

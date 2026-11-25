@@ -1,6 +1,6 @@
 # SCRUM-258 — Estados de carga: esqueletos, aviso de espera y reintento
 
-**Fase:** 2 · **Decisiones del usuario (21/11):** Opción A (el arranque no cambia; solo el panel del administrador tras iniciar sesión), aviso a los 8 segundos, esqueleto con pulso suave.
+**Estado:** hecho y Finalizado en Jira (21/11) · **Fase:** 2 · **Decisiones del usuario (21/11):** Opción A (el arranque no cambia; solo el panel del administrador tras iniciar sesión), aviso a los 8 segundos, esqueleto con pulso suave.
 
 ## Problema
 Nadie sabía si la app estaba trabajando o se había colgado, y el administrador esperaba en "Verificando…" sin ver el panel mientras cargaban solicitudes y catálogo.

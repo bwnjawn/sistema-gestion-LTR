@@ -1,6 +1,6 @@
 # Specs por historia
 
-Un spec describe **cómo** se construye una historia. Los specs de historias terminadas se conservan como registro de las decisiones; su estado se alinea con Jira (última revisión: 22/11). Jira sigue siendo la fuente del **estado** y de los criterios oficiales; no se duplica el avance aquí.
+Un spec describe **cómo** se construye una historia. Los specs de historias terminadas se conservan como registro de las decisiones; su estado se alinea con Jira (última revisión: 24/11). Jira sigue siendo la fuente del **estado** y de los criterios oficiales; no se duplica el avance aquí.
 
 ## Cuándo se crea un spec
 - Sí: historias con lógica de negocio, decisiones de diseño o varias capas (servicio, store, repositorio, vista).

@@ -1,6 +1,6 @@
 # Esquema de Supabase — Los Troncos de Repil
 
-Historia: SCRUM-245. Estado: **decisiones aprobadas** (2026-11-11); tipos, migración del catálogo y adaptadores listos (SCRUM-245); falta cablearlos a los repositorios (SCRUM-246). Nada de esto está aplicado todavía: la creación del proyecto, la autenticación y las migraciones reales son SCRUM-248; el cableado de los repositorios es SCRUM-246.
+Historia: SCRUM-245 (diseño aprobado el 2026-11-11). **Estado al 2026-11-24: todo esto ya está aplicado** en el proyecto real de Supabase (SCRUM-246 y SCRUM-248 hechas). Lo que describen las secciones siguientes es el diseño original; la lista de lo realmente aplicado, con las migraciones 1 a 11 y sus diferencias con el diseño, está en la sección "Estado de la base". Cómo se opera: `despliegue-y-mantenimiento.md`.
 
 Principios:
 - **Los valores de los enums son idénticos a las uniones de `src/types/domain.ts`** (`pending`, `confirmed`, `cabana`, `diario`…), así el adaptador solo cambia de forma, no de vocabulario.
@@ -270,7 +270,7 @@ Todas las tablas con `enable row level security`. Dos roles: **público** (clave
 
 **Al confirmar** (trigger sobre `estado`): la restricción de exclusión impide dos cabañas confirmadas cruzadas; para restaurante y camping, el trigger suma las personas ya confirmadas del mismo día y comida/modalidad y rechaza si superan el aforo. En la reconexión sin conexión (SCRUM-250), el error de la restricción es lo que marca `en_conflicto = true` en lugar de perder la reserva.
 
-### Estado de la base (2026-11-16)
+### Estado de la base (actualizado 2026-11-24)
 
 Proyecto `sistema-gestion-LTR` (id `shzeaodsshckniadugof`, región us-east-1). Los archivos SQL están en `supabase/migrations/` y ya están aplicados:
 1. `tipos_y_catalogo`: enums, catálogo, ajustes, administradores y sus reglas de acceso.
@@ -280,6 +280,10 @@ Proyecto `sistema-gestion-LTR` (id `shzeaodsshckniadugof`, región us-east-1). L
 5. `admin_guardar_reserva`: guarda una reserva con sus comidas e ítems en una sola operación (solo administradores).
 6. `perfiles_admin_correo`: columna `correo` en los perfiles de administrador.
 7. `tiempo_real_reservas`: `reservas`, `pagos` y `reserva_comidas` en la publicación `supabase_realtime` (SCRUM-273).
+8. `reglamento_camping` (SCRUM-51): bucket público `documentos` (solo PDF, hasta 10 MB; solo un administrador sube, reemplaza o borra) y lectura pública de la clave `reglamento_camping` de `ajustes`.
+9. `fotos_inicio` (SCRUM-271): lectura pública de la clave `fotos_inicio` de `ajustes` (foto de cada tarjeta del inicio).
+10. `camping_dia_sin_rango` (SCRUM-277): `crear_solicitud` deja de exigir el rango de personas del espacio cuando la modalidad es `diario` (por el día todos los espacios de camping son iguales); al pernoctar se sigue validando. El cupo total del día lo sigue validando el trigger de aforo.
+11. `avisos_push` (SCRUM-68): tabla `suscripciones_push` (un dispositivo de un administrador; cada uno ve y borra solo las suyas), función `registrar_suscripcion_push`, columna `reservas.aviso_push_en` (hace el aviso idempotente) y el disparador `avisar_solicitud_nueva`, que al crearse una solicitud del cliente (`origen = 'cliente'`) llama por `pg_net` a la Edge Function `avisar-solicitud`. Un fallo al avisar nunca impide guardar la solicitud. Detalle en `docs/specs/SCRUM-68.md` y operación en `docs/despliegue-y-mantenimiento.md`.
 
 Diferencias con lo descrito arriba:
 - `reservas.evento_especial boolean` se agregó (SCRUM-261): así `details.isSpecialEvent` ya no se pierde.

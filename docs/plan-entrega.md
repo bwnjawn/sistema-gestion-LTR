@@ -1,5 +1,7 @@
 # Plan de entrega
 
+> **Documento histórico.** Es el plan y el registro de avance de noviembre (escrito el 10/11, antes de conectar Supabase). Sirve para ver cómo se ordenó el trabajo, **no** describe el estado final del sistema. Para eso: `reglas-negocio.md`, `supabase-esquema.md` y `despliegue-y-mantenimiento.md`. En particular, la sección "Seguridad del prototipo" ya no aplica: las cuentas usan Supabase Auth y no hay contraseñas en el código.
+
 Última revisión: 2026-11-10 · Prototipo: **viernes 13/11** · Entrega final: **viernes 27/11**
 Trabajo de una sola persona; el orden no depende del responsable que figura en Jira.
 
