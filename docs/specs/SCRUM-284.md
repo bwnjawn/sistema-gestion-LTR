@@ -1,6 +1,6 @@
 # SCRUM-284 — Cancelar una reserva confirmada para liberar sus fechas
 
-**Fase:** 2 · **Decisión del usuario (20/11):** "eliminar" una confirmada significa **cancelarla**, no borrarla.
+**Estado:** hecho y Finalizado en Jira (21/11) · **Fase:** 2 · **Decisión del usuario (20/11):** "eliminar" una confirmada significa **cancelarla**, no borrarla.
 
 ## Problema
 Una solicitud **pendiente** se puede rechazar (o cancelar si el abono venció), pero una **confirmada** solo se podía modificar o anotarle pagos. Si el cliente avisaba que no iba, la fecha quedaba bloqueada para siempre.

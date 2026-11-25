@@ -1,6 +1,6 @@
 # SCRUM-288 — Aviso arriba que confirma cada acción del administrador
 
-**Fase:** 2 · **Decisiones del usuario (21/11):** aviso en el encabezado (no un modal centrado), **Opción 2: barra bajo el encabezado**, **4 segundos**, textos aprobados.
+**Estado:** hecho y Finalizado en Jira (21/11) · **Fase:** 2 · **Decisiones del usuario (21/11):** aviso en el encabezado (no un modal centrado), **Opción 2: barra bajo el encabezado**, **4 segundos**, textos aprobados.
 
 ## Problema
 La app solo avisaba cuando algo **fallaba** (cuadro rojo). Cuando salía bien, la hoja se cerraba y no se decía nada: los administradores (unos 60 años) quedaban con la duda de si se aprobó, se rechazó o se guardó.

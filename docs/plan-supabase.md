@@ -1,5 +1,7 @@
 # Plan de la base de datos (Supabase)
 
+> **Plan de trabajo del 16 al 27/11.** Las fases A, B y C están hechas (salvo B10, imágenes en Storage, que quedó parcial: hoy solo el bucket `documentos` para el reglamento). De la Fase D, el hosting en Cloudflare ya está publicado; el punto D2 (contraseñas de fábrica) ya no aplica porque las cuentas usan Supabase Auth. El estado real de la base está en `supabase-esquema.md` y su operación en `despliegue-y-mantenimiento.md`.
+
 Creado: 2026-11-16 · Congelar funcionalidades: **24/11** · Entrega final: **viernes 27/11**
 Cubre SCRUM-248 (Supabase) y SCRUM-250 (modo sin conexión). La capa de repositorios (SCRUM-246) y el esquema (SCRUM-245, `docs/supabase-esquema.md`) ya están hechos.
 
