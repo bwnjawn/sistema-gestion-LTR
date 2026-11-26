@@ -88,7 +88,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
       :total="total"
     />
 
-    <div v-else class="lg:max-w-2xl lg:mx-auto bg-white p-6 rounded-3xl border-2 border-brand-border shadow-md space-y-5 text-center">
+    <div v-else class="lg:max-w-2xl lg:mx-auto space-y-5 text-center">
       <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-xs border-2 border-emerald-300">
         <CheckCircle2 class="w-10 h-10 stroke-[2.5]" />
       </div>
@@ -102,7 +102,7 @@ const { terminar: handleGoHome } = useSalidaReserva()
         </p>
       </div>
 
-      <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left text-sm text-gray-700 flex justify-between items-center">
+      <div class="bg-white p-4 rounded-2xl border-2 border-brand-border text-left text-sm text-gray-700 flex justify-between items-center">
         <span class="text-gray-600">Total de la entrada:</span>
         <span class="text-base font-bold text-brand-dark">{{ formatCLP(total) }}</span>
       </div>

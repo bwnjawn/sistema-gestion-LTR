@@ -34,7 +34,7 @@ function cargarOtra() {
 </script>
 
 <template>
-  <div class="bg-white p-6 rounded-3xl border-2 border-brand-border shadow-md space-y-5 text-center">
+  <div class="lg:max-w-2xl lg:mx-auto space-y-5 text-center">
     <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto border-2 border-emerald-300">
       <CheckCircle2 class="w-10 h-10 stroke-[2.5]" aria-hidden="true" />
     </div>
@@ -56,7 +56,7 @@ function cargarOtra() {
       </p>
     </div>
 
-    <div class="bg-brand-light p-4 rounded-2xl border border-brand-border text-left space-y-2 text-sm text-gray-700">
+    <div class="bg-white p-4 rounded-2xl border-2 border-brand-border text-left space-y-2 text-sm text-gray-700">
       <div class="flex justify-between gap-2">
         <span class="text-gray-600">Cliente:</span>
         <span class="text-brand-dark font-bold text-right">{{ store.clientName || 'Sin nombre' }}</span>
