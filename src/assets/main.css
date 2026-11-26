@@ -47,15 +47,66 @@
 .bottom-sobre-nav {
   bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
 }
+/* Espacio al final del contenido. En teléfono las barras de abajo ya no tapan nada (van dentro del marco, debajo
+   del contenido), así que basta un margen pequeño. En PC la barra de acción sigue fija y reserva su lugar. */
 .pb-contenido-precio {
-  padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 1.5rem;
 }
 .franja-paso {
-  /* Debajo del encabezado fijo; ClientHeader publica su altura real */
+  /* En PC, debajo del encabezado pegado; ClientHeader publica su altura real. En teléfono el encabezado
+     queda fuera del contenido que se desplaza (marco), así que la franja se pega arriba del todo. */
   top: var(--alto-encabezado, 4rem);
 }
+@media (max-width: 1023.98px) {
+  .franja-paso { top: 0; }
+}
 .pb-contenido-nav {
-  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 1.5rem;
+}
+@media (min-width: 1024px) {
+  .pb-contenido-precio {
+    padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+  }
+  .pb-contenido-nav {
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Marco de altura fija (SCRUM-259, componente MarcoApp): en teléfono la página no se desplaza; el encabezado y la
+   barra inferior son parte del marco y solo `.marco-scroll` se desplaza. En PC (desde 1024 px) todo es flujo normal. */
+.marco-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.marco-scroll {
+  flex: 1 0 auto;
+}
+.marco-barra {
+  flex: none;
+}
+@media (max-width: 1023.98px) {
+  html.con-marco,
+  html.con-marco body {
+    height: 100%;
+    overflow: hidden;
+  }
+  .marco-app {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .marco-app > header {
+    flex: none;
+  }
+  .marco-scroll {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* iOS hace zoom al enfocar campos con letra menor a 16 px */
@@ -123,17 +174,4 @@ input[type="password"] {
   *::-webkit-scrollbar {
     display: none;
   }
-}
-
-/* Barras fijas inferiores: si iOS deja un margen debajo (teclado cerrado), se rellena
-   con el mismo color de la barra para que no se vea una franja del fondo */
-.barra-fija-inferior::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: 100vh;
-  background: inherit;
-  pointer-events: none;
 }

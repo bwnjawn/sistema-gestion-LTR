@@ -20,6 +20,7 @@ const abiertas: number[] = []
 import { onBeforeUnmount, toRef, watch } from 'vue'
 import { X } from 'lucide-vue-next'
 import { useBloqueoScroll } from '../../composables/useBloqueoScroll'
+import { useAnclajeAlTeclado } from '../../composables/useAnclajeAlTeclado'
 
 const props = withDefaults(defineProps<{
   abierto: boolean
@@ -49,6 +50,8 @@ const emit = defineEmits<{
 }>()
 
 useBloqueoScroll(toRef(props, 'abierto'))
+// Con el teclado abierto en iPhone, la hoja se ajusta al área visible y el fondo no se arrastra (SCRUM-259)
+const anclajeTeclado = useAnclajeAlTeclado(toRef(props, 'abierto'))
 
 // Esc cierra solo la hoja de más arriba: si hay otra abierta con un nivel mayor, esta no responde.
 function alTeclear(evento: KeyboardEvent) {
@@ -87,7 +90,7 @@ function alTocarFondo() {
       <div
         v-if="abierto"
         class="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center sm:p-4"
-        :style="{ zIndex: nivel }"
+        :style="[{ zIndex: nivel }, anclajeTeclado]"
         @click.self="alTocarFondo"
       >
         <div

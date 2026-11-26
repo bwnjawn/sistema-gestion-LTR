@@ -12,6 +12,7 @@ import FondoFotoTarjeta from '../../components/ui/FondoFotoTarjeta.vue'
 import TarjetaServicioExtra from '../../components/ui/TarjetaServicioExtra.vue'
 import HojaContactoEvento from '../../components/ui/HojaContactoEvento.vue'
 import FranjaModoAdmin from '../../components/ui/FranjaModoAdmin.vue'
+import MarcoApp from '../../components/ui/MarcoApp.vue'
 import AvisoPendientesEnvio from '../../components/ui/AvisoPendientesEnvio.vue'
 import { useSalidaReserva } from '../../composables/useSalidaReserva'
 
@@ -36,12 +37,14 @@ function selectService(service: ServiceType) {
 </script>
 
 <template>
-  <div class="flex flex-col min-h-[85vh]">
-    <!-- Modo administrador (SCRUM-56): la misma franja de los pasos, con botón para salir al panel -->
-    <FranjaModoAdmin v-if="reservationStore.isAdminMode" con-salir @salir="salirAlPanel" />
+  <MarcoApp class="bg-brand-light">
+    <template #encabezado>
+      <!-- Modo administrador (SCRUM-56): la misma franja de los pasos, con botón para salir al panel -->
+      <FranjaModoAdmin v-if="reservationStore.isAdminMode" con-salir @salir="salirAlPanel" />
 
-    <!-- En PC la navegación va arriba -->
-    <ClientBarraSuperior v-if="!reservationStore.isAdminMode" />
+      <!-- En PC la navegación va arriba -->
+      <ClientBarraSuperior v-if="!reservationStore.isAdminMode" />
+    </template>
 
     <main class="p-4 space-y-4 grow max-w-md lg:max-w-7xl lg:px-10 mx-auto w-full pb-contenido-nav lg:pb-12">
       
@@ -178,5 +181,5 @@ function selectService(service: ServiceType) {
 
     <!-- Navegación Inferior -->
     <ClientBottomNav v-if="!reservationStore.isAdminMode" />
-  </div>
+  </MarcoApp>
 </template>

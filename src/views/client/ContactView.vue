@@ -4,14 +4,17 @@ import { useSettingsStore } from '../../stores/settingsStore'
 import ClientHeader from '../../components/ui/ClientHeader.vue'
 import ClientBottomNav from '../../components/ui/ClientBottomNav.vue'
 import ClientBarraSuperior from '../../components/ui/ClientBarraSuperior.vue'
+import MarcoApp from '../../components/ui/MarcoApp.vue'
 
 const settingsStore = useSettingsStore()
 </script>
 
 <template>
-  <div class="min-h-screen bg-brand-light">
-    <ClientBarraSuperior />
-    <ClientHeader class="lg:hidden" titulo="Contacto" subtitulo="Los Troncos de Repil" />
+  <MarcoApp class="bg-brand-light">
+    <template #encabezado>
+      <ClientBarraSuperior />
+      <ClientHeader class="lg:hidden" titulo="Contacto" subtitulo="Los Troncos de Repil" />
+    </template>
 
   <div class="space-y-4 max-w-md lg:max-w-7xl mx-auto w-full px-4 lg:px-10 pt-4 lg:pt-8 pb-contenido-nav lg:pb-12 lg:space-y-0 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-6 lg:items-start">
     <!-- Canales de Contacto Directo -->
@@ -160,5 +163,5 @@ const settingsStore = useSettingsStore()
     <!-- Navegación Inferior -->
     <ClientBottomNav />
   </div>
-  </div>
+  </MarcoApp>
 </template>
