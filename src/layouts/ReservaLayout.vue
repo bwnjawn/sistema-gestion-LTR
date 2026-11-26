@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ClientHeader from '../components/ui/ClientHeader.vue'
+import MarcoApp from '../components/ui/MarcoApp.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
 import FranjaModoAdmin from '../components/ui/FranjaModoAdmin.vue'
 import ModalAyuda from '../components/ui/ModalAyuda.vue'
@@ -100,19 +101,21 @@ function salirBorrando() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-brand-light">
-    <ClientHeader
-      :titulo="titulo"
-      :subtitulo="subtitulo"
-      :con-volver="!store.solicitudEnviada"
-      :con-cerrar="!store.solicitudEnviada"
-      :con-ayuda="conAyuda"
-      @ayuda="ayudaAbierta = true"
-      @volver="volver"
-      @cerrar="cerrar"
-    />
+  <MarcoApp class="bg-brand-light">
+    <template #encabezado>
+      <ClientHeader
+        :titulo="titulo"
+        :subtitulo="subtitulo"
+        :con-volver="!store.solicitudEnviada"
+        :con-cerrar="!store.solicitudEnviada"
+        :con-ayuda="conAyuda"
+        @ayuda="ayudaAbierta = true"
+        @volver="volver"
+        @cerrar="cerrar"
+      />
 
-    <FranjaModoAdmin v-if="store.isAdminMode && !store.solicitudEnviada" />
+      <FranjaModoAdmin v-if="store.isAdminMode && !store.solicitudEnviada" />
+    </template>
 
     <!-- En PC, el resumen de la reserva va fijo a la derecha del paso -->
     <main class="px-4 lg:px-8 pt-4 lg:pt-8">
@@ -147,5 +150,5 @@ function salirBorrando() {
         </div>
       </template>
     </HojaModal>
-  </div>
+  </MarcoApp>
 </template>

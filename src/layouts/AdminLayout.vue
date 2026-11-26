@@ -1,14 +1,17 @@
 <template>
   <!-- En PC (desde 1024 px) el menú va a la izquierda y el contenido se ensancha (SCRUM-278) -->
-  <div class="min-h-screen bg-brand-light flex flex-col pb-contenido-nav lg:pb-0 lg:pl-64">
+  <!-- Marco de altura fija en teléfono (SCRUM-259): encabezado arriba, navegación abajo y solo el contenido se desplaza -->
+  <MarcoApp class="bg-brand-light lg:pb-0 lg:pl-64">
     <!-- Menú lateral: solo se ve en PC -->
     <AdminMenuLateral />
 
-    <!-- Encabezado de Admin Unificado -->
-    <AdminHeader />
+    <template #encabezado>
+      <!-- Encabezado de Admin Unificado -->
+      <AdminHeader />
+    </template>
 
     <!-- Vistas Hijas del Panel de Administración -->
-    <main class="p-4 grow w-full max-w-md lg:max-w-[1680px] mx-auto lg:px-10 lg:py-8">
+    <main class="p-4 pb-contenido-nav lg:pb-0 grow w-full max-w-md lg:max-w-[1680px] mx-auto lg:px-10 lg:py-8">
       <router-view />
     </main>
 
@@ -24,14 +27,17 @@
     </button>
 
     <!-- Barra de Navegación Inferior Admin Unificada (solo teléfono) -->
-    <AdminBottomNav />
-  </div>
+    <template #pie>
+      <AdminBottomNav />
+    </template>
+  </MarcoApp>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { Plus } from 'lucide-vue-next'
 import AdminHeader from '../components/ui/AdminHeader.vue'
+import MarcoApp from '../components/ui/MarcoApp.vue'
 import AdminBottomNav from '../components/admin/AdminBottomNav.vue'
 import AdminMenuLateral from '../components/admin/AdminMenuLateral.vue'
 

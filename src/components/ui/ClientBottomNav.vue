@@ -1,6 +1,7 @@
 <template>
   <!-- Mismo estilo que la barra del admin: ícono relleno y oscuro cuando está activo, más una etiqueta -->
-  <nav class="lg:hidden barra-fija-inferior fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-30 bg-[#e3eae1]/95 backdrop-blur-md border-t-2 border-brand-border px-2.5 pt-2.5 pb-seguro-nav shadow-2xl">
+  <AnclaBarraInferior>
+  <nav class="lg:hidden barra-fija-inferior mx-auto w-full max-w-md z-30 bg-[#e3eae1]/95 backdrop-blur-md border-t-2 border-brand-border px-2.5 pt-2.5 pb-seguro-nav shadow-2xl">
     <div class="grid grid-cols-2 gap-2">
       <button
         v-for="item in items"
@@ -19,9 +20,11 @@
       </button>
     </div>
   </nav>
+  </AnclaBarraInferior>
 </template>
 
 <script setup lang="ts">
+import AnclaBarraInferior from './AnclaBarraInferior.vue'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import IconoBarra, { type NombreIconoBarra } from './IconoBarra.vue'

@@ -6,7 +6,6 @@ import '@fontsource/atkinson-hyperlegible/latin-400.css'
 import '@fontsource/atkinson-hyperlegible/latin-700.css'
 import './assets/main.css'
 import { evitarZoomDobleToque } from './lib/sinZoomDobleToque'
-import { corregirViewportTeclado } from './lib/corregirViewportTeclado'
 import { inicializarAplicacion } from './lib/arranque'
 import { useActualizacionStore } from './stores/actualizacionStore'
 import { usePreferenciasStore } from './stores/preferenciasStore'
@@ -53,7 +52,6 @@ async function iniciar() {
   router.afterEach(to => usePreferenciasStore(pinia).definirAreaAdmin(to.path.startsWith('/admin')))
   app.mount('#app')
   evitarZoomDobleToque()
-  corregirViewportTeclado()
   // Al volver a la app o recuperar internet, los datos se actualizan solos (SCRUM-273)
   useActualizacionStore(pinia).iniciar()
 }

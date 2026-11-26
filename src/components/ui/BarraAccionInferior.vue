@@ -2,6 +2,7 @@
 import { ArrowRight, Send } from 'lucide-vue-next'
 import BaseButton from './BaseButton.vue'
 import { formatCLP } from '../../lib/format'
+import AnclaBarraInferior from './AnclaBarraInferior.vue'
 
 // Barra fija inferior de los pasos de reserva: una sola acción, la de avanzar.
 // Volver atrás se hace desde el encabezado.
@@ -24,10 +25,14 @@ defineEmits<{ (e: 'click', ev: MouseEvent): void }>()
 </script>
 
 <template>
+  <!-- En teléfono va dentro del marco, debajo del contenido (AnclaBarraInferior); en PC sigue fija abajo o, con total, junto al resumen -->
+  <AnclaBarraInferior>
   <div
     :class="[
-      'barra-fija-inferior fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-3.5 pt-3.5 pb-seguro-nav shadow-2xl',
-      total !== undefined ? 'lg:static lg:order-first lg:z-auto lg:rounded-3xl lg:border lg:border-gray-200 lg:bg-white lg:shadow-sm lg:px-6 lg:pt-6 lg:!pb-6 lg:after:hidden' : ''
+      'barra-fija-inferior z-30 bg-white/95 backdrop-blur-md border-t-2 border-brand-border px-3.5 pt-3.5 pb-seguro-nav shadow-2xl',
+      total !== undefined
+        ? 'lg:static lg:order-first lg:z-auto lg:rounded-3xl lg:border lg:border-gray-200 lg:bg-white lg:shadow-sm lg:px-6 lg:pt-6 lg:!pb-6'
+        : 'lg:fixed lg:bottom-0 lg:left-0 lg:right-0'
     ]"
   >
     <div
@@ -63,4 +68,5 @@ defineEmits<{ (e: 'click', ev: MouseEvent): void }>()
       </BaseButton>
     </div>
   </div>
+  </AnclaBarraInferior>
 </template>

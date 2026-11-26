@@ -102,7 +102,11 @@ const router = createRouter({
     // contenido que aún se pinta pueden dejar la pantalla a medio camino, así que se
     // suelta el foco y se repite el desplazamiento un instante después.
     ;(document.activeElement as HTMLElement | null)?.blur?.()
-    const arriba = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    // En teléfono el que se desplaza es el contenido del marco (SCRUM-259) y no la ventana; en PC, la ventana
+    const arriba = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      document.querySelector('.marco-scroll')?.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    }
     requestAnimationFrame(arriba)
     setTimeout(arriba, 120)
     return { top: 0, left: 0 }
