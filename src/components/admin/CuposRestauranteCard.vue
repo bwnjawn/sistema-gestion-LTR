@@ -42,7 +42,7 @@ async function guardar() {
     </p>
     <p class="flex justify-between gap-2">
       <span>Grupos de más de {{ settingsStore.capacityRules.menuLargeGroupThreshold }}</span>
-      <span class="font-bold text-brand-dark">máx. {{ settingsStore.capacityRules.maxMenuVarietiesLargeGroup }} menús distintos</span>
+      <span class="font-bold text-brand-dark">máx. {{ settingsStore.capacityRules.maxMenuVarietiesLargeGroup }} platos distintos en el almuerzo</span>
     </p>
   </TarjetaAjuste>
 
@@ -58,7 +58,7 @@ async function guardar() {
       <input id="cupo-umbral" v-model.number="umbral" type="number" inputmode="numeric" min="1" max="1000" class="campo-entrada" />
     </div>
     <div>
-      <label for="cupo-variedades" class="campo-etiqueta">Máximo de menús distintos por comida en esos grupos</label>
+      <label for="cupo-variedades" class="campo-etiqueta">Máximo de platos distintos en el almuerzo de esos grupos</label>
       <input id="cupo-variedades" v-model.number="variedades" type="number" inputmode="numeric" min="1" max="50" class="campo-entrada" />
     </div>
   </HojaModal>

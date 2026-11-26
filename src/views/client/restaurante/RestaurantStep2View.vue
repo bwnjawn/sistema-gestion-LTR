@@ -13,6 +13,7 @@ import { useSettingsStore } from '../../../stores/settingsStore'
 import { puedeAgregarVariedad, superaLimiteVariedades } from '../../../services/menus'
 import { formatCLP } from '../../../lib/format'
 import type { Dish } from '../../../types/catalog'
+import type { MealType } from '../../../types/domain'
 
 const router = useRouter()
 const store = useReservationStore()
@@ -31,8 +32,8 @@ const mealLabels: Record<string, string> = {
 
 // 1. ORDEN FIJO: Siempre Desayuno -> Almuerzo -> Once
 const activeMealTypes = computed(() => {
-  const order = ['desayuno', 'almuerzo', 'once']
-  const selected = store.selectedMealTypes.length > 0 ? store.selectedMealTypes : ['almuerzo']
+  const order: MealType[] = ['desayuno', 'almuerzo', 'once']
+  const selected: string[] = store.selectedMealTypes.length > 0 ? store.selectedMealTypes : ['almuerzo']
   return order.filter(m => selected.includes(m))
 })
 
@@ -80,7 +81,7 @@ function updateDishCount(dishId: string, delta: number) {
   const currentCount = sel.count
   const newCount = Math.max(0, currentCount + delta)
 
-  if (newCount > currentCount && currentCount === 0 && !puedeAgregarVariedad(totalGuests.value, countVarieties(currentMealDishes.value), settingsStore.limiteVariedades)) {
+  if (newCount > currentCount && currentCount === 0 && !puedeAgregarVariedad(totalGuests.value, countVarieties(currentMealDishes.value), settingsStore.limiteVariedades, currentMealType.value)) {
     showVarietyLimitWarning.value = true
     return
   }
@@ -99,7 +100,7 @@ function handleDishCountInput(dishId: string, event: Event) {
   if (isNaN(val) || val < 0) val = 0
 
   const sel = getDishSelection(dishId)
-  if (val > 0 && sel.count === 0 && !puedeAgregarVariedad(totalGuests.value, countVarieties(currentMealDishes.value), settingsStore.limiteVariedades)) {
+  if (val > 0 && sel.count === 0 && !puedeAgregarVariedad(totalGuests.value, countVarieties(currentMealDishes.value), settingsStore.limiteVariedades, currentMealType.value)) {
     showVarietyLimitWarning.value = true
     target.value = String(sel.count)
     return
@@ -207,7 +208,7 @@ function selectMealTab(idx: number) {
 const mealsOverVarietyLimit = computed(() =>
   activeMealTypes.value.filter(mId => {
     const dishes = catalogStore.dishes.filter(d => d.mealType === mId)
-    return superaLimiteVariedades(totalGuests.value, countVarieties(dishes), settingsStore.limiteVariedades)
+    return superaLimiteVariedades(totalGuests.value, countVarieties(dishes), settingsStore.limiteVariedades, mId)
   })
 )
 
@@ -298,7 +299,7 @@ function proceedToStep3() {
       <div class="flex items-center gap-2">
         <AlertTriangle class="w-5 h-5 text-white shrink-0 stroke-[2.5]" />
         <span>
-          Para grupos de más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas, se permite un <strong>máximo de {{ settingsStore.limiteVariedades.maxVariedades }} variedades de menú en {{ mealLabels[currentMealType] }}</strong>.
+          Para grupos de más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas, se permite un <strong>máximo de {{ settingsStore.limiteVariedades.maxVariedades }} platos distintos en el almuerzo</strong>.
         </span>
       </div>
       <button aria-label="Cerrar" 
@@ -316,7 +317,7 @@ function proceedToStep3() {
     </div>
 
     <BaseAlert v-if="mealsOverVarietyLimit.length > 0" variant="warning" title="Demasiados menús distintos">
-      Para grupos de más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas el máximo es {{ settingsStore.limiteVariedades.maxVariedades }} menús distintos por comida. Quita platos en: {{ mealsOverVarietyLimit.map(m => mealLabels[m]).join(', ') }}.
+      Para grupos de más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas el máximo es {{ settingsStore.limiteVariedades.maxVariedades }} platos distintos en el almuerzo. Quita platos en: {{ mealsOverVarietyLimit.map(m => mealLabels[m]).join(', ') }}.
     </BaseAlert>
 
     <!-- Alerta Guiada (Sin contador acumulado global) -->

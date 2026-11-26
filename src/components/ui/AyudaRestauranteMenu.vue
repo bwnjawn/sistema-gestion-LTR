@@ -17,7 +17,7 @@ const settingsStore = useSettingsStore()
     </li>
     <li>
       <b class="font-bold text-brand-dark">Grupos grandes.</b>
-      Con más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas, se pueden elegir hasta {{ settingsStore.limiteVariedades.maxVariedades }} platos distintos por comida.
+      Con más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas, se pueden elegir hasta {{ settingsStore.limiteVariedades.maxVariedades }} platos distintos en el almuerzo. El desayuno y la once no tienen límite.
     </li>
     <li>
       <b class="font-bold text-brand-dark">Varias comidas.</b>

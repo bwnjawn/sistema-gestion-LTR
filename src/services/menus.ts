@@ -11,30 +11,37 @@ export const ETIQUETAS_COMIDA: Record<MealType, string> = {
   once: 'Once'
 }
 
-/** Valores de fábrica: más de 30 personas, máximo 3 platos distintos por comida (SCRUM-36). */
+/** Valores de fábrica: más de 30 personas, máximo 3 platos distintos en el almuerzo (SCRUM-36, SCRUM-294). */
 export const LIMITE_VARIEDADES_POR_DEFECTO: LimiteVariedades = { umbralPersonas: 30, maxVariedades: 3 }
 
-/** La regla de variedades se aplica solo cuando el grupo supera el umbral. */
-export function aplicaLimiteVariedades(personas: number, limite: LimiteVariedades): boolean {
-  return personas > limite.umbralPersonas
+/** Solo el almuerzo tiene tope de platos distintos; el desayuno y la once no (decisión del 22/11, SCRUM-294). */
+export function comidaTieneLimiteDeVariedades(comida: MealType): boolean {
+  return comida === 'almuerzo'
+}
+
+/** La regla de variedades se aplica solo al almuerzo y solo cuando el grupo supera el umbral. */
+export function aplicaLimiteVariedades(personas: number, limite: LimiteVariedades, comida: MealType): boolean {
+  return comidaTieneLimiteDeVariedades(comida) && personas > limite.umbralPersonas
 }
 
 /** Indica si se puede sumar un plato distinto a los que ya están elegidos en una comida. */
 export function puedeAgregarVariedad(
   personas: number,
   variedadesElegidas: number,
-  limite: LimiteVariedades
+  limite: LimiteVariedades,
+  comida: MealType
 ): boolean {
-  return !aplicaLimiteVariedades(personas, limite) || variedadesElegidas < limite.maxVariedades
+  return !aplicaLimiteVariedades(personas, limite, comida) || variedadesElegidas < limite.maxVariedades
 }
 
 /** Indica si una comida ya supera el máximo de variedades (por ejemplo, tras subir las personas). */
 export function superaLimiteVariedades(
   personas: number,
   variedadesElegidas: number,
-  limite: LimiteVariedades
+  limite: LimiteVariedades,
+  comida: MealType
 ): boolean {
-  return aplicaLimiteVariedades(personas, limite) && variedadesElegidas > limite.maxVariedades
+  return aplicaLimiteVariedades(personas, limite, comida) && variedadesElegidas > limite.maxVariedades
 }
 
 // ---------------------------------------------------------------------------
