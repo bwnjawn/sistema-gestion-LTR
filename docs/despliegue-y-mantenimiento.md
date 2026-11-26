@@ -29,6 +29,13 @@ Dirección actual de la app: `https://sistema-gestion-ltr.benjaminojedaval.worke
 - **Todo lo que empieza con `VITE_` queda visible en el navegador de cualquier visitante.** Nunca poner ahí la clave secreta (`service_role` o `secret`) de Supabase.
 - **En tu computador:** archivo `.env` en la raíz (no se sube a git; la plantilla es `.env.example`). Si falta, la app corre en **modo local**: guarda todo en `localStorage` y no habla con Supabase.
 - **En Cloudflare:** Settings → Build → **Variables and secrets** (la sección de *Build*, no la de *Runtime*; son valores que se incrustan al construir). Tras cambiarlas hay que volver a desplegar.
+- **Secretos del Worker para el ping a Supabase (SCRUM-292).** Son distintos de los de Build: se cargan en Settings → **Variables and secrets** con tipo **Secret** y los lee el Worker mientras corre, no el build. Tipo *Secret* y no texto plano porque el repositorio es público y porque los secretos no se pierden al desplegar (las variables de texto sí pueden perderse).
+
+  | Secreto | Valor |
+  |---|---|
+  | `SUPABASE_URL` | El mismo valor que `VITE_SUPABASE_URL` |
+  | `SUPABASE_PUBLISHABLE_KEY` | El mismo valor que `VITE_SUPABASE_PUBLISHABLE_KEY` (solo la pública) |
+
 - **Respaldar el `.env` antes de cambiar de rama** o hacer operaciones de git grandes: una vez git lo borró al cambiar de rama.
 
 ## 3. Trabajar en local
@@ -66,6 +73,8 @@ y publica `dist/` más el Worker de `worker/index.js`. No hay paso manual.
 - `not_found_handling: single-page-application`: cualquier ruta (`/admin`, `/reservas`…) carga la app en vez de dar 404.
 - `run_worker_first: ["/admin", "/admin/*"]`: esas rutas pasan primero por `worker/index.js`.
 - `previews: {}`: obligatorio para que las ramas distintas de `main` se publiquen como vista previa.
+- `triggers.crons`: tarea diaria a las 12:00 UTC (08:00 o 09:00 en Chile) que ejecuta `scheduled` de `worker/index.js` (el ping a Supabase de la sección 5). Solo corre en la versión de producción, no en las vistas previas.
+- `observability.enabled`: guarda los registros del Worker para verlos en el panel de Cloudflare.
 
 ### Vistas previas de ramas
 
@@ -142,7 +151,14 @@ Son 17 pruebas. Las de administrador piden además las variables `PRUEBA_ADMIN_C
 
 ### Plan de Supabase y respaldos
 
-En el plan gratuito el proyecto **se pausa tras 7 días sin uso** y no ofrece respaldos descargables (confirmar las condiciones vigentes en la página de precios de Supabase). Para un servicio real conviene un plan de pago a nombre del cliente. Mientras tanto, una visita semanal a la app evita la pausa. Si el proyecto se pausa, se reactiva desde el panel (Restore).
+En el plan gratuito el proyecto **se pausa tras 7 días sin uso** y no ofrece respaldos descargables (confirmar las condiciones vigentes en la página de precios de Supabase). Para un servicio real conviene un plan de pago a nombre del cliente. Si el proyecto se pausa, se reactiva desde el panel (Restore).
+
+**Ping diario contra la pausa (SCRUM-292).** El Worker consulta una vez al día una tabla pública (`cabanas`, un solo registro, con la clave pública) para que siempre haya actividad de base de datos. Código: `worker/pingSupabase.js`; horario: `triggers.crons` de `wrangler.jsonc`.
+
+- **Requiere** los secretos `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` (sección 2). Sin ellos, cada ejecución falla con el mensaje "faltan las variables…".
+- **Cómo comprobar que funciona:** panel de Cloudflare → Worker `sistema-gestion-ltr` → **Observability / Logs**, y buscar "Ping a Supabase: correcto". Las ejecuciones fallidas aparecen como error con el motivo (`faltan las variables`, `respondió 401`, `no se pudo consultar`). Revisarlo cada tanto mientras no haya plan de pago.
+- **Por verificar:** que Supabase cuente esa consulta como actividad. La documentación oficial habla de "actividad de base de datos"; confirmar dejándolo correr unos días y mirando que el proyecto no pase a inactivo en el panel de Supabase.
+- **No es un respaldo.** Evita la pausa, pero no protege de borrados por error ni de fallas de la plataforma; ver el respaldo manual (SCRUM-293).
 
 ## 6. Cuentas de administrador
 
@@ -190,7 +206,7 @@ npx supabase functions deploy avisar-solicitud --remote=shzeaodsshckniadugof --n
 
 Cambiar la dirección de la app tiene efectos en cadena. Hacerlo todo junto y probar al final:
 
-1. Cloudflare: nuevo dominio (Settings → Domains & Routes) o nuevo Worker; cargar de nuevo las variables de Build.
+1. Cloudflare: nuevo dominio (Settings → Domains & Routes) o nuevo Worker; cargar de nuevo las variables de Build **y los dos secretos del ping** (`SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`). El cron viaja con `wrangler.jsonc`; los secretos no.
 2. Supabase → Authentication → **URL Configuration**: actualizar *Site URL* y *Redirect URLs*.
 3. Reactivar los avisos push en cada dispositivo (la suscripción estaba atada al origen anterior).
 4. Reinstalar la PWA en los teléfonos (borrar el ícono y volver a agregarlo).
