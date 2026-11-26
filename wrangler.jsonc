@@ -12,6 +12,12 @@
     // Cualquier ruta (/admin, /reservas...) carga la app en vez de dar 404.
     "not_found_handling": "single-page-application"
   },
+  // Ping diario a Supabase (SCRUM-292): todos los días a las 12:00 UTC (08:00 o 09:00 en Chile) para que
+  // el plan gratuito no pause el proyecto. Solo corre en la versión de producción. Necesita los secretos
+  // SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY (ver worker/pingSupabase.js).
+  "triggers": { "crons": ["0 12 * * *"] },
+  // Guarda los registros del Worker (incluidos los del ping) para poder verlos en el panel de Cloudflare.
+  "observability": { "enabled": true },
   // Las ramas que no son main se publican como vista previa (`wrangler preview`),
   // que exige este bloque, aunque vaya vacío.
   "previews": {}
