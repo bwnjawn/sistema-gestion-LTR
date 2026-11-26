@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { ChevronLeft, CircleHelp, X, WifiOff } from 'lucide-vue-next'
 import { useSettingsStore } from '../../stores/settingsStore'
 
@@ -16,10 +17,28 @@ defineProps<{
 defineEmits<{ (e: 'volver'): void; (e: 'cerrar'): void; (e: 'ayuda'): void }>()
 
 const settingsStore = useSettingsStore()
+
+// Publica la altura real del encabezado (con la zona segura y el aviso sin conexión) como `--alto-encabezado`,
+// para que las franjas que se quedan pegadas debajo (por ejemplo la del paso 2 del restaurante) sepan dónde empezar.
+const encabezado = ref<HTMLElement | null>(null)
+let observador: ResizeObserver | undefined
+onMounted(() => {
+  if (!encabezado.value || typeof ResizeObserver === 'undefined') return
+  const publicar = () => {
+    if (encabezado.value) document.documentElement.style.setProperty('--alto-encabezado', `${encabezado.value.offsetHeight}px`)
+  }
+  publicar()
+  observador = new ResizeObserver(publicar)
+  observador.observe(encabezado.value)
+})
+onBeforeUnmount(() => {
+  observador?.disconnect()
+  document.documentElement.style.removeProperty('--alto-encabezado')
+})
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-brand-border shadow-2xs pt-[env(safe-area-inset-top,0px)]">
+  <header ref="encabezado" class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-brand-border shadow-2xs pt-[env(safe-area-inset-top,0px)]">
     <div class="max-w-md lg:max-w-5xl lg:px-0 lg:h-16 mx-auto w-full px-2 h-14 flex items-center gap-1">
       <button
         v-if="conVolver"

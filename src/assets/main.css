@@ -50,6 +50,10 @@
 .pb-contenido-precio {
   padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
 }
+.franja-paso {
+  /* Debajo del encabezado fijo; ClientHeader publica su altura real */
+  top: var(--alto-encabezado, 4rem);
+}
 .pb-contenido-nav {
   padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
 }

@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import HojaModal from '../../../components/ui/HojaModal.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Minus, Plus, Check, AlertTriangle, CheckCircle2, X } from 'lucide-vue-next'
+import { Minus, Plus, Check, AlertTriangle, CheckCircle2 } from 'lucide-vue-next'
 import StepIndicator from '../../../components/ui/StepIndicator.vue'
 import BaseButton from '../../../components/ui/BaseButton.vue'
 import BarraAccionInferior from '../../../components/ui/BarraAccionInferior.vue'
-import BaseAlert from '../../../components/ui/BaseAlert.vue'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { useCatalogStore } from '../../../stores/catalogStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
-import { puedeAgregarVariedad, superaLimiteVariedades } from '../../../services/menus'
+import { aplicaLimiteVariedades, puedeAgregarVariedad, superaLimiteVariedades } from '../../../services/menus'
 import { formatCLP } from '../../../lib/format'
 import type { Dish } from '../../../types/catalog'
 import type { MealType } from '../../../types/domain'
@@ -22,7 +21,15 @@ const settingsStore = useSettingsStore()
 
 const activeMealIndex = ref(0)
 const showIncompleteModal = ref(false)
-const showVarietyLimitWarning = ref(false)
+// Se enciende un momento cuando el cliente intenta pasar el límite de platos distintos: resalta la franja fija.
+const limiteRecienTocado = ref(false)
+let temporizadorLimite: ReturnType<typeof setTimeout> | undefined
+function resaltarLimite() {
+  limiteRecienTocado.value = true
+  clearTimeout(temporizadorLimite)
+  temporizadorLimite = setTimeout(() => { limiteRecienTocado.value = false }, 2500)
+}
+onBeforeUnmount(() => clearTimeout(temporizadorLimite))
 
 const mealLabels: Record<string, string> = {
   desayuno: 'Desayuno',
@@ -82,7 +89,7 @@ function updateDishCount(dishId: string, delta: number) {
   const newCount = Math.max(0, currentCount + delta)
 
   if (newCount > currentCount && currentCount === 0 && !puedeAgregarVariedad(totalGuests.value, countVarieties(currentMealDishes.value), settingsStore.limiteVariedades, currentMealType.value)) {
-    showVarietyLimitWarning.value = true
+    resaltarLimite()
     return
   }
 
@@ -101,7 +108,7 @@ function handleDishCountInput(dishId: string, event: Event) {
 
   const sel = getDishSelection(dishId)
   if (val > 0 && sel.count === 0 && !puedeAgregarVariedad(totalGuests.value, countVarieties(currentMealDishes.value), settingsStore.limiteVariedades, currentMealType.value)) {
-    showVarietyLimitWarning.value = true
+    resaltarLimite()
     target.value = String(sel.count)
     return
   }
@@ -212,6 +219,17 @@ const mealsOverVarietyLimit = computed(() =>
   })
 )
 
+// Franja fija: el almuerzo es la única comida con tope de platos distintos (SCRUM-294).
+const almuerzoConLimite = computed(() =>
+  activeMealTypes.value.includes('almuerzo') && aplicaLimiteVariedades(totalGuests.value, settingsStore.limiteVariedades, 'almuerzo')
+)
+const variedadesAlmuerzo = computed(() => countVarieties(catalogStore.dishes.filter(d => d.mealType === 'almuerzo')))
+const estadoLimite = computed<'libre' | 'alcanzado' | 'superado'>(() => {
+  const max = settingsStore.limiteVariedades.maxVariedades
+  if (variedadesAlmuerzo.value > max) return 'superado'
+  return variedadesAlmuerzo.value === max ? 'alcanzado' : 'libre'
+})
+
 const isFormValid = computed(() => {
   if (mealsOverVarietyLimit.value.length > 0) return false
   const hasAnyDish = activeMealTypes.value.some(mId => getMealSelectedCount(mId) > 0)
@@ -291,63 +309,77 @@ function proceedToStep3() {
       </template>
     </HojaModal>
 
-    <!-- Aviso Flotante para Límite de 3 Variedades -->
-    <div 
-      v-if="showVarietyLimitWarning" 
-      class="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto bg-amber-500 text-white p-3.5 rounded-2xl shadow-2xl border-2 border-amber-600 font-bold text-sm flex items-center justify-between gap-3"
-    >
-      <div class="flex items-center gap-2">
-        <AlertTriangle class="w-5 h-5 text-white shrink-0 stroke-[2.5]" />
-        <span>
-          Para grupos de más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas, se permite un <strong>máximo de {{ settingsStore.limiteVariedades.maxVariedades }} platos distintos en el almuerzo</strong>.
-        </span>
-      </div>
-      <button aria-label="Cerrar" 
-        type="button" 
-        @click="showVarietyLimitWarning = false"
-        class="p-1 hover:bg-amber-600 rounded-lg transition-colors shrink-0"
-      >
-        <X class="w-4 h-4 text-white stroke-[2.5]" />
-      </button>
-    </div>
-
     <!-- Indicador de Pasos -->
     <div class="bg-white p-3.5 rounded-2xl border-2 border-brand-border shadow-xs">
       <StepIndicator :current-step="2" />
     </div>
 
-    <BaseAlert v-if="mealsOverVarietyLimit.length > 0" variant="warning" title="Demasiados menús distintos">
-      Para grupos de más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas el máximo es {{ settingsStore.limiteVariedades.maxVariedades }} platos distintos en el almuerzo. Quita platos en: {{ mealsOverVarietyLimit.map(m => mealLabels[m]).join(', ') }}.
-    </BaseAlert>
-
-    <!-- Alerta Guiada (Sin contador acumulado global) -->
-
-    <!-- Pestañas por Servicio Activo (En orden Fijo) -->
-    <div v-if="activeMealTypes.length > 1" class="flex gap-2 p-1 bg-brand-light rounded-2xl border-2 border-brand-border">
-      <button
-        type="button"
-        v-for="(mId, idx) in activeMealTypes"
-        :key="mId"
-        @click="selectMealTab(idx)"
-        :class="[
-          'flex-1 py-2.5 px-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5 border touch-target',
-          activeMealIndex === idx
-            ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
-            : 'bg-white text-brand-dark border-brand-border hover:bg-gray-100'
-        ]"
-      >
-        <span>{{ mealLabels[mId] }}</span>
-        <span 
+    <!-- Franja fija bajo el encabezado: pestañas con el avance de cada comida y el límite de platos distintos.
+         Se queda pegada al hacer scroll para ver siempre cuánto llevas (la altura del encabezado la fija ClientHeader). -->
+    <div
+      class="franja-paso sticky z-30 -mx-4 px-4 py-1.5 lg:mx-0 lg:px-0 bg-brand-light/95 backdrop-blur-md border-b border-brand-border space-y-1.5"
+      data-testid="franja-paso"
+    >
+      <div v-if="activeMealTypes.length > 1" class="flex gap-2 p-1 bg-white rounded-2xl border-2 border-brand-border">
+        <button
+          type="button"
+          v-for="(mId, idx) in activeMealTypes"
+          :key="mId"
+          @click="selectMealTab(idx)"
           :class="[
-            'text-sm px-1.5 py-0.5 rounded-full font-bold',
-            isMealValid(mId) && getMealSelectedCount(mId) > 0
-              ? 'bg-emerald-400 text-brand-dark'
-              : 'bg-gray-200 text-gray-700'
+            'flex-1 py-2 px-1 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1 border touch-target',
+            activeMealIndex === idx
+              ? 'bg-brand-dark text-white border-brand-dark shadow-xs'
+              : 'bg-white text-brand-dark border-brand-border hover:bg-gray-100'
           ]"
         >
-          {{ getMealSelectedCount(mId) }}/{{ totalGuests }}
+          <span>{{ mealLabels[mId] }}</span>
+          <span
+            :class="[
+              'text-sm px-1 py-0.5 rounded-full font-bold',
+              isMealValid(mId) && getMealSelectedCount(mId) > 0
+                ? 'bg-emerald-400 text-brand-dark'
+                : 'bg-gray-200 text-gray-700'
+            ]"
+          >
+            {{ getMealSelectedCount(mId) }}/{{ totalGuests }}
+          </span>
+        </button>
+      </div>
+      <div v-else class="flex items-center justify-between gap-2 bg-white rounded-2xl border-2 border-brand-border px-4 py-2.5 text-sm font-bold text-brand-dark">
+        <span>{{ mealLabels[currentMealType] }}</span>
+        <span
+          :class="[
+            'px-2 py-0.5 rounded-full',
+            getMealSelectedCount(currentMealType) > 0 ? 'bg-emerald-400 text-brand-dark' : 'bg-gray-200 text-gray-700'
+          ]"
+        >
+          {{ getMealSelectedCount(currentMealType) }}/{{ totalGuests }} personas
         </span>
-      </button>
+      </div>
+
+      <!-- Límite de platos distintos del almuerzo para grupos grandes: siempre a la vista -->
+      <div
+        v-if="almuerzoConLimite"
+        role="status"
+        data-testid="aviso-limite-platos"
+        :class="[
+          'rounded-2xl border-2 px-3 py-1.5 text-sm font-bold flex items-start gap-2 transition-colors',
+          estadoLimite === 'superado'
+            ? 'bg-rose-50 border-rose-400 text-rose-900'
+            : estadoLimite === 'alcanzado'
+              ? 'bg-amber-100 border-amber-500 text-amber-950'
+              : 'bg-white border-brand-border text-brand-dark',
+          limiteRecienTocado ? 'animate-pulse ring-2 ring-amber-500' : ''
+        ]"
+      >
+        <AlertTriangle v-if="estadoLimite !== 'libre'" class="w-4 h-4 mt-0.5 shrink-0 stroke-[2.5]" aria-hidden="true" />
+        <span>
+          Almuerzo: {{ variedadesAlmuerzo }} de {{ settingsStore.limiteVariedades.maxVariedades }} platos distintos.
+          <template v-if="estadoLimite === 'superado'">Quita platos: es el máximo para grupos de más de {{ settingsStore.limiteVariedades.umbralPersonas }} personas.</template>
+          <template v-else-if="estadoLimite === 'alcanzado'">Llegaste al máximo.</template>
+        </span>
+      </div>
     </div>
 
     <!-- Lista de Platos -->
